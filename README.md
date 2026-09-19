@@ -95,3 +95,21 @@ python3 tools/check_page.py --all                                             # 
 - 标「本地实机运行」的内容（终端输出、表格数据、Fiori 截图）是真实命令的输出，图注里写了产生它的命令。
 - 服务 plan、配额、角色集合名、API 端点等**标准值**随版本与区域不同，页面里给了「自系统确认方法」。
 - BTP 云端部分（`mbt build` / `cf deploy`）**未在本机执行**（无试用账号），命令与验证清单来自官方文档。
+
+## 7. 仓库与发布
+
+- 本站是独立仓库：**https://github.com/raysource/sap-cap** （public，`main`）。
+  历史是父仓库 `raysource/sap-consult` 用 `git subtree split -P sap-cap` 切出来的，5 条本站提交一条不少。
+- 发布/同步：`bash tools/publish_to_github.sh ["提交信息"]` —— init（若无）+ 建/改 remote +
+  `git add -A` + commit + push，末尾调用
+  `scripts/reconcile_published_repo.sh`（来自 sap-training-sites skill）做**逐路径对账**：
+  `local HEAD == git ls-remote == gh api …/commits/main`，且远端 blob 列表 == 本地 `git ls-files`。
+  只信这个输出，不信 push 的回显。
+- 本仓库的 `.gitignore` 已经挡掉 `node_modules/`、`db.sqlite*`、`target/`、`gen/`、`work/render/`、
+  `mta_archives/`、`*.mtar`；**`assets/` 与 `work/evidence`、`work/quiz` 是内容，必须提交**。
+- 注意：有了自己的 `.git` 之后，本站就是父仓库里的**嵌套仓库**——在父仓库里
+  `git add sap-cap/...` **会静默无效**（git 2.39 实测返回 0 但索引为空）。
+  要同步进父仓库请用：
+  `bash ../tools/include_nested_repo_files.sh "$PWD/.." sap-cap`
+  （读嵌套索引的 mode + blob sha → hash-object 落库 → update-index，脚本会 assert SHA 一致），
+  然后核对 `git ls-files sap-cap | wc -l` == `git -C sap-cap ls-files | wc -l`。
