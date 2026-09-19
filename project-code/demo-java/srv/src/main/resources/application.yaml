@@ -1,0 +1,20 @@
+
+---
+# 默认 profile：本地用 H2 内存库，schema 由 cds-maven-plugin 生成的 schema-h2.sql 建好
+spring:
+  config.activate.on-profile: default
+  sql.init.platform: h2
+cds:
+  data-source.auto-config.enabled: false
+  # 本地开发的身份模拟：alice / bob。没有凭据的请求 → 401（与 Node 版的 mocked 认证行为一致）
+  security:
+    mock:
+      enabled: true
+      users:
+        - name: alice
+          password: alice
+          roles:
+            - admin
+        - name: bob
+          password: bob
+          roles: []

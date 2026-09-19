@@ -1,0 +1,119 @@
+{
+  "key": "bas_s02",
+  "kind": "dialog",
+  "w": 1440,
+  "h": 900,
+  "caption": "Create Dev Space 对话框：名称、Type（Kind）、Additional SAP Extensions 与磁盘上限；Create Dev Space 只有填了名称才可点",
+  "alt": "Create Dev Space 对话框：名称、Type（Kind）、Additional SAP Extensions 与磁盘上限；Create Dev Space 只有填了名称才可点",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 步骤出自 SAP Help「Working in the Dev Space Manager」",
+  "dw": 960,
+  "dh": 640,
+  "title": "Create Dev Space",
+  "subtitle": "名称 + Type（Kind）为必填；Additional SAP Extensions 可稍后修改",
+  "under": {
+    "kind": "cockpit",
+    "product": "SAP Business Application Studio",
+    "nav": {
+      "title": "DEV SPACE MANAGER",
+      "items": [
+        {
+          "label": "Dev Spaces",
+          "active": true
+        },
+        {
+          "label": "Extensions"
+        }
+      ]
+    },
+    "title": "Dev Space Manager",
+    "blocks": [
+      {
+        "t": "table",
+        "cols": [
+          "DEV SPACE",
+          "STATUS"
+        ],
+        "widths": [
+          2,
+          1
+        ],
+        "rows": [
+          [
+            "bookorder",
+            "RUNNING"
+          ],
+          [
+            "hana-native",
+            "STOPPED"
+          ]
+        ]
+      }
+    ]
+  },
+  "blocks": [
+    {
+      "t": "form",
+      "cols": 1,
+      "fields": [
+        [
+          "Dev Space Name",
+          "bookorder",
+          "只能用字母 / 数字 / - / _，不能有空格"
+        ],
+        [
+          "Type (Kind)",
+          "Full Stack Cloud Application",
+          "CAP + SAP Fiori + Node.js / Java"
+        ],
+        [
+          "Additional SAP Extensions",
+          "SAP HANA Tools、SAP HANA Database Explorer",
+          "需先 Stop 才能增删"
+        ],
+        [
+          "Disk Size",
+          "4 GB（试用 / 免费上限；Standard 计划 10 GB）",
+          "超限会导致无法启动"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "Full Stack Cloud Application 预置扩展：CAP Tools、CDS Graphical Modeler、MTA Tools、SAP HANA Database Explorer、SAP Fiori Tools。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "创建后状态为 STARTING；若已有 1 个 RUNNING（试用计划），新 dev space 会停在 STOPPED。"
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Cancel"
+    },
+    {
+      "label": "Create Dev Space",
+      "primary": true
+    }
+  ],
+  "callouts": [
+    {
+      "on": "bookorder",
+      "text": "1. 名称建议与项目同名"
+    },
+    {
+      "on": "Full Stack Cloud Application",
+      "text": "2. CAP 的 kind"
+    },
+    {
+      "on": "SAP HANA Tools、SAP HANA Database Explorer",
+      "text": "3. 额外扩展可事后再加"
+    },
+    {
+      "on": "4 GB（试用 / 免费上限；Standard 计划 10 GB）",
+      "text": "4. 这是磁盘上限，不是内存配额"
+    }
+  ]
+}

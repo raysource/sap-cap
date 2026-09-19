@@ -1,0 +1,63 @@
+{
+  "key": "sec_s12",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap — cf env 里看 bind 进来的凭据",
+  "src": "本站自绘（VCAP_SERVICES 字段名随绑定/平台版本可能不同，标 ~ 处请以自己环境为准）",
+  "caption": "cf env 里的 VCAP_SERVICES：xsuaa 绑定的 xsappname / clientid / url 就在这，排查 401 先看它绑的是哪个实例",
+  "lh": 18,
+  "lines": [
+    "$ cf env demo-node-srv | jq '.VCAP_SERVICES.xsuaa[0] | {name, label, plan, tags}'",
+    "{",
+    "  \"name\": \"demo-node-uaa\",",
+    "  \"label\": \"xsuaa\",",
+    "  \"plan\": \"application\",",
+    "  \"tags\": [ \"xsuaa\" ]",
+    "}",
+    "$ cf env demo-node-srv | jq '.VCAP_SERVICES.xsuaa[0].credentials | keys'",
+    "[",
+    "  \"apiurl\", \"clientid\", \"clientsecret\", \"identityzone\", \"identityzoneid\",",
+    "  \"tenantid\", \"tenantmode\", \"uaadomain\", \"url\", \"verificationkey\", \"xsappname\"",
+    "]",
+    "$ cf env demo-node-srv | jq -r '.VCAP_SERVICES.xsuaa[0].credentials.xsappname'",
+    "demo-node-trial-dev",
+    "$ cf env demo-node-srv | jq -r '.VCAP_SERVICES.xsuaa[0].credentials.url'",
+    "https://trial-dev-demo-node.authentication.ap10.hana.ondemand.com",
+    "",
+    "# 排错要点：",
+    "#  · xsappname 与 JWT 里 scope 前缀不一致 → 403（换过实例或改过 xsappname）",
+    "#  · uaadomain / url 指向别的子账户 → token 校验失败（issuer 不匹配）→ 401",
+    "#  · clientsecret 只看前 4 位核对，别整串贴进聊天记录"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        640
+      ],
+      "text": "1. 三个关键字段"
+    },
+    {
+      "at": [
+        60,
+        676
+      ],
+      "text": "2. 与 xs-security 一致"
+    },
+    {
+      "at": [
+        60,
+        712
+      ],
+      "text": "3. 403 先查 xsappname"
+    },
+    {
+      "at": [
+        60,
+        748
+      ],
+      "text": "4. 401 先查 uaadomain"
+    }
+  ]
+}

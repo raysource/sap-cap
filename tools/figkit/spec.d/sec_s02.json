@@ -1,0 +1,143 @@
+{
+  "key": "sec_s02",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP Business Technology Platform",
+  "caption": "Security → Role Collections：部署后 xs-security.json 里的角色集合会出现在这里，手工建的也在同一张表上",
+  "crumbs": [
+    "Global Account: trial-eu10-9f3a2b (trial)",
+    "Subaccount: trial"
+  ],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {
+        "label": "Overview"
+      },
+      {
+        "label": "Instances and Subscriptions"
+      },
+      {
+        "label": "Cloud Foundry",
+        "sub": [
+          "Spaces"
+        ]
+      },
+      {
+        "label": "Users"
+      },
+      {
+        "label": "Security",
+        "group": true
+      },
+      {
+        "label": "Role Collections",
+        "active": true
+      },
+      {
+        "label": "Trust Configuration"
+      }
+    ]
+  },
+  "title": "Role Collections",
+  "subtitle": "Subaccount: trial · 每行 = 一个可以发给用户的角色包",
+  "tabs": [
+    "All Role Collections"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "toolbar",
+      "items": [
+        {
+          "label": "Create New Role Collection",
+          "primary": true
+        }
+      ],
+      "search": "Search role collection"
+    },
+    {
+      "t": "table",
+      "cols": [
+        "Name",
+        "Description",
+        "# Roles",
+        "# Users"
+      ],
+      "widths": [
+        2.9,
+        1.5,
+        0.7,
+        0.7
+      ],
+      "rows": [
+        [
+          "BookOrder.View (demo-node trial-dev)",
+          "generated",
+          "1",
+          "2"
+        ],
+        [
+          "BookOrder.Edit (demo-node trial-dev)",
+          "generated",
+          "1",
+          "1"
+        ],
+        [
+          "BookOrder.Submit (demo-node trial-dev)",
+          "generated",
+          "1",
+          "1"
+        ],
+        [
+          "订单管理员（手工建立）",
+          "订单提交 + 只读查看",
+          "2",
+          "3"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "名字后缀 (demo-node trial-dev) 来自 mta.yaml 的 ${org}-${space}，同一子账户里多套环境互不干扰。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "用户没被加进任何角色集合 → 请求能过认证却拿不到 scope → 403（不是 401）。"
+    }
+  ],
+  "status": "● 4 role collections · 3 generated from xs-security.json · Subaccount: trial",
+  "callouts": [
+    {
+      "at": [
+        110,
+        620
+      ],
+      "text": "1. 部署时自动生成"
+    },
+    {
+      "at": [
+        110,
+        656
+      ],
+      "text": "2. Users 为 0 先查这里"
+    },
+    {
+      "at": [
+        110,
+        692
+      ],
+      "text": "3. 手工集合可跨应用"
+    },
+    {
+      "at": [
+        110,
+        728
+      ],
+      "text": "4. 403 的常见根因"
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+[
+ {
+  "tag": "概念",
+  "q": "CAP 项目里，决定「数据落到哪个数据库」的是哪一项？",
+  "opts": {
+   "A": "db/schema.cds 里的 namespace",
+   "B": "cds.requires.db 的 kind（sqlite 或 hana）",
+   "C": "package.json 的 name 字段",
+   "D": "mta.yaml 的 ID"
+  },
+  "answer": "B",
+  "explain": "CAP 把领域模型（db/schema.cds）与数据库实现分开：kind 决定用 @cap-js/sqlite 还是 @cap-js/hana，模型本身不用改。"
+ },
+ {
+  "tag": "操作",
+  "q": "在本地确认当前生效的数据库配置，正确且最可靠的命令是？",
+  "opts": {
+   "A": "cat package.json",
+   "B": "cds env get requires.db（需要时加 --profile production / hybrid）",
+   "C": "cf services",
+   "D": "cds version"
+  },
+  "answer": "B",
+  "explain": "cds env 合并全局默认、项目配置、profile 与环境变量得出「最终生效」的配置。默认看到 @cap-js/sqlite，加 --profile production 会看到 @cap-js/hana。"
+ },
+ {
+  "tag": "概念",
+  "q": "免费层/试用环境下，SAP HANA Cloud 数据库实例的固定规格是？",
+  "opts": {
+   "A": "8 GB 内存、1 vCPU、40 GB 存储",
+   "B": "16 GB 内存、1 vCPU、80 GB 存储",
+   "C": "32 GB 内存、2 vCPU、120 GB 存储，可自由调整",
+   "D": "规格取决于子账户区域，免费层没有实例"
+  },
+  "answer": "B",
+  "explain": "免费层/试用只有一个预定义规格的实例：16 GB 内存、1 vCPU、80 GB 存储；付费环境才可在向导里调整大小。"
+ },
+ {
+  "tag": "操作",
+  "q": "CAP 部署到 Cloud Foundry 时，数据库侧要绑定的是哪一种服务实例？",
+  "opts": {
+   "A": "SAP HANA Cloud 的 hana 计划（数据库实例本体）",
+   "B": "SAP HANA Schemas & HDI Containers 的 hdi-shared 计划",
+   "C": "SAP HANA Cloud 的 tools 计划",
+   "D": "Authorization & Trust Management 的 application 计划"
+  },
+  "answer": "B",
+  "explain": "hdi-shared 提供受 HDI 管控的容器 schema 与部署能力（表由 hdi-deployer 创建）；hana 是数据库实例本体，tools 是管理界面的订阅计划。"
+ },
+ {
+  "tag": "概念",
+  "q": "hdi-shared、schema、tools 三者的区别，哪一项正确？",
+  "opts": {
+   "A": "三者可以互换，随便选一个即可",
+   "B": "hdi-shared 是受 HDI 托管的容器；schema 只是裸 schema（没有 HDI 部署能力）；tools 是数据库管理工具的订阅计划",
+   "C": "tools 是最大的数据库计划，含无限存储",
+   "D": "schema 一定要配 tools 才能在 CAP 里使用"
+  },
+  "answer": "B",
+  "explain": "CAP 需要 HDI 的部署语义（比对工件、创建/更新对象、技术用户连接），所以用 hdi-shared；schema 适合只想拿一个空 schema 的场景；tools 是 SAP HANA Cloud 服务的 Application 计划，用于订阅管理界面。"
+ },
+ {
+  "tag": "操作",
+  "q": "建 HDI 容器容器时，参数里的 database_id 从哪里来？",
+  "opts": {
+   "A": "子账户 ID",
+   "B": "SAP HANA Cloud Central 里实例行末菜单的 Copy Instance ID",
+   "C": "org 名加 space 名",
+   "D": "CF API endpoint"
+  },
+  "answer": "B",
+  "explain": "创建 HDI 容器（cockpit）时用 JSON 参数把容器指向具体数据库实例：schema 建议名 + database_id（从 Cloud Central 的 ⋯ 菜单复制）。"
+ },
+ {
+  "tag": "操作",
+  "q": "CAP 生成的 HANA 表名，与 CDS 实体 sap.training.bookorder.BookOrders 的对应关系是？",
+  "opts": {
+   "A": "BOOK_ORDERS",
+   "B": "BookOrders",
+   "C": "SAP_TRAINING_BOOKORDER_BOOKORDERS",
+   "D": "sap.training.bookorder::BookOrders"
+  },
+  "answer": "C",
+  "explain": "plain names 规则：命名空间的分隔点换成下划线，未加引号的标识符再折叠为大写（CAP 文档《Using Native HANA Artifacts》）。本地 SQLite 里同一实体是 sap_training_bookorder_BookOrders。"
+ },
+ {
+  "tag": "操作",
+  "q": "实体里的关联 customer: Association to Customers 在 HANA 表里生成什么列？",
+  "opts": {
+   "A": "CUSTOMER",
+   "B": "CUSTOMER_ID",
+   "C": "CUSTOMERS_ID",
+   "D": "customer"
+  },
+  "answer": "B",
+  "explain": "关联会生成「导航属性名 + _ID」的外键列：BookOrders.customer → CUSTOMER_ID，BookOrderItems.order → ORDER_ID，BookOrderItems.book → BOOK_ID。手动 join 时全靠它对上。"
+ },
+ {
+  "tag": "操作",
+  "q": "让本地 cds watch 的服务连上云端 HDI 容器，正确的手顺是？",
+  "opts": {
+   "A": "把 HANA 密码写进 package.json 的 credentials",
+   "B": "cf login --sso 并 cf target 核对后，cds bind db --to 实例名，再 cds watch --profile hybrid",
+   "C": "先 mbt build 再 cds watch",
+   "D": "把 .cdsrc-private.json 从同事那里拷过来用"
+  },
+  "answer": "B",
+  "explain": "cds bind 把「去哪里取凭据」写进 .cdsrc-private.json（不落盘凭据），然后用 hybrid profile 启动即可连云端库；拷别人的文件既不安全也常因环境不同而失败。"
+ },
+ {
+  "tag": "概念",
+  "q": ".cdsrc-private.json 里存的是什么？",
+  "opts": {
+   "A": "数据库账号密码的明文",
+   "B": "绑定的元数据（平台、org/space、实例名、服务键名），凭据在运行时才解析",
+   "C": "HDI 容器里的全部表结构",
+   "D": "编译后的 SQL 工件"
+  },
+  "answer": "B",
+  "explain": "CAP 刻意不把凭据写到磁盘：文件里只有 binding{type, org, space, instance, key, resolved} 这类信息，cds watch 运行到需要时才去 CF 取凭据。"
+ },
+ {
+  "tag": "排错",
+  "q": "第二天回来应用连不上 HANA，报连接失败/超时，最可能的原因是？",
+  "opts": {
+   "A": "子账户被删除",
+   "B": "免费层/试用实例每天夜间被自动停止，需要重新启动",
+   "C": "CDS 模型语法错误",
+   "D": "cf CLI 版本过旧"
+  },
+  "answer": "B",
+  "explain": "免费层/试用实例每天夜间自动停止（且 30 天不重启会被删除）。恢复：cf update-service 实例名 -c '{\"data\":{\"serviceStopped\":false}}'，或到 Cloud Central 点 Start。"
+ },
+ {
+  "tag": "排错",
+  "q": "在 SQL Console 里执行 SELECT 报「表或视图不存在」，但应用能正常查询数据，最可能的原因？",
+  "opts": {
+   "A": "表被删除了",
+   "B": "表名大小写或下划线写法不对（HANA 未加引号的标识符会折叠为大写，命名空间的点要换成下划线）",
+   "C": "当前用户没有 SELECT 权限",
+   "D": "数据库版本太旧"
+  },
+  "answer": "B",
+  "explain": "按规则写成 SAP_TRAINING_BOOKORDER_BOOKORDERS 这类全大写形式；也可以用 SET SCHEMA 先切到正确 schema，再从 Catalog 树复制真实表名。"
+ },
+ {
+  "tag": "排错",
+  "q": "创建 HDI 容器失败并提示没有可用数据库 / 未映射，应该先做什么？",
+  "opts": {
+   "A": "重装 cf CLI",
+   "B": "确认 SAP HANA Cloud 实例处于 RUNNING，并把实例映射（Instance Mapping）到你的 CF org",
+   "C": "把 schema 参数删掉再试",
+   "D": "改用 schema 计划代替 hdi-shared"
+  },
+  "answer": "B",
+  "explain": "HDI 容器必须落在已映射到 CF 的数据库实例上：Cloud Central → 实例 → Manage Configurations → Instance Mapping → Add Mapping 选 org → Review and Save，再重建容器。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于 db/data/*.csv 里的初始数据，哪一项正确？",
+  "opts": {
+   "A": "部署后用户可以在应用里改，下次部署不会被覆盖",
+   "B": "HDI 部署时按 .hdbtabledata 装载并取得所有权，后续每次部署都会用 CSV 覆盖，所以只适合放配置类数据",
+   "C": "CSV 只在本地生效，云端不会导入",
+   "D": "CSV 会被写进 mta.yaml，随部署描述符一起下发"
+  },
+  "answer": "B",
+  "explain": "capire 明确：HDI 部署 CSV 数据并在后续部署中覆盖它，因此不要通过应用端点修改这些数据；需要保留用户改动的初始数据要用 include_filter 等机制区分。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "关于「建表与推数据」的三条路径，哪种理解正确？",
+  "opts": {
+   "A": "cds deploy --to sqlite 与 cds deploy --to hana 完全等价，只是数据库不同",
+   "B": "正式部署时由 MTA 的 hdb 模块（gen/db 里的 @sap/hdi-deploy）建表；cds deploy --to hana 适合只把数据库更新推上去、服务仍本地跑；cds deploy --to sqlite 是本地开发用",
+   "C": "cds build --for hana 会自动把表建到云端",
+   "D": "必须先 cds deploy --to sqlite 才能在云端建表"
+  },
+  "answer": "B",
+  "explain": "cds build --for hana 只生成工件（.hdbtable/.hdbview/.hdbtabledata），真正执行建表的是 HDI deployer：正式路径由 mbt build + cf deploy 触发 hdb 模块，快速迭代路径用 cds deploy --to hana。"
+ },
+ {
+  "tag": "操作",
+  "q": "要确认「云端表里的数据」与「服务返回的数据」一致，最直接的验证是？",
+  "opts": {
+   "A": "只看 Database Explorer 的行数",
+   "B": "用 SQL 查出订单合计，与 OData 的 getOrderTotal(orderNo='BO-1003') 返回值对账（都应为 17400）",
+   "C": "重启一次应用",
+   "D": "重新部署一次再看日志"
+  },
+  "answer": "B",
+  "explain": "双视角对账：SQL 查 SAP_TRAINING_BOOKORDER_BOOKORDERS + BOOKORDERITEMS 的聚合，与 OData 函数 getOrderTotal 比对；数字一致说明数据库绑定与服务层都正确。"
+ }
+]

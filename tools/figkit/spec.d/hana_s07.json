@@ -1,0 +1,48 @@
+{
+  "key": "hana_s07",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "caption": "本地连云端 HANA：cds bind 生成 hybrid 绑定（不落盘凭据），再用 cds watch --profile hybrid 启动",
+  "alt": "本地连云端 HANA：cds bind 生成 hybrid 绑定（不落盘凭据），再用 cds watch --profile hybrid 启动",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 命令与输出行出自 capire「Hybrid Testing」（cds bind），服务名替换为本教材项目",
+  "title": "jason@MacBook-Pro: ~/projects/demo-node",
+  "lines": [
+    "$ cds bind db --to demo-hana-db",
+    "@[bind] - Retrieving data from Cloud Foundry...",
+    "@[bind] - Binding db to Cloud Foundry managed service demo-hana-db:demo-hana-db-key with kind hana.",
+    "@[bind] - Saving bindings to .cdsrc-private.json in profile hybrid.",
+    "@[bind] -",
+    "@[bind] - TIP: Run with cloud bindings: cds watch --profile hybrid",
+    "",
+    "$ cds watch --profile hybrid",
+    "@[cds] - connect to db > hana { url: '...hana.ondemand.com:443' }",
+    "@[cds] - serving BookOrderService { at: [ '/odata/v4/book-order' ] }",
+    "@[cds] - server listening on { url: 'http://localhost:4004' }",
+    "",
+    "$ cds env get requires.db --profile hybrid",
+    "  { \"kind\": \"hana\", \"binding\": { \"type\": \"cf\", \"instance\": \"demo-hana-db\" } }",
+    "",
+    "$ cds bind --exec --profile hybrid -- npm run integration-test",
+    "#  等价做法：把凭据以 VCAP_SERVICES 注入子进程，不写任何文件"
+  ],
+  "callouts": [
+    {
+      "on": "$ cds bind db --to demo-hana-db",
+      "text": "1. 绑定 CF 上的 HDI 容器实例"
+    },
+    {
+      "on": "[bind] - Saving bindings to .cdsrc-private.json in profile hybrid.",
+      "text": "2. 只存「去哪里取凭据」"
+    },
+    {
+      "on": "$ cds watch --profile hybrid",
+      "text": "3. 本地进程连云端库"
+    },
+    {
+      "on": "$ cds bind --exec --profile hybrid -- npm run integration-test",
+      "text": "4. 测试场景用 --exec 更干净"
+    }
+  ]
+}

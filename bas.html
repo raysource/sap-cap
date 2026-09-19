@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>② Business Application Studio 开发环境 · SAP CAP 培训课程</title>
+<meta name="description" content="SAP Business Application Studio 上开发 CAP 的完整手顺：订阅与创建 Dev Space、界面导览与端口预览、cds init 建项目、终端命令与调试、Git/PAT、mbt build 与 cf deploy 部署到 Cloud Foundry，附常见错误表与验收清单。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a class="active" href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>② Business Application Studio 开发环境</span></p>
+<h1>② Business Application Studio 开发环境：从空账户到能部署 CAP 项目</h1>
+<p class="kicker">Subaccount 订阅与 Dev Space 创建 → 界面与端口预览 → <span class="cmd">cds init</span> 建项目 → 终端 / 调试 / Git → <span class="cmd">mbt build</span> + <span class="cmd">cf deploy</span> → cockpit 验证。每步都给出「验证」与失败现象。</p>
+
+<div class="toc">
+  <a href="#s1">1. 本页地图与选型对照</a>
+  <a href="#s2">2. 创建 Dev Space（手顺）</a>
+  <a href="#s3">3. 界面导览与取舍</a>
+  <a href="#s4">4. 创建 CAP 项目</a>
+  <a href="#s5">5. 终端命令与调试</a>
+  <a href="#s6">6. CDS 语法检查与红线</a>
+  <a href="#s7">7. 接进 Git / GitHub</a>
+  <a href="#s8">8. 部署前准备（mbt / cds build）</a>
+  <a href="#s9">9. 部署到 Cloud Foundry</a>
+  <a href="#s10">10. 用 cockpit 验证</a>
+  <a href="#s11">11. 常见错误表</a>
+  <a href="#s12">12. 对照速查表</a>
+  <a href="#s13">13. 本节测试</a>
+  <a href="#s14">14. 小结</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>在 trial 子账户里确认 BAS 订阅，并创建一个能跑 CAP 的 Dev Space（知道 2 个 / 1 个 RUNNING / 4 GB 这些硬限制来自哪里）。</li>
+  <li>用 <span class="cmd">cds init</span> 或 Template Wizard 生成 <span class="cmd">app/ db/ srv/</span> 骨架，并说清每个目录放什么。</li>
+  <li>在 BAS 终端里跑起本地服务、把 4004 端口暴露到浏览器、用 <span class="cmd">launch.json</span> 附加调试。</li>
+  <li>把项目推到 GitHub（HTTPS + Personal Access Token），并说出认证失败的三种典型原因。</li>
+  <li>用 <span class="cmd">mbt build</span> 生成 MTAR、<span class="cmd">cf deploy</span> 部署，再在 cockpit 里核对应用与服务实例状态。</li>
+  <li>遇到 dev space 起不来 / npm ERR! / 端口打不开 / 会话超时 / 配额不足 / 扩展冲突时，能按错误表定位。</li>
+</ul></div>
+
+<h2 id="s1">1. 本页地图与选型对照</h2>
+<p>本页是一条「开发环境」主线：<b>先把环境建出来（第 2 节）</b> → <b>认清界面与能力边界（第 3 节）</b> → <b>把项目建出来（第 4 节）</b> → <b>能跑能调（第 5–6 节）</b> → <b>能存进 Git（第 7 节）</b> → <b>能部署并在 cockpit 验收（第 8–10 节）</b>。第 11 节之前遇到的报错，都能在第 11 节的错误表里查到处置办法。</p>
+
+<div class="flow">
+  <div class="node">Subaccount<br><small>Instances and Subscriptions</small></div>
+  <div class="arrow">→</div>
+  <div class="node">Create Dev Space<br><small>Full Stack Cloud Application</small></div>
+  <div class="arrow">→</div>
+  <div class="node">cds init<br><small>app/ db/ srv/</small></div>
+  <div class="arrow">→</div>
+  <div class="node">cds watch<br><small>localhost:4004</small></div>
+  <div class="arrow">→</div>
+  <div class="node">git push<br><small>HTTPS + PAT</small></div>
+  <div class="arrow">→</div>
+  <div class="node">mbt build + cf deploy<br><small>MTAR → CF</small></div>
+</div>
+
+<h3 id="s1-1">1-1 BAS 与「本地 VS Code + Node.js」的关系</h3>
+<p>一句话：<b>BAS 不是替代 VS Code，而是替代「装环境 + 配工具链」这件事</b>。BAS 基于 Code-OSS（VS Code 的开源底座），所以菜单、命令面板、<span class="cmd">launch.json</span>、Git 面板的行为与 VS Code 一致；差别在于它跑在云端的 dev space 里，工具是预装的、配额是受限的、断网就停摆。</p>
+
+<table class="tbl small">
+  <thead><tr><th>维度</th><th>BAS（云端 Dev Space）</th><th>本地 VS Code + Node.js</th></tr></thead>
+  <tbody>
+    <tr><td>安装成本</td><td>订阅后即可用；CAP Tools、MTA Tools、CF CLI、cds-dk 由场景预装</td><td>自己装 Node.js、<span class="cmd">npm i -g @sap/cds-dk</span>、<span class="cmd">mbt</span>、<span class="cmd">cf</span> CLI 与 MTA 插件</td></tr>
+    <tr><td>资源限制</td><td>试用/免费：最多 2 个 dev space、同时 1 个 RUNNING、每个 4 GB 磁盘；Standard 计划 10 个 / 2 个同时 / 10 GB</td><td>取决于本机（内存、磁盘、CPU）</td></tr>
+    <tr><td>网络依赖</td><td>全程联网；<span class="cmd">npm install</span>、扩展安装、数据库连接都走网络</td><td>装好依赖后可离线开发</td></tr>
+    <tr><td>扩展</td><td>场景扩展 + 额外 SAP 扩展可选；VS Code 市场扩展在远程连接模式下也能用（第三方扩展可读 dev space 数据）</td><td>VS Code 市场扩展自由安装</td></tr>
+    <tr><td>调试</td><td>内置 Node.js 调试（launch / attach），<span class="cmd">cds watch --inspect 127.0.0.1:9229</span> 后附加</td><td>同样支持；也可本机直连调试</td></tr>
+    <tr><td>访问本地资源</td><td>访问本机文件、内网系统要绕（Cloud Connector / 目的地）</td><td>直连本机与内网</td></tr>
+    <tr><td>协作与还原</td><td>换设备即可继续开发；dev space 停止后文件与设置保留</td><td>依赖 Git 与本地备份</td></tr>
+    <tr><td>推荐用法</td><td>教学、临时环境、需要 SAP 预置工具链、需要在客户环境里开发</td><td>长期主力开发、需要离线或重度的本地调试</td></tr>
+  </tbody>
+</table>
+
+<div class="box info"><b class="t">自系统确认方法</b>
+在 BAS 里打开终端执行 <span class="cmd">node --version</span>、<span class="cmd">cds --version</span>、<span class="cmd">mbt -v</span>、<span class="cmd">cf -v</span>，四条都有版本号输出，说明这条 dev space 的工具链是齐的；本地 VS Code 侧对同样的命令应得到相同结论。若 <span class="cmd">mbt</span> 没有版本号，说明该 dev space 的 MTA Tools 扩展缺失（见第 8 节）。</div>
+
+
+<figure class="fig" data-fig="bas_s03">
+  <a class="zoom" href="assets/fig/bas_s03.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s03.svg" alt="bas_s03" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">bas_s03</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+<figure class="fig" data-fig="bas_s08">
+  <a class="zoom" href="assets/fig/bas_s08.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s08.svg" alt="BAS 内置调试：launch.json 的 Node.js 附加配置与 Run and Debug 面板；cds watch --inspect 暴露 9229" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">BAS 内置调试：launch.json 的 Node.js 附加配置与 Run and Debug 面板；cds watch --inspect 暴露 9229</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 调试步骤出自 SAP Help「Debugging」；--inspect 与 9229 出自 capire cds-cli 与 Node.js 文档</span></figcaption>
+</figure><h2 id="s2">2. 创建 Dev Space（手顺）</h2>
+<div class="stepmeta"><span class="k">Instances and Subscriptions</span><span class="k">Create Dev Space</span><span class="c">耗时 5–10 分（首次更久）</span></div>
+
+<h3 id="s2-1">2-1 前置：确认订阅与角色</h3>
+<ol class="steps">
+  <li><b>确认 Cloud Foundry 环境已启用</b>：cockpit → Subaccount → Overview，看到 Cloud Foundry Environment 段与至少一个 Space（例：<span class="cmd">dev</span>）。这一步必要，因为后面 <span class="cmd">cf deploy</span> 要落在这个 org/space 里。</li>
+  <li><b>确认订阅</b>：Subaccount → <b>Services</b> &gt; <b>Service Marketplace</b>，搜索 <span class="cmd">Studio</span>，打开 <b>SAP Business Application Studio</b> 的 Overview 页 → <b>Create</b> → 选计划（trial / free / standard）→ 再点 <b>Create</b>。若已订阅，跳下一步。</li>
+  <li><b>确认权限</b>：Security &gt; Role Collections，当前用户应有 <span class="cmd">Business_Application_Studio_Developer</span>（管理 dev space 另需 Administrator 角色集合）。</li>
+  <li><b>进入 BAS</b>：回到 SAP Business Application Studio 的 Overview 页 → 点 <b>Go to Application</b>。
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">Subaccount: trial
+  Services > Instances and Subscriptions          ← 订阅记录在这里
+  Services > Service Marketplace > 搜索 Studio     ← 没有订阅时从这里 Create
+  SAP Business Application Studio > Overview > Go to Application   ← 进入 BAS</code></pre>
+  </li>
+  <li><b>验证</b>：浏览器打开 BAS 的 Lobby（含 Quick Links 的 Get Started 页），URL 形如 <span class="cmd">https://&lt;subaccount&gt;.&lt;region&gt;.applicationstudio.cloud.sap/</span>。若停在授权页反复跳转，先确认上一步的角色集合已生效，再清 Cookie 重进。</li>
+</ol>
+
+<div class="box info"><b class="t">自系统确认方法</b>
+订阅与计划名会随发布/区域变化：在 cockpit 的 <b>Instances and Subscriptions</b> 里能直接看到「SAP Business Application Studio / 计划名 / Status: Subscribed」这一行，以该页显示为准；本文出现的按钮文字（Create、Go to Application）若与实际界面不同，按同位置的按钮操作即可。</div>
+
+<h3 id="s2-2">2-2 Create Dev Space：字段逐个说清楚</h3>
+<ol class="steps">
+  <li><b>打开 Dev Space Manager</b>：Lobby 右上角产品切换图标 → <b>Dev Space Manager</b>，或 Get Started 页 Quick Links 里的同名链接。</li>
+  <li><b>点 Create Dev Space</b>，依次填：<b>名称</b>（只能用字母/数字/<span class="cmd">-</span>/<span class="cmd">_</span>，不能有空格；建议与项目同名，如 <span class="cmd">bookorder</span>）、<b>Type（Kind）</b>、<b>Additional SAP Extensions</b>（可多选）。<b>数据库类 kind 的取舍</b>见下表。</li>
+  <li><b>看清磁盘上限</b>：dev space 是「磁盘」受限而不是内存受限——试用/免费 4 GB、Standard 10 GB。超限的表现是 npm/build 报 <span class="cmd">No space left on device</span>，严重时 dev space 起不来。</li>
+  <li><b>点 Create Dev Space</b>（名称未填时按钮不可用），状态会从 <b>STARTING</b> 变 <b>RUNNING</b>；点 dev space 名字进入。</li>
+  <li><b>验证</b>：Dev Space Manager 列表里该 dev space 的 STATUS = <b>RUNNING</b>，点进去后左侧 EXPLORER、底部 TERMINAL、状态栏（Node 版本、Git 分支）都出现；终端里 <span class="cmd">pwd</span> 返回 <span class="cmd">/home/user/projects</span>。</li>
+</ol>
+
+<table class="tbl small">
+  <thead><tr><th>Type（Kind）</th><th>用途</th><th>本课程是否用</th></tr></thead>
+  <tbody>
+    <tr><td>Full Stack Cloud Application</td><td>CAP（Node.js / Java）+ SAP Fiori 的常规场景；预置 CAP Tools、CDS Graphical Modeler、MTA Tools、SAP HANA Database Explorer、SAP Fiori Tools</td><td><span class="tag teal">推荐</span>本课程第 2–12 节都用它</td></tr>
+    <tr><td>SAP Fiori</td><td>只做 Fiori / UI5 前端（含 ABAP Cloud、S/4HANA 连接场景）</td><td>第 9 节做 UI 时可以另开一个</td></tr>
+    <tr><td>SAP HANA Native Application</td><td>原生的 HANA 工件（calculation view、SQLScript、表）开发</td><td>可选：需要 Database Explorer 与 HANA Tools 时</td></tr>
+    <tr><td>Full-Stack Application Using Productivity Tools</td><td>低代码/生产力工具场景</td><td>不用</td></tr>
+    <tr><td>Basic</td><td>只有 SAP 基础工具，最轻量</td><td>只做 shell 练习时可用</td></tr>
+  </tbody>
+</table>
+
+
+<div class="box ok"><b class="t">验收（第 2 节的完成判据）</b>
+<ul class="check">
+  <li>Dev Space Manager 里能看到你的 dev space，STATUS = RUNNING，Type = Full Stack Cloud Application。</li>
+  <li>能进入 dev space，终端可执行 <span class="cmd">node --version</span> 并返回版本号。</li>
+  <li>知道三个硬限制的数字：最多 2 个 dev space、同时 1 个 RUNNING、每个 4 GB 磁盘（试用/免费计划）。</li>
+</ul></div>
+
+<div class="box warn"><b class="t">常见错误</b>
+<ul>
+  <li><b>Create Dev Space 按钮点不动</b>：名称没填。文档明确写明只有填了名称按钮才可用。</li>
+  <li><b>新建的 dev space 停着不动（STOPPED）</b>：已经在跑 1 个（试用）或 2 个（Standard）。先 Stop 另一个再 Start 这个。</li>
+  <li><b>状态长期卡在 STARTING</b>：等 5 分钟后重试；仍不行就新建一个 dev space，用 Git 把项目拉回来，并把旧 dev space 的 ws-id 报给 SAP 支持。</li>
+  <li><b>改了扩展却看不到效果</b>：扩展的增删与更新都要求先 <b>Stop</b>，保存变更后再 <b>Start</b>。</li>
+  <li><b>手滑点了 Delete</b>：不可恢复。所以第 7 节要求先把项目推到 Git。</li>
+</ul></div>
+
+
+<figure class="fig" data-fig="bas_s01">
+  <a class="zoom" href="assets/fig/bas_s01.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s01.svg" alt="Dev Space Manager：dev space 列表、状态（RUNNING / STOPPED / STARTING）、Type 与磁盘占用；Create Dev Space 从这里开始" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">Dev Space Manager：dev space 列表、状态（RUNNING / STOPPED / STARTING）、Type 与磁盘占用；Create Dev Space 从这里开始</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 字段与限制出自 SAP Help「Working in the Dev Space Manager」「Trial Plan Restrictions」</span></figcaption>
+</figure><h2 id="s3">3. 界面导览与取舍</h2>
+<div class="stepmeta"><span class="k">F1 命令面板</span><span class="k">Ports: Preview</span><span class="f">Get Started 页</span><span class="c">耗时 10 分</span></div>
+
+<h3 id="s3-1">3-1 五个必须先认识的位置</h3>
+<table class="tbl small">
+  <thead><tr><th>位置</th><th>怎么打开</th><th>本课程怎么用</th></tr></thead>
+  <tbody>
+    <tr><td>EXPLORER（文件树）</td><td>左侧活动栏第一格；未打开项目时显示 NO FOLDER OPENED</td><td>确认 <span class="cmd">db/ srv/ app/</span> 结构与 <span class="cmd">db/data/*.csv</span></td></tr>
+    <tr><td>TERMINAL</td><td>菜单 Terminal &gt; New Terminal；或在文件上右键 <b>Open in Integrated Terminal</b></td><td>所有 <span class="cmd">cds</span> / <span class="cmd">mbt</span> / <span class="cmd">cf</span> / <span class="cmd">git</span> 命令都在这里跑</td></tr>
+    <tr><td>命令面板</td><td>F1，或 Command + Shift + P（Mac）/ Ctrl + Shift + P</td><td>端口预览、MTA 构建部署、CF 登录、运行时切换、调试</td></tr>
+    <tr><td>端口 / 预览</td><td>命令面板输入 <span class="cmd">Ports: Preview</span></td><td>把 <span class="cmd">localhost:4004</span> 暴露成一个浏览器标签</td></tr>
+    <tr><td>Run and Debug / PROBLEMS</td><td>左侧活动栏「▷」；菜单 View &gt; Problems</td><td>调试附加；看 <span class="cmd">.cds</span> 的红线与警告</td></tr>
+  </tbody>
+</table>
+
+
+<h3 id="s3-2">3-2 端口转发：两条都走一遍</h3>
+<ol class="steps">
+  <li><b>路径 A：命令面板</b>（官方文档记载的唯一入口）：F1 → 输入 <span class="cmd">Ports: Preview</span> → 列表里点要预览的应用 → 在新标签打开。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 1) 先让服务监听端口
+npx cds watch
+# 2) 命令面板（F1）输入：Ports: Preview
+#    → 列表出现 http://localhost:4004 → 点选 → 浏览器新标签打开
+# 3) 端口被占用（上一个进程没死干净）时：
+#    命令面板 → Ports: Stop the process running on the port → 选 4004</code></pre>
+  </li>
+  <li><b>路径 B：端口通知</b>：新端口第一次被监听时，右下角会出现提示条，可直接在新标签打开。不同版本提示条上的按钮文字略有差异（~），以实际显示为准；不想被反复提示可在 Settings 里搜 <span class="cmd">Ports</span> → <b>Exclude Expose Notifications</b> → Edit in settings.json 里配置端口。</li>
+  <li><b>验证</b>：浏览器打开 <span class="cmd">http://localhost:4004</span> 能看到 CAP 欢迎页；打开 <span class="cmd">/odata/v4/book-order/$metadata</span> 返回 XML；再打开 <span class="cmd">/odata/v4/book-order/BookOrders</span> 返回包含 <span class="cmd">BO-1001</span> 的 JSON。</li>
+</ol>
+
+<div class="box info"><b class="t">自系统确认方法</b>
+端口预览的入口名称随发布可能变化：以 F1 里输入 <span class="cmd">Ports</span> 后列出的命令名为准（本文写作时的命令名为 <span class="cmd">Ports: Preview</span> 与 <span class="cmd">Ports: Stop the process running on the port</span>）。如果列表里没有你要的端口，说明进程没起来或没监听在 4004——先回终端看日志最后一行。</div>
+
+<h3 id="s3-3">3-3 BAS 与本地开发的取舍（什么时候该换回本地）</h3>
+<div class="cols2">
+<div class="panel">
+<b class="t">选 BAS</b>
+<ul>
+  <li>环境一致性优先：全班/全组拿到的是同一套预装工具链。</li>
+  <li>需要 SAP 侧的预置能力：CDS Graphical Modeler、SAP HANA Database Explorer 扩展、MTA Tools。</li>
+  <li>要在客户环境/受限终端上开发，本机不能装 Node。</li>
+  <li>需要「换台电脑就能继续」。</li>
+</ul>
+</div>
+<div class="panel">
+<b class="t">换回本地 VS Code</b>
+<ul>
+  <li>磁盘吃紧：<span class="cmd">node_modules</span> + 构建缓存很容易顶到 4 GB（用 <span class="cmd">df -h</span> / <span class="cmd">df -ih</span> 看）。</li>
+  <li>需要稳定的长时调试或高频热重载（网络抖动会打断）。</li>
+  <li>需要访问本机文件、内网数据库或本地设备。</li>
+<figure class="fig" data-fig="bas_s04">
+  <a class="zoom" href="assets/fig/bas_s04.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s04.svg" alt="首次进入 BAS 的 Get Started 页：New Project from Template / Open Folder / Clone Repository 三条起步路径" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">首次进入 BAS 的 Get Started 页：New Project from Template / Open Folder / Clone Repository 三条起步路径</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 入口名称出自 SAP Help「Create a Project」与 SAP Tutorials（BAS + CAP）</span></figcaption>
+</figure>
+  <li>需要 VS Code 市场里的第三方扩展与自定终端体验。</li>
+</ul>
+</div>
+</div>
+<p>还有个折中方案：<b>用本地 VS Code 远程连到 BAS 的 dev space</b>。装 SAP 官方的 <span class="cmd">SAP Business Application Studio toolkit</span> 扩展，在 VS Code 里 Connect Landscape 添加 BAS 环境地址，就能在本地 VS Code 里使用云端 dev space 的工具链（含 SAP 内部目的地）。注意：远程模式安装的第三方扩展可以访问 dev space 里的数据，公司项目里要先过安全评审。</p>
+
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+  <li>能说出「Ports: Preview」与「Ports: Stop the process running on the port」两条命令分别解决什么问题。</li>
+  <li>能把 <span class="cmd">http://localhost:4004/odata/v4/book-order/$metadata</span> 在浏览器里打开并看到 XML。</li>
+  <li>写出至少两条「这个项目应该换回本地 VS Code」的理由。</li>
+</ul></div>
+
+<h2 id="s4">4. 创建 CAP 项目</h2>
+<div class="stepmeta"><span class="k">cds init</span><span class="k">cds add</span><span class="f">app/ db/ srv/ package.json</span><span class="c">耗时 10 分</span></div>
+
+<h3 id="s4-1">4-1 两条路：向导与终端</h3>
+<ol class="steps">
+  <li><b>路径 A：Template Wizard</b>：Get Started → <b>New Project from Template</b> → 选 <b>CAP Project</b> → 填项目名（例 <span class="cmd">demo-node</span>）→ 选 <b>Minimal Sample</b> → Finish。向导会同时建好项目并打开工作区。</li>
+  <li><b>路径 B：终端 <span class="cmd">cds init</span></b>（可复现、可写进脚本，推荐教学用）：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 在 /home/user/projects 下创建项目骨架
+npx cds init demo-node
+
+# 只加最小示例文件（不含 Fiori UI）
+npx cds init bookshop --add tiny-sample
+
+# 示例 + Fiori UI
+npx cds init bookshop --nodejs --add sample
+
+# 已有项目上继续长：加 HANA、MTA、XSUAA 等
+cd demo-node
+npx cds add hana mta xsuaa</code></pre>
+  </li>
+  <li><b>确认目录结构</b>：<span class="cmd">cds init</span> 生成的是「约定优于配置」的骨架：<span class="cmd">app/</span> 放 UI、<span class="cmd">srv/</span> 放服务与实现、<span class="cmd">db/</span> 放领域模型与初始数据。
+    <div class="file-tree">demo-node/
+├─ app/                      <span class="dir">UI 与 Fiori Elements 注解</span>
+│  └─ book-orders/
+│     └─ annotations.cds
+├─ db/                       <span class="dir">领域模型与数据库相关内容</span>
+│  ├─ data/
+│  │  ├─ sap.training.bookorder-Books.csv
+│  │  ├─ sap.training.bookorder-Customers.csv
+│  │  ├─ sap.training.bookorder-BookOrders.csv
+│  │  └─ sap.training.bookorder-BookOrderItems.csv
+│  └─ schema.cds             <span class="dir">namespace sap.training.bookorder; 实体定义</span>
+├─ srv/                      <span class="dir">服务定义与实现</span>
+│  ├─ book-order-service.cds <span class="dir">service BookOrderService @path /odata/v4/book-order</span>
+│  └─ book-order-service.js  <span class="dir">submitOrder / getOrderTotal / getOrderSummary 的实现</span>
+├─ test/
+│  └─ odata-verify.sh        <span class="dir">25 项 OData 验证脚本</span>
+├─ package.json              <span class="dir">依赖 + scripts + cds.requires 配置</span>
+├─ mta.yaml                  <span class="dir">部署描述符（cds add mta 生成）</span>
+└─ xs-security.json          <span class="dir">XSUAA 授权描述（cds add xsuaa 生成）</span></div>
+  </li>
+  <li><b>读一眼 package.json</b>：<span class="cmd">cds init</span> 会把运行时依赖与脚本写进去，<span class="cmd">cds add</span> 之后才出现 HANA / MTA 相关配置。下面这份正是本课程示范项目的真实内容（节选）：
+    <pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "name": "demo-node",
+  "dependencies": { "@sap/cds": "^9" },
+  "devDependencies": { "@cap-js/sqlite": "^2", "@sap/cds-dk": "^9" },
+  "scripts": {
+    "start":  "cds-serve",
+    "watch":  "cds watch",
+    "deploy": "cds deploy --to sqlite:db.sqlite",
+    "build":  "cds build --production",
+    "test":   "mocha --reporter spec --timeout 20000 test/*.test.js"
+  },
+  "cds": {
+    "requires": {
+      "db": { "kind": "sqlite", "credentials": { "url": "db.sqlite" } },
+      "auth": { "kind": "mocked" }
+    }
+  }
+}</code></pre>
+  </li>
+  <li><b>验证</b>：终端里
+<figure class="fig" data-fig="bas_s06">
+  <a class="zoom" href="assets/fig/bas_s06.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s06.svg" alt="cds init 生成的 CAP 项目结构与 cds watch 的首次输出（服务路径与本地端口）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 5</span><span class="cap">cds init 生成的 CAP 项目结构与 cds watch 的首次输出（服务路径与本地端口）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 终端行为本地实测：npx cds watch（教材项目 demo-node，Node v22 / CAP 9.9.x）</span></figcaption>
+</figure> <span class="cmd">ls</span> 能看到 <span class="cmd">app/ db/ srv/ package.json</span>；<span class="cmd">npx cds --version</span> 能打印 cds-dk 与 @sap/cds 版本；<span class="cmd">npx cds compile db/schema.cds --to sql</span> 能打印出 <span class="cmd">CREATE TABLE sap_training_bookorder_Books (...)</span>。</li>
+</ol>
+
+
+<div class="box warn"><b class="t">常见错误</b>
+<ul>
+  <li><b><span class="cmd">cds: command not found</span></b>：dev space 里应预装 cds-dk；若无，用 <span class="cmd">npx cds ...</span> 调用项目本地依赖，或在终端执行 <span class="cmd">npm i -g @sap/cds-dk</span>。</li>
+  <li><b>项目建在了错误的层级</b>：终端默认目录是 <span class="cmd">/home/user/projects</span>，建完记得 <span class="cmd">cd</span> 进项目根目录再执行 <span class="cmd">cds watch</span>。</li>
+  <li><b>CSV 没被装载</b>：文件名必须是 <span class="cmd">&lt;命名空间&gt;-&lt;实体名&gt;.csv</span>（例：<span class="cmd">sap.training.bookorder-Books.csv</span>），且放在 <span class="cmd">db/data/</span>。</li>
+</ul></div>
+
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+  <li>EXPLORER 里能看到 <span class="cmd">app/ db/ srv/</span> 三个目录与 <span class="cmd">package.json</span>。</li>
+  <li><span class="cmd">db/data/</span> 下有 4 个 CSV，文件名遵循「命名空间-实体」。</li>
+  <li><span class="cmd">npx cds compile db/schema.cds --to sql</span> 有 CREATE TABLE 输出。</li>
+</ul></div>
+
+<h2 id="s5">5. 终端命令与调试</h2>
+<div class="stepmeta"><span class="k">cds watch</span><span class="k">cds env</span><span class="k">launch.json</span><span class="f">db.sqlite</span><span class="c">耗时 15 分</span></div>
+
+<h3 id="s5-1">5-1 三个最常用命令</h3>
+<ol class="steps">
+  <li><b><span class="cmd">cds watch</span></b>：本地起服务，文件一改就重启。首次运行会自动建 SQLite 内存库并装载 CSV。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds watch
+#   [cds] - loaded model from 3 file(s):
+#     srv/book-order-service.cds   db/schema.cds   node_modules/@sap/cds/common.cds
+#   [cds] - connect to db > sqlite { url: 'db.sqlite' }
+#   [cds] - serving BookOrderService {
+#     at: [ '/odata/v4/book-order' ],  impl: 'srv/book-order-service.js' }
+#   [cds] - server listening on { url: 'http://localhost:4004' }</code></pre>
+  </li>
+  <li><b><span class="cmd">npm run deploy</span></b>（即 <span class="cmd">cds deploy --to sqlite:db.sqlite</span>）：把模型真的落成一个 SQLite 文件，并装载 <span class="cmd">db/data/*.csv</span>。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm run deploy
+#   > init from db/data/sap.training.bookorder-Customers.csv
+#   > init from db/data/sap.training.bookorder-Books.csv
+#   > init from db/data/sap.training.bookorder-BookOrders.csv
+#   > init from db/data/sap.training.bookorder-BookOrderItems.csv
+#   successfully deployed to db.sqlite</code></pre>
+  </li>
+  <li><b><span class="cmd">cds env</span></b>：查看「最终生效」的配置（全局默认 + 项目配置 + profile + 环境变量）。判断当前到底连哪个库，永远看它，不看记忆。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds env                    # 等价于 cds env ls
+npx cds env get requires.db    # 只看 db 的生效配置
+npx cds env get requires.db --profile production
+#   默认：{ "impl": "@cap-js/sqlite", "kind": "sqlite", "credentials": { "url": "db.sqlite" } }
+#   production：{ "impl": "@cap-js/hana", "kind": "hana" }</code></pre>
+  </li>
+  <li><b>验证</b>：<span class="cmd">npm run deploy</span> 输出里出现 <span class="cmd">successfully deployed to db.sqlite</span>；随后 <span class="cmd">npx cds watch</span> 的日志里有 <span class="cmd">serving BookOrderService</span> 与 <span class="cmd">server listening on http://localhost:4004</span> 两行。</li>
+</ol>
+
+
+<h3 id="s5-2">5-2 在 dev space 里看 SQLite 与日志</h3>
+<ul>
+  <li><b>看 SQLite</b>：<span class="cmd">db.sqlite</span> 就在项目根目录。至少要知道三件事：(a) 表名是 <span class="cmd">sap_training_bookorder_Books</span> 这种「命名空间+实体」；(b) 连它的是 <span class="cmd">@cap-js/sqlite</span>；(c) 一旦切到 <span class="cmd">production</span> profile，<span class="cmd">cds env</span> 显示的 impl 会变成 <span class="cmd">@cap-js/hana</span>。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 方式一：项目自带的验证脚本（会打印每张表的行数）
+python3 - &lt;&lt;'PY'
+import sqlite3
+c = sqlite3.connect('db.sqlite')
+for (s,) in c.execute("select sql from sqlite_master where type='table'"):
+    print(s.split('(')[0].strip())
+PY
+
+# 方式二：装一个 SQLite 查看扩展（BAS 的 VS Code 市场可装第三方扩展）
+#   注意：第三方扩展能读取 dev space 数据，公司项目需评审</code></pre>
+  </li>
+  <li><b>看日志</b>：<span class="cmd">cds watch</span> 的终端就是主日志（含每条 OData 请求与错误堆栈）；部署后的日志在 cockpit → Space → Applications → 应用 → <b>Logs</b>。第 10 节会用它验证部署。</li>
+  <li><b>验证</b>：执行上表的第一段脚本，输出里能看到 <span class="cmd">sap_training_bookorder_Books</span> 与 <span class="cmd">sap_training_bookorder_BookOrderItems</span>；终端里对一个不存在的订单号调用函数，日志会出现 404 与中文错误消息。</li>
+</ul>
+
+<h3 id="s5-3">5-3 调试：launch 与 attach</h3>
+<ol class="steps">
+  <li><b>让进程监听调试端口</b>（BAS 与本地同样适用）：<span class="cmd">cds watch --inspect 127.0.0.1:9229</span>；想在用户代码第一行就停住用 <span class="cmd">--inspect-brk</span>。9229 是 Node.js inspector 的默认端口。</li>
+  <li><b>建 launch.json</b>：左侧活动栏「▷」（Run and Debug）→ 下拉选 <b>Node.js</b>，BAS 会自动创建 <span class="cmd">launch.json</span>（默认含 Launch Program / Run Current File / Create JavaScript Debug Terminal）；再 <b>Add Configuration</b> 加一条 attach。</li>
+  <li><b>附加并打断点</b>：命令面板 <span class="cmd">Debug: Start Debug
+<figure class="fig" data-fig="bas_s05">
+  <a class="zoom" href="assets/fig/bas_s05.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s05.svg" alt="命令面板里的常用命令：Ports: Preview、Ports: Stop the process、MTA: Build MTA Project、CF: Login to Cloud Foundry" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">命令面板里的常用命令：Ports: Preview、Ports: Stop the process、MTA: Build MTA Project、CF: Login to Cloud Foundry</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 命令名出自 SAP Help「Application Preview Settings」「Building and Deploying Multitarget Applications」「Cloud Foundry Tools」</span></figcaption>
+</figure>ging</span>，或选 <b>Debug: Attach to Node Process</b>；在 <span class="cmd">srv/book-order-service.js</span> 里点行号左侧打红点（F9 同效），在 VARIABLES / BREAKPOINTS 面板里观察变量。</li>
+  <li><b>验证</b>：终端出现 <span class="cmd">Debugger listening on ws://127.0.0.1:9229/…</span>；用浏览器/curl 触发 <span class="cmd">submitOrder</span> 时执行停在断点行，变量面板能看到 <span class="cmd">orderNo</span> 之类的值。</li>
+</ol>
+
+
+<div class="box info"><b class="t">自系统确认方法</b>
+调试端口的默认值与可选参数以本命令为准：在项目根目录执行 <span class="cmd">npx cds watch --help</span>，看 <span class="cmd">--debug / --inspect</span> 与 <span class="cmd">--inspect-brk</span> 两项的说明与默认值（本文写作时为 <span class="cmd">127.0.0.1:9229</span>）；<span class="cmd">npx cds --help</span> 里还能看到 <span class="cmd">cds debug</span>（调试已在 Cloud Foundry 上运行的应用）是否存在——不存在说明你用的 cds-dk 版本较旧。</div>
+
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+  <li><span class="cmd">npx cds env get requires.db</span> 打印出 <span class="cmd">kind: sqlite</span>，加 <span class="cmd">--profile production</span> 后变成 <span class="cmd">kind: hana</span>。</li>
+  <li><span class="cmd">npm run deploy</span> 之后 <span class="cmd">db.sqlite</span> 出现在项目根目录。</li>
+  <li>断点能在 <span class="cmd">srv/book-order-service.js</span> 命中，且能单步走到 <span class="cmd">SELECT</span> 之后。</li>
+</ul></div>
+
+<h2 id="s6">6. CDS 语法检查与「红线」</h2>
+<div class="stepmeta"><span class="k">cds compile</span><span class="k">PROBLEMS</span><span class="f">db/schema.cds</span><span class="c">耗时 10 分</span></div>
+
+<h3 id="s6-1">6-1 编辑器补全与命令行检查</h3>
+<ol class="steps">
+  <li><b>靠编辑器</b>：在 <span class="cmd">.cds</span> 文件里输入 <span class="cmd">entity</span>、<span class="cmd">Association to</span>、<span class="cmd">@odata.draft.enabled</span> 时，CAP Tools 提供的语言服务会给补全与 hover 文档；被引用实体的字段名也有补全（例：<span class="cmd">items.order = $self</span> 里的 <span class="cmd">items</span>）。</li>
+  <li><b>靠命令行</b>：不确定编辑器是否滞后，就直接编译一遍——编译通过才是硬结论。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 只编译模型 → 打印 DDL
+npx cds compile db/schema.cds srv/book-order-service.cds --to sql
+
+# 编译成 OData EDMX（看服务暴露了哪些实体/函数）
+npx cds compile srv/book-order-service.cds --to edmx
+
+# 只解析（不生成任何东西），语法错误会直接报行号
+npx cds parse db/schema.cds</code></pre>
+  </li>
+  <li><b>看 PROBLEMS 面板</b>：菜单 View &gt; Problems 会汇总所有打开文件里的错误与警告，点条目跳到出错行。</li>
+  <li><b>验证</b>：故意把 <span class="cmd">entity Books {</span> 的右花括号删掉，<span class="cmd">npx cds parse db/schema.cds</span> 会以非零退出码报错并给出行号；恢复后命令静默成功、PROBLEMS 面板清零。</li>
+</ol>
+
+<h3 id="s6-2">6-2 三种最常见的「红线」</h3>
+<table class="tbl small">
+  <thead><tr><th>红线/报错</th><th>真正的原因</th><th>怎么消掉</th></tr></thead>
+  <tbody>
+    <tr><td>实体没有主键</td><td>视图或投影缺少 <span class="cmd">key</span>。CAP 要求暴露为 OData 实体的对象必须有主键；聚合（group by）结果拿不到主键。</td><td>给视图加 <span class="cmd">key</span>（如 <span class="cmd">key ID</span>）；聚合结果改由服务层函数返回（本项目的 <span class="cmd">getOrderTotal</span> / <span class="cmd">getOrderSummary</span> 就是这么做的）。</td></tr>
+    <tr><td>自动重定向失败<br><span class="cmd">can't auto-redirect BookOrders:items</span></td><td>同一个 db 实体被投影到两个服务层实体（<span class="cmd">BookOrders</span> 与 <span class="cmd">BookOrderItems</span> 都来自 <span class="cmd">db.BookOrderItems</span> 的关联），CAP 无法猜出该指向哪一个。</td><td>在其中一个上显式声明 <span class="cmd">@cds.redirection.target</span>（本项目标在 <span class="cmd">BookOrderItems</span> 投影上）。</td></tr>
+    <tr><td>引用了不存在的元素 / 类型不匹配</td><td>改了 <span class="cmd">db/schema.cds</span> 里的列名，但 <span class="cmd">srv/</span> 或 CSV 还是旧名字；或 <span class="cmd">Decimal(13,2)</span> 的位置填了字符串。</td><td>用编译确认（<span class="cmd">cds compile --to sql</span>）→ 同步改 <span class="cmd">srv/*.cds</span> 与 <span class="cmd">db/data/*.csv</span> 的表头（CSV 表头必须与实体元素名一致）。</td></tr>
+  </tbody>
+</table>
+
+<div class="box info"><b class="t">自系统确认方法</b>
+报错信息与「哪些检查会被执行」随 CAP 版本变化：以项目里 <span class="cmd">@sap/cds</span> 的版本为准（<span class="cmd">npx cds --version</span>），并用 <span class="cmd">npx cds compile … --to sql</span> 与 <span class="cmd">npx cds env get requires</span> 交叉确认。凡本文提到的具体报错文案，都以你机器上命令的真实输出为准。</div>
+
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+  <li>能用一条命令（<span class="cmd">cds compile … --to sql</span>）判断模型是否合法。</li>
+ 
+<figure class="fig" data-fig="bas_s09">
+  <a class="zoom" href="assets/fig/bas_s09.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s09.svg" alt="BAS 内置 Git 面板：Changes / Staged Changes 分区、提交与推送；HTTPS 需要 Personal Access Token" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 7</span><span class="cap">BAS 内置 Git 面板：Changes / Staged Changes 分区、提交与推送；HTTPS 需要 Personal Access Token</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 面板结构出自 SAP Help「Understanding the UI」「Providing Authentication to Git」</span></figcaption>
+</figure> <li>能说出「主键缺失」「自动重定向」「改列名没同步」三类红线的处置动作。</li>
+  <li>PROBLEMS 面板在修复后为空。</li>
+</ul></div>
+
+<h2 id="s7">7. 把项目接进 Git / GitHub</h2>
+<div class="stepmeta"><span class="k">SOURCE CONTROL</span><span class="k">git push</span><span class="f">.git/config</span><span class="c">耗时 10 分</span></div>
+
+<h3 id="s7-1">7-1 面板与终端，两条路等价</h3>
+<ol class="steps">
+  <li><b>面板路（Git 视图）</b>：左侧活动栏 Git 图标 → <b>Initialize Repository</b> 建本地库 → 在 <b>Changes</b> 区点 + 暂存（文件状态字母：A 新增、M 修改、U 未暂存、D 删除、C 复制/冲突）→ 顶部输入提交信息 → 提交（Ctrl+Enter）→ 更多操作 <b>Remote &gt; Add Remote</b> 填仓库 URL → Push。</li>
+  <li><b>终端路（可写进脚本、便于教学复核）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">git init
+printf 'node_modules/\ngen/\n*.sqlite*\n.cdsrc-private.json\n' &gt;&gt; .gitignore
+git add -A &amp;&amp; git commit -m "init demo-node"
+git remote add origin https://github.com/&lt;你的用户名&gt;/demo-node.git
+git branch -M main
+git push -u origin main
+#   Username 提示 → 填 GitHub 用户名的邮箱/用户名
+#   Password 提示 → 粘贴 Personal Access Token（不是登录密码）
+git remote -v          # 验证：origin 指向正确仓库</code></pre>
+  </li>
+  <li><b>验证</b>：<span class="cmd">git status</span> 显示 <span class="cmd">nothing to commit, working tree clean</span>；<span class="cmd">git log --oneline -1</span> 有你的提交；浏览器打开仓库 URL 能看到 <span class="cmd">db/ srv/</span> 与 <span class="cmd">package.json</span>，且 <span class="cmd">node_modules</span> 没被提交。</li>
+</ol>
+
+
+<h3 id="s7-2">7-2 凭据：PAT 与 OAuth</h3>
+<table class="tbl small">
+  <thead><tr><th>认证方式</th><th>怎么用</th><th>注意</th></tr></thead>
+  <tbody>
+    <tr><td>HTTPS + Personal Access Token（推荐）</td><td>在 Git 提供方生成 PAT（GitHub：Settings &gt; Developer settings &gt; Personal access tokens），push 时把 PAT 粘到密码位置</td><td>PAT 要定期更新；权限至少要有仓库读写（GitHub 经典 token 需 repo scope）</td></tr>
+    <tr><td>GitHub OAuth</td><td>连接 GitHub 时 BAS 弹窗显示一次性验证码 → 复制并打开 GitHub → 粘贴验证码授权 → 回 BAS 选按会话或按 dev space 保存</td><td>有开关项可配置（<span class="cmd">sapbas.git.github.oauth</span>）</td></tr>
+    <tr><td>凭据缓存 / 存储</td><td>git-credential-cache（内存、短时）或 git-credential-store（dev space 上落盘）</td><td>落盘等于把凭据交给云端环境，敏感仓库慎用 SSH/Basic</td></tr>
+  </tbody>
+</table>
+
+<div class="box warn"><b class="t">认证失败的三种典型原因</b>
+<ul>
+  <li><b>用登录密码代替 PAT</b>：GitHub 早已停用密码认证，报错形如 <span class="cmd">Support for password authentication was removed</span> / <span class="cmd">Authentication failed</span>。改成 PAT。</li>
+  <li><b>PAT 过期或权限不足</b>：能 <span class="cmd">git pull</span>（读）但不能 <span class="cmd">push</span>（写），或 403。重新生成 token 并勾选写权限。</li>
+  <li><b>remote 里带着旧用户名</b>：换账号后仍推到旧地址。用 <span class="cmd">git remote set-url origin &lt;新地址&gt;</span> 修正，再 <span class="cmd">git remote -v</span> 核对。</li>
+  <li>（企业内网 Git）报 <span class="cmd">Recei
+<figure class="fig" data-fig="bas_s10">
+  <a class="zoom" href="assets/fig/bas_s10.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s10.svg" alt="从 BAS 部署：mbt build 生成 MTAR，再 cf deploy 上传；命令行与 Task Explorer / 右键菜单等价" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 8</span><span class="cap">从 BAS 部署：mbt build 生成 MTAR，再 cf deploy 上传；命令行与 Task Explorer / 右键菜单等价</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 命令出自 capire「Deploy to Cloud Foundry」与 SAP Help「Building and Deploying Multitarget Applications」</span></figcaption>
+</figure>ved HTTP code 502 from proxy after CONNECT</span>：子账户没配 Cloud Connector，需先接线再克隆。</li>
+</ul></div>
+
+<div class="box info"><b class="t">自系统确认方法</b>
+BAS 支持的认证方式与设置项名随版本变化：以页面实际弹窗与 Preferences 里搜索 <span class="cmd">git</span> 的结果为准（本文写作时可见 <span class="cmd">sapbas.git.github.oauth</span>）。若 OAuth 不可用，直接用 PAT 走 HTTPS 即可，功能不受影响。</div>
+
+<h2 id="s8">8. 部署前准备：mbt 与 cds build</h2>
+<div class="stepmeta"><span class="k">mbt build</span><span class="k">cds build</span><span class="f">mta.yaml</span><span class="c">耗时 15 分</span></div>
+
+<h3 id="s8-1">8-1 先让项目「可部署」</h3>
+<ol class="steps">
+  <li><b>加 HANA 与 MTA</b>：<span class="cmd">cds add hana mta</span>。前者把生产数据库切到 HANA（依赖 <span class="cmd">@cap-js/hana</span>，并写入 <span class="cmd">[production]</span> profile），后者生成 <span class="cmd">mta.yaml</span>。要本地连云端库再加 <span class="cmd">cds add hana --for hybrid</span>（第 ③ 页会用到）。</li>
+  <li><b>确认 mta.yaml 内容</b>：<span class="cmd">cds add mta</span> 生成的结构（本项目真实产物）：
+    <pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml">_schema-version: 3.3.0
+ID: demo-node
+version: 1.0.0
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: demo-node-srv            # Node.js 服务模块
+    type: nodejs
+    path: gen/srv
+    requires:
+      - name: demo-node-db
+  - name: demo-node-db-deployer    # 建表模块（HDI deployer）
+    type: hdb
+    path: gen/db
+    requires:
+      - name: demo-node-db
+resources:
+  - name: demo-node-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared</code></pre>
+  </li>
+  <li><b>检查 <span class="cmd">mbt</span> 是否可用</b>：终端执行 <span class="cmd">mbt -v</span>。Full Stack Cloud Application 的 MTA Tools 扩展自带 Cloud MTA Build Tool、CF CLI、CF 部署插件与 MTA module runner；若没有，用 <span class="cmd">npm i -g mbt</span> 安装（Windows 还需 GNU Make）。</li>
+  <li><b>先干跑一次 <span class="cmd">cds build</span></b>：先看产物再打包，出错时更容易定位。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</butto
+<figure class="fig" data-fig="bas_s11">
+  <a class="zoom" href="assets/fig/bas_s11.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s11.svg" alt="部署后用 cockpit 核对：space 里的应用（srv 与 db-deployer）与服务实例、最近活动" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 9</span><span class="cap">部署后用 cockpit 核对：space 里的应用（srv 与 db-deployer）与服务实例、最近活动</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 页面结构与字段出自 SAP BTP cockpit（Cloud Foundry &gt; Spaces）</span></figcaption>
+</figure>n></div><code class="lang-bash">npx cds build --production
+#   done &gt; wrote output to:
+#     gen/srv/...            ← 服务模块产物
+#     gen/db/package.json    ← 建表模块入口（@sap/hdi-deploy）
+#     gen/db/src/gen/...     ← 表 / 视图 / 数据工件（第 ③ 页详解）</code></pre>
+  </li>
+  <li><b>验证</b>：<span class="cmd">ls gen</span> 能看到 <span class="cmd">srv/</span> 与 <span class="cmd">db/</span> 两个目录；<span class="cmd">cf -v</span> 与 <span class="cmd">mbt -v</span> 都能打印版本。</li>
+</ol>
+
+<h3 id="s8-2">8-2 Task Explorer / 右键菜单（不想记命令时）</h3>
+<ul>
+  <li><b>构建</b>：右键 <span class="cmd">mta.yaml</span> → <b>Build MTA Project</b>；或命令面板输入 <span class="cmd">MTA</span> → 选同项；或 Task Explorer（活动栏图标）→ <b>+</b> → <b>Build</b> → 选 <span class="cmd">mta.yaml</span> → Configure → 保存后可复用。</li>
+  <li><b>部署</b>：右键 <span class="cmd">.mtar</span> → <b>Deploy MTA Archive</b>；或命令面板同项；或 Task Explorer → <b>+</b> → <b>Deploy</b>。前提是已经登录 CF 且目标 org/space 正确。</li>
+  <li><b>验证</b>：构建完成后项目里出现 <span class="cmd">mta_archives</span> 目录（默认约定）并含 MTAR 文件；Task Explorer 里能看到你保存的任务。</li>
+</ul>
+
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+  <li><span class="cmd">mta.yaml</span> 里既有 <span class="cmd">type: nodejs</span> 的服务模块，也有 <span class="cmd">type: hdb</span> 的建表模块，以及 <span class="cmd">com.sap.xs.hdi-container</span> 资源。</li>
+  <li><span class="cmd">npx cds build --production</span> 正常结束且生成 <span class="cmd">gen/</span>。</li>
+  <li><span class="cmd">mbt -v</span>、<span class="cmd">cf -v</span> 都有输出版本。</li>
+</ul></div>
+
+<h2 id="s9">9. 从 BAS 部署到 Cloud Foundry</h2>
+<div class="stepmeta"><span class="k">cf login --sso</span><span class="k">mbt build</span><span class="k">cf deploy</span><span class="c">耗时 15–30 分（含 CF 侧）</span></div>
+
+<h3 id="s9-1">9-1 手顺</h3>
+<ol class="steps">
+  <li><b>登录并确认目标</b>：企业 IdP / 试用环境用 <span class="cmd">cf login --sso</span>（浏览器取一次性验证码）；SAP ID Service 用 <span class="cmd">cf login</span>；自建 IdP 用 <span class="cmd">cf login --origin &lt;origin&gt;</span>。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf login --sso
+cf target            # 验证：API endpoint / org / space 三行都要对
+#   也可以用 BAS 的 CF 工具：F1 → CF: Login to Cloud Foundry（选 org 与 space）
+#   或左侧 CLOUD FOUNDRY: TARGETS 视图</code></pre>
+  </li>
+  <li><b>锁定依赖</b>（有 <span class="cmd">package-lock.json</span> 的项目）：<span class="cmd">npm install --package-lock-only</span>，避免构建时解析到新版本导致「本地能跑、云端不一样」。</li>
+  <li><b>打包</b>：<span class="cmd">mbt build -t gen --mtar mta.tar</span>。这会执行 <span class="cmd">mta.yaml</span> 里 <span class="cmd">build-parameters.before-all</span> 定义的 <span class="cmd">npm ci</span> 与 <span class="cmd">npx cds build --production</span>。</li>
+  <li><b>部署</b>：<span class="cmd">cf deploy gen/mta.tar -f</span>（<span class="cmd">-f</span> 强制覆盖同名部署）。改动大时整个过程要几分钟。</li>
+  <li><b>验证</b>：部署日志里出现两个模块的结果——<span class="cmd">hdb</span> 模块建表成功、<span class="cmd">nodejs</span> 模块 <span class="cmd">started</span>，并打印应用路由；随后用浏览器打开 <span class="cmd">&lt;路由&gt;/odata/v4/book-order/$metadata</span>，应返回 XML（未配 XSUAA 时直接 200，配了则先跳登录）。</li>
+</ol>
+
+
+<div class="box warn"><b class="t">常见错误（部署阶段）</b>
+<ul>
+  <li><b>MTAR 部署失败（package-lock 冲突 / 不该带 node_modules）</b>：按官方建议在项目级加 <span class="cmd">.npmrc</span> 指向公共 registry 以绕开 BAS 的 npm 缓存。</li>
+  <li><b>建表模块失败</b>：多半是 HDI 容器实例不存在或权限不足——先建好 <span class="cmd">hdi-shared</span> 实例（第 ③ 页），或让 <span class="cmd">mta.yaml</span> 的资源名与实际实例名一致。</li>
+  <li><b>启动后立刻 crashed</b>：看 Space &gt; Applications &gt; 应用 &gt; Logs 的第一条错误；常见是缺 <span class="cmd">@cap-js/hana</span> 依赖或 <span class="cmd">[production] db kind: hana</span> 没写上。</li>
+  <li><b>内存配额不足</b>：trial 的 CF 内存配额很小，日志会明确提示配额；先 <span class="cmd">cf apps</span> 看谁在占内存，必要时停掉不用的应用。</li>
+</ul></div>
+
+<div class="box info"><b class="t">自系统确认方法</b>
+命令与参数以本机 CLI 为准：<span class="cmd">cf login --help</span>（看 <span class="cmd">--sso</span> / <span class="cmd">--origin</span>）、<span class="cmd">mbt --help</span>（看 <span class="cmd">-t</span> / <span class="cmd">--mtar</span>）、<span class="cmd">cf deploy --help</span>（看 <span class="cmd">-f</span> 等）。capire 的部署指南也给了等价写法 <span class="cmd">cds up</span>（一条命令完成构建 + 部署，内部就是 <span class="cmd">mbt build -t gen --mtar mta.tar</span> 加 <span class="cmd">cf deploy gen/mta.tar -f</span>）。</div>
+
+<h2 id="s10">10. 用 cockpit 验证部署</h2>
+<ol class="steps">
+  <li><b>看应用</b>：cockpit → Subaccount → Cloud Foundry → Space: <span class="cmd">dev</span> → <b>Applications</b>。应看到两类应用：服务应用（<span class="cmd">demo-node-srv</span>，started）与建表任务（<span class="cmd">demo-node-db-deployer</span>，任务性质，停在 stopped 属正常）。</li>
+  <li><b>看服务实例</b>：Subaccount → <b>Instances and Subscriptions</b>，能看到 <span class="cmd">demo-node-db</span>（hdi-shared）与 <span class="cmd">demo-xsuaa</span>（application），且状态为 created。</li>
+  <li><b>看日志与路由</b>：点应用名进详情，Logs 里能看到 <span class="cmd">[cds] - server listening on …</span> 这类启动行；Routes 里是被真实分配的 URL。</li>
+  <li><b>验证</b>：浏览器打开 <span class="cmd">&lt;route&gt;/odata/v4/book-order/BookOrders</span> 返回数据（配了认证时先登录），<span class="cmd">/odata/v4/book-order/BookOrders?$filter=status eq 'OPEN'</span> 返回 2 条（BO-1001、BO-1002）。</li>
+</ol>
+
+
+<table class="tbl small">
+  <thead><tr><th>要验证什么</th><th>去哪看</th><th>通过判据</th></tr></thead>
+  <tbody>
+    <tr><td>服务是否起来</td><td>Space &gt; Applications</td><td><span class="cmd">demo-node-srv</span> 状态 started，且有路由</td></tr>
+    <tr><td>建表是否成功</td><td>Space &gt; Applications &gt; demo-node-db-deployer &gt; Logs</td><td>日志里出现 HDI 部署成功的收尾行，没有 error</td></tr>
+    <tr><td>数据库绑定是否正确</td><td>Instances and Subscriptions / 应用详情 Environment 的 VCAP_SERVICES</td><td><span class="cmd">demo-node-db</span> 在应用的绑定列表里，plan 为 hdi-shared</td></tr>
+    <tr><td>接口是否可用</td><td>浏览器 / curl</td><td><span class="cmd">$metadata</span> 返回 XML，实体集返回数据</td></tr>
+    <tr><td>内存是否吃紧</td><td>Subaccount Overview / Space 概览</td><td>已用内存明显小于配额</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s11">11. 常见错误表</h2>
+<table class="tbl small">
+  <thead><tr><th>现象</th><th>原因</th><th>处置</th><th>验证</th></tr></thead>
+  <tbody>
+    <tr><td>Dev space 卡在 STARTING，进不去</td><td>后端异常，或该 dev space 的文件系统已损坏</td><td>等 5 分钟后重试；仍不行就新建 dev space，用 Git 拉回项目，并把旧 dev space 的 ws-id 交给 SAP 支持</td><td>新 dev space 的 STATUS = RUNNING，且 Git 克隆成功</td></tr>
+    <tr><td>Dev space 在 STOPPED，Start 不了</td><td>同时 RUNNING 的数量已达上限（试用 1 个 / Standard 2 个）</td><td>先 Stop 另一个 dev space，再 Start 这个</td><td>列表里只有一个 RUNNING，目标 dev space 可打开</td></tr>
+    <tr><td>Dev space 处于 ERROR / SAFE MODE</td><td>dev space 文件系统异常，处于可恢复只读状态</td><td>用 Download Dev space content 导出 tar，导入到新 dev space（SAFE MODE 之后不能回到 RUNNING）</td><td>新 dev space 里项目文件齐全，能 <span class="cmd">cds watch</span></td></tr>
+    <tr><td>终端 npm ERR! / <span class="cmd">No space left on device</span></td><td>4 GB 磁盘或 inode 耗尽（node_modules、缓存、Trash 堆积）</td><td><span class="cmd">df -h</span> 与 <span class="cmd">df -ih</span> 定位；清 <span class="cmd">~/.npm</span>、<span class="cmd">~/.cache</span>、Trash，或把项目搬到新 dev space</td><td>两个命令的已用比例回到 80% 以下，npm 安装能完成</td></tr>
+    <tr><td>端口打开了但浏览器提示无法访问</td><td>进程没监听 4004 / 未通过 Ports: Preview 暴露 / 之前的进程还占着端口</td><td>看终端最后一行确认监听端口；命令面板 <span class="cmd">Ports: Preview</span>；占用时用 Ports: Stop the process running on the port</td><td>Ports: Preview 列表里能看到该 URL，点开返回 CAP 欢迎页</td></tr>
+    <tr><td>会话一小时无操作被踢出 / 要重新登录</td><td>试用计划会话超时（1 小时无操作）</td><td>重新登录；把「改完就提交」变成习惯，避免只留在 dev space 里</td><td>重新进入后 <span class="cmd">git status</span> 是 clean（说明已提交）</td></tr>
+    <tr><td>30 天没进 dev space，dev space 不见了</td><td>连续 30 天未处于 RUNNING 的 dev space 会被删除</td><td>重建 dev space 并从 Git 恢复；日常保持至少一次成功提交</td><td>克隆回来的项目能跑通 <span class="cmd">npm run deploy</span></td></tr>
+    <tr><td>配额不足：dev space / 服务实例创建失败</td><td>子账户 entitlement 或 quota 已用尽（dev space 数量、内存配额、hdi-shared 配额）</td><td>Entitlements 页确认该服务有配额；停掉不用的应用/实例，或申请提额</td><td>Entitlements 页显示该 plan 剩余可用；Create 不再报 quota 错误</td></tr>
+    <tr><td>打开 dev space 提示「Some extensions were not fully installed」</td><td>扩展安装不完整（扩展冲突或后端拉取失败）</td><td>点 Installation Details 看日志找出扩展名，按日志给的组件开票；Restart dev space 会重试</td><td>重启后不再出现该提示，扩展功能可用</td></tr>
+    <tr><td>扩展装了却看不到菜单/命令</td><td>扩展变更后没重启 dev space（增删扩展要求 STOPPED 状态 + 重启生效）</td><td>Stop → 编辑扩展 → Save Changes → Start</td><td>F1 里能搜到该扩展提供的命令</td></tr>
+    <tr><td><span class="cmd">cds: command not found</span></td><td>cds-dk 不在 PATH（并非所有 dev space kind 都预装）</td><td>用 <span class="cmd">npx cds</span>，或 <span class="cmd">npm i -g @sap/cds-dk</span></td><td><span class="cmd">npx cds --version</span> 打印版本</td></tr>
+    <tr><td>git push 报 Authentication failed</td><td>用密码代替 PAT / PAT 过期或缺写权限 / remote 带旧用户名</td><td>用 PAT 作为密码；重新生成带 repo 权限的 token；<span class="cmd">git remote set-url</span> 修正地址</td><td><span class="cmd">git ls-remote origin</span> 无需交互即可成功，push 返回 ok</td></tr>
+    <tr><td>mbt build 报找不到
+<figure class="fig" data-fig="bas_s02">
+  <a class="zoom" href="assets/fig/bas_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s02.svg" alt="Create Dev Space 对话框：名称、Type（Kind）、Additional SAP Extensions 与磁盘上限；Create Dev Space 只有填了名称才可点" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 10</span><span class="cap">Create Dev Space 对话框：名称、Type（Kind）、Additional SAP Extensions 与磁盘上限；Create Dev Space 只有填了名称才可点</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 步骤出自 SAP Help「Working in the Dev Space Manager」</span></figcaption>
+</figure> <span class="cmd">mbt</span></td><td>无 MTA Tools 扩展且未全局安装</td><td>换用带 MTA Tools 的 dev space（或加装扩展后重启），或 <span class="cmd">npm i -g mbt</span></td><td><span class="cmd">mbt -v</span> 有版本输出</td></tr>
+    <tr><td>cf deploy 后应用 crashed</td><td>生产依赖/配置缺失（如缺 <span class="cmd">@cap-js/hana</span>、HANA 实例未启动或无绑定）</td><td>看 Logs 第一条错误；补依赖、确认服务实例状态与绑定</td><td>应用状态 started，<span class="cmd">$metadata</span> 可访问</td></tr>
+    <tr><td>克隆企业内网 Git 报 502 from proxy</td><td>子账户未配置 Cloud Connector</td><td>配好 Cloud Connector 与目的地后再克隆</td><td><span class="cmd">git clone</span> 成功，<span class="cmd">git remote -v</span> 指向内网仓库</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s12">12. 与本地开发环境对照速查表</h2>
+<table class="tbl small">
+  <thead><tr><th>任务</th><th>BAS（Dev Space）</th><th>本地 VS Code + Node.js</th></tr></thead>
+  <tbody>
+    <tr><td>装工具链</td><td>由 dev space kind 预装（CAP Tools / MTA Tools / CF CLI）</td><td><span class="cmd">npm i -g @sap/cds-dk</span>、<span class="cmd">npm i -g mbt</span>、装 CF CLI 与 multiapps 插件</td></tr>
+    <tr><td>建项目</td><td>Template Wizard 或 <span class="cmd">npx cds init</span></td><td><span class="cmd">cds init</span>（全局 cds-dk）</td></tr>
+    <tr><td>跑服务</td><td>终端 <span class="cmd">npx cds watch</span>；端口用 <span class="cmd">Ports: Preview</span> 打开</td><td><span class="cmd">cds watch</span>；浏览器直接开 <span class="cmd">localhost:4004</span></td></tr>
+    <tr><td>调试</td><td>Run and Debug + <span class="cmd">launch.json</span>（attach 9229）</td><td>同样的 launch.json；也可 <span class="cmd">node --inspect</span></td></tr>
+    <tr><td>切换数据库</td><td><span class="cmd">cds env get requires.db --profile …</span></td><td>同一条命令</td></tr>
+    <tr><td>版本管理</td><td>Git 面板 + PAT；<span class="cmd">gh</span> 不便使用时用 HTTPS</td><td>Git CLI / <span class="cmd">gh</span> / GitHub Desktop</td></tr>
+    <tr><td>构建部署</td><td><span class="cmd">mbt build -t gen --mtar mta.tar</span> + <span class="cmd">cf deploy gen/mta.tar -f</span>（或 Task Explorer）</td><td>同样的命令；需本机装 mbt 与 CF CLI 插件</td></tr>
+    <tr><td>看云端日志</td><td>cockpit &gt; Space &gt; Applications &gt; Logs；或 <span class="cmd">cf logs &lt;app&gt; --recent</span></td><td>同</td></tr>
+    <tr><td>磁盘清理</td><td><span class="cmd">df -h</span> / <span class="cmd">df -ih</span>，清 <span class="cmd">~/.npm</span>、<span class="cmd">~/.cache</span>、Trash</td><td>清本机磁盘</td></tr>
+    <tr><td>离线开发</td><td>不可（依赖网络与云端 dev space）</td><td>可以（依赖装好后）</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s13">13. 本节测试</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>在试用子账户里，BAS 的 dev space 同时最多能 RUNNING 几个？每个 dev space 的磁盘上限是多少？</li>
+    <li>Create Dev Space 时 <b>Type（Kind）</b> 选哪个才能直接拿到 CAP Tools 与 MTA Tools？</li>
+    <li>把 CAP 服务暴露到浏览器，官方文档记载的命令是什么？端口被上一个进程占住时用哪条命令？</li>
+    <li><span class="cmd">cds init</span> 生成的三个目录 <span class="cmd">app/ db/ srv/</span> 各自放什么？CSV 初始数据放在哪里、文件名怎么拼？</li>
+    <li>一条命令判断当前生效的数据库是 SQLite 还是 HANA，并说明为什么要用 <span class="cmd">--profile</span>。</li>
+    <li>要把服务调试起来，<span class="cmd">cds watch</span> 的哪个参数让进程监听调试端口？默认端口号是多少？</li>
+    <li>GitHub 上为 <span class="cmd">git push</span> 认证时，密码位置应该填什么？说出两种认证失败的典型原因。</li>
+    <li>部署到 Cloud Foundry 的完整命令序列是什么（含打包与部署）？部署完成后到 cockpit 的哪两个位置核对？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-bas">自测 · ② Business Application Studio</a>；动手任务见任务索引页「BAS-01…」。</p>
+</div>
+
+<h2 id="s14">14. 小结</h2>
+<div class="box ok"><b class="t">这一页真正要记住的</b>
+<ul>
+  <li><b>环境是有配额的</b>：2 个 dev sp
+<figure class="fig" data-fig="bas_s07">
+  <a class="zoom" href="assets/fig/bas_s07.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/bas_s07.svg" alt="本地实测：cds env get requires.db 看到生效配置、cds compile --to sql 看到生成的 DDL、cds deploy 装载 CSV" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 11</span><span class="cap">本地实测：cds env get requires.db 看到生效配置、cds compile --to sql 看到生成的 DDL、cds deploy 装载 CSV</span><span class="kind real">本地实机运行</span><span class="src">本地实测：项目根目录执行 npx cds env get requires.db / npx cds compile --to sql / npm run deploy</span></figcaption>
+</figure>ace / 1 个 RUNNING / 4 GB 磁盘 / 1 小时会话超时 / 30 天不活跃即删除。所有「环境类怪问题」先按配额与活跃度排查。</li>
+  <li><b>命令只有一套</b>：<span class="cmd">cds init</span>、<span class="cmd">cds watch</span>、<span class="cmd">cds env</span>、<span class="cmd">cds build</span>、<span class="cmd">mbt build</span>、<span class="cmd">cf deploy</span>。BAS 与本地是同一套 CAP 工具链，差别只在外壳。</li>
+  <li><b>验证要看「行」</b>：<span class="cmd">successfully deployed</span>（本地建库）、<span class="cmd">server listening on http://localhost:4004</span>（服务起来）、<span class="cmd">$metadata</span> 返回 XML（接口可用）、cockpit 里 started + created（云端就位）。</li>
+  <li><b>先 Git 后删/后改</b>：扩展变更要重启、删除 dev space 不可恢复——提交是唯一的保险。</li>
+  <li><b>下一步</b>：把数据库从本地 SQLite 换成云端 HANA Cloud 与 HDI 容器（第 ③ 页），那是本项目从「能跑」到「能用」的分水岭。</li>
+</ul></div>
+
+<div class="box info"><b class="t">页面事实来源（便于自查）</b>
+<ul>
+  <li>SAP Business Application Studio 官方文档（Developer Guide）：Dev Space Manager / Dev Space Types / Trial Plan Restrictions / Terminal / Command Palette / Application Preview Settings / Debugging / Problems View / Cloud Foundry Tools / MTA Tools / Building and Deploying Multitarget Applications / Git 与认证 / Troubleshooting。</li>
+  <li>capire（CAP 官方文档）：Getting Started（cds init / cds add）、CDS CLI（cds env / cds watch --inspect / cds debug）、Deploy to Cloud Foundry（mbt build + cf deploy / cds up）。</li>
+  <li>本地实测：本课程示范项目 <span class="cmd">project-code/demo-node</span> 的 <span class="cmd">cds env get requires.db</span>、<span class="cmd">cds compile --to sql</span>、<span class="cmd">cds build --for hana</span>、<span class="cmd">cds watch</span> 日志与 <span class="cmd">work/evidence/*.txt</span>。</li>
+  <li>带 <span class="cmd">~</span> 的名称表示随发布/区域可能不同（如向导按钮文案、mbt 输出行文、端口通知按钮文字），使用前请按页面里给出的「自系统确认方法」在本机复核。</li>
+</ul></div>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

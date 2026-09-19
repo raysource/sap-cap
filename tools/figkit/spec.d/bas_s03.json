@@ -1,0 +1,86 @@
+{
+  "key": "bas_s03",
+  "kind": "bas",
+  "w": 1440, "h": 900,
+  "window": "schema.cds - demo-node - SAP Business Application Studio",
+  "menus": ["File", "Edit", "Selection", "View", "Go", "Run", "Terminal", "Help"],
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {"label": "DEMO-NODE (WORKSPACE)", "open": true, "mb": 4, "items": [
+      {"d": 0, "k": "folder", "open": true, "label": "app", "b": true},
+      {"d": 1, "k": "folder", "open": true, "label": "book-orders"},
+      {"d": 1, "k": "file", "label": "annotations.cds"},
+      {"d": 0, "k": "folder", "open": true, "label": "db", "b": true},
+      {"d": 1, "k": "file", "label": "schema.cds", "tag": "M"},
+      {"d": 0, "k": "folder", "open": true, "label": "srv", "b": true},
+      {"d": 1, "k": "file", "label": "order-service.cds"},
+      {"d": 1, "k": "file", "label": "order-service.js", "tag": "M"},
+      {"d": 0, "k": "file", "label": "mta.yaml"},
+      {"d": 0, "k": "file", "label": "package.json"},
+      {"d": 0, "k": "file", "label": "xs-security.json"}
+    ]}
+  ],
+  "tabs": ["schema.cds", "order-service.js", "mta.yaml"],
+  "activeTab": 0,
+  "breadcrumb": "demo-node  ›  db  ›  schema.cds  ›  entity BookOrders",
+  "editor": {
+    "lang": "cds",
+    "fs": 13,
+    "lh": 22,
+    "hl": [12, 13, 14, 15, 16],
+    "lines": [
+      "namespace sap.training.bookorder;",
+      "",
+      "using { cuid, managed } from '@sap/cds/common';",
+      "using { Currency, Country } from '@sap/cds/common';",
+      "",
+      "entity Books {",
+      "  key ID      : Integer;",
+      "      title   : localized String(120);",
+      "      author  : String(80);",
+      "      price   : Decimal(9,2);",
+      "      currency: Currency default 'JPY';",
+      "}",
+      "",
+      "entity BookOrders : managed {",
+      "  key ID       : UUID;",
+      "      orderNo  : String(16) @mandatory;",
+      "      customer : Association to Customers;",
+      "      orderDate: Date default $now;",
+      "      status   : String(10) default 'OPEN';",
+      "      total    : Decimal(13,2) @readonly;",
+      "      items    : Association to many BookOrderItems on items.order = $self;",
+      "}",
+      "",
+      "entity BookOrderItems : managed {",
+      "  key ID     : UUID;",
+      "      order  : Association to BookOrders;",
+      "      book   : Association to Books;",
+      "      quantity: Integer default 1;",
+      "      amount : Decimal(13,2) @readonly;",
+      "}"
+    ]
+  },
+  "panel": {"title": "TERMINAL", "h": 218, "extraTabs": ["PROBLEMS", "OUTPUT", "DEBUG CONSOLE"], "lines": [
+    "$ npm run deploy",
+    "@> cds deploy --to sqlite:db.sqlite",
+    "#  [cds] - using bindings from: { registry: '~/.cds-services.json' }",
+    "  creating database schema... 6 entities, 6 tables -> db.sqlite",
+    "  filled 6 tables with data from db/data/*.csv (24 rows)",
+    "  successfully deployed to sqlite:db.sqlite  (0.42 s)",
+    "$ npx cds watch",
+    "@[cds] - serving BookOrderService { at: '/odata/v4/book-order' }",
+    "@[cds] - server listening on { url: 'http://localhost:4004' }"
+  ]},
+  "activity": [
+    {"glyph": "⧉", "active": true}, {"glyph": "⌕"}, {"glyph": "⑂"}, {"glyph": "▷"}, {"glyph": "⌬"}, {"glyph": "⛭"}
+  ],
+  "status": ["⑂ main", "0 ▲ 0 ●", "Node 22.20.0", "CAP 9.4.2 · cds-dk 9.4.2", "UTF-8"],
+  "callouts": [
+    {"on": "schema.cds", "on_index": 1, "text": "1. 模型文件（db/schema.cds）"},
+    {"on": "Association to many BookOrderItems on items.order = $self;", "text": "2. 主从关联：不要用 Composition"},
+    {"on": "successfully deployed to sqlite:db.sqlite  (0.42 s)", "text": "3. 建库成功（先看这一行）"},
+    {"on": "http://localhost:4004", "text": "4. 服务地址：/odata/v4/book-order"}
+  ]
+}

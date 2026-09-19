@@ -1,0 +1,123 @@
+{
+  "key": "bas_s08",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "caption": "BAS 内置调试：launch.json 的 Node.js 附加配置与 Run and Debug 面板；cds watch --inspect 暴露 9229",
+  "alt": "BAS 内置调试：launch.json 的 Node.js 附加配置与 Run and Debug 面板；cds watch --inspect 暴露 9229",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 调试步骤出自 SAP Help「Debugging」；--inspect 与 9229 出自 capire cds-cli 与 Node.js 文档",
+  "window": "launch.json - demo-node - SAP Business Application Studio",
+  "sideTitle": "RUN AND DEBUG",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "VARIABLES",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "file",
+          "label": "req"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "orderNo"
+        }
+      ]
+    },
+    {
+      "label": "WATCH",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "file",
+          "label": "totalAmount"
+        }
+      ]
+    },
+    {
+      "label": "BREAKPOINTS",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "file",
+          "label": "book-order-service.js:96"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "submitOrder()"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "launch.json",
+    "book-order-service.js"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node  ›  .vscode  ›  launch.json",
+  "editor": {
+    "lang": "json",
+    "fs": 12.5,
+    "lh": 21,
+    "hl": [
+      6,
+      7,
+      8
+    ],
+    "lines": [
+      "{ \"version\": \"0.2.0\",",
+      "  \"configurations\": [",
+      "    { \"type\": \"node\", \"request\": \"launch\", \"name\": \"Launch Program\",",
+      "      \"program\": \"${workspaceFolder}/node_modules/.bin/cds-serve\" },",
+      "    { \"type\": \"node\", \"request\": \"attach\",",
+      "      \"name\": \"Attach to CAP server\",",
+      "      \"port\": 9229,",
+      "      \"restart\": true }] }"
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 180,
+    "extraTabs": [
+      "PROBLEMS",
+      "DEBUG CONSOLE"
+    ],
+    "lines": [
+      "$ npx cds watch --inspect 127.0.0.1:9229",
+      "@Debugger listening on ws://127.0.0.1:9229/…",
+      "#  然后 Run and Debug 选 Attach to CAP server 附加；断点打 srv/book-order-service.js",
+      "$ npx cds watch --inspect-brk   # 在第一行用户代码处停住"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.20.0",
+    "CAP 9.9.3",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "on": "    { \"type\": \"node\", \"request\": \"attach\",",
+      "text": "1. attach 模式：附加到已跑的进程"
+    },
+    {
+      "on": "      \"port\": 9229,",
+      "text": "2. Node inspector 默认端口 9229"
+    },
+    {
+      "on": "$ npx cds watch --inspect 127.0.0.1:9229",
+      "text": "3. 先让进程监听调试端口"
+    },
+    {
+      "on": "book-order-service.js:96",
+      "text": "4. 断点：行号 + 函数断点"
+    }
+  ]
+}

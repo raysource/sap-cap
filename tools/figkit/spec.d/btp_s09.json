@@ -1,0 +1,146 @@
+{
+ "key": "btp_s09",
+ "kind": "cockpit",
+ "w": 1440,
+ "h": 900,
+ "product": "SAP Business Technology Platform",
+ "caption": "Cloud Foundry › Spaces：试用已自动建好 org 与 space dev，org 与子账户是 1:1",
+ "alt": "BTP cockpit 子账户的 Cloud Foundry 页面，显示 Org Name、API Endpoint 与 dev、test 两个 space",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 端点格式依据 SAP Help「Regions and API Endpoints…for the Cloud Foundry Environment」",
+ "crumbs": [
+  "Global Account: trial-9f3a2b (trial)",
+  "Subaccount: trial",
+  "Cloud Foundry"
+ ],
+ "nav": {
+  "title": "Subaccount: trial",
+  "items": [
+   {
+    "label": "Overview"
+   },
+   {
+    "label": "Services",
+    "sub": [
+     "Service Marketplace",
+     "Instances and Subscriptions"
+    ]
+   },
+   {
+    "label": "Cloud Foundry",
+    "sub": [
+     "Org Members",
+     "Spaces",
+     "Space Quotas"
+    ],
+    "active": true
+   },
+   {
+    "label": "Connectivity",
+    "sub": [
+     "Destinations",
+     "Cloud Connectors"
+    ]
+   },
+   {
+    "label": "Security",
+    "sub": [
+     "Role Collections",
+     "Users",
+     "Trust Configuration"
+    ]
+   },
+   {
+    "label": "Entitlements"
+   }
+  ]
+ },
+ "title": "Cloud Foundry",
+ "subtitle": "Org: trial · 一个子账户恰好一个 org（1:1）",
+ "blocks": [
+  {
+   "t": "kv",
+   "lw": 160,
+   "rows": [
+    [
+     "Org Name",
+     "trial"
+    ],
+    [
+     "API Endpoint",
+     "https://api.cf.ap21.hana.ondemand.com"
+    ],
+    [
+     "Org Memory",
+     "4 GB（试用）"
+    ],
+    [
+     "Org Manager",
+     "jason@example.com"
+    ]
+   ]
+  },
+  {
+   "t": "toolbar",
+   "items": [
+    {
+     "label": "Create Space",
+     "primary": true
+    }
+   ]
+  },
+  {
+   "t": "table",
+   "cols": [
+    "Space",
+    "Space Roles",
+    "Apps",
+    "Service Instances"
+   ],
+   "widths": [
+    0.9,
+    1.2,
+    0.6,
+    1.2
+   ],
+   "rows": [
+    [
+     "dev",
+     "Space Developer",
+     "2",
+     "3"
+    ],
+    [
+     "test",
+     "Space Developer",
+     "0",
+     "0"
+    ]
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "info",
+   "text": "试用注册自动建好 org 'trial' 与 space 'dev'；再建子账户时需自己点 Enable Cloud Foundry。"
+  }
+ ],
+ "status": "Cloud Foundry enabled · Org: trial · 2 spaces · Region ap21 (Singapore)",
+ "callouts": [
+  {
+   "on": "Create Space",
+   "text": "1. 一个 org 下可建多个 space"
+  },
+  {
+   "on": "https://api.cf.ap21.hana.ondemand.com",
+   "text": "2. cf login -a 就用这个端点"
+  },
+  {
+   "on": "Space Developer",
+   "text": "3. 部署应用需要这个角色"
+  },
+  {
+   "on": "Enable Cloud Foundry",
+   "text": "4. 新子账户要手动启用"
+  }
+ ]
+}

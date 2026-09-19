@@ -1,0 +1,216 @@
+== ⑧ XSUAA 生成物实测（临时副本 /tmp/authtest3，未改动示范项目本体）
+== 1) srv 追加：annotate BookOrderService.BookOrders with @(restrict:
+==      [ {grant:'READ', to:'BookOrder.View'}, {grant:['CREATE','UPDATE'], to:'BookOrder.Edit'},
+==        {grant:'submitOrder', to:'BookOrder.Submit'} ])
+== 2) npx cds compile srv --to xsuaa
+
+{
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.BookOrder.View",
+      "description": "BookOrder.View"
+    },
+    {
+      "name": "$XSAPPNAME.BookOrder.Edit",
+      "description": "BookOrder.Edit"
+    },
+    {
+      "name": "$XSAPPNAME.BookOrder.Submit",
+      "description": "BookOrder.Submit"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "BookOrder.View",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.BookOrder.View"
+      ],
+      "attribute-references": []
+    },
+    {
+      "name": "BookOrder.Edit",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.BookOrder.Edit"
+      ],
+      "attribute-references": []
+    },
+    {
+      "name": "BookOrder.Submit",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.BookOrder.Submit"
+      ],
+      "attribute-references": []
+    }
+  ]
+}
+
+== 3) npx cds add xsuaa --for production  →  xs-security.json
+
+{
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.BookOrder.View",
+      "description": "BookOrder.View"
+    },
+    {
+      "name": "$XSAPPNAME.BookOrder.Edit",
+      "description": "BookOrder.Edit"
+    },
+    {
+      "name": "$XSAPPNAME.BookOrder.Submit",
+      "description": "BookOrder.Submit"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "BookOrder.View",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.BookOrder.View"
+      ],
+      "attribute-references": []
+    },
+    {
+      "name": "BookOrder.Edit",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.BookOrder.Edit"
+      ],
+      "attribute-references": []
+    },
+    {
+      "name": "BookOrder.Submit",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.BookOrder.Submit"
+      ],
+      "attribute-references": []
+    }
+  ]
+}
+
+== 4) npx cds add mta  →  mta.yaml（xsuaa 资源 + 自动生成的 role-collections）
+
+_schema-version: 3.3.0
+ID: demo-node
+version: 1.0.0
+description: "SAP CAP 培训示范项目（Node.js 运行时）—— 图书受注管理"
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: demo-node-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: demo-node-auth
+
+resources:
+  - name: demo-node-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: demo-node-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+        role-collections:
+          - name: 'BookOrder.View (demo-node ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.BookOrder.View'
+          - name: 'BookOrder.Edit (demo-node ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.BookOrder.Edit'
+          - name: 'BookOrder.Submit (demo-node ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.BookOrder.Submit'
+
+== 5) 追加后的 package.json（注意 [production] 档与 @sap/xssec 依赖）
+
+{
+  "name": "demo-node",
+  "version": "1.0.0",
+  "description": "SAP CAP 培训示范项目（Node.js 运行时）—— 图书受注管理",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@sap/cds": "^9",
+    "@sap/xssec": "^4"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": "^9",
+    "chai": "^5",
+    "mocha": "^10"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch",
+    "deploy": "cds deploy --to sqlite:db.sqlite",
+    "build": "cds build --production",
+    "test": "mocha --reporter spec --timeout 20000 test/*.test.js",
+    "lint:model": "cds compile db/schema.cds srv/book-order-service.cds --to sql"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      },
+      "auth": {
+        "kind": "mocked"
+      },
+      "[production]": {
+        "auth": {
+          "kind": "xsuaa"
+        }
+      }
+    }
+  },
+  "mocha": {
+    "reporter": "spec"
+  },
+  "allowScripts": {
+    "better-sqlite3": true
+  }
+}
+
+== 6) 同一目标重复 annotate @restrict 的后果（只有 WARNING，后者整体覆盖前者）
+
+[WARNING] srv/book-order-service.cds:41:45-53: Duplicate assignment with “@restrict”, using last (in annotate:“BookOrderService.BookOrders”)
+[WARNING] srv/book-order-service.cds:45:45-53: Duplicate assignment with “@restrict”, using last (in annotate:“BookOrderService.BookOrders”)
+
+== 7) 未加业务角色时（示范项目原样，仅 authenticated-user）：cds compile srv --to xsuaa 输出空数组
+   {"scopes": [], "attributes": [], "role-templates": []}

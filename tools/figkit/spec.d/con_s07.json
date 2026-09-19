@@ -1,0 +1,140 @@
+{
+  "key": "con_s07",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP Business Technology Platform",
+  "caption": "部署视图：一次 mbt build / cf deploy 把模型、服务、UI、数据库与授权一起变成云上的实例与应用",
+  "crumbs": [
+    "Global Account: trial-eu10-9f3a2b (trial)",
+    "Subaccount: trial",
+    "Space: dev"
+  ],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {
+        "label": "Overview"
+      },
+      {
+        "label": "Instances and Subscriptions",
+        "active": true
+      },
+      {
+        "label": "Cloud Foundry",
+        "sub": [
+          "Spaces",
+          "Service Marketplace"
+        ]
+      },
+      {
+        "label": "Security",
+        "group": true
+      },
+      {
+        "label": "Role Collections"
+      }
+    ]
+  },
+  "title": "Instances and Subscriptions",
+  "subtitle": "Space: dev · MTA demo-node 1.0.0 deployed",
+  "tabs": [
+    "Instances",
+    "Subscriptions"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "h3",
+      "text": "Service Instances"
+    },
+    {
+      "t": "table",
+      "cols": [
+        "Name",
+        "Service",
+        "Plan",
+        "Bound Apps"
+      ],
+      "widths": [
+        1.4,
+        1.0,
+        0.9,
+        1.6
+      ],
+      "rows": [
+        [
+          "demo-node-db",
+          "hana",
+          "hdi-shared",
+          "demo-node-srv"
+        ],
+        [
+          "demo-node-uaa",
+          "xsuaa",
+          "application",
+          "demo-node-srv, demo-node-approuter"
+        ]
+      ]
+    },
+    {
+      "t": "h3",
+      "text": "Applications (Cloud Foundry)"
+    },
+    {
+      "t": "tiles",
+      "cols": 3,
+      "h": 104,
+      "items": [
+        {
+          "title": "demo-node-srv",
+          "sub": "gen/srv · 256M · nodejs_buildpack",
+          "glyph": "SR",
+          "chip": "started"
+        },
+        {
+          "title": "demo-node-approuter",
+          "sub": "approuter · 128M · 对外入口",
+          "glyph": "AR",
+          "chip": "started"
+        },
+        {
+          "title": "mta_archives/demo-node_1.0.0.mtar",
+          "sub": "mbt build 的部署单元",
+          "glyph": "MT",
+          "chip": "built",
+          "accent": "#256f3a"
+        }
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "srv 应用通过 VCAP_SERVICES 拿数据库与 XSUAA 凭据；approuter 负责登录并把 JWT 转发给 srv（forwardAuthToken）。"
+    }
+  ],
+  "status": "● 2 service instances · ● 2 applications in space 'dev' · Region: ap10",
+  "callouts": [
+    {
+      "at": [
+        110,
+        660
+      ],
+      "text": "1. 模型 → 两份运行时产物"
+    },
+    {
+      "at": [
+        110,
+        696
+      ],
+      "text": "2. approuter = 对外入口"
+    },
+    {
+      "at": [
+        110,
+        732
+      ],
+      "text": "3. HDI 容器装 DDL"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "key": "con_s10",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap/project-code/demo-node — 一次请求的往返",
+  "label": "本地实机运行",
+  "src": "本地实测：npx cds watch + curl（@sap/cds 9.9.3）",
+  "caption": "一次请求的往返证据：HTTP → OData 解析 → 认证 → handler → 数据库 → 响应，服务端同步打印所在阶段",
+  "lh": 19,
+  "lines": [
+    "$ curl -u alice:alice -o /dev/null -w '%{http_code}\\n' \\",
+    "    \"http://localhost:4004/odata/v4/book-order/BookOrders?\\$top=2\"",
+    "200",
+    "$ curl -o /dev/null -w '%{http_code}\\n' \"http://localhost:4004/odata/v4/book-order/BookOrders\"   # 匿名",
+    "401",
+    "$ curl -s -u alice:alice \"http://localhost:4004/odata/v4/book-order/getOrderTotal(orderNo='BO-1003')\"",
+    "17400",
+    "$ curl -s -u alice:alice -X POST \\",
+    "    \"http://localhost:4004/odata/v4/book-order/BookOrders(ID=...,IsActiveEntity=true)/submitOrder\" -d '{}'",
+    "\"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）\"",
+    "",
+    "# 同时看服务端（cds watch 的那个窗口）：",
+    "[odata] - GET /odata/v4/book-order/BookOrders { '$top': '2' }",
+    "[odata] - GET /odata/v4/book-order/getOrderTotal(orderNo='BO-1003')",
+    "[odata] - POST /odata/v4/book-order/BookOrders(ID=...,IsActiveEntity=true)/submitOrder",
+    "",
+    "# 请求顺序：OData 解析 → 认证(401/403 在此) → before → on/bound action → 数据库 → after → 响应",
+    "# 自定义 handler 里 req.reject(400/404/409) 直接变成 HTTP 状态码，见第 ⑤⑥⑦ 章"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        620
+      ],
+      "text": "1. URL = @path + 实体名"
+    },
+    {
+      "at": [
+        60,
+        656
+      ],
+      "text": "2. 认证先于业务逻辑"
+    },
+    {
+      "at": [
+        60,
+        692
+      ],
+      "text": "3. 函数走服务层聚合"
+    },
+    {
+      "at": [
+        60,
+        728
+      ],
+      "text": "4. 动作 = 状态迁移"
+    }
+  ]
+}

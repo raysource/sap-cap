@@ -1,0 +1,16 @@
+$ curl -s -o /dev/null -w '%{http_code}\n' "$SVC/\$metadata"                          # 无认证
+401
+$ curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice "$SVC/\$metadata"                       # Basic Auth
+200
+$ curl -s -u alice:alice "$SVC/\$metadata" | grep -c '<EntitySet'
+5
+$ curl -s -u alice:alice "$SVC/getOrderTotal(orderNo='BO-1003')"                                   # function: GET
+{"@odata.context":"$metadata#Edm.Decimal","value":17400}
+$ curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice -X POST "$SVC/getOrderTotal(orderNo='BO-1003')" -d '{}'   # function 用 POST → ?
+405
+$ curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice "$SVC/BookOrders(ID=4a1f8c03-0001-…,IsActiveEntity=true)/submitOrder"   # action 用 GET → ?
+405
+$ curl -s -u alice:alice "$SVC/BookOrders?\$count=true&\$top=0" | head -c 120
+{"@odata.context":"$metadata#BookOrders","@odata.count":4,"value":[]}
+$ curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice -X DELETE "$SVC/BookOrders(ID=…,IsActiveEntity=false)"  # 丢弃草稿
+204

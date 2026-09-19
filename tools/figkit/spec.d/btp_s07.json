@@ -1,0 +1,163 @@
+{
+ "key": "btp_s07",
+ "kind": "cockpit",
+ "w": 1440,
+ "h": 900,
+ "product": "SAP Business Technology Platform",
+ "caption": "子账户 Entitlements：先 Edit → Add Service Plans，再把数字配额加到上限后 Save",
+ "alt": "BTP cockpit 子账户 Entitlements 表格，列出 hana-free、hdi-shared、xsuaa application、destination lite 等计划与配额",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 计划名依据 SAP Help HANA Cloud / Connectivity 文档与 SAP 教程 hana-cloud-mission-trial-2",
+ "crumbs": [
+  "Global Account: trial-9f3a2b (trial)",
+  "Subaccount: trial"
+ ],
+ "nav": {
+  "title": "Subaccount: trial",
+  "items": [
+   {
+    "label": "Overview"
+   },
+   {
+    "label": "Services",
+    "sub": [
+     "Service Marketplace",
+     "Instances and Subscriptions"
+    ]
+   },
+   {
+    "label": "Cloud Foundry",
+    "sub": [
+     "Org Members",
+     "Spaces",
+     "Space Quotas"
+    ]
+   },
+   {
+    "label": "Connectivity",
+    "sub": [
+     "Destinations",
+     "Cloud Connectors"
+    ]
+   },
+   {
+    "label": "Security",
+    "sub": [
+     "Role Collections",
+     "Users",
+     "Trust Configuration"
+    ]
+   },
+   {
+    "label": "Entitlements",
+    "active": true
+   }
+  ]
+ },
+ "title": "Entitlements",
+ "subtitle": "服务与计划 = 能不能用；配额 = 能用多少（部分版本按钮为 Configure Entitlements）",
+ "blocks": [
+  {
+   "t": "toolbar",
+   "items": [
+    {
+     "label": "Edit",
+     "primary": true
+    },
+    {
+     "label": "Add Service Plans"
+    }
+   ]
+  },
+  {
+   "t": "table",
+   "cols": [
+    "Service",
+    "Plan",
+    "Quota",
+    "Used"
+   ],
+   "widths": [
+    2.3,
+    1.0,
+    0.5,
+    0.5
+   ],
+   "rh": 30,
+   "rows": [
+    [
+     "SAP HANA Cloud (hana-cloud)",
+     "hana-free",
+     "1",
+     "0"
+    ],
+    [
+     "SAP HANA Schemas & HDI Containers (hana)",
+     "hdi-shared",
+     "1",
+     "0"
+    ],
+    [
+     "SAP HANA Schemas & HDI Containers (hana)",
+     "schema",
+     "1",
+     "0"
+    ],
+    [
+     "Authorization and Trust Management Service (xsuaa)",
+     "application",
+     "1",
+     "0"
+    ],
+    [
+     "Destination (destination)",
+     "lite",
+     "1",
+     "0"
+    ],
+    [
+     "Application Logs (application-logs)",
+     "lite",
+     "1",
+     "0"
+    ],
+    [
+     "Connectivity (connectivity)",
+     "lite",
+     "1",
+     "0"
+    ],
+    [
+     "HTML5 Application Repository (html5-apps-repo)",
+     "app-host",
+     "1",
+     "0"
+    ]
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "info",
+   "text": "配额从子账户释放后回到全局账户，可以再分给别的子账户。"
+  }
+ ],
+ "status": "Subaccount: trial · 8 plans assigned · Quota is managed at global account level",
+ "callouts": [
+  {
+   "on": "hana-free",
+   "text": "1. 试用用免费层计划"
+  },
+  {
+   "on": "hdi-shared",
+   "text": "2. CAP 部署目标就是这个计划"
+  },
+  {
+   "on": "Edit",
+   "text": "3. 必须先进编辑态"
+  },
+  {
+   "on": "Add Service Plans",
+   "text": "4. 搜索服务名再加计划"
+  }
+ ]
+}

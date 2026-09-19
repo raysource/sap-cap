@@ -1,0 +1,3 @@
+### submitOrder 成功（BO-1002：2 行明细、合计 12000）
+HTTP 200
+{"@odata.context":"../$metadata#Edm.String","value":"订单 BO-1002 已提交，合计 12000.00 JPY（2 行）"}

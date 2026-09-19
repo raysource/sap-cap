@@ -1,0 +1,44 @@
+{
+  "key": "btp_s06",
+  "kind": "dialog",
+  "w": 1440, "h": 900,
+  "dw": 760, "dh": 520,
+  "title": "Create Instance",
+  "subtitle": "Service: SAP HANA Cloud · Plan: hdi-shared · Subaccount: trial",
+  "under": {
+    "kind": "cockpit",
+    "nav": {"title": "Subaccount: trial", "items": [
+      {"label": "Overview"}, {"label": "Instances and Subscriptions", "active": true},
+      {"label": "Connectivity"}, {"label": "Cloud Foundry"}, {"label": "Security"}, {"label": "Services"}
+    ]},
+    "title": "Instances and Subscriptions",
+    "subtitle": "Instances (3) / Subscriptions (0) / Service Marketplace",
+    "blocks": [
+      {"t": "table", "cols": ["Name", "Service", "Plan", "Status"], "widths": [1.4, 1.3, 1.0, 0.9],
+       "rows": [["demo-hana-db", "hana-cloud", "hdi-shared", "Created"],
+                ["demo-xsuaa", "xsuaa", "application", "Created"],
+                ["demo-destination", "destination", "lite", "Created"]]}
+    ]
+  },
+  "steps": {"items": ["Basic Information", "Parameters", "Assign to Application", "Review"], "active": 1},
+  "blocks": [
+    {"t": "h3", "text": "Instance Parameters"},
+    {"t": "form", "cols": 2, "rowh": 48, "fields": [
+      ["Instance Name *", "demo-hana-db"],
+      ["Vendor", "SAP SE"],
+      ["Service", "hana-cloud"],
+      ["Plan", "hdi-shared"],
+      ["Runtime Environment", "Cloud Foundry (ap10)"],
+      ["Maximum number of CA instances", "1"]
+    ]},
+    {"t": "note", "kind": "warn",
+     "text": "参数会在创建后固化。名字里带 '-db' 是团队约定；改名就要删掉实例重建（试用的 HANA Cloud 实例 30 天到期）。"}
+  ],
+  "buttons": [{"label": "Cancel"}, {"label": "Back"}, {"label": "Create", "primary": true}],
+  "callouts": [
+    {"on": "demo-hana-db", "on_index": 1, "text": "1. 名字会出现在 VCAP_SERVICES 里"},
+    {"on": "hdi-shared", "on_index": 1, "text": "2. CAP 要用 hdi-shared（不是 schema）"},
+    {"on": "Cloud Foundry (ap10)", "text": "3. 运行时环境决定部署目标"},
+    {"on": "Create", "text": "4. 创建后立刻在列表里核对 Status"}
+  ]
+}

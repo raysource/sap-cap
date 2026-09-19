@@ -1,0 +1,190 @@
+[33m
+[1mcds serve all --with-mocks --in-memory? [0m
+[33m( live reload enabled for browsers ) [0m
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 224 ms
+[odata] - GET /odata/v4/book-order/getOrderTotal(orderNo='BO-1003') 
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 191 ms
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/$metadata 
+[odata] - GET /odata/v4/book-order/$metadata 
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/$metadata 
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 211 ms
+[odata] - GET /odata/v4/book-order/BookOrders { '$top': '1' }
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 250 ms
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 194 ms
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - HEAD /odata/v4/book-order/ 
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 204 ms
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - POST /odata/v4/book-order/$batch 
+[odata] - > GET /BookOrders {
+  '$count': 'true',
+  '$select': 'HasActiveEntity,HasDraftEntity,ID,IsActiveEntity,orderDate,orderNo,status,statusCriticality,totalAmount',
+  '$expand': 'DraftAdministrativeData($select=DraftUUID,InProcessByUser),customer($select=ID,name)',
+  '$filter': '(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)',
+  '$skip': '0',
+  '$top': '30'
+}
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 308 ms
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[33m
+[1m        ___________________________
+ [0m
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 306 ms
+[33m[1m[32m
+[cds] - my watch has ended. [0m [0m

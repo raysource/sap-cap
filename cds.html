@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>④ CDS 建模 —— 从领域模型到数据库 · SAP CAP 培训课程</title>
+<meta name="description" content="CDS 建模详解：三种模型文件与编译管线（cds compile --to sql/edmx/csn/hdbtable）、类型与物理列对照、主键与 UUID、managed/cuid/localized aspect 展开、Association 与 Composition 的物理差异、命名与视图、注解、CSV 种子数据陷阱、16 条建模排错手册与练习。所有 DDL 与报错均为本地实测原样。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a class="active" href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>④ CDS 建模</span></p>
+<h1>④ CDS 建模 —— 从领域模型到数据库</h1>
+<p class="kicker">本页交出「模型层」：db/schema.cds · srv/*.cds · app/*/annotations.cds 三种文件的分工，<code>cds compile</code> 的四条产出（sql / hdbtable / edmx / csn），类型与物理列的对照，Association 与 Composition 的实测差异，以及 CSV 种子数据把整个 deploy 打回去的几种真实报错。</p>
+
+<div class="toc">
+<a href="#s0">0. 本页地图与分工</a>
+<a href="#s1">1. CDS 是什么</a>
+<a href="#s2">2. 元素与类型全表</a>
+<a href="#s3">3. 主键与 UUID</a>
+<a href="#s4">4. aspect 与复用</a>
+<a href="#s5">5. Association vs Composition</a>
+<a href="#s6">6. 命名与物理列规则</a>
+<a href="#s7">7. 视图</a>
+<a href="#s8">8. 注解基础</a>
+<a href="#s9">9. 数据初始化与种子数据</a>
+<a href="#s10">10. 建模排错手册</a>
+<a href="#s11">11. 建模练习</a>
+<a href="#s12">12. 本节测试</a>
+<a href="#s13">13. 小结</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+<li>拿到任意一份 <code>.cds</code>，说清它会建出哪些表、哪些列、哪些视图，并亲手用 <code>cds compile --to sql</code> 核对。</li>
+<li>知道 <code>key ID : UUID</code>、<code>managed</code>、<code>cuid</code>、<code>localized</code> 各自展开成什么物理列（本页全部给出实测 DDL）。</li>
+<li>能解释为什么本站示范项目在 <code>BookOrders</code> 与 <code>BookOrderItems</code> 之间<b>故意用 Association 而不是 Composition</b>，并知道 Composition 真正的坑在哪里。</li>
+<li>能自己排查 CSV 初始化失败：看懂 <code>no column named …</code> / <code>UNIQUE constraint failed</code> / <code>NOT NULL constraint failed</code> 三类报错，并用 <code>python3</code> 查 <code>sqlite_master</code> 自证。</li>
+<li>遇到「Mismatched #」「Can't auto-redirect」「Expected entity to have a primary key」不再靠猜——本页第 10 节是 16 行现象→原因→对策表。</li>
+</ul>
+</div>
+
+<div class="box warn"><b class="t">本页所有 SQL / 报错的来源约定</b>
+<ul>
+<li>凡标注「本地实测」的代码块，都是在 <code>project-code/demo-node</code> 里执行下面这条命令的真实输出，未做手工改写（除明确标注「已缩略路径/长行」的地方）：<br>
+<code>export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH" &amp;&amp; npx cds compile …</code></li>
+<li>本机实测版本：Node.js 22.23.2 · @sap/cds-dk 9.9.6 · @sap/cds 9.9.3 · @sap/cds-compiler 6.9.5 · @cap-js/sqlite 2.4.3。</li>
+<li>带 <span class="tag">~</span> 前缀的说法表示本站未在本地验证（多与 HANA 云端行为、版本差异有关），已给出官方文档位置，请在自己环境核对。</li>
+</ul>
+</div>
+
+<h2 id="s0">0. 本页地图与分工</h2>
+<p>整套课程里「模型」这件事被切成三块讲，避免同一段代码在三页里重复。先明确边界，再开始建模：</p>
+
+<table class="tbl">
+<thead><tr><th>页面</th><th>负责的层</th><th>你会看到的东西</th><th>不在这里讲</th></tr></thead>
+<tbody>
+<tr><td><a href="concept.html">概念</a></td><td>CAP 三层架构总览</td><td>model / service / UI 三层与 Node·Java 双运行时的关系</td><td>具体语法</td></tr>
+<tr><td><b>本页 cds.html</b></td><td><b>模型层（.cds 文件与编译产物）</b></td><td>db/schema.cds、srv/*.cds 的定义写法、类型与物理列、关联、视图、注解、CSV 种子数据、编译到 SQL/EDMX 的结果</td><td>业务逻辑代码、UI 注解细节、部署与权限</td></tr>
+<tr><td><a href="node.html">⑤ Node 服务</a></td><td>Node.js 运行时</td><td>service 实现类、<code>SELECT/INSERT/UPDATE</code>、<code>req.reject</code>、函数与绑定动作的 <code>.js</code> 实现、<code>cds watch</code> 调试</td><td>模型文件怎么写</td></tr>
+<tr><td><a href="java.html">⑥ Java 服务</a></td><td>CAP Java 运行时</td><td>同一份 <code>.cds</code> 在 Maven 工程里的位置、<code>@Service</code> 与 <code>EventContext</code>、Spring 集成</td><td>CDS 语法（与 Node 共用本页）</td></tr>
+<tr><td><a href="testing.html">⑦ 测试</a></td><td>验证层</td><td>单元测试、OData 契约测试、<code>test/odata-verify.sh</code> 怎么读</td><td>编译期报错的含义（本页第 10 节）</td></tr>
+<tr><td><a href="fiori.html">⑨ Fiori UI</a></td><td>UI 注解层</td><td><code>UI.LineItem</code>、<code>UI.FieldGroup</code>、<code>UI.Facets</code> 怎么写、Fiori Elements 怎么用</td><td>非 UI 注解（本页第 8 节）</td></tr>
+<tr><td><a href="security.html">⑧ 权限</a></td><td>授权层</td><td>XSUAA、角色集合、<code>@requires</code>/<code>@restrict</code> 的完整用法</td><td>注解语法本身（本页第 8 节给最小用法）</td></tr>
+<tr><td><a href="deploy.html">⑩ 部署</a></td><td>运行环境</td><td>MTA、<code>cf deploy</code>、HDI 容器与部署后验证</td><td>CSV 种子数据规则（本页第 9 节）</td></tr>
+</tbody>
+</table>
+
+<div class="box ok"><b class="t">一句话分工</b>
+本页只管「<b>写 .cds</b>」和「<b>看编译结果</b>」：任何以 <code>module.exports = class … </code> 开头、<code>this.on(...)</code> 结尾的代码都去 <a href="node.html">⑤ Node 服务</a>；任何以 <code>annotate service.X with @(UI.…</code> 开头、只影响界面的注解都去 <a href="fiori.html">⑨ Fiori UI</a>。
+</div>
+
+<h3 id="s0-1">0-1 本页地图（按「你要解决什么问题」索引）</h3>
+<ul>
+<li>不知道 <code>.cds</code> 文件该放哪、编译出什么 → <a href="#s1">第 1 节</a>（含真实 <code>cds compile</code> 输出与画面 <code>cds_s02</code>）。</li>
+<li>要选字段类型、关心「写进数据库到底是什么列」→ <a href="#s2">第 2 节</a>（SQLite / HANA 双列对照，全部实测）。</li>
+<li>纠结主键用 UUID 还是业务编号 → <a href="#s3">第 3 节</a>。</li>
+<li>想知道 <code>managed</code>/<code>cuid</code> 到底给我加了哪些列 → <a href="#s4">第 4 节</a>。</li>
+<li>主从表用 Association 还是 Composition → <a href="#s5">第 5 节</a>（本页最有价值的一节，含反例）。</li>
+<li>表名 / 列名为什么长这样 → <a href="#s6">第 6 节</a>。</li>
+<li>聚合结果怎么暴露 → <a href="#s7">第 7 节</a>。</li>
+<li><code>@readonly</code> 写哪儿、生效在哪儿 → <a href="#s8">第 8 节</a>。</li>
+<li>CSV 一放就报错、顺序对不上 → <a href="#s9">第 9 节</a>。</li>
+<li>已经报错了，要最快的现象→原因→对策 → <a href="#s10">第 10 节</a>。</li>
+</ul>
+
+<h2 id="s1">1. CDS 是什么：三种文件、配置与编译管线</h2>
+<p>CDS（Conceptual Definition Language）不是「另一种 SQL」，它是<b>面向实体与关联的模型语言</b>：你声明「有哪些业务对象、它们怎么互相引用、界面怎么称呼它们」，剩下的建表语句、外键列、OData 元数据由编译器按目标（数据库方言 / OData 版本）生成。同一份模型因此能落到 SQLite、HANA、PostgreSQL，也能吐出 OData 的 <code>$metadata</code>。</p>
+
+<h3 id="s1-1">1-1 三种文件的分工（手顺）</h3>
+<div class="stepmeta"><span class="k">cds compile</span><span class="f">project-code/demo-node/</span><span class="c">耗时 15 分</span></div>
+<p>示范项目的目录只有三类 <code>.cds</code> 文件，职责完全不同——这是 CAP 里最容易被初学者混在一起的地方：</p>
+
+<div class="cols2">
+<div>
+<p><b>① 持久化模型</b>（<code>db/schema.cds</code>）：<code>entity … { … }</code> 声明。它是唯一会<b>建表</b>的文件。</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">demo-node/
+├─ db/
+│  ├─ schema.cds                 ← 实体与关联（建表来源）
+│  └─ data/
+│     ├─ sap.training.bookorder-Books.csv
+│     ├─ sap.training.bookorder-Customers.csv
+│     ├─ sap.training.bookorder-BookOrders.csv
+│     └─ sap.training.bookorder-BookOrderItems.csv
+├─ srv/
+│  ├─ book-order-service.cds      ← 服务定义（projection on）
+│  └─ book-order-service.js       ← 业务逻辑（不在本页）
+├─ app/book-orders/
+│  └─ annotations.cds             ← UI 注解（只进 $metadata）
+└─ package.json                   ← cds 配置在这里</code></pre>
+</div>
+<div>
+<table class="tbl small">
+<thead><tr><th>文件</th><th>内容</th><th>编译产物</th></tr></thead>
+<tbody>
+<tr><td><code>db/schema.cds</code></td><td><code>namespace</code> / <code>entity</code> / <code>type</code> / <code>aspect</code></td><td>CREATE TABLE、CREATE VIEW</td></tr>
+<tr><td><code>srv/*.cds</code></td><td><code>service … { entity … as projection on …; function … }</code></td><td>服务级 CREATE VIEW + <code>$metadata</code>（EDMX）</td></tr>
+<tr><td><code>app/*/annotations.cds</code></td><td><code>annotate service.X with @(…)</code></td><td>只进 <code>$metadata</code> 的 <code>&lt;Annotations&gt;</code> 段，<b>不建任何表</b></td></tr>
+</tbody>
+</table>
+<p class="small">判断方法：临时把某份文件移走再跑 <code>cds compile --to sql</code>——若 <code>CREATE TABLE</code> 的数变少，说明它是持久化模型或服务定义（服务会带出 draft 表）；若 DDL 一字不变、只有 <code>--to edmx</code> 的输出变了，它就是注解层。</p>
+</div>
+</div>
+
+<ol class="steps">
+<li><b>确认三份文件都在</b>：<code>db/schema.cds</code>、<code>srv/book-order-service.cds</code>、<code>app/book-orders/annotations.cds</code>。
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd ~/Desktop/work/training/sap-cap/project-code/demo-node
+find db srv app -name '*.cds' | sort</code></pre>
+</li>
+<li><b>验证</b>：期望看到恰好 3 行（三份 <code>.cds</code>）。少任何一份，后面的 <code>--to edmx</code> 会缺少对应的 EntitySet 或注解。</li>
+<li><b>分别编译三份文件</b>，观察「谁建表、谁建视图、谁只影响元数据」。
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+
+# 只用持久化模型 → 看「建表」
+npx cds compile db/schema.cds --to sql | grep -c 'CREATE TABLE'      # 实测 4
+npx cds compile db/schema.cds --to sql | grep -c 'CREATE VIEW'       # 实测 1（OrderItemView）
+
+# 加上服务定义 → 视图变多（projection 也是 VIEW），并多出 draft 相关表
+npx cds compile db/schema.cds srv/book-order-service.cds --to sql | grep -c 'CREATE VIEW'    # 实测 7
+npx cds compile db/schema.cds srv/book-order-service.cds --to sql | grep -c 'CREATE TABLE'   # 实测 6（4 业务表 + 2 张 draft 表）
+
+# 加上注解 → DDL 一字不变，但 $metadata 多出 Annotations 段
+npx cds compile db/schema.cds srv/book-order-service.cds app/book-orders/annotations.cds --to sql | grep -c 'CREATE TABLE'   # 仍是 6
+npx cds compile db/schema.cds srv/book-order-service.cds app/book-orders/annotations.cds --to edmx | grep -c 'Annotations'   # 实测 66</code></pre>
+</li>
+<li><b>验证</b>：第一条 <code>grep -c 'CREATE TABLE'</code> 打印 <code>4</code>；加上服务定义后变 <code>6</code>（多了 draft 表，见第 8 节 <code>@odata.draft.enabled</code>）；<b>再加注解文件数量不变</b>（注解不建表）；而 <code>--to edmx</code> 的 <code>Annotations</code> 段从「不存在」变成 <code>66</code> 条。这就是三层的分界线。</li>
+<li><b>顺手记一个坑</b>：只给 <code>db/schema.cds</code> 就跑 <code>--to edmx</code> 会直接失败——实测输出 <code>Error: There are no service definitions found at all in given model(s).</code>。EDMX 是「服务」的产物，没有 <code>service</code> 就没有 <code>$metadata</code>。</li>
+</ol>
+
+<figure class="fig" data-fig="cds_s01">
+  <a class="zoom" href="assets/fig/cds_s01.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cds_s01.svg" alt="BAS 编辑器中的 db/schema.cds，含命名空间、cuid/managed aspect 引入与 Books/BookOrders 实体定义" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">db/schema.cds 全文节选（第 1–39 行）：命名空间、using 引入 aspect、四个实体的主键与关联定义（注释行的原文含日文，此处统一改为中文；模型语句逐字未改）</span><span class="kind">高保真重绘</span><span class="src">本站示范项目 project-code/demo-node/db/schema.cds（节选，文件共 72 行）</span></figcaption>
+</figure>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能说出三个文件分别属于哪一层。</li>
+<li>删掉 <code>annotations.cds</code> 后 <code>--to sql</code> 的输出一字不变。</li>
+<li>知道 <code>db/data/*.csv</code> 不是模型，只是初始化数据（第 9 节）。</li>
+</ul>
+</div>
+<div class="box warn"><b class="t">常见错误</b>
+把服务定义里的 <code>entity Books as projection on db.Books;</code> 当成「新表」——它是 <b>VIEW</b>。<code>cds compile … --to sql</code> 里你会看到 <code>CREATE VIEW BookOrderService_Books AS SELECT …</code>，而不是 CREATE TABLE。想给业务表加字段，改的是 <code>db/schema.cds</code>，不是服务文件。</div>
+
+<h3 id="s1-2">1-2 配置放在哪：package.json 的 <code>cds</code> 段（本项目）与 .cdsrc.json</h3>
+<p>CAP 的运行时配置（数据库连哪个文件、认证怎么走）有两个可放置的地方：项目根目录的 <code>.cdsrc.json</code>，或 <code>package.json</code> 里的 <code>"cds"</code> 段。<b>本站示范项目用后者，仓库里没有 <code>.cdsrc.json</code></b>（可以用 <code>ls -a</code> 确认）——这是 CAP 9 的推荐做法，也让 <code>npm install</code> 之后配置立刻可用。</p>
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "name": "demo-node",
+  "scripts": {
+    "watch":  "cds watch",
+    "deploy": "cds deploy --to sqlite:db.sqlite",
+    "build":  "cds build --production",
+    "lint:model": "cds compile db/schema.cds srv/book-order-service.cds --to sql"
+  },
+  "cds": {
+    "requires": {
+      "db":   { "kind": "sqlite", "credentials": { "url": "db.sqlite" } },
+      "auth": { "kind": "mocked" }
+    }
+  }
+}</code></pre>
+<ol class="steps">
+<li><b>确认本地用哪种数据库</b>：<code>cds</code> 段的 <code>requires.db.kind = sqlite</code> 且 <code>credentials.url = db.sqlite</code>。这就是为什么本页的 DDL 是 SQLite 方言。</li>
+<li><b>验证</b>：<code>npx cds env get requires.db</code> 打印下面这份<b>实测输出</b>——注意 CAP 还给 <code>db</code> 补了 <code>impl</code>、<code>pool</code>、<code>data</code> 等默认值，其中 <code>data</code> 就是扫描种子数据的目录（第 9 节会用到）：
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "impl": "@cap-js/sqlite",
+  "credentials": { "url": "db.sqlite" },
+  "data": [ "db/data", "db/csv", "test/data" ],
+  "pool": { "max": 1 },
+  "kind": "sqlite"
+}</code></pre>
+把 <code>kind</code> 改成 <code>hana</code> 再看这条命令，会提示缺少 hana 服务绑定——说明配置真的在生效。</li>
+</ol>
+<div class="box info"><b class="t">.cdsrc.json 什么时候用</b>
+需要放<b>不进版本库</b>的凭据、或想按 profile 切换（开发用 sqlite、生产用 hana）时用它。文件位置、profile 合并规则与 <code>cds env</code> 的用法见官方文档 <code>cap.cloud.sap/docs/node.js/cds-env</code>。本课程不依赖它。</div>
+
+<h3 id="s1-3">1-3 编译管线：<code>cds compile</code> 的四个 target</h3>
+<p><code>cds compile &lt;文件…&gt; --to &lt;target&gt;</code> 是模型层的「单元测试」——改完 <code>.cds</code> 先看它，比跑服务快得多。支持的目标（本机 <code>npx cds compile --help</code> 实测输出）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">  -2 | --to &lt;target format&gt;
+    Currently supported:
+    - json, yml
+    - edm, edmx, edmx-v2, edmx-v4, edmx-w4, edmx-x4
+    - sql, hana, hdbtable
+    - cdl
+    - xsuaa
+    - openapi
+    - asyncapi
+
+  --dialect &lt;dialect&gt;
+    Specify the dialect in combination with --to sql. Currently supported:
+    - sqlite
+    - h2
+    - postgres
+    - hana</code></pre>
+
+<div class="timeline">
+<div class="tl"><b>CSN</b><small>.cds → 规范化的 JSON 模型（<code>--to csn</code>），所有后续步骤的输入</small></div>
+<div class="tl"><b>flatten / unfold</b><small>aspect 展开（managed → 4 列）、关联展开成 FK 列、视图编译成 CQL</small></div>
+<div class="tl"><b>SQL</b><small><code>--to sql [--dialect …]</code> → CREATE TABLE / CREATE VIEW</small></div>
+<div class="tl"><b>HDI</b><small><code>--to hdbtable</code> → COLUMN TABLE（HANA 部署用的 .hdbtable 内容）</small></div>
+<div class="tl"><b>OData</b><small><code>--to edmx</code> → 服务的 $metadata（EntitySet + Annotations）</small></div>
+</div>
+
+<p><b>真实命令 1 —— 看建表（本页第 2、3、4、5、6 节的全部 DDL 都来自这条命令）：</b></p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+npx cds compile db/schema.cds --to sql</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE sap_training_bookorder_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120) NOT NULL,
+  author NVARCHAR(80),
+  price DECIMAL(9, 2) NOT NULL,
+  currency NVARCHAR(3) DEFAULT 'JPY',
+  stock INTEGER DEFAULT 0,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_training_bookorder_Customers (
+  ID INTEGER NOT NULL,
+  name NVARCHAR(80) NOT NULL,
+  city NVARCHAR(60),
+  country NVARCHAR(20),
+  email NVARCHAR(120),
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_training_bookorder_BookOrders (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  orderNo NVARCHAR(16) NOT NULL,
+  customer_ID INTEGER,
+  orderDate DATE_TEXT DEFAULT CURRENT_TIMESTAMP,
+  status NVARCHAR(10) DEFAULT 'OPEN',
+  note NVARCHAR(255),
+  totalAmount DECIMAL(13, 2) DEFAULT 0,
+  statusCriticality INTEGER DEFAULT 2,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_training_bookorder_BookOrderItems (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  order_ID NVARCHAR(36),
+  book_ID INTEGER,
+  quantity INTEGER DEFAULT 1,
+  amount DECIMAL(13, 2),
+  PRIMARY KEY(ID)
+);
+
+CREATE VIEW sap_training_bookorder_OrderItemView AS SELECT
+  BookOrderItems_0.ID,
+  order_1.orderNo AS orderNo,
+  order_1.orderDate AS orderDate,
+  BookOrderItems_0.book_ID AS bookID,
+  book_2.title AS bookTitle,
+  book_2.price AS unitPrice,
+  BookOrderItems_0.quantity,
+  BookOrderItems_0.amount
+FROM ((sap_training_bookorder_BookOrderItems AS BookOrderItems_0 LEFT JOIN sap_training_bookorder_BookOrders AS order_1 ON BookOrderItems_0.order_ID = order_1.ID) LEFT JOIN sap_training_bookorder_Books AS book_2 ON BookOrderItems_0.book_ID = book_2.ID);</code></pre>
+<figure class="fig" data-fig="cds_s02">
+  <a class="zoom" href="assets/fig/cds_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cds_s02.svg" alt="终端中 cds compile --to sql 的输出，显示 4 条 CREATE TABLE 与列定义" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">cds compile db/schema.cds --to sql 的真实输出：四张表、managed 展开的 4 列、关联展开的 FK 列、日期/时间戳的 SQLite 物理类型</span><span class="kind">高保真重绘</span><span class="src">本地实测：npx cds compile db/schema.cds --to sql（cds-dk 9.9.6，Node 22.23.2）</span></figcaption>
+</figure>
+<p class="small">↑ 以上 5 段是本页最重要的「地面真值」：<code>managed</code> 给了 4 列、<code>customer</code> 关联给了 <code>customer_ID</code>、<code>UUID</code> 是 <code>NVARCHAR(36)</code>、<code>Date</code> 在 SQLite 上是 <code>DATE_TEXT</code>、视图被编译成两个 <code>LEFT JOIN</code>。后面每一节都在解释它的某一部分。</p>
+
+<p><b>真实命令 2 —— 换方言（同一个模型，HANA 侧）：</b></p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds --to sql --dialect hana | sed -n '/BookOrders (/,/);/p'
+npx cds compile db/schema.cds --to hdbtable | head -12</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE sap_training_bookorder_BookOrders (
+  createdAt TIMESTAMP,          -- SQLite 是 TIMESTAMP_TEXT
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  orderNo NVARCHAR(16) NOT NULL,
+  customer_ID INTEGER,
+  orderDate DATE DEFAULT CURRENT_TIMESTAMP,   -- SQLite 是 DATE_TEXT
+  status NVARCHAR(10) DEFAULT 'OPEN',
+  note NVARCHAR(255),
+  totalAmount DECIMAL(13, 2) DEFAULT 0,
+  statusCriticality INTEGER DEFAULT 2,
+  PRIMARY KEY(ID)
+);</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">----- sap.training.bookorder.Books.hdbtable -----
+COLUMN TABLE sap_training_bookorder_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120) NOT NULL,
+  author NVARCHAR(80),
+  price DECIMAL(9, 2) NOT NULL,
+  currency NVARCHAR(3) DEFAULT 'JPY',
+  stock INTEGER DEFAULT 0,
+  PRIMARY KEY(ID)
+)</code></pre>
+<p class="small">注释（<code>--</code>）是为讲解加的；命令原文不含注释。<code>--to hdbtable</code> 输出的是 HANA 部署用的 <code>.hdbtable</code> 文件内容（HANA 的列存表语法 <code>COLUMN TABLE</code>），是 <code>cds deploy --to hana</code> / <code>cds build</code> 的中间产物。</p>
+
+<p><b>真实命令 3 —— 看 OData 元数据（服务与注解的最终形态）：</b></p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds srv/book-order-service.cds app/book-orders/annotations.cds --to edmx | head -40</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">xml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-xml">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"&gt;
+  &lt;edmx:DataServices&gt;
+    &lt;Schema Namespace="BookOrderService" xmlns="http://docs.oasis-open.org/odata/ns/edm"&gt;
+      &lt;EntityContainer Name="EntityContainer"&gt;
+        &lt;EntitySet Name="Books" EntityType="BookOrderService.Books"/&gt;
+        &lt;EntitySet Name="Customers" EntityType="BookOrderService.Customers"/&gt;
+        &lt;EntitySet Name="BookOrders" EntityType="BookOrderService.BookOrders"&gt;
+          &lt;NavigationPropertyBinding Path="customer" Target="Customers"/&gt;
+          &lt;NavigationPropertyBinding Path="items" Target="BookOrderItems"/&gt;
+          &lt;NavigationPropertyBinding Path="SiblingEntity" Target="BookOrders"/&gt;
+        &lt;/EntitySet&gt;
+        &lt;EntitySet Name="BookOrderItems" EntityType="BookOrderService.BookOrderItems"&gt;
+          &lt;NavigationPropertyBinding Path="order" Target="BookOrders"/&gt;
+          &lt;NavigationPropertyBinding Path="book" Target="Books"/&gt;
+        &lt;/EntitySet&gt;
+        &lt;EntitySet Name="OrderItemView" EntityType="BookOrderService.OrderItemView"/&gt;
+        &lt;FunctionImport Name="getOrderTotal" Function="BookOrderService.getOrderTotal"/&gt;
+        &lt;FunctionImport Name="getOrderSummary" Function="BookOrderService.getOrderSummary"/&gt;
+      &lt;/EntityContainer&gt;
+      &lt;EntityType Name="Books"&gt;
+        &lt;Key&gt;&lt;PropertyRef Name="ID"/&gt;&lt;/Key&gt;
+        &lt;Property Name="ID" Type="Edm.Int32" Nullable="false"/&gt;
+        &lt;Property Name="title" Type="Edm.String" MaxLength="120" Nullable="false"/&gt;
+        &lt;Property Name="author" Type="Edm.String" MaxLength="80"/&gt;
+        &lt;Property Name="price" Type="Edm.Decimal" Precision="9" Scale="2" Nullable="false"/&gt;
+        &lt;Property Name="currency" Type="Edm.String" MaxLength="3" DefaultValue="JPY"/&gt;
+        &lt;Property Name="stock" Type="Edm.Int32" DefaultValue="0"/&gt;
+      &lt;/EntityType&gt;</code></pre>
+<p class="small">中间的 <code>&lt;edmx:Reference&gt;</code> 与若干 EntityType 用 … 省略；<code>BookOrders</code> 的 <code>&lt;Key&gt;</code> 里会多出 <code>IsActiveEntity</code>（因为开了 <code>@odata.draft.enabled</code>，见第 8 节）。</p>
+
+<p><b>真实命令 4 —— 看规范化 JSON（CSN，排查「编译器到底看见了什么」）：</b></p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds --to csn | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(json.dumps(d['definitions']['sap.training.bookorder.Books'], ensure_ascii=False, indent=2))"</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "kind": "entity",
+  "elements": {
+    "ID":       { "key": true, "type": "cds.Integer" },
+    "title":    { "type": "cds.String", "length": 120, "notNull": true },
+    "author":   { "type": "cds.String", "length": 80 },
+    "price":    { "type": "cds.Decimal", "precision": 9, "scale": 2, "notNull": true },
+    "currency": { "type": "cds.String", "length": 3, "default": { "val": "JPY" } },
+    "stock":    { "type": "cds.Integer", "default": { "val": 0 } }
+  }
+}</code></pre>
+<ol class="steps">
+<li><b>为什么先看 CSN</b>：DDL 是 CSN 经过 dialect 处理器之后的产物。当 DDL 里出现你没写的列（例如 <code>createdAt</code>），用 CSN 就能看出它来自哪个 aspect 展开。</li>
+<li><b>验证</b>：<code>npx cds compile db/schema.cds --to csn | python3 -c "import sys,json;print(list(json.load(sys.stdin)['definitions']))"</code> 的输出里应包含 <code>sap.training.bookorder.Books</code>、…<code>BookOrders</code>、…<code>OrderItemView</code> 以及 <code>sap.common.Currencies</code> 等（<code>using … from '@sap/cds/common'</code> 引入的定义也会进 CSN）。</li>
+</ol>
+
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li><code>cds compile db/schema.cds --to sql</code> 打印 4 个 CREATE TABLE、1 个 CREATE VIEW。</li>
+<li><code>--dialect hana</code> 时 <code>createdAt</code> 变成 <code>TIMESTAMP</code>、<code>orderDate</code> 变成 <code>DATE</code>。</li>
+<li><code>--to edmx</code> 里能看到 5 个 EntitySet（Books / Customers / BookOrders / BookOrderItems / OrderItemView）与 2 个 FunctionImport（<code>getOrderTotal</code>、<code>getOrderSummary</code>）。</li>
+<li>知道「注解文件不建表」：加它前后 <code>--to sql</code> 的 CREATE TABLE 数不变。</li>
+</ul>
+</div>
+
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>三个 <code>.cds</code> 文件里，哪个的改动会让 <code>--to sql</code> 的输出发生变化？为什么？</li>
+    <li><code>cds compile … --to sql --dialect hana</code> 与 <code>--to hdbtable</code> 有什么区别？各自什么时候用？</li>
+    <li>只想确认「服务里有没有漏掉某个实体」，你跑哪条命令、看哪一段？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s2">2. 元素与类型全表：CDS 类型 → 物理列</h2>
+<p>一个元素（element）的完整写法是：<code>[key] 名字 : 类型 [(长度[, 小数位])] [not null] [default 值] [@注解]</code>。类型决定「写到数据库里是哪一列」，而不同的数据库方言给出的列<b>并不一样</b>——这是跨 SQLite（开发）与 HANA（生产）迁移时最先要核对的东西。</p>
+
+<h3 id="s2-1">2-1 手顺：把一张「类型动物园」编译两遍</h3>
+<div class="stepmeta"><span class="k">cds compile</span><span class="f">/tmp/zoo.cds（临时文件，不放进项目）</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+<li><b>写一份只含类型的最小模型</b>（放在项目外的临时目录，避免污染示范项目）：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">namespace demo.zoo;
+
+entity Zoo {
+  key ID       : UUID;
+      sStr     : String(20);
+      sDef     : String;
+      sBig     : LargeString;
+      iInt     : Integer;
+      i16      : Int16;
+      i64      : Int64;
+      dDec     : Decimal(9,2);
+      dDef     : Decimal;
+      dDbl     : Double;
+      bBool    : Boolean;
+      dDate    : Date;
+      tTime    : Time;
+      tsStamp  : Timestamp;
+      dtDateTime : DateTime;
+      uUuid    : UUID;
+      binSmall : Binary(16);
+      binLarge : LargeBinary;
+      sArr     : array of String(20);
+}</code></pre>
+</li>
+<li><b>两种方言各编译一次</b>，然后把两次输出并排比对：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+mkdir -p /tmp/cdswork && cp /tmp/zoo.cds /tmp/cdswork/zoo.cds     # 或把上面的模型存到这里
+npx cds compile /tmp/cdswork/zoo.cds --to sql                    > /tmp/zoo.sqlite.sql
+npx cds compile /tmp/cdswork/zoo.cds --to sql --dialect hana     > /tmp/zoo.hana.sql
+diff /tmp/zoo.sqlite.sql /tmp/zoo.hana.sql</code></pre>
+</li>
+<li><b>验证</b>：<code>diff</code> 一定有输出（两次 DDL 不同）。下面就是实测的两份输出，可直接对照。</li>
+</ol>
+
+<div class="cols2">
+<div>
+<p><b>SQLite 方言（本地默认，实测原样）</b></p>
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE demo_zoo_Zoo (
+  ID NVARCHAR(36) NOT NULL,
+  sStr NVARCHAR(20),
+  sDef NVARCHAR(255),
+  sBig NCLOB,
+  iInt INTEGER,
+  i16 SMALLINT,
+  i64 BIGINT,
+  dDec DECIMAL(9, 2),
+  dDef DECIMAL,
+  dDbl DOUBLE,
+  bBool BOOLEAN,
+  dDate DATE_TEXT,
+  tTime TIME_TEXT,
+  tsStamp TIMESTAMP_TEXT,
+  dtDateTime DATETIME_TEXT,
+  uUuid NVARCHAR(36),
+  binSmall BINARY_BLOB(16),
+  binLarge BLOB,
+  sArr NCLOB,
+  PRIMARY KEY(ID)
+);</code></pre>
+</div>
+<div>
+<p><b>HANA 方言（<code>--dialect hana</code>，实测原样）</b></p>
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE demo_zoo_Zoo (
+  ID NVARCHAR(36) NOT NULL,
+  sStr NVARCHAR(20),
+  sDef NVARCHAR(5000),
+  sBig NCLOB,
+  iInt INTEGER,
+  i16 SMALLINT,
+  i64 BIGINT,
+  dDec DECIMAL(9, 2),
+  dDef DECIMAL,
+  dDbl DOUBLE,
+  bBool BOOLEAN,
+  dDate DATE,
+  tTime TIME,
+  tsStamp TIMESTAMP,
+  dtDateTime SECONDDATE,
+  uUuid NVARCHAR(36),
+  binSmall VARBINARY(16),
+  binLarge BLOB,
+  sArr NCLOB,
+  PRIMARY KEY(ID)
+);</code></pre>
+</div>
+</div>
+
+<h3 id="s2-2">2-2 类型对照表（左：CDS 写法 / 中：SQLite / 右：HANA）</h3>
+<table class="tbl small">
+<thead><tr><th>CDS 类型</th><th>SQLite 物理列（实测）</th><th>HANA 物理列（实测）</th><th>建模建议</th></tr></thead>
+<tbody>
+<tr><td><code>UUID</code></td><td><code>NVARCHAR(36)</code></td><td><code>NVARCHAR(36)</code></td><td>技术主键首选；INSERT 时由框架自动填</td></tr>
+<tr><td><code>String(n)</code></td><td><code>NVARCHAR(n)</code></td><td><code>NVARCHAR(n)</code></td><td>业务上一定要给长度：<code>orderNo : String(16)</code></td></tr>
+<tr><td><code>String</code>（不写长度）</td><td><code>NVARCHAR(255)</code></td><td><code>NVARCHAR(5000)</code></td><td><b>同一行代码两种长度</b>；跨库项目必须写长度</td></tr>
+<tr><td><code>LargeString</code></td><td><code>NCLOB</code></td><td><code>NCLOB</code></td><td>长备注、文本块</td></tr>
+<tr><td><code>Integer</code></td><td><code>INTEGER</code></td><td><code>INTEGER</code></td><td>数量、枚举序号</td></tr>
+<tr><td><code>Int16</code></td><td><code>SMALLINT</code></td><td><code>SMALLINT</code></td><td>小范围码值（如币种小数位）</td></tr>
+<tr><td><code>Int64</code></td><td><code>BIGINT</code></td><td><code>BIGINT</code></td><td>序列号、时间戳整数</td></tr>
+<tr><td><code>Decimal(p,s)</code></td><td><code>DECIMAL(p, s)</code></td><td><code>DECIMAL(p, s)</code></td><td><b>金额一律用它</b>：<code>Decimal(13,2)</code></td></tr>
+<tr><td><code>Decimal</code>（不写精度）</td><td><code>DECIMAL</code></td><td><code>DECIMAL</code></td><td>不推荐：精度由库决定</td></tr>
+<tr><td><code>Double</code></td><td><code>DOUBLE</code></td><td><code>DOUBLE</code></td><td>不要拿来存金额（二进制浮点误差）</td></tr>
+<tr><td><code>Boolean</code></td><td><code>BOOLEAN</code></td><td><code>BOOLEAN</code></td><td>是/否标志</td></tr>
+<tr><td><code>Date</code></td><td><code>DATE_TEXT</code></td><td><code>DATE</code></td><td>订单日期：<code>Date default $now</code></td></tr>
+<tr><td><code>Time</code></td><td><code>TIME_TEXT</code></td><td><code>TIME</code></td><td>班次、时刻</td></tr>
+<tr><td><code>Timestamp</code></td><td><code>TIMESTAMP_TEXT</code></td><td><code>TIMESTAMP</code></td><td><code>managed</code> 用的就是它</td></tr>
+<tr><td><code>DateTime</code></td><td><code>DATETIME_TEXT</code></td><td><code>SECONDDATE</code></td><td>带时区的业务时刻（HANA 上是 SECONDDATE）</td></tr>
+<tr><td><code>Binary(n)</code></td><td><code>BINARY_BLOB(n)</code></td><td><code>VARBINARY(n)</code></td><td>短二进制（哈希、指纹）</td></tr>
+<tr><td><code>LargeBinary</code></td><td><code>BLOB</code></td><td><code>BLOB</code></td><td>附件本体（生产上更常用对象存储存 URL）</td></tr>
+<tr><td><code>array of &lt;类型&gt;</code></td><td><code>NCLOB</code>（实测）</td><td><code>NCLOB</code>（实测）</td><td>存在同一行里、不可按元素查询</td></tr>
+<tr><td><code>Association to X</code></td><td>目标在主表的 FK 列：<code>book_ID INTEGER</code></td><td>同左</td><td>不生成单独的表，只生成列（第 5、6 节）</td></tr>
+<tr><td><span class="tag">~</span><code>Map</code> / <code>Vector</code></td><td>未本地验证</td><td>官方类型表列 <code>JSON</code> / <code>REAL_VECTOR</code></td><td>用到再查 <code>cap.cloud.sap/docs/cds/types</code></td></tr>
+</tbody>
+</table>
+<figure class="fig" data-fig="cds_s04">
+  <a class="zoom" href="assets/fig/cds_s04.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cds_s04.svg" alt="HANA Database Explorer 显示 SAP_TRAINING_BOOKORDER_BOOKORDERS 的列定义与 HANA 类型" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">同一份 CDS 在 HANA 上的物理形态（Database Explorer 的 Columns 页）：TIMESTAMP/DATE 取代 SQLite 的 *_TEXT，标识符被折叠成大写</span><span class="kind">高保真重绘</span><span class="src">本站自绘（列名与类型取自 npx cds compile db/schema.cds --to sql --dialect hana 的实际输出）</span></figcaption>
+</figure>
+<div class="box info"><b class="t">与官方文档的一处差异（记下来，别互相打架）</b>
+官方《CDL Compilation to Database-Specific DDLs》的类型表里，SQLite 的 <code>Decimal(p,s)</code> 写的是 <code>REAL_DECIMAL(p,s)</code>。<b>本机实测（@sap/cds-dk 9.9.6 / @cap-js/sqlite 2.4.3）输出的是 <code>DECIMAL(9, 2)</code></b>，见上面的 Zoo DDL 与第 1 节的 <code>price DECIMAL(9, 2) NOT NULL</code>。<span class="tag">~</span>两者差异属版本演进，写文档或复核时必须以<b>自己环境的实测输出</b>为准（这正是本页反复让你跑 <code>cds compile</code> 的原因）。</div>
+
+<h3 id="s2-3">2-3 站内实战：示范项目的类型选择逐条解释</h3>
+<table class="tbl small">
+<thead><tr><th>元素</th><th>类型</th><th>为什么这样选</th></tr></thead>
+<tbody>
+<tr><td><code>Books.ID</code> / <code>Customers.ID</code></td><td><code>Integer</code></td><td>主数据由 CSV 播种，人工编号（1001、1000）便于对账与手工造数据</td></tr>
+<tr><td><code>Books.price</code></td><td><code>Decimal(9,2) not null</code></td><td>单价必须有值，最多 7 位整数 + 2 位小数（JPY 4200 之类）</td></tr>
+<tr><td><code>Books.currency</code></td><td><code>String(3)</code></td><td>本示范「故意」不用 <code>Currency</code> 类型：避免引入币种码表及其校验（第 4 节给出两者的实测差异）</td></tr>
+<tr><td><code>BookOrders.ID</code> / <code>BookOrderItems.ID</code></td><td><code>UUID</code></td><td>业务对象由服务创建，用不透明主键（第 3 节）</td></tr>
+<tr><td><code>BookOrders.orderDate</code></td><td><code>Date default $now</code></td><td>只关心日期；<code>$now</code> 让客户端不传时有默认值</td></tr>
+<tr><td><code>BookOrders.totalAmount</code></td><td><code>Decimal(13,2) default 0</code></td><td>合计由子表汇总（服务层回写），默认 0 避免 NULL 参与运算</td></tr>
+<tr><td><code>BookOrders.statusCriticality</code></td><td><code>Integer default 2</code></td><td>派生字段：把状态翻译成 Fiori 的 Criticality 数值，供 <code>UI.Criticality</code> 着色</td></tr>
+<tr><td><code>BookOrderItems.amount</code></td><td><code>Decimal(13,2)</code></td><td>= 单价 × 数量，由 <code>book-order-service.js</code> 计算后写入</td></tr>
+</tbody>
+</table>
+<ol class="steps">
+<li><b>自证类型没写歪</b>：把 DDL 和 CSN 对齐看一遍即可——CSN 里 <code>price</code> 是 <code>{"type":"cds.Decimal","precision":9,"scale":2,"notNull":true}</code>，SQLite DDL 里是 <code>price DECIMAL(9, 2) NOT NULL</code>，两边必须一致。
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds --to sql | grep -n 'DECIMAL\|UUID\|TEXT'     # 一眼看完全部“有讲究”的列</code></pre>
+</li>
+<li><b>验证</b>：期望看到 <code>price DECIMAL(9, 2) NOT NULL</code>、<code>totalAmount DECIMAL(13, 2) DEFAULT 0</code>、<code>ID NVARCHAR(36) NOT NULL</code>（UUID）、<code>createdAt TIMESTAMP_TEXT</code>。若出现 <code>NVARCHAR(5000)</code> 或 <code>NVARCHAR(255)</code> 在你没写长度的列上，说明该列漏了长度声明。</li>
+</ol>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能说出「<code>String</code> 不写长度时 SQLite 与 HANA 分别是什么」。</li>
+<li>知道金额列必须 <code>Decimal(p,s)</code>，日期列 <code>Date</code> 在 SQLite 上是 <code>DATE_TEXT</code>。</li>
+<li>能把 CSN 的 <code>type/precision/scale</code> 与 DDL 的列类型一一对上。</li>
+</ul>
+</div>
+<div class="box warn"><b class="t">常见错误</b>
+<ul>
+<li>用 <code>Double</code> 存金额 → 汇总时出现 <code>15999.999999</code> 之类的尾差，对账永远差几分钱。</li>
+<li><code>String</code> 不写长度 → 开发库 255、生产库 5000，上线后才被 HANA 拒绝（或反过来，SQLite 上悄悄截断）。</li>
+<li>把 <code>Date</code> 当字符串写 <code>String(10)</code> → 失去日期函数与格式校验，OData 里也变成字符串比较。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li><code>String</code>、<code>String(16)</code>、<code>LargeString</code> 在 SQLite 上分别是哪一列？HANA 上呢？</li>
+    <li>为什么 <code>Double</code> 不能拿来存金额？示范项目里金额列写的什么？</li>
+    <li><code>array of String(20)</code> 的列类型是什么？还能按数组元素查询吗？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s3">3. 主键与 UUID：<code>key ID : UUID</code> 与 <code>cuid</code></h2>
+<p>主键怎么写、写什么类型，是模型层唯一「事后几乎无法回头」的决定（改主键意味着改表结构 + 改所有 FK 列 + 重新播种数据）。示范项目里两种做法同时存在，正好用来对照。</p>
+
+<h3 id="s3-1">3-1 三种主键写法与其实测产物</h3>
+<ol class="steps">
+<li><b>写法 A：整数业务主键</b>（主数据用）
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity Books {
+  key ID : Integer;          // 1001 … 1005，由 CSV 播种
+      title : String(120) not null;
+}</code></pre>
+</li>
+<li><b>写法 B：UUID 主键</b>（业务对象用）——就是示范项目的 <code>BookOrders</code>：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity BookOrders : managed {
+  key ID : UUID;             // 由框架在 INSERT 时自动生成
+      orderNo : String(16) not null;
+}</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">-- 实测（cds compile db/schema.cds --to sql）
+  ID NVARCHAR(36) NOT NULL,
+  ...
+  PRIMARY KEY(ID)</code></pre>
+</li>
+<li><b>写法 C：复合主键</b>（子表的「父键 + 序号」模式，实测同样成立）：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity Items {
+  key order : Association to Orders;   // 父键参与主键
+  key pos   : Integer;                 // 行号
+      quantity : Integer;
+}</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE demo_ck_Items (
+  order_ID NVARCHAR(36) NOT NULL,
+  pos INTEGER NOT NULL,
+  quantity INTEGER,
+  PRIMARY KEY(order_ID, pos)
+);</code></pre>
+</li>
+<li><b>验证</b>：三种写法都用 <code>npx cds compile &lt;文件&gt; --to sql</code> 跑一遍。<code>PRIMARY KEY(…)</code> 里的列必须都是 <code>NOT NULL</code>；若你看到 <code>PRIMARY KEY(ID)</code> 但 <code>ID</code> 那行没有 <code>NOT NULL</code>，说明这个元素没有被标成 <code>key</code>。</li>
+</ol>
+<div class="box warn"><b class="t">主键不能用「未托管的关联/组合」</b>
+编译器消息目录里有一条：<code>Unmanaged associations/compositions can't be defined as primary key</code>（本机 <code>@sap/cds-compiler</code> 6.9.5 的 message-registry 实测包含此条）。想用「父键 + 序号」的复合主键，父侧必须写成<b>托管</b>关联（<code>key order : Association to Orders;</code>），也就是不要自己写 <code>on</code> 条件去指一个裸列。</div>
+
+<h3 id="s3-2">3-2 <code>cuid</code>：一行换一个 UUID 主键</h3>
+<p><code>cuid</code> 是 <code>@sap/cds/common</code> 提供的 aspect，源码只有两行（下面是本机 <code>node_modules/@sap/cds/common.cds</code> 的原文）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">aspect cuid {
+  key ID : UUID; //> automatically filled in
+}</code></pre>
+<p>三种写法的等价关系（<b>推荐第一种</b>，团队里一看就懂）：</p>
+<table class="tbl small">
+<thead><tr><th>写法</th><th>效果</th><th>评价</th></tr></thead>
+<tbody>
+<tr><td><code>entity X : cuid { … }</code></td><td>主键 <code>ID : UUID</code>，INSERT 时自动生成</td><td>推荐：与 <code>managed</code> 一起用时写 <code>entity X : cuid, managed { … }</code></td></tr>
+<tr><td><code>entity X { key ID : UUID; … }</code></td><td>完全一样（<code>cuid</code> 就展开成这一行）</td><td>可读，示范项目用的是这种</td></tr>
+<tr><td><code>entity X { key ID : String(36); … }</code></td><td>同样的物理列，但<b>没有自动填充</b></td><td>不要用：每次 INSERT 都得自己造 ID</td></tr>
+</tbody>
+</table>
+<ol class="steps">
+<li><b>验证「自动填充」这件事真的存在</b>：示范项目的 <code>book-order-service.js</code> 在创建明细时只传了 <code>order_ID</code>、<code>book_ID</code>、<code>quantity</code>，没传 <code>ID</code>：
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">POST /odata/v4/book-order/BookOrderItems
+{ "order_ID": "&lt;BO-1002 的 ID&gt;", "book_ID": 1003, "quantity": 3 }</code></pre>
+而集成测试期望返回体里带 <code>amount</code> 与自动生成的主键（见 <code>test/odata-verify.sh</code> 第 4 组用例）。</li>
+<li><b>验证</b>：返回值里 <code>ID</code> 是形如 <code>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code> 的 36 位字符串。<code>BookOrders</code> 同理——这就是 <code>UUID</code> 主键的「框架代填」行为，官方文档写作 <i>Auto-filled primary keys</i>。</li>
+</ol>
+
+<h3 id="s3-3">3-3 为什么用不透明主键：与业务键 <code>orderNo</code> 的取舍</h3>
+<table class="tbl">
+<thead><tr><th>维度</th><th>不透明主键（<code>ID : UUID</code>）</th><th>业务键当主键（<code>key orderNo : String(16)</code>）</th></tr></thead>
+<tbody>
+<tr><td>生成</td><td>客户端/框架生成，不冲突、可离线</td><td>需要唯一性约束或集中式编号（数据库序列在分布式下很难用）</td></tr>
+<tr><td>可改</td><td>业务字段变化不影响主键（订单号打错可以改）</td><td>订单号一改，所有引用它的明细都要跟着改</td></tr>
+<tr><td>可读性</td><td>URL 里是 <code>…(ID=6f9…)</code>，人工不便</td><td>URL 里是 <code>…('BO-1001')</code>，人工友好（本示范的 <code>getOrderTotal(orderNo='BO-1003')</code> 就是吃这个便利）</td></tr>
+<tr><td>信息泄露</td><td>不暴露订单量、编号规则</td><td>订单号递增会泄露业务量</td></tr>
+<tr><td>官方立场</td><td colspan="2">CAP 文档《Domain Modeling → Prefer UUIDs for Keys》建议：优先 UUID；只在真实高数据量场景才用数据库序列；并特别提醒 <b>Don't Interpret UUIDs!</b>（不要校验/解析 UUID 的内容）</td></tr>
+</tbody>
+</table>
+<p>示范项目的做法是<b>两条都要</b>：主键用 <code>UUID</code>，同时保留一个业务键 <code>orderNo</code>，唯一性在服务层保证。真实实现（<code>srv/book-order-service.js</code>）在创建订单头时先查重，再自动编号：</p>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.before('CREATE', BookOrders, async (req) =&gt; {
+  const data = req.data;
+  if (!data.orderNo) {
+    data.orderNo = await nextOrderNo();            // 取 max(orderNo) → BO-1005
+  } else {
+    const dup = await SELECT.one.from(BookOrders).where({ orderNo: data.orderNo });
+    if (dup) req.reject(409, `订单号 ${data.orderNo} 已存在，请更换`);
+  }
+  …
+});</code></pre>
+<ol class="steps">
+<li><b>看模型里到底有没有唯一约束</b>：实测 <code>npx cds compile db/schema.cds --to sql --dialect hana | sed -n '/BookOrders (/,/);/p'</code>，输出里 <code>orderNo NVARCHAR(16) NOT NULL</code> 后面<b>没有 UNIQUE</b>。也就是说：数据库不拦重复订单号，拦它的是上面那段服务代码。</li>
+<li><b>验证</b>：用同一个 <code>orderNo</code> POST 两次 <code>BookOrders</code>，第二次返回 <code>409</code> 且带消息「订单号 … 已存在，请更换」。这就是「业务键的唯一性由应用层保证」的可观察证据。</li>
+<li><b>若你想把唯一性下沉到数据库</b>：CAP 提供 <code>@assert.unique</code> 注解（文档见 <code>cap.cloud.sap/docs/guides/services/constraints</code>），或直接给元素加 <code>@assert.unique</code>/自建索引。<span class="tag">~</span>本站示范项目未使用，未在本地验证其 DDL 产物。</li>
+</ol>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能说出 <code>cuid</code> 展开成什么，并知道 UUID 主键会被自动填充。</li>
+<li>知道示范项目 <code>orderNo</code> 的唯一性来自服务层代码，DDL 里没有 UNIQUE。</li>
+<li>能写出复合主键（<code>key order : Association to …; key pos : Integer;</code>）并预期 <code>PRIMARY KEY(order_ID, pos)</code>。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li><code>entity X : cuid { … }</code> 与 <code>entity X { key ID : UUID; … }</code> 有什么区别？</li>
+    <li>为什么 <code>BookOrders</code> 用 UUID 主键、<code>Books</code> 用整数主键？</li>
+    <li><code>orderNo</code> 重复时是谁拦下来的？在哪一层？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s4">4. aspect 与复用：<code>managed</code> / <code>cuid</code> / <code>localized</code> 展开成什么</h2>
+<p>aspect 是「可被实体包含的字段集合」。写 <code>entity BookOrders : managed { … }</code> 时，<code>managed</code> 里定义的每个元素都会被<b>复制进这个实体</b>，并在编译时参与展开——所以它一定会出现在 DDL 里。新手最常见的困惑是「我没写 <code>createdAt</code>，为什么表里有这一列」，答案就在本节。</p>
+
+<h3 id="s4-1">4-1 语法与三种来源</h3>
+<ol class="steps">
+<li><b>三种引入方式</b>（都合法，团队的规范是「优先用 <code>@sap/cds/common</code> 内置 aspect」）：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">using { cuid, managed } from '@sap/cds/common';   // ① 内置 aspect
+
+aspect Audited {                                   // ② 自己定义的 aspect
+  auditedAt : Timestamp @cds.on.insert: $now;
+}
+
+entity BookOrders : managed, Audited {             // ③ 包含（冒号后用逗号分隔多个）
+  key ID : UUID;
+}</code></pre>
+</li>
+<li><b>验证</b>：包含 aspect 后，<code>npx cds compile db/schema.cds --to csn</code> 的输出里，<code>BookOrders.elements</code> 会直接多出 <code>createdAt/createdBy/modifiedAt/modifiedBy</code> 四个元素——aspect 已经「摊平」进实体，CSN 里看不到 aspect 的名字了。</li>
+</ol>
+
+<h3 id="s4-2">4-2 <code>cuid</code> 与 <code>managed</code>：逐字给出定义与物理列</h3>
+<p>下面是本机 <code>node_modules/@sap/cds/common.cds</code>（@sap/cds 9.9.3）里这两个 aspect 的代码，逐字照抄（仅略去其上方说明用途的文档注释）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">aspect cuid {
+  key ID : UUID; //> automatically filled in
+}
+
+aspect managed {
+  createdAt  : Timestamp @cds.on.insert : $now;
+  createdBy  : User      @cds.on.insert : $user;
+  modifiedAt : Timestamp @cds.on.insert : $now  @cds.on.update : $now;
+  modifiedBy : User      @cds.on.insert : $user @cds.on.update : $user;
+}
+
+type User : String(255);</code></pre>
+<p><code>@cds.on.insert</code> / <code>@cds.on.update</code> 是「写入时机」的声明：INSERT 时填 <code>createdAt/createdBy</code> 与 <code>modifiedAt/modifiedBy</code>，UPDATE 时刷新 <code>modified*</code>。<b>展开后的物理列</b>（实测，来自第 1 节的 <code>cds compile db/schema.cds --to sql</code>）：</p>
+<table class="tbl small">
+<thead><tr><th>aspect</th><th>展开的元素</th><th>SQLite 列（实测）</th><th>HANA 列（实测）</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><code>cuid</code></td><td><code>key ID : UUID</code></td><td><code>ID NVARCHAR(36) NOT NULL</code></td><td><code>ID NVARCHAR(36) NOT NULL</code></td><td>主键，INSERT 自动填充</td></tr>
+<tr><td><code>managed</code></td><td><code>createdAt</code></td><td><code>createdAt TIMESTAMP_TEXT</code></td><td><code>createdAt TIMESTAMP</code></td><td>审计字段之一</td></tr>
+<tr><td><code>managed</code></td><td><code>createdBy</code></td><td><code>createdBy NVARCHAR(255)</code></td><td><code>createdBy NVARCHAR(255)</code></td><td><code>User</code> = <code>String(255)</code></td></tr>
+<tr><td><code>managed</code></td><td><code>modifiedAt</code></td><td><code>modifiedAt TIMESTAMP_TEXT</code></td><td><code>modifiedAt TIMESTAMP</code></td><td>UPDATE 时刷新</td></tr>
+<tr><td><code>managed</code></td><td><code>modifiedBy</code></td><td><code>modifiedBy NVARCHAR(255)</code></td><td><code>modifiedBy NVARCHAR(255)</code></td><td>UPDATE 时刷新</td></tr>
+</tbody>
+</table>
+<ol class="steps">
+<li><b>对照实验：手写 vs aspect</b>。把 <code>managed</code> 换成手写四列，DDL 应完全一致：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">using { User } from '@sap/cds/common';
+
+entity X : cuid {
+      createdAt  : Timestamp @cds.on.insert : $now;
+      createdBy  : User      @cds.on.insert : $user;
+      modifiedAt : Timestamp @cds.on.insert : $now  @cds.on.update : $now;
+      modifiedBy : User      @cds.on.insert : $user @cds.on.update : $user;
+}</code></pre>
+</li>
+<li><b>验证</b>：<code>npx cds compile /tmp/x.cds --to sql</code> 与 <code>entity Y : cuid, managed { }</code> 的版本逐字一致（列名、类型、顺序）。若不一致，检查 <code>@cds.on.insert/@cds.on.update</code> 是否漏写——它们不影响列，但决定运行时谁被自动填值。</li>
+</ol>
+
+<h3 id="s4-3">4-3 <code>localized</code>：会额外建一张 <code>_texts</code> 表</h3>
+<p><code>localized</code> 是关键字而不是注解：写在元素类型前面，表示「这个字段要按语言存多份」。示范项目的 <code>Books.title</code> <b>故意没用它</b>（用普通 <code>String(120)</code>），因为它会改变表结构与读取路径。实测展开结果如下：</p>
+<ol class="steps">
+<li><b>编译这样一份模型</b>（临时文件）：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">namespace demo.loc;
+
+entity Books {
+  key ID : Integer;
+      title : localized String(120);
+      author : String(80);
+}</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile /tmp/cdswork3/loc.cds --to sql</code></pre>
+</li>
+<li><b>实测输出（三个对象）</b>：
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE demo_loc_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120),
+  author NVARCHAR(80),
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE demo_loc_Books_texts (
+  locale NVARCHAR(14) NOT NULL,
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120),
+  PRIMARY KEY(locale, ID)
+);
+
+CREATE VIEW localized_demo_loc_Books AS SELECT
+  L_0.ID,
+  coalesce(localized_1.title, L_0.title) AS title,
+  L_0.author
+FROM (demo_loc_Books AS L_0 LEFT JOIN demo_loc_Books_texts AS localized_1
+      ON localized_1.ID = L_0.ID
+     AND localized_1.locale = session_context( '$user.locale' ));</code></pre>
+</li>
+<li><b>验证</b>：输出里出现「原表 + <code>_texts</code> 表 + <code>localized_</code> 视图」三件套。读数据要走视图：它用 <code>coalesce</code> 做「有译文取译文、没有取原文」的回退，并按 <code>session_context('$user.locale')</code> 取当前会话语言——本地 SQLite 没有真实会话上下文，这也是示范项目避开 <code>localized</code> 的原因之一。</li>
+</ol>
+<div class="box warn"><b class="t">什么时候用 localized</b>
+多语言产品的主数据描述字段（名称、说明）才是它的舞台。<b>不要</b>给业务数字、状态、编号加 <code>localized</code>：它们不该有译文，加了只会让表多出一张 <code>_texts</code> 表、读取路径变复杂。示范项目里币种、状态都用普通 <code>String</code>，正是这个判断。</div>
+
+<h3 id="s4-4">4-4 <code>Currency</code> 这类「代码表类型」：省写字数，代价是列名与码表</h3>
+<p><code>@sap/cds/common</code> 里的 <code>Currency</code> / <code>Country</code> / <code>Language</code> 本质是<b>到码表实体的关联</b>（原文：<code>type Currency : Association to sap.common.Currencies;</code>）。用它换来三样东西：列名变成 <code>currency_code</code>、多出码表（含 <code>_texts</code> 表）、以及需要维护的码表内容。</p>
+<ol class="steps">
+<li><b>编译对照组</b>：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">namespace demo.cur;
+using { Currency, Country } from '@sap/cds/common';
+
+entity Books {
+  key ID : Integer;
+      title : String(120);
+      price : Decimal(9,2);
+      currency : Currency default 'JPY';       // ← 与 String(3) 的差别就在这一行
+}
+entity Customers { key ID : Integer; country : Country; }</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile /tmp/cdswork3/cur.cds --to sql</code></pre>
+</li>
+<li><b>实测输出（节选，注意列名与新增的表）</b>：
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE demo_cur_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120),
+  price DECIMAL(9, 2),
+  currency_code NVARCHAR(3) DEFAULT 'JPY',     -- ← 不是 currency，是 currency_code
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_common_Currencies (
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(3) NOT NULL,
+  symbol NVARCHAR(5),
+  minorUnit SMALLINT,
+  PRIMARY KEY(code)
+);
+
+CREATE TABLE sap_common_Currencies_texts (
+  locale NVARCHAR(14) NOT NULL,
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(3) NOT NULL,
+  PRIMARY KEY(locale, code)
+);
+
+CREATE TABLE demo_cur_Customers (
+  ID INTEGER NOT NULL,
+  country_code NVARCHAR(3),
+  PRIMARY KEY(ID)
+);</code></pre>
+</li>
+<li><b>验证</b>：把 <code>currency : String(3)</code> 与 <code>currency : Currency</code> 的 DDL 并排看：前者是普通列，后者是 <code>currency_code</code> + 两张 <code>sap_common_*</code> 表。若 CSV 表头还写 <code>currency</code>，<code>cds deploy</code> 会直接失败——实测报错 <code>table … has no column named currency</code>（第 9、10 节有完整现场）。</li>
+</ol>
+<div class="box info"><b class="t">结论（示范项目的选择）</b>
+本地/教学环境用 <code>String(3)</code> 存币种：少两张表、CSV 好写、不必维护码表内容；<b>生产上推荐换成 <code>Currency</code> 类型</b>——它带来码表校验与 Fiori 的下拉选择。改类型时务必同步改 CSV 表头。</div>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能默写 <code>cuid</code> 与 <code>managed</code> 展开的 5 个元素名。</li>
+<li>知道 <code>@cds.on.insert/@cds.on.update</code> 影响运行时取值，不改变 DDL。</li>
+<li>能说出 <code>localized</code> 额外产生的两个对象（<code>_texts</code> 表与 <code>localized_</code> 视图）。</li>
+<li>知道 <code>currency : Currency</code> 的物理列名是 <code>currency_code</code>。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li><code>entity BookOrders : managed { … }</code> 会多出哪 4 列？在 SQLite 上是什么类型？</li>
+    <li><code>localized String(120)</code> 会建出什么？为什么读取要走 <code>localized_</code> 视图？</li>
+    <li><code>currency : Currency</code> 写进数据库的列名是什么？CSV 表头要不要跟着改？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s5">5. Association 与 Composition：本站为什么故意不用 Composition</h2>
+<p>这是本页最值得慢读的一节。主从表（订单头 / 订单明细）在 CAP 里有两种写法，官方文档都支持，但<b>语义</b>不同；网上不少二手资料把「物理差异」讲错了，本节用实测输出把话说清楚。</p>
+
+<h3 id="s5-1">5-1 先看语义（官方文档要点）</h3>
+<table class="tbl">
+<thead><tr><th>维度</th><th><code>Association to many X on …</code></th><th><code>Composition of many X on …</code></th></tr></thead>
+<tbody>
+<tr><td>含义</td><td>「引用」关系：两边是独立的业务对象</td><td>「包含」关系（contained-in）：子对象从属于父对象，是文档结构</td></tr>
+<tr><td>运行时待遇</td><td>普通关联</td><td>官方文档列出的三项特殊待遇：<b>Deep Insert / Update</b> 自动写入整个文档结构；删除父对象时<b>级联删除</b>子对象（Cascaded Delete）；组合目标在服务里<b>自动暴露</b>（auto-exposed）</td></tr>
+<tr><td>模型要求</td><td>to-many 必须写 <code>on</code> 条件（文档原话：「To-many associations are unmanaged by nature as we always have to specify an on condition」）</td><td>同样必须写 <code>on</code> 条件（见 5-2 的实测报错）</td></tr>
+<tr><td>子表主键</td><td>子表自己管主键（本示范用 UUID）</td><td>常见「父键 + 行号」复合主键</td></tr>
+<tr><td>适合场景</td><td>能被单独查询、单独维护、生命周期独立的实体（本站：明细行要能单独 POST/PATCH/DELETE）</td><td>强从属的文档结构（发票行、行程行），父删子必删</td></tr>
+</tbody>
+</table>
+
+<h3 id="s5-2">5-2 实测：三种写法各编译一遍</h3>
+<ol class="steps">
+<li><b>准备两个只差一个词的临时模型</b>：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">// ① assoc_c.cds —— 本站示范项目的写法
+namespace demo.compo;
+using { managed } from '@sap/cds/common';
+entity Orders : managed {
+  key ID : UUID;
+      orderNo : String(16);
+      items   : Association to many Items on items.order = $self;
+}
+entity Items : managed {
+  key ID : UUID;
+      order   : Association to Orders;
+      quantity: Integer;
+}
+
+// ② compo_a.cds —— 结构完全相同，仅把 items 改成：
+//      items : Composition of many Items on items.order = $self;</code></pre>
+</li>
+<li><b>分别编译并 diff</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile /tmp/cdswork/assoc_c.cds --to sql &gt; /tmp/a.sql
+npx cds compile /tmp/cdswork/compo_a.cds --to sql &gt; /tmp/b.sql
+diff /tmp/a.sql /tmp/b.sql &amp;&amp; echo "两份 DDL 完全一致"</code></pre>
+</li>
+<li><b>实测结果（cds-dk 9.9.6）：<code>diff</code> 无输出</b>，两份 DDL 逐字相同：
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE demo_compo_Orders (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  orderNo NVARCHAR(16),
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE demo_compo_Items (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  order_ID NVARCHAR(36),          -- ← FK 在子表；两种写法都一样
+  quantity INTEGER,
+  PRIMARY KEY(ID)
+);</code></pre>
+</li>
+<li><b>再试「不写 on 条件」的 Composition</b>（很多教程里出现的写法）：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity Orders { key ID : UUID; items : Composition of many Items; }
+entity Items  { key ID : UUID; quantity: Integer; }</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[ERROR] compo_b.cds:6:7: Expected composition with target cardinality ‘of many’ to have an ON-condition
+        (in entity:“demo.compo.Orders”/element:“items”)</code></pre>
+</li>
+<li><b>验证</b>：三条结论一次拿到——① 有 <code>on</code> 条件时 Association 与 Composition 的物理表<b>完全相同</b>，FK 都在子表 <code>order_ID</code>；② <code>Composition of many</code> 缺 <code>on</code> 条件是<b>编译错误</b>；③ 因此「Composition 会改变物理列布局」这个流行说法在本版本上不成立。</li>
+</ol>
+
+<div class="box danger"><b class="t">纠偏：一个被广泛转述的「父表加 FK 列」说法</b>
+<p>坊间（包括一些示例项目的代码注释）常见这样的理由：<i>「用 Composition 时父表会多出一个 FK 列，CSV 播种填不到它，于是 <code>$expand</code> 返回空数组」</i>。<b>本站在同一版本工具链上反复实测，没有复现这个现象</b>：</p>
+<ul>
+<li>to-many 的 Composition 与 Association 编译出的 DDL 逐字相同，FK 列都在<b>子表</b>（<code>order_ID</code>）。</li>
+<li>反过来写 <code>order : Composition of one Orders</code>（子表侧的 to-one 组合），实测子表 <code>demo_t1_Items</code> 得到 <code>order_ID NVARCHAR(36)</code>，父表 <code>demo_t1_Orders</code> 也没有任何额外列。</li>
+<li>真正常见的「列名意外」只有一种：<b>匿名的内联 Composition</b>——见 5-3。</li>
+</ul>
+<p>所以本节给出的取舍理由<b>只基于可核验的三点</b>：语义（是否需要级联删除与 Deep Insert）、服务暴露行为、以及 CSV/查询时 FK 列名是否可预期。<b>建议不要</b>在讲课或文档里继续写「Composition 会在父表加列」——它经不起 <code>diff</code>。</p>
+</div>
+
+<h3 id="s5-3">5-3 真正会咬人的地方：匿名内联 Composition 的 <code>up__ID</code></h3>
+<p>把 Composition 的目标写成「匿名结构体」时，编译器会在后台生成一张实体表，并加一条<b>回链关联 <code>up_</code></b>（官方文档原文：「Behind the scenes this will add an entity named <code>Orders.Items</code> with a backlink association named <code>up_</code>」）。实测：</p>
+<ol class="steps">
+<li><b>编译</b>：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">namespace demo.t5;
+entity Orders {
+  key ID : UUID;
+      items : Composition of many {
+        key pos : Integer;
+        quantity : Integer;
+      };
+}</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile /tmp/cdswork2/inline.cds --to sql</code></pre>
+</li>
+<li><b>实测输出</b>：
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE TABLE demo_t5_Orders (
+  ID NVARCHAR(36) NOT NULL,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE demo_t5_Orders_items (
+  up__ID NVARCHAR(36) NOT NULL,      -- ← 自动加的回链列，名字是 up__ID
+  pos INTEGER NOT NULL,
+  quantity INTEGER,
+  PRIMARY KEY(up__ID, pos)
+);</code></pre>
+</li>
+<li><b>后果与验证</b>：子表的 FK 列名是 <code>up__ID</code>（<code>up_</code> + <code>_</code> + 目标主键名 <code>ID</code>）。如果照直觉在 CSV 里写 <code>order_ID</code> 表头，<code>cds deploy</code> 会整批失败（同类错误的实测原文）：
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">SqliteError: in cds.deploy(): table … has no column named order_ID in:
+INSERT INTO … (ID,order_ID,book_ID,…) …
+/&gt; deployment to db.sqlite failed</code></pre>
+表头写对（<code>up__ID</code>）就能播种成功、<code>$expand</code> 也能返回数据——<b>关键是「CSV 表头必须等于物理列名」，而不是「Composition 不能配 CSV」</b>。</li>
+</ol>
+
+<h3 id="s5-4">5-4 本站示范项目的正例（Association + 显式 FK）</h3>
+<p>示范项目选择 Association，理由是「明细行需要被独立寻址」：<code>BookOrderItems</code> 既挂在订单下，也在服务里被单独暴露（POST 一行明细、PATCH 数量、DELETE 删行），集成测试直接对 <code>/BookOrderItems</code> 发请求。模型与实测产物：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity BookOrders : managed {
+  key ID          : UUID;
+      orderNo     : String(16) not null;
+      customer    : Association to Customers;
+      orderDate   : Date default $now;
+      status      : String(10) default 'OPEN';
+      note        : String(255);
+      totalAmount : Decimal(13,2) default 0;
+      statusCriticality : Integer default 2;
+      items       : Association to many BookOrderItems on items.order = $self;
+}
+
+entity BookOrderItems : managed {
+  key ID       : UUID;
+      order    : Association to BookOrders;
+      book     : Association to Books;
+      quantity : Integer default 1;
+      amount   : Decimal(13,2);
+}</code></pre>
+<p>配套的 CSV（真实内容，表头就是物理列名）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">ID,orderNo,customer_ID,orderDate,status,note,totalAmount,statusCriticality
+4a1f8c03-0001-4000-8000-000000000001,BO-1001,1000,2026-09-01,OPEN,首次订货,16000,2
+…
+ID,order_ID,book_ID,quantity,amount
+5b2f9d10-0001-4000-8000-000000000001,4a1f8c03-0001-4000-8000-000000000001,1001,2,8400</code></pre>
+<p class="small">两个 CSV 的完整内容（含全部 9 行明细）见第 9 节 9-4。</p>
+<ol class="steps">
+<li><b>部署</b>：<code>npm run deploy</code>（= <code>cds deploy --to sqlite:db.sqlite</code>）。</li>
+<li><b>验证「关联真的通了」</b>——不看日志，看 FK 列的值：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3
+c = sqlite3.connect('db.sqlite')
+q = 'select count(*) from sap_training_bookorder_BookOrderItems i join sap_training_bookorder_BookOrders o on i.order_ID = o.ID'
+print('明细能连回订单的行数 =', c.execute(q).fetchone()[0])"</code></pre>
+期望输出 <code>明细能连回订单的行数 = 9</code>（9 行明细全部连得上）。若打印 <code>0</code>，说明 <code>order_ID</code> 为空或指向了不存在的行——这正是 CSV 表头写错时的静默后果（第 9 节）。</li>
+</ol>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能解释 Association 与 Composition 的三项语义差异（Deep Insert、级联删除、服务自动暴露）。</li>
+<li>知道两种写法在本版本的 DDL 相同、FK 都在子表；<b>不会</b>再说「Composition 会在父表加列」。</li>
+<li>知道匿名内联 Composition 的 FK 列名是 <code>up__ID</code>，以及 CSV 表头必须等于物理列名。</li>
+<li>能跑出「9 行明细全部能连回订单」的核对命令。</li>
+</ul>
+</div>
+<div class="box warn"><b class="t">常见错误</b>
+<ul>
+<li>照抄教程写 <code>Composition of many Items</code> 却不写 <code>on</code> 条件 → 编译直接失败（报错原文见 5-2）。</li>
+<li>用了 Composition 又想让明细独立于订单存在（例如把明细挪到别的订单）——语义冲突，应选 Association。</li>
+<li>CSV 表头按「CDS 元素名」而不是「物理列名」写（例如写 <code>order</code>）。表头必须是 <code>order_ID</code>。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>Association 与 Composition 在物理表结构上有没有区别？请说明你的验证方法。</li>
+    <li>Composition 会带来哪三项运行时行为？本站为什么不要它们？</li>
+    <li>匿名内联 Composition 的 FK 列名叫什么？CSV 表头该怎么写？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s6">6. 命名与物理列规则</h2>
+<p>「CDS 里叫 <code>customer</code>，数据库里为什么是 <code>customer_ID</code>」「表名前缀为什么这么长」——三条规则即可算清，全部可用 <code>sqlite_master</code> 自证。</p>
+<table class="tbl">
+<thead><tr><th>规则</th><th>CDS 里写的</th><th>数据库里的（实测）</th></tr></thead>
+<tbody>
+<tr><td>① 命名空间 → 表名前缀（点变下划线，官方称 slugification）</td><td><code>namespace sap.training.bookorder;</code> + <code>entity BookOrders</code></td><td><code>sap_training_bookorder_BookOrders</code></td></tr>
+<tr><td>① 附：点号嵌套的实体名</td><td>匿名内联组合 <code>Orders.items</code></td><td><code>demo_t5_Orders_items</code></td></tr>
+<tr><td>② 关联 → <code>&lt;关联名&gt;_&lt;目标主键&gt;</code></td><td><code>customer : Association to Customers;</code> / <code>book : Association to Books;</code></td><td><code>customer_ID</code> / <code>book_ID</code></td></tr>
+<tr><td>② 附：目标主键是复合键 → <b>每列一个 FK 列</b></td><td><code>parent : Association to Parents;</code>（Parents 主键 <code>tenant + no</code>）</td><td><code>parent_tenant</code>、<code>parent_no</code>（实测同时出现）</td></tr>
+<tr><td>③ 服务里的投影 → 服务名作前缀，且是 VIEW 不是表</td><td><code>service BookOrderService { entity Books as projection on db.Books; }</code></td><td><code>CREATE VIEW BookOrderService_Books AS SELECT …</code></td></tr>
+<tr><td>③ 附：本地化 / 码表</td><td><code>localized String(120)</code>、<code>Currency</code></td><td><code>…_texts</code> 表、<code>localized_…</code> 视图、<code>sap_common_Currencies</code></td></tr>
+</tbody>
+</table>
+<ol class="steps">
+<li><b>先算再核对</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+npx cds compile db/schema.cds --to sql | grep -E 'CREATE TABLE|_ID |PRIMARY KEY'
+npx cds compile db/schema.cds srv/book-order-service.cds --to sql | grep 'CREATE VIEW' | head -3</code></pre>
+</li>
+<li><b>验证</b>：应看到 <code>sap_training_bookorder_BookOrders</code>、<code>customer_ID</code>、<code>order_ID</code>、<code>book_ID</code>、<code>PRIMARY KEY(ID)</code>，以及 <code>CREATE VIEW BookOrderService_Books</code>。</li>
+</ol>
+<h3 id="s6-1">6-1 大小写、保留字与命名规范</h3>
+<ul>
+<li><b>保留字会被加引号</b>：把主键命名为 <code>no</code>，实测 DDL 为 <code>"no" INTEGER NOT NULL</code> 与 <code>PRIMARY KEY(tenant, "no")</code>。命名时避开 <code>no</code>、<code>order</code>、<code>group</code>、<code>select</code> 这类关键字。</li>
+<li><b>HANA 把未加引号的标识符折叠成大写</b>，SQLite 保留原写法。官方文档原话：优先用 <code>Books.Details</code> 这类点号命名而非 <code>BooksDetails</code>，因为在<b>不保留大小写的数据库（例如 SAP HANA）</b>里前者显示为 <code>BOOKS_DETAILS</code>、后者显示为 <code>BOOKSDETAILS</code>。所以在 HANA 的 Database Explorer 里看到 <code>SAP_TRAINING_BOOKORDER_BOOKORDERS</code> 是正常的。</li>
+<li><b>不要和自动生成的 FK 列重名</b>：<code>customer</code>（关联）与 <code>customer_ID</code>（列）是编译器配对的一对；自己再声明 <code>customer_ID : Integer</code> 会与它冲突（那时你得显式写 <code>on</code> 条件把它变成未托管关联）。</li>
+</ul>
+<table class="tbl small">
+<thead><tr><th>官方建议</th><th>反例</th><th>示范项目</th></tr></thead>
+<tbody>
+<tr><td>实体名简洁、用复数</td><td><code>BooksTableMaster</code></td><td><code>Books</code>、<code>Customers</code>、<code>BookOrders</code></td></tr>
+<tr><td>字段不重复上下文</td><td><code>Books.bookTitle</code></td><td><code>Books.title</code></td></tr>
+<tr><td>技术主键统一叫 <code>ID</code></td><td><code>orderUUID</code></td><td>全部实体都是 <code>key ID</code></td></tr>
+<tr><td>业务键另起名字</td><td>拿 <code>orderNo</code> 当主键</td><td><code>orderNo : String(16) not null</code>（唯一性在服务层）</td></tr>
+<tr><td>命名空间用反向域名</td><td><code>namespace proj;</code></td><td><code>namespace sap.training.bookorder;</code></td></tr>
+</tbody>
+</table>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>给定 <code>namespace a.b.c;</code> + <code>entity Orders</code> + <code>customer : Association to Customers;</code>，能直接写出表名与 FK 列名。</li>
+<li>能用 <code>sqlite_master</code> 列出实际表名并解释对应关系。</li>
+<li>知道 HANA 里会看到大写表名，不是错误。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li><code>namespace sap.training.bookorder;</code> 下的 <code>BookOrderItems</code> 在数据库里叫什么？</li>
+    <li><code>book : Association to Books;</code> 生成什么列？若 <code>Books</code> 是复合主键呢？</li>
+    <li>服务里的 <code>projection on</code> 建的是表还是视图？名字带什么前缀？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s7">7. 视图：带主键的可暴露为实体，聚合视图不能</h2>
+<p>现实里你常想把「明细 + 图书 + 订单号」一次查出给前端，或者给出一份订单汇总。CAP 对这两件事的答案不一样。</p>
+<h3 id="s7-1">7-1 带主键的视图 → 可以直接暴露为只读实体</h3>
+<p>示范项目的 <code>OrderItemView</code> 就是这种：它是 <code>as select from</code> 的视图，<code>key ID</code> 沿用了明细行的主键，因此在服务里可以写成 <code>entity OrderItemView as projection on db.OrderItemView;</code> 并被 OData 当成实体发布。实测 DDL（第 1 节同一命令的输出）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">sql</span><button class="copy-btn" type="button">复制</button></div><code class="lang-sql">CREATE VIEW sap_training_bookorder_OrderItemView AS SELECT
+  BookOrderItems_0.ID,
+  order_1.orderNo AS orderNo,
+  order_1.orderDate AS orderDate,
+  BookOrderItems_0.book_ID AS bookID,
+  book_2.title AS bookTitle,
+  book_2.price AS unitPrice,
+  BookOrderItems_0.quantity,
+  BookOrderItems_0.amount
+FROM ((sap_training_bookorder_BookOrderItems AS BookOrderItems_0
+       LEFT JOIN sap_training_bookorder_BookOrders AS order_1 ON BookOrderItems_0.order_ID = order_1.ID)
+       LEFT JOIN sap_training_bookorder_Books AS book_2 ON BookOrderItems_0.book_ID = book_2.ID);</code></pre>
+<p>模型里是这么写的（读者可对照视图别名 <code>order_1</code> / <code>book_2</code> 的来历）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity OrderItemView as select from BookOrderItems {
+  key ID,                          // ← 有主键，所以能当实体暴露
+      order.orderNo   as orderNo,
+      order.orderDate as orderDate,
+      book.ID         as bookID,
+      book.title      as bookTitle,
+      book.price      as unitPrice,
+      quantity,
+      amount
+};</code></pre>
+<ol class="steps">
+<li><b>验证「视图真的能当实体用」</b>：启动服务后读取该实体，行数应等于明细行数（9）。
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds watch            # 另开终端
+curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/OrderItemView" \
+  | python3 -c "import sys,json;print(len(json.load(sys.stdin)['value']))"</code></pre>
+</li>
+<li><b>验证</b>：打印 <code>9</code>；若改成 <code>$top=1</code>，返回行里能看到 <code>orderNo</code>、<code>bookTitle</code>、<code>unitPrice</code> 这些「跨表取来的列」，说明视图的 JOIN 生效。契约测试里对应的用例是 <code>GET OrderItemView (带主键视图，可暴露) → 9</code>。</li>
+</ol>
+<h3 id="s7-2">7-2 聚合结果没有主键 → 只能走函数</h3>
+<p>把上一节改成 <code>group by</code>（例如「每张订单的合计」），编译器无法给出主键，于是 <b>它不能作为实体暴露</b>。实测报错（服务里暴露一个无主键视图时，<code>--to edmx</code> 阶段就拦下来了）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[ERROR] /tmp/cdserr/nokey_view.cds:3:20: Expected entity to have a primary key (in entity:“e.S.V”)</code></pre>
+<p>示范项目的处理（服务定义节选，函数声明部分照抄，注解改为行注释）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">// 单张订单的合计：聚合结果没有主键 → 只能用函数返回
+function getOrderTotal(orderNo : String) returns Decimal(13,2);
+
+// 订单汇总一览：函数返回结构体数组（结果结构体不需要主键）
+type OrderSummaryRow : {
+  orderNo      : String(16);
+  customerName : String(80);
+  orderDate    : Date;
+  status       : String(10);
+  itemCount    : Integer;
+  totalAmount  : Decimal(13,2);
+};
+function getOrderSummary() returns array of OrderSummaryRow;</code></pre>
+<table class="tbl small">
+<thead><tr><th>需求</th><th>可用做法</th><th>为什么</th></tr></thead>
+<tbody>
+<tr><td>明细 + 主数据展开成一张平表</td><td><b>带 <code>key</code> 的 CDS 视图</b> + 服务里 <code>projection on</code></td><td>有主键 → 可发布为 OData 实体，支持 <code>$filter/$orderby/$top</code></td></tr>
+<tr><td>聚合（sum / count / group by）</td><td><b>无绑定函数</b>（示范项目）</td><td>聚合结果没有唯一主键，实体化会被 <code>cds2edm</code> 拒绝；函数返回类型不需要主键</td></tr>
+<tr><td>只想在服务里临时用、不想建数据库视图</td><td><code>@cds.persistence.skip</code> 视图（第 8 节）</td><td>编译不出物理视图，运行时由 CAP 解析</td></tr>
+<tr><td>聚合 + 需要当实体查</td><td>自己造一个稳定主键列（例如 <code>orderNo</code> 或哈希）再暴露</td><td>必须让每行有唯一标识；注意它只是「读」视图，不可写</td></tr>
+</tbody>
+</table>
+<ol class="steps">
+<li><b>验证聚合函数确实返回了正确数字</b>（不靠界面）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/getOrderTotal(orderNo='BO-1003')"
+# 期望 {"@odata.context":"…","value":17400}
+curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/getOrderSummary()" \
+  | python3 -c "import sys,json;[print(r['orderNo'], r['itemCount'], r['totalAmount']) for r in json.load(sys.stdin)['value']]"</code></pre>
+期望汇总四行：<code>BO-1001 3 16000</code>、<code>BO-1002 1 3600</code>、<code>BO-1003 3 17400</code>、<code>BO-1004 2 7600</code>（与 CSV 的 <code>totalAmount</code> 一致——数字对不上就回去查第 9 节的金额列）。</li>
+</ol>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能说出「视图何时能当实体暴露」的判据（是否有 <code>key</code>）。</li>
+<li>知道聚合走函数，并知道 <code>type OrderSummaryRow { … }</code> 声明的返回结构不需要主键。</li>
+<li>能跑通上面两条 curl 并核对到 <code>17400</code> 与四行汇总。</li>
+</ul>
+</div>
+<div class="box warn"><b class="t">常见错误</b>
+把聚合视图直接 <code>as projection on</code> 进服务 → 服务启动/编译期报 <code>Expected entity to have a primary key</code>。另一个常见坑是给无主键视图「硬加」<code>key 1 as ID</code> 之类的常量主键：这样每行主键相同，OData 单行读取会永远命中同一条。</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>为什么 <code>OrderItemView</code> 能直接暴露，而「订单汇总」只能用函数？</li>
+    <li><code>type X : { … }</code> 用在函数返回类型上，为什么不需要主键？</li>
+    <li>如果一定要把汇总做成实体，你需要补什么？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s8">8. 注解基础：写在哪、影响什么</h2>
+<p>注解（annotation）以 <code>@</code> 开头，能写在<b>定义（entity/service/type）、元素、参数</b>三处。位置决定作用范围——这是初学者最容易放错的地方。本节只讲示范项目真正用到的，其余给官方位置。</p>
+<h3 id="s8-1">8-1 本项目用到的注解与实测效果</h3>
+<table class="tbl">
+<thead><tr><th>注解</th><th>写在哪</th><th>作用</th><th>实测证据</th></tr></thead>
+<tbody>
+<tr><td><code>@readonly</code></td><td>实体 或 元素</td><td>实体：整块只读（OData 里拒绝写）；元素：不可改</td><td>服务里 <code>@readonly entity OrderItemView</code> 编译后在 <code>$metadata</code> 里生成 <code>Capabilities.DeleteRestrictions/InsertRestrictions/UpdateRestrictions</code> 全为 <code>false</code>；元素级 <code>c : Integer @readonly</code> 生成 <code>Core.Computed Bool="true"</code></td></tr>
+<tr><td><code>@mandatory</code></td><td>元素</td><td>界面必填；OData 侧给 FieldControl</td><td>实测 <code>a : String(10) @mandatory</code> → <code>&lt;Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/&gt;</code>（注意：它<b>不</b>等于 <code>not null</code>，数据库列仍可为空）</td></tr>
+<tr><td><code>@title</code> / <code>@description</code></td><td>定义 或 元素</td><td>人类可读标签/说明；进 <code>$metadata</code></td><td>实测 <code>annotate Books with @(title:'图书', description:'商品主数据')</code> → <code>Common.Label String="图书"</code>、<code>Core.Description String="商品主数据"</code></td></tr>
+<tr><td><code>@cds.persistence.skip</code></td><td>视图实体</td><td>不生成数据库对象，运行时由 CAP 解析</td><td>实测：加它之后 <code>CREATE VIEW an_S_VSkip</code> <b>不出现在</b> SQL 输出里；写成 <code>@cds.persistence.skip : 'if-unused'</code> 时视图<b>仍然生成</b>（因被引用）</td></tr>
+<tr><td><code>@odata.draft.enabled</code></td><td>服务里的实体</td><td>开启草稿（Fiori 编辑流程）</td><td>实测：多出 <code>BookOrderService_BookOrders_drafts</code> 与 <code>DRAFT_DraftAdministrativeData</code> 两张表；<code>$metadata</code> 的 <code>BookOrders</code> 主键变成 <code>ID + IsActiveEntity</code>，并多出 <code>SiblingEntity</code> 导航</td></tr>
+<tr><td><code>@requires</code></td><td>服务 或 实体</td><td>访问需要哪些角色/范围</td><td>示范项目服务定义：<code>service BookOrderService @(requires: 'authenticated-user')</code> → 匿名访问被拒（契约测试：<code>GET /BookOrders 匿名 → 401</code>）</td></tr>
+<tr><td><code>@restrict</code></td><td>服务 或 实体</td><td>按操作细分授权（grant/to/where）</td><td>本站示范项目未使用；完整用法见 <a href="security.html">⑧ 权限</a> 与官方文档 <code>cap.cloud.sap/docs/cds/annotations</code> 的 Access Control 段</td></tr>
+<tr><td><code>@cds.redirection.target</code></td><td>服务里的实体</td><td>同一源实体被投影两次时，指定哪个是导航目标</td><td>见 8-3：不加它直接编译失败，报错里就写着修复办法</td></tr>
+</tbody>
+</table>
+<ol class="steps">
+<li><b>亲手看一遍 <code>@readonly</code> 与 <code>@odata.draft.enabled</code> 的产物</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+# ① draft 带来的表
+npx cds compile db/schema.cds srv/book-order-service.cds --to sql | grep 'CREATE TABLE'
+# ② $metadata 里的只读限制与草稿
+npx cds compile db/schema.cds srv/book-order-service.cds app/book-orders/annotations.cds --to edmx \
+  | grep -A6 'EntityContainer/OrderItemView'</code></pre>
+</li>
+<li><b>验证</b>：① 会看到 <code>BookOrderService_BookOrders_drafts</code> 与 <code>DRAFT_DraftAdministrativeData</code>；② 会看到 <code>Capabilities.DeleteRestrictions</code>、<code>InsertRestrictions</code>、<code>UpdateRestrictions</code> 三段，值都是 <code>false</code>。<code>git diff</code> 里看不到表结构变化，说明注解只改元数据。</li>
+</ol>
+<h3 id="s8-2">8-2 位置规则速记</h3>
+<ul>
+<li><b>定义级</b>：<code>@readonly entity X { … }</code> 或 <code>entity X @(readonly) { … }</code>；也常用 <code>annotate X with @(…);</code> 把注解与核心模型分开写（示范项目的 <code>app/book-orders/annotations.cds</code> 就是这种「注解层」）。</li>
+<li><b>元素级</b>：<code>totalAmount : Decimal(13,2) @readonly</code>；或 <code>annotate service.BookOrders with { totalAmount : @readonly };</code>。</li>
+<li><b>服务级</b>：<code>service S @(requires: 'authenticated-user') { … }</code>——作用到该服务下所有实体。</li>
+<li><b>写在 <code>db/schema.cds</code> 还是 <code>app/</code> 里？</b>域相关（<code>@mandatory</code> 这类「业务规则」）可留在 <code>db</code>；界面相关（<code>UI.*</code>）放 <code>app/</code>；授权相关放 <code>srv</code> 或独立文件。示范项目：域模型里只有 <code>@title/@description/@readonly</code>，UI 全在 <code>app/</code>。</li>
+<li><b>官方清单</b>：其他注解（<code>@assert.unique</code>、<code>@cds.valid.from/to</code>、<code>@Capabilities.*</code>、<code>@Common.Text</code>…）见 <code>cap.cloud.sap/docs/cds/annotations</code>；<span class="tag">~</span>本站未逐一验证。</li>
+</ul>
+<h3 id="s8-3">8-3 实战：<code>@cds.redirection.target</code> 与那条必须记住的报错</h3>
+<p>示范项目里 <code>BookOrderItems</code> 与 <code>OrderItemView</code> <b>都来自</b> <code>db.BookOrderItems</code>。此时 <code>BookOrders:items</code> 这条导航该指向谁？编译器不会猜，它直接报错并告诉你加什么注解。把服务里那行注解注释掉，实测输出：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[ERROR] srv/no_redir.cds:16:10: Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems”
+        or “BookOrderService.OrderItemView” to select the entity as redirection target for
+        “sap.training.bookorder.BookOrderItems” in this service; can't auto-redirect
+        “BookOrderService.BookOrders:items” otherwise (in entity:“BookOrderService.BookOrderItems”)</code></pre>
+<p>修复（示范项目实际写法）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">/* 两张实体都源自 db.BookOrderItems → 必须显式指定重定向目标，
+   否则 CAP 报 “can't auto-redirect BookOrders:items” */
+@cds.redirection.target
+entity BookOrderItems as projection on db.BookOrderItems;
+
+@readonly
+entity OrderItemView as projection on db.OrderItemView;</code></pre>
+<ol class="steps">
+<li><b>复现</b>：注释掉 <code>@cds.redirection.target</code> 后执行 <code>npx cds compile db/schema.cds srv/book-order-service.cds --to edmx</code>，得到上面那条报错（位置精确到行:列）。</li>
+<li><b>验证</b>：把注解加回，同一条命令立刻输出 XML（第一行 <code>&lt;?xml version="1.0" encoding="utf-8"?&gt;</code>），且 <code>$metadata</code> 里 <code>BookOrders</code> 的 <code>NavigationPropertyBinding Path="items"</code> 指向 <code>BookOrderItems</code>。这就是「注解改的是导航落点」的可观察证据。</li>
+</ol>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能说出 <code>@readonly</code>、<code>@mandatory</code>、<code>@cds.persistence.skip</code>、<code>@odata.draft.enabled</code> 各自影响什么（元数据 / DDL / 二者）。</li>
+<li>知道 <code>@mandatory</code> 不等于 <code>not null</code>。</li>
+<li>能在 30 秒内修好 <code>can't auto-redirect</code> 类报错。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li><code>@readonly</code> 写在实体上和写在元素上，产物分别是什么？</li>
+    <li><code>@cds.persistence.skip</code> 与 <code>@cds.persistence.skip : 'if-unused'</code> 有什么区别？</li>
+    <li><code>@odata.draft.enabled</code> 会让数据库多出什么？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s9">9. 数据初始化与种子数据（CSV）</h2>
+<p><code>cds deploy</code> 会做两件事：<b>建 schema</b>、然后把 <code>db/data/*.csv</code> 灌进去。<code>cds env get requires.db</code> 的实测输出里已经告诉你扫描目录：<code>"data": [ "db/data", "db/csv", "test/data" ]</code>。</p>
+<h3 id="s9-1">9-1 三条规则</h3>
+<table class="tbl">
+<thead><tr><th>规则</th><th>示范项目实例</th><th>为什么</th></tr></thead>
+<tbody>
+<tr><td>① 文件名 = <code>&lt;命名空间&gt;-&lt;实体名&gt;.csv</code>（命名空间的点在文件名里保留）</td><td><code>sap.training.bookorder-BookOrders.csv</code>、<code>sap.training.bookorder-BookOrderItems.csv</code>；码表是 <code>sap.common-Currencies.csv</code></td><td>CAP 用文件名反查实体；名字写错则该文件被忽略（表保持空）</td></tr>
+<tr><td>② 表头 = <b>物理列名</b>（不是 CDS 元素名）</td><td><code>order_ID</code>、<code>book_ID</code>、<code>customer_ID</code>（不是 <code>order</code>/<code>book</code>/<code>customer</code>）</td><td>CSV 直接对物理表 INSERT；写错 → 整个 deploy 回滚</td></tr>
+<tr><td>③ 每一行都要能自洽（金额=单价×数量、汇总=明细之和）</td><td><code>BO-1001</code>：<code>8400+2800+4800 = 16000</code></td><td>播种完就有一份「会算的」测试数据，后续 UI/函数都能对账</td></tr>
+</tbody>
+</table>
+<figure class="fig" data-fig="cds_s06">
+  <a class="zoom" href="assets/fig/cds_s06.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cds_s06.svg" alt="BAS 中打开的订单明细 CSV，表头为 ID,order_ID,book_ID,quantity,amount" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">db/data/sap.training.bookorder-BookOrderItems.csv 的真实内容：文件名 = <命名空间>-<实体名>.csv，表头 = 物理列名（order_ID / book_ID）</span><span class="kind">高保真重绘</span><span class="src">本站示范项目 project-code/demo-node/db/data/（实际文件内容）</span></figcaption>
+</figure>
+<h3 id="s9-2">9-2 手顺：部署 + 自检（这是每改一次模型的固定动作）</h3>
+<div class="stepmeta"><span class="k">npm run deploy</span><span class="f">db/data/*.csv · db.sqlite</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+<li><b>部署</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+npm run deploy</code></pre>
+期望输出（实测）：
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">&gt; demo-node@1.0.0 deploy
+&gt; cds deploy --to sqlite:db.sqlite
+
+  &gt; init from db/data/sap.training.bookorder-Customers.csv
+  &gt; init from db/data/sap.training.bookorder-Books.csv
+  &gt; init from db/data/sap.training.bookorder-BookOrders.csv
+  &gt; init from db/data/sap.training.bookorder-BookOrderItems.csv
+/&gt; successfully deployed to db.sqlite</code></pre>
+</li>
+<li><b>验证 1：表都建出来了</b>（<code>python3</code> 查 <code>sqlite_master</code>，这是最快的人工核对方式）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3
+c = sqlite3.connect('db.sqlite')
+q = 'select name, type from sqlite_master where type in (\"table\",\"view\") order by type, name'
+for n, t in c.execute(q): print(f'{t:5} {n}')"</code></pre>
+期望（实测完整清单，7 表 7 视图）：
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">table BookOrderService_BookOrders_drafts
+table DRAFT_DraftAdministrativeData
+table cds_outbox_Messages
+table sap_training_bookorder_BookOrderItems
+table sap_training_bookorder_BookOrders
+table sap_training_bookorder_Books
+table sap_training_bookorder_Customers
+view  BookOrderService_BookOrderItems
+view  BookOrderService_BookOrders
+view  BookOrderService_Books
+view  BookOrderService_Customers
+view  BookOrderService_DraftAdministrativeData
+view  BookOrderService_OrderItemView
+view  sap_training_bookorder_OrderItemView</code></pre>
+</li>
+<li><b>验证 2：数据与对账</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3
+c = sqlite3.connect('db.sqlite')
+for t in ('Books','Customers','BookOrders','BookOrderItems'):
+    n = c.execute(f'select count(*) from sap_training_bookorder_{t}').fetchone()[0]
+    print(t, n)
+q = 'select o.orderNo, count(i.ID), sum(i.amount) from sap_training_bookorder_BookOrders o join sap_training_bookorder_BookOrderItems i on i.order_ID = o.ID group by o.orderNo order by o.orderNo'
+for r in c.execute(q): print(r)"</code></pre>
+期望：<code>Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9</code>，汇总为 <code>BO-1001 3 16000</code>、<code>BO-1002 1 3600</code>、<code>BO-1003 3 17400</code>、<code>BO-1004 2 7600</code>（与 CSV 的 <code>totalAmount</code> 逐行一致）。</li>
+<li><b>注意</b>：重复执行 <code>npm run deploy</code> 是安全的——沙箱实测：加了一列后再次 deploy，CSV 重新初始化而<b>行数不变</b>（不会重复插入）。真正的数据迁移（保留线上数据）不在 <code>cds deploy</code> 的职责里，那属于部署话题（见 <a href="deploy.html">⑩ 部署</a>）。</li>
+</ol>
+<h3 id="s9-3">9-3 CSV 的五种坏法（全部实测）</h3>
+<table class="tbl small">
+<thead><tr><th>坏法</th><th>现象 / 实测报错</th><th>修法</th></tr></thead>
+<tbody>
+<tr><td>表头写了 CDS 元素名（<code>orders_ID</code>、<code>currency</code>）</td><td><code>SqliteError: in cds.deploy(): table sap_training_bookorder_BookOrderItems has no column named orders_ID</code> + <code>deployment to db.sqlite failed</code>（<b>整个 deploy 回滚</b>）</td><td>表头改成物理列名：<code>order_ID</code>、<code>book_ID</code>、<code>currency_code</code></td></tr>
+<tr><td>少写一列（例如漏了 <code>status</code>）</td><td><b>部署成功</b>，该列取 CDS 里的 <code>default</code>（没写 default 就是 NULL）</td><td>正常行为，但要确认业务上可接受</td></tr>
+<tr><td>把 <code>not null</code> 且无 default 的列漏掉</td><td><code>SqliteError: in cds.deploy(): NOT NULL constraint failed: sap_training_bookorder_BookOrderItems.serial</code></td><td>CSV 补列，或给该列加 <code>default</code></td></tr>
+<tr><td>同一主键出现两次</td><td><code>SqliteError: in cds.deploy(): UNIQUE constraint failed: sap_training_bookorder_BookOrderItems.ID</code></td><td>UUID 不要手抄重复；用唯一序号生成</td></tr>
+<tr><td>FK 指向不存在的行（<code>book_ID=9999</code>）</td><td><b>部署成功、无任何报错</b>（SQLite 不校验 FK）；后果是 <code>join</code> 结果为 0、<code>$expand=book</code> 拿到空/nil</td><td>播种后自己查一次「孤儿行」（见下方命令）</td></tr>
+</tbody>
+</table>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3
+c = sqlite3.connect('db.sqlite')
+q = 'select count(*) from sap_training_bookorder_BookOrderItems i left join sap_training_bookorder_Books b on i.book_ID = b.ID where b.ID is null'
+print('孤儿明细行 =', c.execute(q).fetchone()[0])"</code></pre>
+<p>期望 <code>孤儿明细行 = 0</code>。实测把 CSV 里某行的 <code>book_ID</code> 改成 <code>9999</code> 后：deploy 仍打印成功，但该查询返回 1，且 <code>join</code> 计数从 1 变 0——这就是「静默坏数据」的现场。</p>
+<figure class="fig" data-fig="cds_s03">
+  <a class="zoom" href="assets/fig/cds_s03.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cds_s03.svg" alt="终端显示 cds deploy 成功与 sqlite_master 查询结果：7 张表 7 个视图" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 5</span><span class="cap">部署与自检：npm run deploy 的 4 个 CSV 初始化行 + 用 sqlite_master 核对实际建出的 7 表 7 视图</span><span class="kind">高保真重绘</span><span class="src">本地实测：npm run deploy（cds deploy --to sqlite:db.sqlite）与 python3 查询 sqlite_master</span></figcaption>
+</figure>
+<h3 id="s9-4">9-4 本站四个 CSV 的完整内容（测试数据规范）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">── db/data/sap.training.bookorder-Books.csv
+ID,title,author,price,currency,stock
+1001,SAP CAP 实战,张伟,4200,JPY,120
+1002,SAP BTP 入门,李娜,3600,JPY,80
+1003,CDS 建模精要,王强,2800,JPY,200
+1004,ABAP 到 CAP 迁移指南,刘洋,5200,JPY,35
+1005,SAP Fiori Elements 实战,陈静,4800,JPY,60
+
+── db/data/sap.training.bookorder-Customers.csv
+ID,name,city,country,email
+1000,北京华信书业,北京市海淀区,CN,order@bj-huaxin.example.cn
+2000,上海博文出版中心,上海市浦东新区,CN,sales@sh-bowen.example.cn
+3000,广州南方图书,广东省广州市,CN,buy@gz-nanfang.example.cn
+
+── db/data/sap.training.bookorder-BookOrders.csv
+ID,orderNo,customer_ID,orderDate,status,note,totalAmount,statusCriticality
+4a1f8c03-0001-4000-8000-000000000001,BO-1001,1000,2026-09-01,OPEN,首次订货,16000,2
+4a1f8c03-0002-4000-8000-000000000002,BO-1002,1000,2026-09-03,OPEN,,3600,2
+4a1f8c03-0003-4000-8000-000000000003,BO-1003,2000,2026-09-05,SUBMITTED,加急,17400,3
+4a1f8c03-0004-4000-8000-000000000004,BO-1004,3000,2026-09-08,CLOSED,已结案,7600,0
+
+── db/data/sap.training.bookorder-BookOrderItems.csv
+ID,order_ID,book_ID,quantity,amount
+5b2f9d10-0001-4000-8000-000000000001,4a1f8c03-0001-4000-8000-000000000001,1001,2,8400
+5b2f9d10-0002-4000-8000-000000000002,4a1f8c03-0001-4000-8000-000000000001,1003,1,2800
+5b2f9d10-0003-4000-8000-000000000003,4a1f8c03-0001-4000-8000-000000000001,1005,1,4800
+5b2f9d10-0004-4000-8000-000000000004,4a1f8c03-0002-4000-8000-000000000002,1002,1,3600
+5b2f9d10-0005-4000-8000-000000000005,4a1f8c03-0003-4000-8000-000000000003,1001,1,4200
+5b2f9d10-0006-4000-8000-000000000006,4a1f8c03-0003-4000-8000-000000000003,1004,2,10400
+5b2f9d10-0007-4000-8000-000000000007,4a1f8c03-0003-4000-8000-000000000003,1003,1,2800
+5b2f9d10-0008-4000-8000-000000000008,4a1f8c03-0004-4000-8000-000000000004,1005,1,4800
+5b2f9d10-0009-4000-8000-000000000009,4a1f8c03-0004-4000-8000-000000000004,1003,1,2800</code></pre>
+<ul>
+<li><b>主键刻意可读</b>：<code>4a1f8c03-0001-…</code> 对应的就是 <code>BO-1001</code>，<code>5b2f9d10-0001-…</code> 是它的第一行明细——讲课时一眼就能对上，不必复制粘贴 UUID。</li>
+<li><b>数字能对账</b>：明细 <code>amount</code> = 图书 <code>price</code> × <code>quantity</code>；订单 <code>totalAmount</code> = 该订单明细之和。测试里出现的 8400/2800/4800/3600/4200/10400 都能手算复现。</li>
+<li><b>状态与着色一致</b>：<code>OPEN→2</code>、<code>SUBMITTED→3</code>、<code>CLOSED→0</code>，与 <code>book-order-service.js</code> 里 <code>criticalityOf()</code> 的映射一致（否则 Fiori 列表的颜色会和数据打架）。</li>
+<li><b>中文不写引号</b>：<code>note</code> 里的「加急」直接写；若内容本身含逗号，用双引号包起来（标准 CSV 规则）。</li>
+</ul>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>能从文件名说出它初始化哪张表；知道扫描目录是 <code>db/data</code>（还有 <code>db/csv</code>、<code>test/data</code>）。</li>
+<li>知道表头必须是物理列名，并能举出 <code>order_ID</code> 这个例子。</li>
+<li>能从 <code>sqlite_master</code> 与行数/汇总两条命令判断「播种成功」。</li>
+<li>知道 FK 指向不存在的行不会报错，需要自己查孤儿行。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li><code>sap.training.bookorder-BookOrders.csv</code> 初始化的是哪张表？文件名规则是什么？</li>
+    <li>表头写 <code>order</code> 而不是 <code>order_ID</code> 会发生什么？</li>
+    <li>CSV 里少写一列、多写一列、重复主键，分别是什么结果？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s10">10. 建模排错手册（16 行）</h2>
+<p>下表每一行都是「现象 → 原因 → 对策」，其中报错文本与 DDL 均为本机实测原文（用 <code>cds-dk 9.9.6</code>）。完整排错索引见 <a href="issues.html">排错页</a>；命令速查见 <a href="cli.html">速查页</a>。</p>
+<table class="tbl small">
+<thead><tr><th>#</th><th>现象（报错原文 / 观察）</th><th>原因</th><th>对策</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>Mismatched ‘#’, expecting ‹Identifier›, ‘}’, ‘@’, ‘key’, ‘virtual’</code></td><td>多写/错放了 <code>#</code>（枚举值才用 <code>#</code>，且只在注解或 <code>enum</code> 上下文里）</td><td>看报错的 <code>行:列</code> 删掉多余字符；想写行注释用 <code>//</code></td></tr>
+<tr><td>2</td><td><code>Mismatched ‹EOF›, expecting …</code></td><td>括号不配对（最常见的 <code>}</code> 少一个）</td><td>编辑器里逐个折叠实体确认；<code>cds compile</code> 会报文件末尾位置</td></tr>
+<tr><td>3</td><td><code>Expected entity to have a primary key (in entity:“e.S.V”)</code></td><td>视图没有 <code>key</code>（聚合、或 <code>select</code> 里没保留主键），却暴露在服务里</td><td>保留 <code>key ID</code>；聚合改用函数；或加 <code>@cds.persistence.skip</code></td></tr>
+<tr><td>4</td><td><code>Add “@cds.redirection.target” to either … ; can't auto-redirect “BookOrders:items” otherwise</code></td><td>同一源实体在本服务里被投影两次（<code>BookOrderItems</code> 与 <code>OrderItemView</code>）</td><td>给想作为导航目标的那张加 <code>@cds.redirection.target</code>（示范项目给的是 <code>BookOrderItems</code>）</td></tr>
+<tr><td>5</td><td><code>Unmanaged associations can't be used in expressions in queries (in entity:“ue.V”/column:“n”)</code></td><td>对未托管关联做聚合/运算，例如 <code>count(b)</code></td><td>改成对 FK 列聚合：<code>count(b_ID)</code>，或先把关联展开成正规视图</td></tr>
+<tr><td>6</td><td><code>Unexpected reference to an unmanaged association (in entity:“ue.V”/query:1)</code> / <code>Associations can't be used as values in expressions</code></td><td>把关联当值用，例如 <code>where b is not null</code>、<code>group by b</code></td><td>写成 <code>b.ID is not null</code> / <code>group by b_ID</code></td></tr>
+<tr><td>7</td><td><code>table sap_training_bookorder_BookOrderItems has no column named orders_ID</code> + <code>deployment to db.sqlite failed</code></td><td>CSV 表头写了 CDS 元素名或拼错（<code>orders_ID</code>）</td><td>表头改成物理列名 <code>order_ID</code>；用 <code>--to sql</code> 核对列名</td></tr>
+<tr><td>8</td><td><code>UNIQUE constraint failed: sap_training_bookorder_BookOrderItems.ID</code></td><td>CSV 里主键重复</td><td>去重；UUID 列不要手抄</td></tr>
+<tr><td>9</td><td><code>NOT NULL constraint failed: …serial</code></td><td>CSV 缺少 <code>not null</code> 且无 <code>default</code> 的列</td><td>补列或给 <code>default</code></td></tr>
+<tr><td>10</td><td>deploy 成功但 <code>$expand=items</code> 返回空数组</td><td>子表 FK 列没值（表头写错、或用 <code>up__ID</code> 之类没填对）</td><td>查 FK 列与 join 计数（9-3 的命令）；确认表头 = 物理列名</td></tr>
+<tr><td>11</td><td>CSV 表头写 <code>currency</code> 报 <code>has no column named currency</code></td><td>用了 <code>Currency</code> 类型 → 物理列是 <code>currency_code</code></td><td>表头改 <code>currency_code</code>；如需码表内容另加 <code>db/data/sap.common-Currencies.csv</code></td></tr>
+<tr><td>12</td><td><code>Expected composition with target cardinality ‘of many’ to have an ON-condition</code></td><td><code>Composition of many</code> 没写 <code>on</code> 条件</td><td>补 <code>on items.order = $self;</code>（或改用 Association）</td></tr>
+<tr><td>13</td><td>FK 列名与预期不符（出现 <code>up__ID</code>）</td><td>用了匿名内联组合 <code>Composition of many { … }</code>，编译器自动加回链 <code>up_</code></td><td>CSV 表头写 <code>up__ID</code>；或改成具名实体 + 显式关联（推荐）</td></tr>
+<tr><td>14</td><td>改列名/类型后 deploy 报列不存在或数据错位</td><td>schema drift：模型与已存在的物理表不一致</td><td>SQLite 实测：加列会 <code>ALTER</code> 成功、数据保留；改类型在 SQLite 上因动态类型不报错（实测 <code>price</code> 从 <code>DECIMAL</code> 变 <code>INTEGER</code> 且 2 行数据保留）。<b>生产（HANA）</b><span class="tag">~</span>请走正式迁移（HDI 部署/迁移文件），不要靠删库重建——本地确认不了的行为以官方《Databases》指南为准</td></tr>
+<tr><td>15</td><td><code>Unmanaged associations/compositions can't be defined as primary key</code></td><td>把未托管关联写成 <code>key</code></td><td>改成托管关联 <code>key order : Association to Orders;</code>，或改用普通列做主键</td></tr>
+<tr><td>16</td><td>改了 <code>db/schema.cds</code> 但表没变</td><td>只跑了 <code>cds compile</code>（只打印，不落库）；或服务在读旧 <code>db.sqlite</code></td><td>跑 <code>npm run deploy</code>；或用 <code>cds watch</code>（自动重启并重新部署）</td></tr>
+</tbody>
+</table>
+<ol class="steps">
+<li><b>排错动作顺序（照这个顺序做，比乱猜快）</b>：① 先跑 <code>npx cds compile &lt;文件&gt; --to sql</code> 看是不是模型本身的问题；② 报错含行:列就去那一行；③ 报错出现在 deploy 阶段就看它是「建表失败」还是「灌数据失败」（看是否已打印 <code>&gt; init from …</code>）；④ 灌数据失败一律先核 CSV 表头与物理列名；⑤ 修完再跑 9-2 的两条自检命令。</li>
+<li><b>验证</b>：挑任意一行复现成功即可——例如把 <code>items</code> 的 <code>order_ID</code> 改成 <code>orders_ID</code>，deploy 必须失败在 <code>no column named orders_ID</code>；改回来必须成功。这就是「手册可复现」的判据。</li>
+</ol>
+<figure class="fig" data-fig="cds_s05">
+  <a class="zoom" href="assets/fig/cds_s05.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cds_s05.svg" alt="终端显示四条 CAP 报错：Mismatched #、Mismatched EOF、can't auto-redirect、no column named" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">建模期最常见的四类报错（本地实测原样）：词法错误、EOF 不配对、多实体同源的重定向、CSV 列名与物理列不符</span><span class="kind">高保真重绘</span><span class="src">本地实测：npx cds compile / npx cds deploy（cds-dk 9.9.6）；长行已截断</span></figcaption>
+</figure>
+<div class="box ok"><b class="t">验收</b>
+<ul class="check">
+<li>遇到报错能先判断它属于「编译期」还是「部署期」。</li>
+<li>能背出第 7、10、11 行（全是 CSV 表头惹的祸）。</li>
+<li>知道第 4 行报错里已经写好了修复注解名，不必搜索。</li>
+</ul>
+</div>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>报错 <code>Mismatched ‹EOF›</code> 说明什么？</li>
+    <li><code>can't auto-redirect</code> 的修复动作是什么？</li>
+    <li>deploy 打印了 <code>successfully deployed</code> 但 <code>$expand</code> 是空的，你会查哪三件事？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cds">自测 · CDS 建模</a>。</p>
+</div>
+
+<h2 id="s11">11. 建模练习（3 个递进小练习）</h2>
+<p>三个练习都只动模型与 CSV，不需要写业务逻辑；每个练习都给了<b>可观察的完成基准</b>。命令前缀统一为：</p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"</code></pre>
+
+<h3 id="s11-1">练习 1（基础·10 分）：给客户加一个信用额度字段</h3>
+<div class="stepmeta"><span class="k">cds compile / cds deploy</span><span class="f">db/schema.cds · db/data/sap.training.bookorder-Customers.csv</span><span class="c">10 分</span></div>
+<ol class="steps">
+<li><b>改模型</b>：给 <code>entity Customers</code> 增加 <code>creditLimit : Decimal(13,2) default 0;</code>。</li>
+<li><b>改数据</b>：CSV 表头追加 <code>creditLimit</code>，并给三行分别填 <code>100000</code>、<code>50000</code>、<code>20000</code>。</li>
+<li><b>部署并核对</b>：<code>npm run deploy</code> 后执行
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3; c = sqlite3.connect('db.sqlite')
+print([r[1] + ':' + r[2] for r in c.execute('pragma table_info(sap_training_bookorder_Customers)')])
+print(c.execute('select ID, creditLimit from sap_training_bookorder_Customers order by ID').fetchall())"</code></pre>
+</li>
+</ol>
+<p><b>完成基准</b>：① <code>pragma table_info</code> 里出现 <code>creditLimit:DECIMAL(13, 2)</code>；② 三行额度分别是 <code>100000.0</code>、<code>50000.0</code>、<code>20000.0</code>；③ 在 CSV 里故意把表头写成 <code>credit_limit</code> 再跑一次，必须失败在 <code>no column named credit_limit</code>（证明你理解了表头规则）。</p>
+
+<h3 id="s11-2">练习 2（关联·20 分）：新增供应商并与图书建立关联</h3>
+<div class="stepmeta"><span class="k">cds compile</span><span class="f">db/schema.cds · db/data/*.csv</span><span class="c">20 分</span></div>
+<ol class="steps">
+<li><b>加实体</b>：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity Suppliers {
+  key ID : Integer;
+      name : String(80) not null;
+      city : String(60);
+}</code></pre>
+</li>
+<li><b>加关联</b>：在 <code>Books</code> 上加 <code>supplier : Association to Suppliers;</code>（提示：这会自动产生 <code>supplier_ID</code> 列，你不需要手写它）。</li>
+<li><b>播种</b>：新增 <code>db/data/sap.training.bookorder-Suppliers.csv</code>（至少 2 行），并给 <code>Books.csv</code> 追加 <code>supplier_ID</code> 列（注意表头必须是这个物理列名）。</li>
+<li><b>编译核对</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds --to sql | grep -A9 'CREATE TABLE sap_training_bookorder_Books'
+npx cds compile db/schema.cds srv/book-order-service.cds --to edmx | grep -A3 'NavigationProperty Name="supplier"'</code></pre>
+</li>
+</ol>
+<p><b>完成基准</b>：① <code>Books</code> 的 DDL 里出现 <code>supplier_ID INTEGER</code>；② A 服务侧 <code>$metadata</code> 里出现 <code>NavigationProperty Name="supplier"</code> 且带 <code>ReferentialConstraint Property="supplier_ID" ReferencedProperty="ID"</code>；③ <code>python3</code> 查孤儿行返回 <code>0</code>。</p>
+
+<h3 id="s11-3">练习 3（视图与取舍·30 分）：做一张「库存视图」，再故意做错一次</h3>
+<div class="stepmeta"><span class="k">cds compile --to sql / --to edmx</span><span class="f">db/schema.cds · srv/book-order-service.cds</span><span class="c">30 分</span></div>
+<ol class="steps">
+<li><b>写带主键的视图</b>：在 <code>db/schema.cds</code> 末尾加
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity BookStockView as select from Books {
+  key ID,
+      title,
+      price,
+      stock
+};</code></pre>
+并在服务里加 <code>@readonly entity BookStockView as projection on db.BookStockView;</code>。</li>
+<li><b>增加一个聚合视图，故意不带主键</b>：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">entity StockByAuthor as select from Books {
+      author,
+      sum(stock) as totalStock : Integer
+};</code></pre>
+把它也暴露到服务里（<code>entity StockByAuthor as projection on db.StockByAuthor;</code>），然后编译：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds srv/book-order-service.cds --to edmx 2>&1 | head -3</code></pre>
+</li>
+<li><b>两种修法都试一次</b>：① 删掉服务里的 <code>StockByAuthor</code>，改用函数返回；② 保留视图但加 <code>@cds.persistence.skip</code>，看 <code>--to sql</code> 是否就不再产生物理视图。</li>
+</ol>
+<p><b>完成基准</b>：① <code>BookStockView</code> 在 <code>--to sql</code> 里是 <code>CREATE VIEW</code>，在 <code>--to edmx</code> 里是 <code>EntitySet</code>（只读：三段 Restrictions 均为 <code>false</code>）；② 暴露无主键视图时得到 <code>Expected entity to have a primary key</code> 报错，且你能一字不差地说出这句话；③ 加 <code>@cds.persistence.skip</code> 后 <code>--to sql</code> 里该视图消失，但服务仍可使用（CAP 运行时解析）。</p>
+<div class="box ok"><b class="t">三个练习的统一验收</b>
+<ul class="check">
+<li>每次改模型都先跑 <code>cds compile --to sql</code>，再看 deploy 结果。</li>
+<li>CSV 表头一律用物理列名；改列名后先跑 <code>grep</code> 核对 DDL。</li>
+<li>能用一句 SQL/python 证明「数据是对的」而不只是「部署没报错」。</li>
+</ul>
+</div>
+
+<h2 id="s12">12. 本节测试</h2>
+<p>先合上本页做一遍，再对照答案。<a href="quiz.html#q-cds">自测页</a>上有同主题的机考题（自动判分，合格线 75%）。</p>
+<ol class="steps">
+<li>写出「三种 .cds 文件」各自的职责与编译产物。</li>
+<li><code>cds compile --to sql</code>、<code>--to hdbtable</code>、<code>--to edmx</code>、<code>--to csn</code> 分别产出什么？各自什么时候用？</li>
+<li><code>String</code>（无长度）在 SQLite 与 HANA 上分别是什么列？为什么这是个坑？</li>
+<li><code>key ID : UUID</code> 与 <code>entity X : cuid { }</code> 有区别吗？UUID 主键由谁生成？</li>
+<li><code>managed</code> 展开出哪 4 列？<code>localized String(120)</code> 会多出什么对象？</li>
+<li>Association 与 Composition 在物理表上的差异是什么？Composition 真正带来的三项运行时行为是什么？</li>
+<li>匿名内联 Composition 的子表 FK 列名是什么？为什么它会让 CSV 播种失败？</li>
+<li><code>namespace sap.training.bookorder;</code> + <code>order : Association to BookOrders;</code> 生成什么表名与列名？</li>
+<li>什么时候可以把视图当实体暴露？聚合结果为什么不行、示范项目怎么绕开？</li>
+<li>CSV 表头写错、漏列、主键重复、FK 指向不存在的行，四种情况各是什么结果？</li>
+<li>报错 <code>can't auto-redirect “BookOrders:items”</code> 的根因与一行修复。</li>
+<li>如何证明「部署成功」与「数据可用」是两件事？给出你会跑的两条命令。</li>
+</ol>
+<div class="box info"><b class="t">参考答案（要点）</b>
+<ol>
+<li><code>db/schema.cds</code> = 实体与关联（建表）；<code>srv/*.cds</code> = 服务与投影（服务级 VIEW + EDMX）；<code>app/*/annotations.cds</code> = 注解（只进 <code>$metadata</code>）。</li>
+<li>sql = 建表/建视图语句；hdbtable = HANA 列存表定义（部署产物）；edmx = OData <code>$metadata</code>；csn = 规范化 JSON 模型（排查展开问题的中间态）。</li>
+<li>SQLite <code>NVARCHAR(255)</code>、HANA <code>NVARCHAR(5000)</code>——长度随库而异，必须显式写长度。</li>
+<li>没有区别（<code>cuid</code> 就展开成 <code>key ID : UUID</code>）；UUID 主键在 INSERT 时由框架自动填充。</li>
+<li><code>createdAt/createdBy/modifiedAt/modifiedBy</code>；<code>localized</code> 多出 <code>_texts</code> 表与 <code>localized_</code> 视图。</li>
+<li>物理差异：没有（DDL 逐字相同，FK 都在子表）。Composition 的运行时行为：Deep Insert/Update、删除父对象时级联删除、组合目标在服务里自动暴露。</li>
+<li><code>up__ID</code>（回链 <code>up_</code> + 目标主键 <code>ID</code>）；CSV 表头若写 <code>order_ID</code> 会报 <code>no column named order_ID</code> 并整批回滚。</li>
+<li>表 <code>sap_training_bookorder_BookOrders</code>、列 <code>order_ID</code>。</li>
+<li>视图有 <code>key</code> 时可暴露；聚合没有唯一主键，会被 <code>Expected entity to have a primary key</code> 拦下；示范项目用无绑定函数 <code>getOrderTotal</code>/<code>getOrderSummary</code> 返回。</li>
+<li>表头错 → deploy 失败并回滚；漏列 → 成功且取默认值；主键重复 → <code>UNIQUE constraint failed</code>；FK 指向不存在的行 → <b>静默成功</b>，join 结果为 0。</li>
+<li>同一源实体在服务里被投影两次导致导航目标不明确；给 <code>BookOrderItems</code> 加 <code>@cds.redirection.target</code>。</li>
+<li>例如：<code>python3</code> 查 <code>sqlite_master</code> 看表是否齐全 + 查「明细 join 订单」的计数是否等于 9（或查孤儿行为 0）。</li>
+</ol>
+</div>
+
+<h2 id="s13">13. 小结</h2>
+<div class="grid cards">
+<div class="card"><b>三种文件三层产物</b><p>schema 建表、service 建视图与元数据、annotations 只改 <code>$metadata</code>。<code>cds compile</code> 是模型层的单元测试。</p></div>
+<div class="card"><b>类型与物理列</b><p>金额 <code>Decimal(13,2)</code>、日期 <code>Date</code>、主键 <code>UUID</code>；SQLite 有 <code>*_TEXT</code> 变体，HANA 没有；<code>String</code> 无长度时两库长度不同。</p></div>
+<div class="card"><b>aspect 是展开不是继承</b><p><code>managed</code> 一定进 DDL；<code>localized</code> 一定多一张 <code>_texts</code> 表；<code>Currency</code> 把列名变成 <code>currency_code</code>。</p></div>
+<div class="card"><b>Association 而非 Composition</b><p>DDL 相同，差在语义（级联删除/Deep Insert）。真正的坑是匿名内联组合的 <code>up__ID</code> 与「CSV 表头必须等于物理列名」。</p></div>
+<div class="card"><b>带主键的视图才是实体</b><p>聚合没有主键 → 走无绑定函数（<code>getOrderTotal</code>/<code>getOrderSummary</code>）。</p></div>
+<div class="card"><b>CSV 播种先核对表头</b><p><code>order_ID</code> 不是 <code>order</code>；错一个词整个 deploy 回滚。FK 指向不存在的行不会报错，要自己查孤儿行。</p></div>
+</div>
+<h3 id="s13-1">13-1 本页的自证清单（离开本页前请全部打勾）</h3>
+<ul class="check">
+<li><code>npx cds compile db/schema.cds --to sql</code> → 4 张表 + 1 视图，且能逐列解释它们来自哪一行 CDS。</li>
+<li><code>--dialect hana</code> 与 SQLite 输出的差异能说清（<code>TIMESTAMP</code>/<code>DATE</code>/<code>NVARCHAR(5000)</code>）。</li>
+<li><code>npm run deploy</code> 成功，且 <code>sqlite_master</code> 查询给出 7 表 7 视图。</li>
+<li>能跑出「明细 join 订单 = 9」与「孤儿明细行 = 0」。</li>
+<li>能故意制造并修好这三条报错：<code>Mismatched ‹EOF›</code>、<code>can't auto-redirect</code>、<code>no column named orders_ID</code>。</li>
+</ul>
+<h3 id="s13-2">13-2 下一站</h3>
+<p>模型定下来之后，业务逻辑写在 <code>srv/book-order-service.js</code>：<code>before CREATE</code> 里编订单号、派生 <code>amount</code>、回写 <code>totalAmount</code>、绑定动作 <code>submitOrder</code> 的状态迁移、以及两个无绑定函数的聚合实现——全部在 <a href="node.html">⑤ Node 服务</a>；同一份模型换个运行时（Java）见 <a href="java.html">⑥ Java 服务</a>；把这套模型搬到 HANA Cloud 并部署见 <a href="deploy.html">⑩ 部署</a>。想看这些 <code>.cds</code> 与 <code>.js</code> 的完整原文，直接去 <a href="code.html">源码页</a>。</p>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

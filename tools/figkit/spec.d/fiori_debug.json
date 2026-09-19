@@ -1,0 +1,54 @@
+{
+  "key": "fiori_debug",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — 空白页三步定位（本地实测）",
+  "lh": 20,
+  "caption": "空白页的三步定位：① 静态资源是否 200 ② 控制台第一条报错 ③ $metadata 里注解是否真的在 —— 三条 curl 就能把「页面 / 服务 / 注解」三层分开",
+  "label": "本地实机运行",
+  "src": "本地实测：curl 本地 cds watch（端口 4010）",
+  "lines": [
+    "$ # 步骤①：应用的三份入口资源是否可达（对应浏览器 Network 面板）",
+    "$ curl -s -o /dev/null -w '%{http_code} %{content_type}\\n' http://localhost:4004/book-orders/webapp/index.html",
+    "200 text/html; charset=utf-8",
+    "$ curl -s -o /dev/null -w '%{http_code} %{content_type}\\n' http://localhost:4004/book-orders/webapp/manifest.json",
+    "200 application/json; charset=utf-8",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:4004/book-orders/index.html",
+    "404                      # 注意：目录地址没有 index.html，应用入口在 webapp/ 下",
+    "",
+    "$ # 步骤②：服务与认证（对应 console 里的 401 / Failed to load metadata）",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:4004/odata/v4/book-order/$metadata",
+    "401                      # 匿名被挡：@requires: 'authenticated-user'",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' -u alice: http://localhost:4004/odata/v4/book-order/$metadata",
+    "200",
+    "",
+    "$ # 步骤③：注解是否真的进了 $metadata（对应「页面有列名但没有列」）",
+    "$ curl -s -u alice: http://localhost:4004/odata/v4/book-order/$metadata | grep -c 'UI.LineItem'",
+    "2                        # 订单头 + 明细各一份；是 0 就说明 annotations.cds 没被加载",
+    "$ curl -s -u alice: http://localhost:4004/odata/v4/book-order/$metadata | grep -A2 'Criticality'",
+    "<PropertyValue Property=\"Criticality\" Path=\"statusCriticality\"/>",
+    "",
+    "$ # 顺带一句：app/ 目录是静态发布的，注解文件本身也能被直接下载",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:4004/book-orders/annotations.cds",
+    "200"
+  ],
+  "callouts": [
+    {
+      "on": "200 text/html; charset=utf-8",
+      "text": "1. 入口页必须 200"
+    },
+    {
+      "on": "404                      # 注意：目录地址没有 index.html，应用入口在 webapp/ 下",
+      "text": "2. 目录≠入口"
+    },
+    {
+      "on": "grep -c 'UI.LineItem'",
+      "text": "3. 注解没进元数据"
+    },
+    {
+      "on": "Path=\"statusCriticality\"",
+      "text": "4. 着色靠这个路径"
+    }
+  ]
+}

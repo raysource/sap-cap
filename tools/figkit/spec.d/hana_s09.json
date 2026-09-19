@@ -1,0 +1,48 @@
+{
+  "key": "hana_s09",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "caption": "部署时建表：cds build --for hana 产出 HDI 工件，mbt build 打包，cf deploy 由 hdb 模块的 HDI deployer 执行",
+  "alt": "部署时建表：cds build --for hana 产出 HDI 工件，mbt build 打包，cf deploy 由 hdb 模块的 HDI deployer 执行",
+  "label": "本地实机运行",
+  "src": "本地实测：npx cds build --for hana 的工件清单与 gen/db/package.json 内容；部署命令出自 capire「Deploy to Cloud Foundry」",
+  "title": "jason@MacBook-Pro: ~/projects/demo-node",
+  "lines": [
+    "$ npx cds build --for hana",
+    "@done > wrote output to:",
+    "@   gen/db/package.json",
+    "@   gen/db/src/gen/sap.training.bookorder.Books.hdbtable",
+    "@   gen/db/src/gen/sap.training.bookorder.BookOrders.hdbtable",
+    "@   gen/db/src/gen/sap.training.bookorder.BookOrderItems.hdbtable",
+    "@   gen/db/src/gen/sap.training.bookorder.Customers.hdbtable",
+    "@   gen/db/src/gen/sap.training.bookorder.OrderItemView.hdbview",
+    "@   gen/db/src/gen/data/sap.training.bookorder-Books.hdbtabledata",
+    "@build completed in 171 ms",
+    "",
+    "$ cat gen/db/package.json          # 这就是 HDI deployer 的入口",
+    "  \"dependencies\": { \"hdb\": \"^2.0.0\", \"@sap/hdi-deploy\": \"^5\" },",
+    "  \"scripts\": { \"start\": \"node node_modules/@sap/hdi-deploy/deploy.js --use-hdb\" }",
+    "",
+    "$ cf deploy gen/mta.tar -f        # 或用 mbt build -t gen --mtar mta.tar",
+    "#  demo-node-db-deployer (type: hdb) 执行 deploy.js → 在 HDI 容器里建表 + 装载 CSV"
+  ],
+  "callouts": [
+    {
+      "on": "   gen/db/src/gen/sap.training.bookorder.BookOrders.hdbtable",
+      "text": "1. 每个实体一个 .hdbtable"
+    },
+    {
+      "on": "   gen/db/src/gen/data/sap.training.bookorder-Books.hdbtabledata",
+      "text": "2. CSV → .hdbtabledata（会被覆盖）"
+    },
+    {
+      "on": "  \"dependencies\": { \"hdb\": \"^2.0.0\", \"@sap/hdi-deploy\": \"^5\" },",
+      "text": "3. HDI deployer 在这里"
+    },
+    {
+      "on": "demo-node-db-deployer (type: hdb) 执行 deploy.js → 在 HDI 容器里建表 + 装载 CSV",
+      "text": "4. 建表发生在部署阶段"
+    }
+  ]
+}

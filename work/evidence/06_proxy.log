@@ -1,0 +1,2 @@
+dev-proxy: http://localhost:4005  ->  http://localhost:4004   (as alice:alice)
+open: http://localhost:4005/book-orders/webapp/index.html

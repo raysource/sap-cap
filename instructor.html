@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>讲师版：采分点、必问问题与参考答案 · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP 培训课程的讲师版：本页用法（课前准备 / 课中提问 / 课后验收）、2 天 20 小时课堂节奏表、11 个板块的采分点清单（能力 / 可观察证据 / 不给分的表现）、43 道必问问题与参考答案、全部自测题与各页本节测试的参考答案、学员卡点现场处置 15 条、两个 15 分钟演示脚本、百分制评分标准与疑难问答。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main"><a class="active" href="index.html">首页</a></nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>讲师版</span></p>
+<h1>讲师版：把 11 个板块讲成 2 天，并把分怎么给说清楚</h1>
+<p class="kicker">对象：讲师 / 内训师。内容：课堂节奏表（含 30 分钟环境检查）· 11 个板块的采分点（能力 → 可观察证据 → 不给分的表现）· 43 道必问问题与参考答案（含追问）· 全套自测题与本节测试的答案 · 学员卡点的现场处置 · 两个 15 分钟演示脚本 · 百分制评分标准。所有答案与数字都取自本站课程页、<code>work/quiz/*.json</code> 题库与示范项目的实测输出（<code>project-code/demo-node/README.md</code>、<code>work/evidence/*</code>）。</p>
+
+<div class="toc">
+  <a href="#s0">0. 本页用法</a><a href="#s1">1. 课堂节奏表（2 天 / 20 小时）</a>
+  <a href="#s2">2. 采分点清单（11 个板块）</a><a href="#s3">3. 必问问题与参考答案</a>
+  <a href="#s4">4. 自测题与本节测试答案</a><a href="#s5">5. 学员卡点与现场处置</a>
+  <a href="#s6">6. 两个 15 分钟演示脚本</a><a href="#s7">7. 评分标准</a><a href="#s8">8. 疑难问答</a>
+</div>
+
+<div class="box danger"><b class="t">讲这一页之前请先确认两件事</b>
+<ul>
+  <li><b>不确定性标注</b>：本页里凡带 <span class="tag">~</span> 的说法，都是「本地无法实测 / 随版本与租户会变」的内容（BTP 与 BAS 的界面菜单名、配额数字、云端授权与迁移行为）。
+    上课时请以你所在租户的实际界面与官方文档为准，<b>不要把带 ~ 的数字当标准答案背给学生</b>。</li>
+  <li><b>一处已知的课程内部不一致</b>：题库 <code>work/quiz/node.json</code> 第 16 题与 <code>node.html</code> 错误表第 2 行把「<code>$expand</code> 返回空数组」解释成
+    「Composition 会在父表加 FK 列，CSV 播种填不到」；而 <code>cds.html</code> §5 的实测 <code>diff</code> 证明两种写法 DDL 逐字相同、FK 都在子表（<code>order_ID</code>）。
+    <b>授课时请按 <a href="cds.html#s5">cds.html §5</a> 的口径讲</b>（见 <a href="#s3-4">3-4 的第 1 题</a>与 <a href="#s8">8 疑难问答 Q1</a>）。</li>
+</ul></div>
+
+<h2 id="s0">0. 本页用法</h2>
+<p>这一页不是讲义，而是<b>讲义的答案与评分手册</b>。三种用法：课前准备、课中提问、课后验收。</p>
+
+<div class="grid cards">
+  <div class="card">
+    <h3>课前准备（提前 1 天）</h3>
+    <ul>
+      <li>把 <a href="#s1">第 1 节课表</a>按你自己的时段改一遍（时刻是相对值），打印每人一份。</li>
+      <li>跑一次<b>环境自检</b>：<span class="cmd">node -v</span>、<span class="cmd">npx cds -v</span>、<span class="cmd">npm run deploy</span>、<span class="cmd">curl -u alice:alice "$SVC/$metadata"</span> 四条全绿。</li>
+      <li>读一遍 <a href="#s2">采分点</a>与 <a href="#s5">卡点表</a>，把你认为最可能发生的 5 条标出来，课上重点盯。</li>
+      <li>给学员发<a href="worksheet.html">学员版</a>（记入表）与 <a href="#s1">课表</a>；提醒他们提前做完 <a href="btp.html">① BTP 注册</a>（<b>注册是最容易被邮箱策略卡住的一步</b>）。</li>
+      <li>备好离线兜底：本课程可在无 BTP 账号时完成 ④–⑨（SQLite + mocked 认证），<a href="index.html#demo">示范项目</a>就是按这个前提设计的。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>课中提问（每段结束前 10 分钟）</h3>
+    <ul>
+      <li>从 <a href="#s3">第 3 节必问问题</a>里按板块挑 2–3 题<b>口头快问</b>，学员答不出来就当场演示一遍，不算分。</li>
+      <li>「必须掌握」的能力用<a href="#s2">采分点</a>的「可观察的证据」当验收动作：<b>让他做给你看</b>，而不是让他复述。</li>
+      <li>出现卡点先查 <a href="#s5">第 5 节</a>：现象 → 他大概会怎么做错 → 你怎么引导（一句话解释）。</li>
+      <li>每段末用该页的「本节测试」做 2 分钟闭卷小测，答案在 <a href="#s4">第 4 节</a>。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>课后验收（当天结束 / 一周后）</h3>
+    <ul>
+      <li>按 <a href="#s7">第 7 节评分标准</a>算分：自测 40 + 任务完成度 40 + 演示与答辩 20。</li>
+      <li>三条<b>硬门禁</b>任何一个不过就是不合格：模型编译无 <code>[ERROR]</code>、<code>npm test</code> 全绿、<code>bash test/odata-verify.sh</code> 的 <code>FAIL 0</code>。</li>
+      <li>要求学员交「证据」而不是「结论」：命令 + 输出 + <code>db.sqlite</code> 里的行数。判据见<a href="#s2">采分点</a>的第三列。</li>
+      <li>对不及格者：先补 <a href="#s5">卡点表</a>里他踩过的那几条，再重跑 <a href="#s6">演示脚本 B</a>（用它证明他真的会看日志定位）。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="box info"><b class="t">一句话记住本页的三条主线</b>
+<ul>
+  <li><b>采分点看证据</b>：能不能「做出来 + 说出为什么」；只会背概念不给分。</li>
+  <li><b>必问问题看追问</b>：第一问答对不算过，追问答得上才算他真懂。</li>
+  <li><b>演示看定位</b>：故意制造一个 409，看他能不能在 30 秒内指到 handler 的行号。</li>
+</ul></div>
+
+<h2 id="s1">1. 课堂节奏表：11 个板块排成 2 天（20 小时）</h2>
+<p>下面这张表把 <a href="index.html#map">11 个板块</a>排成 <b>2 天 × 10 小时 = 1200 分钟</b>的课堂节奏（<a href="index.html#route">学习路线</a>里的 1260 分钟含自学部分，多出的 60 分钟留给课后练习）。
+时段是<b>相对时刻</b>（00:00 指当天开课），请按你的作息平移。每段的四列就是讲师的动作清单：<b>讲什么 / 演示什么 / 学员做什么 / 采分点</b>。</p>
+
+<div class="box info"><b class="t">课前必做：30 分钟环境检查（放在第一天 00:00–00:30）</b>
+<p>这一段不讲新内容，只做一件事：<b>把每个人卡在环境外的问题都暴露出来</b>。三件事，逐人过。</p>
+<ol class="steps">
+  <li><b>核对版本与目标（5 分）</b>：<code>node -v</code> → 期望 <code>v20.x</code> 或 <code>v22.x</code>（LTS）；<code>npx cds -v</code> → <code>@sap/cds-dk</code> 为 9.x；有 BTP 账号的人再跑 <code>cf --version</code> 与 <code>cf target</code>（期望看到正确的 org 与 space）。</li>
+  <li><b>把示范项目跑起来（15 分）</b>：<code>npm install</code> → <code>npm run deploy</code> → <code>npm start</code> → 另一个终端 <code>bash test/odata-verify.sh</code>，期望 <b>PASS 26 / FAIL 0</b>。这一步同时验证了 Node ABI、SQLite、依赖安装与认证策略四件事。</li>
+  <li><b>登记卡点（10 分）</b>：把每人的失败现象抄到白板上，对照 <a href="#s5">第 5 节卡点表</a>现场解决；解决不了的让本人换用「离线路径」（不走 BTP，全部在林本地 SQLite 完成）。</li>
+</ol>
+<p><b>采分点</b>：能独立说出「我的 Node 版本 / 我的数据库 kind / 我的服务 URL」三个值，并能用一条 <code>curl</code> 证明服务在跑（<code>curl -u alice:alice -o /dev/null -w '%{http_code}\n' "$SVC/\$metadata"</code> → <code>200</code>）。
+<b>不给分</b>：能跑通 <code>npm start</code> 但说不出服务挂载在哪个路径、或把「匿名 401」当成故障。</p>
+</div>
+
+<h3>第一天（600 分钟）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>时段</th><th>板块</th><th>讲什么</th><th>演示什么</th><th>学员做什么</th><th>采分点</th></tr></thead>
+<tbody>
+<tr>
+  <td>00:00–00:30<br><b>30 分</b></td><td>环境检查</td>
+  <td>不讲课：版本核对、项目跑通、卡点登记（见上方方框）</td>
+  <td>讲师的「四条命令全绿」：<code>node -v</code> / <code>npx cds -v</code> / <code>npm run deploy</code> / <code>curl $metadata</code></td>
+  <td>在自己机器上跑同样四条；把失败现象写下来</td>
+  <td>能说出 Node 版本 / 数据库 kind / 服务 URL 三个值</td>
+</tr>
+<tr>
+  <td>00:30–01:15<br><b>45 分</b></td><td><a href="concept.html">概念</a></td>
+  <td>一句话定位、模型/服务/UI 三层落点、一份模型三份产物、请求生命周期、12 个误解里最致命的 4 个</td>
+  <td>三条命令看三份产物：<code>cds compile --to sql</code> / <code>--to edmx</code> / <code>--to csn</code>；一次真实请求的 401 与 403 形状对比</td>
+  <td>白纸上画三层架构 + 标文件落点（<a href="concept.html#s2">CON-01</a>）；默写请求生命周期顺序（<a href="concept.html#s4">CON-02</a>）</td>
+  <td>能指出 401 在认证、403 在授权；能说出 sql/edmx/csn 各给谁用</td>
+</tr>
+<tr>
+  <td>01:15–02:30<br><b>75 分</b></td><td><a href="btp.html">① BTP</a></td>
+  <td>五层作用域、试用期规则、子账户/区域、Entitlement 与 Quota、角色集合、CF org 与 space、三个关键服务实例</td>
+  <td>cockpit 与 CLI 双路：<code>btp target</code>、<code>cf login -a</code>、<code>cf marketplace -e hana</code>、<code>cf create-service hana hdi-shared</code></td>
+  <td>照手顺建子账户 → 分配配额 → 建 <code>demo-hana-db</code> / <code>demo-xsuaa</code>；打勾「环境就绪」清单</td>
+  <td>能解释 Entitlement≠Quota；能说出 CAP 要的是 <code>hana / hdi-shared</code> 而不是 <code>hana-cloud</code></td>
+</tr>
+<tr>
+  <td>02:30–04:00<br><b>90 分</b></td><td><a href="bas.html">② BAS</a></td>
+  <td>Dev Space 的类型与配额、界面五个位置、端口预览、<code>cds init</code>、终端三连、调试与 Git/PAT</td>
+  <td>Create Dev Space（Full Stack Cloud Application）→ Ports: Preview → <code>cds watch</code> → <code>launch.json</code> attach 命中断点</td>
+  <td>建 dev space；用 <code>cds init</code> 建项目并核对 <code>app/ db/ srv/</code>；造三类「红线」并修好（<a href="bas.html#s6-2">BAS-09</a>）</td>
+  <td>能用 <code>npx cds env get requires.db</code> 判断数据库；能说出 <code>db/data</code> 的 CSV 命名规则</td>
+</tr>
+<tr>
+  <td>04:00–05:00<br><b>60 分</b></td><td><a href="hana.html">③ HANA</a></td>
+  <td>为什么需要 db 层、SQLite 与 HANA 的六点差异、<code>hdi-shared / schema / tools</code> 的取舍、<code>cds bind</code> 与 hybrid</td>
+  <td>Cloud Central 建实例 → 建 HDI 容器 → <code>cds bind db --to</code> → <code>cds watch --profile hybrid</code></td>
+  <td>推断并实测「实体名 → 表名」映射（<a href="hana.html#s6-2">HANA-07</a>）；在 Database Explorer 里查行数</td>
+  <td>能说出 <code>SAP_TRAINING_BOOKORDER_BOOKORDERS</code> 的由来与 <code>customer → CUSTOMER_ID</code> 规则</td>
+</tr>
+<tr><td colspan="6"><b>05:00–05:15 休息 15 分</b></td></tr>
+<tr>
+  <td>05:15–07:45<br><b>150 分</b></td><td><a href="cds.html">④ CDS 建模</a></td>
+  <td>三种文件分工与编译管线、类型全表、主键与 UUID、aspect 展开、<b>Association vs Composition</b>、视图与主键、注解与 CSV 陷阱、16 条排错手册</td>
+  <td>同一模型编译到 SQLite 与 HANA 两个方言的列对照；Association 与 Composition 的 <code>diff</code> 实测（<code>diff</code> 无输出）；CSV 表头写错让整个 deploy 失败</td>
+  <td>做三个递进练习：加信用额度字段 / 加供应商关联 / 做库存视图并故意做错一次（<a href="cds.html#s11">CDS-11…13</a>）</td>
+  <td>能解释「为什么本站不用 Composition」；能看懂 <code>no column named …</code> 与 <code>Expected entity to have a primary key</code></td>
+</tr>
+<tr>
+  <td>07:45–10:00<br><b>135 分</b></td><td><a href="node.html">⑤ Node（上）</a></td>
+  <td>服务定义逐段讲、before/on/after 体系、请求生命周期、五类实现位置的前三类（编号生成 / 派生金额 / 汇总回写）</td>
+  <td><code>cds watch</code> 日志里 handler 被调用的证据（<code>[odata]</code> 行 + 紧随其后的 <code>[error]</code> 行）；一条 curl 触发 400 与 409</td>
+  <td>跑通 <a href="node.html#s10">本地运行手顺</a>；改一处 <code>before CREATE</code> 校验并用 curl 触发它</td>
+  <td>能说出「before 改数据、on 改结果、after 之后改结果」；能用 curl 触发一条业务规则并得到 4xx</td>
+</tr>
+</tbody></table></div>
+
+<h3>第二天（600 分钟）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>时段</th><th>板块</th><th>讲什么</th><th>演示什么</th><th>学员做什么</th><th>采分点</th></tr></thead>
+<tbody>
+<tr>
+  <td>00:00–01:00<br><b>60 分</b></td><td><a href="node.html">⑤ Node（下）</a></td>
+  <td>绑定动作与无绑定函数、CQN fluent API、事务与 <code>req.reject</code>、<b>草稿流程</b>与它对测试的影响</td>
+  <td>草稿三段式：POST 建草稿（<code>IsActiveEntity=false</code>、<code>orderNo=null</code>）→ <code>draftActivate</code> → 409 / 201；指出校验发生在激活时刻</td>
+  <td>亲手走草稿流程并写出 URL；把某个 <code>on</code> 改成 <code>after</code> 观察差异（<a href="node.html#s12-3">NODE-03</a>）</td>
+  <td>能写出草稿激活的完整 URL；能说出 DELETE 场景为什么要用 <code>req.params</code></td>
+</tr>
+<tr>
+  <td>01:00–03:30<br><b>150 分</b></td><td><a href="java.html">⑥ Java</a></td>
+  <td>同一份 <code>.cds</code> 换运行时：Maven 工程结构、<code>cds-maven-plugin</code> 的三个 goal、注解式事件处理器、类型化 API 与 <code>CqnAnalyzer</code>、与 Node 版逐项对照</td>
+  <td><code>mvn spring-boot:run</code> 的启动日志（8080 端口、<code>/odata/v4</code>、<code>Filling … from ../db/data/…csv</code>、<code>Registered handler class …</code>、<code>CAP Index Page served at http://localhost:8080/</code>），以及 <code>curl …/$metadata</code> → <b>200</b></td>
+  <td>跑起 <code>demo-java</code>；把 Node 版某一类规则在 Java 版里找到对应实现；回答「换运行时哪些东西不用改」</td>
+  <td>能说出共享的是什么（模型 / 服务定义 / 注解 / CSV）、必须重写的是什么（handler / 构建 / 测试）</td>
+</tr>
+<tr>
+  <td colspan="6"><b>诚实说明</b>：本机实测里 Java 版的 <code>BookOrders</code> 返回 <b>401</b>（本地 mock 用户配置未生效，见 <a href="java.html#fail">java.html §10</a>），所以「两种运行时返回同样数据」这句在课堂上要讲成<b>目标</b>而<b>不是已验证的结论</b>；已验证的是 <code>mvn compile</code>、应用启动、CSV 装载与 <code>$metadata</code> 200。</td>
+</tr>
+<tr>
+  <td>03:30–05:15<br><b>105 分</b></td><td><a href="testing.html">⑦ 测试</a></td>
+  <td>四层测试、<code>cds.test</code> 写法、26 条断言逐条读、幂等性与三种数据库隔离、DoD 与 CI</td>
+  <td>同一脚本连跑两次的 FAIL 对照（6 条 FAIL，逐条解释为什么「失败得有价值」）；CI 里为什么不能用 <code>cds watch</code></td>
+  <td>给一条业务规则写正例 + 负例断言（断言状态码 + 业务消息）；把三条硬门禁接进一个脚本</td>
+  <td>能写「400 + 消息」型负向断言；能说出三种隔离做法的代价</td>
+</tr>
+<tr>
+  <td>05:15–06:30<br><b>75 分</b></td><td><a href="security.html">⑧ 权限</a></td>
+  <td>认证 vs 授权、四种本地身份模拟、<code>@requires</code> / <code>@restrict</code> 的 grant-to-where、<code>xs-security.json</code> 与三个名字、JWT 与角色集合</td>
+  <td>同一条 URL 的三态：匿名 401（裸文本）→ <code>-u bob:bob</code> 403（OData 错误体）→ <code>-u alice:alice</code> 200；再演示 <code>kind: dummy</code> 下匿名也 200</td>
+  <td>跑出 401/403/200 三态并截图；给 <code>submitOrder</code> 加一条只有管理员能做的 <code>@restrict</code></td>
+  <td>能说出 401 与 403 各由哪一层产生；能说清 scope 名 / CAP 角色名 / role-template 名的区别</td>
+</tr>
+<tr>
+  <td>06:30–08:00<br><b>90 分</b></td><td><a href="fiori.html">⑨ Fiori</a></td>
+  <td>Fiori Elements 与注解的关系、<code>UI.*</code> 注解分工、<code>manifest.json</code> 逐字段、List Report + Object Page 与草稿交互、本地运行与空白页定位</td>
+  <td>改一行 <code>annotations.cds</code>（加一列 / 改 Criticality）→ 浏览器刷新看到界面变化；<code>$metadata</code> 里 <code>Annotation</code> 计数随之变化</td>
+  <td>在本地打开 List Report 与 Object Page；做一次「新建订单 → 保存（draftActivate）」并解释每一步的请求</td>
+  <td>能说出「界面为什么改 CDS 而不是改前端代码」；能定位空白页/No data 的三个原因</td>
+</tr>
+<tr>
+  <td>08:00–10:00<br><b>120 分</b></td><td><a href="deploy.html">⑩ 部署</a></td>
+  <td><code>cds build</code> → <code>mbt build</code> → <code>.mtar</code> → <code>cf deploy</code> 全链路与<b>每一步的产物</b>、<code>mta.yaml</code> 逐段、部署后验证清单、更新与回滚、CI/CD</td>
+  <td>完整走一遍构建（本机可做：<code>npx cds build --production</code> + <code>mbt build</code>）并逐个打开 <code>gen/srv</code>、<code>gen/db</code>、<code>.mtar</code> 看产物；演示 <a href="#s6">演示脚本 A</a></td>
+  <td>跑构建并列出每一步的产物与验证方法；有账号的人做一次 <code>cf deploy</code> 与路由冒烟测试</td>
+  <td>能按顺序说出五步产物与对应命令；能回答「<code>$metadata</code> 返回 200 说明了什么」</td>
+</tr>
+</tbody></table></div>
+
+<div class="box ok"><b class="t">排课时最容易踩的三个坑</b>
+<ul>
+  <li><b>不要在第一天的 BTP 段讲 CLI 细节</b>：先把 cockpit 的结构（你在哪一层）讲清楚，CLI 只是同一件事的另一种入口；顺序反了会让学员把握不住层级。</li>
+  <li><b>不要把 ④ CDS 挤到下午最后一段</b>：它是全课程信息量最大的一段（类型表 + 关联 + CSV 陷阱），需要学员清醒的时候做练习。</li>
+  <li><b>Java 段不要从语法讲起</b>：学员已经会 Node 版了，先讲「同一份模型换运行时不变的是什么」，再讲注解与类型化 API，能省一半时间。</li>
+</ul></div>
+
+<h2 id="s2">2. 每个板块的采分点清单</h2>
+<p>用法：讲师拿着这张表<b>看学员「做出来的东西」</b>。第三列是判据，第四列是最常见的「看起来做了但不给分」的表现——这一列比第二列更重要，因为它是打分争议的来源。</p>
+<p>下表的「可观察的证据」写成了<b>命令 + 期望输出</b>的形式，可以直接抄进实验报告的检查项。</p>
+
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>板块</th><th>必须掌握的能力</th><th>可观察的证据（命令 / 输出）</th><th>不给分的常见表现</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>concept</b><br><a href="concept.html">概念</a></td>
+  <td>① 说清「一份模型、三份产物」；② 按顺序背出请求生命周期并指出 401 / 403 的位置；③ 指出三层架构在示范项目里的文件落点与依赖方向</td>
+  <td>白纸画出三层 + 部署横切，标注 <code>db/schema.cds</code>、<code>srv/*.cds + .js</code>、<code>app/book-orders/annotations.cds</code>；能指着 <code>--to sql</code> / <code>--to edmx</code> / <code>--to csn</code> 的输出说给谁用</td>
+  <td>把 CDS 当数据库（说「CDS 就是建表语言」）；说 403 在认证阶段；背出「三层架构」但指不出任何一个文件名</td>
+</tr>
+<tr>
+  <td><b>btp</b><br><a href="btp.html">① BTP 注册</a></td>
+  <td>① 分清五层作用域（全局账户 / 目录 / 子账户 / org / space）；② Entitlement 与 Quota 的区别；③ 建出 <code>hana / hdi-shared</code> 实例并说明为什么不是 <code>hana-cloud</code></td>
+  <td><code>cf target</code> 显示正确的 org 与 space；<code>cf services</code> 中三个实例都是 <code>create succeeded</code>；<code>cf marketplace -e hana</code> 能列出 <code>hdi-shared</code> 且为 free</td>
+  <td>只用 cockpit 点过一遍，<code>cf target</code> 仍指错区域；把「配额不足」当成「账号不支持」；说「<code>hana-cloud</code> 和 <code>hana</code> 是同一个东西」</td>
+</tr>
+<tr>
+  <td><b>bas</b><br><a href="bas.html">② BAS 环境</a></td>
+  <td>① 建出 Full Stack Cloud Application 类型的 dev space 并说清三条配额限制；② 用 <code>cds init</code> 建项目并说清三个目录；③ 端口预览两条路；④ 用 <code>cds env</code> 判断生效的数据库</td>
+  <td><code>Ports: Preview</code> 列表里能看到 <code>http://localhost:4004</code>；<code>db/data</code> 下 4 个 CSV 命名为「命名空间-实体.csv」；<code>npx cds env get requires.db</code> 默认 <code>sqlite</code>、<code>--profile production</code> 变 <code>hana</code></td>
+  <td>把 dev space 当「云盘」长期存数据；<code>npm install</code> 报磁盘满时第一反应是重装 Node（应先 <code>df -h</code> / <code>df -ih</code>）；CSV 随便起名导致表建了但 0 行</td>
+</tr>
+<tr>
+  <td><b>hana</b><br><a href="hana.html">③ HANA Cloud 与 HDI</a></td>
+  <td>① 说清 <code>hdi-shared / schema / tools</code> 的取舍；② 推断实体名 → HANA 表名的映射；③ 用 <code>cds bind</code> + hybrid 在本地连云端库并核对生效配置</td>
+  <td>写出 <code>SAP_TRAINING_BOOKORDER_BOOKORDERS</code> 并与 <code>gen/db/src/gen/*.hdbtable</code> 的 grep 结果一致；<code>.cdsrc-private.json</code> 里没有任何密码；<code>cds env get requires.db --profile hybrid</code> 显示 <code>kind: hana</code></td>
+  <td>把密码写进 <code>package.json</code> 或拷同事的 <code>.cdsrc-private.json</code>；说「本地 SQLite 过了就等于云端过了」；把业务数据放 <code>db/data/*.csv</code></td>
+</tr>
+<tr>
+  <td><b>cds</b><br><a href="cds.html">④ CDS 建模</a></td>
+  <td>① 说清三种 <code>.cds</code> 文件的分工与编译 target；② Association 与 Composition 的语义差异并给出本站的取舍理由；③ 看懂主键 / aspect 展开 / 物理列名规则；④ 遇到建模报错能先判断「编译期还是部署期」</td>
+  <td><code>cds compile … --to sql</code> 得到 4 个 <code>CREATE TABLE</code>（加服务定义后 <code>CREATE VIEW</code> 7 个）；<code>diff</code> 两份只差一个关键词的模型输出为空；故意写错 CSV 表头后 deploy 必须失败在 <code>no column named …</code>，改回必须成功</td>
+  <td>说「Composition 会在父表加 FK 列」（本站在同版本工具链上 diff 不出这个现象）；只跑 <code>cds compile</code> 就宣称「表变了」；把 <code>--to csn</code> 的输出当成 DDL</td>
+</tr>
+<tr>
+  <td><b>node</b><br><a href="node.html">⑤ Node 服务实现</a></td>
+  <td>① before / on / after 的差别与各自的可用操作；② 能用 curl 触发一条业务规则并得到正确的 4xx；③ 草稿流程三段式与「before-CREATE 在激活时触发」；④ 用 CQN 写带 filter / orderBy / limit 的查询；⑤ <code>req.reject</code> 而不是 <code>throw</code></td>
+  <td>草稿流程打出 <code>[odata] - POST …/BookOrderService.draftActivate</code> 且随后出现 409/400 日志；<code>curl -u alice:alice "$SVC/getOrderTotal(orderNo='BO-1003')"</code> → <code>{"value":17400}</code>；匿名 <code>curl</code> → <code>401</code>，POST 只读实体 → <code>405</code></td>
+  <td>在草稿实体上 POST 后断言「订单号已生成」（永远失败）；<code>after('DELETE')</code> 里读 <code>req.data.ID</code>；用 <code>throw new Error</code> 表达业务错误（变成 500 且生产被脱敏）；在 handler 里再套 <code>cds.tx()</code></td>
+</tr>
+<tr>
+  <td><b>java</b><br><a href="java.html">⑥ Java 服务实现</a></td>
+  <td>① 说清共享（模型 / 服务定义 / 注解 / CSV）与必须重写（handler / 构建 / 测试）的边界；② 用 <code>@Before / @After / @On</code> + <code>@ServiceName</code> 写一个处理器；③ 启动 Java 服务并返回与 Node 版同样的数据</td>
+  <td><code>mvn spring-boot:run</code> 日志出现 <code>Registered handler class …BookOrderServiceHandler</code>、<code>Tomcat started on port 8080</code>、<code>Filling sap.training.bookorder.Books from ../db/data/…csv</code>、<code>CAP Index Page served at http://localhost:8080/</code>；<code>curl -u alice:alice "http://localhost:8080/odata/v4/book-order/\$metadata"</code> → <b>200</b>（<code>BookOrders</code> 本机返回 401：本地 mock 用户未生效，属未验证项，见 <a href="java.html#fail">java.html §10</a>）</td>
+  <td>把 Java 版的 <code>db/</code> 另存一份改了模型（「同一份模型」立刻不成立）；只会说「Java 更类型安全」而指不出一个具体差异（例如 <code>CqnAnalyzer</code> 取绑定动作的键、生成的 <code>cds.gen.*</code> 类型类）</td>
+</tr>
+<tr>
+  <td><b>testing</b><br><a href="testing.html">⑦ 测试体系</a></td>
+  <td>① 说清四层测试各抓什么；② 写出「状态码 + 业务消息」的负向断言；③ 解释非幂等现象并给出三种隔离做法；④ 说出三条硬门禁</td>
+  <td><code>bash test/odata-verify.sh</code> → <code>PASS 26 / FAIL 0</code>；<code>npm test</code> → 全绿；连跑两次能预测出 6 条 FAIL 并逐条说出原因；CI 脚本里 <code>cds compile</code> + <code>npm start</code>（不是 <code>cds watch</code>）</td>
+  <td>只断言 HTTP 200（等于没测负向）；用 <code>sleep 5</code> 等就绪；缓存 <code>node_modules</code>；把「本地绿」当交付证据而不写门禁</td>
+</tr>
+<tr>
+  <td><b>security</b><br><a href="security.html">⑧ 认证与授权</a></td>
+  <td>① 401 与 403 的分工与响应形状差异；② 四种 auth kind 的取舍并说清「为什么不能拿 dummy 测 401」；③ 写 <code>@restrict</code> 的 grant / to / where；④ 说清 scope 名 / CAP 角色名 / role-template 名</td>
+  <td>同一 URL 的三态：匿名 <code>401</code>（裸文本 <code>Unauthorized</code>）→ <code>-u bob:bob</code> → <code>403</code>（OData 错误体）→ <code>-u alice:alice</code> → <code>200</code>；<code>cds env get requires.auth.kind</code> 为 <code>mocked</code>；<code>[production]</code> 档里 <code>auth.kind</code> 是 <code>xsuaa</code></td>
+  <td>用 <code>dummy</code> 测认证（匿名也 200）；把 role-template 名写进 <code>to:</code>（部署后必 403）；以为 <code>@readonly</code> 是权限；以为 <code>mocked</code> 会校验密码</td>
+</tr>
+<tr>
+  <td><b>fiori</b><br><a href="fiori.html">⑨ Fiori UI</a></td>
+  <td>① 说清「界面由注解生成」的边界（注解决定的 vs 外壳决定的）；② 读 <code>manifest.json</code> 的 dataSources / models / routing；③ 在浏览器里完成一次「新建 → 保存」并解释草稿请求；④ 定位空白页 / No data</td>
+  <td>本地打开 List Report 能看到订单与明细；改动 <code>app/book-orders/annotations.cds</code> 后刷新界面即变（不改 <code>webapp/</code> 一行代码）；<code>curl …/$metadata | grep -c Annotation</code> 随注解增加而变大</td>
+  <td>以为要改 <code>webapp/</code> 才能改列；界面 No data 时去改模型（实际多半是 401 没带凭据）；把 <code>dev-proxy.js</code> 当生产方案</td>
+</tr>
+<tr>
+  <td><b>deploy</b><br><a href="deploy.html">⑩ 构建与部署</a></td>
+  <td>① 说出链路每一步的命令与产物；② 读 <code>mta.yaml</code> 的模块与资源对应关系；③ 部署后按清单验证（应用 started、服务实例、路由 <code>$metadata</code> 200）</td>
+  <td><code>npx cds build --production</code> 生成 <code>gen/srv</code> 与 <code>gen/db</code>；<code>mbt build -t mta_archives</code> 生成 <code>.mtar</code>；<code>cf apps</code> 中 <code>demo-node-srv</code> / <code>demo-node-approuter</code> 都 <code>started</code>；路由上 <code>curl $metadata</code> 返回 <code>200</code></td>
+  <td>跳过 <code>cds build</code> 直接 <code>mbt build</code> 却不知道为什么 MTA 里要有 <code>before-all</code>；只看应用 started 不查服务实例；说「本地能跑 = 云端能跑」</td>
+</tr>
+</tbody></table></div>
+
+<div class="box info"><b class="t">打分口径（讲师内部共识，避免学员之间比较）</b>
+<ul>
+  <li><b>证据优先</b>：命令 + 输出齐全 → 满分；只有结论没有输出 → 一半分；说的和做的不一致 → 0 分。</li>
+  <li><b>4xx 也是成功</b>：负向场景拿到 400/401/409 并在脚本里有断言，比「一片 200」更有价值。</li>
+  <li><b><span class="tag">~</span> 号宽容</b>：凡是本页标注「随版本 / 租户变化」的数字（BAS 配额、试用规则、菜单名），答错只提示不扣分；<b>说得出「自系统确认方法」则加分</b>。</li>
+</ul></div>
+
+<h2 id="s3">3. 必问问题与参考答案（43 题，按板块分组）</h2>
+<p>用法：<b>每题先问第一列，答不上来再给第二列的要点；第三列是追问，追问答得上才算过关。</b>
+带 <span class="tag">~</span> 的句子表示「随版本 / 租户不同」或本地无法实测，授课时请留出余地。</p>
+
+<div class="box info"><b class="t">十个「必须问到」的问题（本页最核心的十题）</b>
+<ol>
+  <li>为什么不用 Composition？（<a href="#s3-4">3-4 Q1</a>）</li>
+  <li>聚合为什么不能用实体暴露？（<a href="#s3-4">3-4 Q2</a>）</li>
+  <li>草稿下 before-CREATE 什么时候触发？（<a href="#s3-5">3-5 Q1</a>）</li>
+  <li>mocked 与 dummy 的差别？（<a href="#s3-8">3-8 Q2</a>）</li>
+  <li>401 与 403 的差别？（<a href="#s3-8">3-8 Q1</a>）</li>
+  <li><code>$expand</code> 返回空数组意味着什么？（<a href="#s3-4">3-4 Q3</a>）</li>
+  <li>修改模型后为什么要删库重建？（<a href="#s3-4">3-4 Q4</a>）</li>
+  <li>为什么必须用 Node LTS？（<a href="#s3-3">3-3 Q1</a>）</li>
+  <li><code>@cds.redirection.target</code> 解决什么问题？（<a href="#s3-5">3-5 Q2</a>）</li>
+  <li>部署链路里每一步的产物是什么？（<a href="#s3-10">3-10 Q1</a>）</li>
+</ol></div>
+
+<h3 id="s3-1">3-1 概念（<a href="concept.html">concept</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td>用一句话说明 CAP 是什么，它用一套模型自动得到哪三样东西？</td>
+<td>「用一套模型描述领域与服务，自动得到 <b>OData V4 API、数据库 schema、Fiori 可用的界面契约</b>」。你要写的是模型、业务规则、授权规则与界面注解。</td>
+<td>这三样里哪一样仍然必须由人写代码？→ 业务规则（handler）、授权规则（<code>@restrict</code> / 角色集合）、界面微调；<b>声明是模型的事，判断是你的代码的事</b>。</td></tr>
+<tr><td>按顺序说出一次 GET 请求经过的阶段，401 与 403 分别在哪一步产生？</td>
+<td>解析（OData → CQN）→ 认证（<b>401</b>）→ 授权（<b>403</b>）→ <code>before</code> → <code>on</code>（缺省实现＝查数据库）→ <code>after</code> → 响应。</td>
+<td>为什么 401 的响应体是裸文本而 403 是 OData 错误对象？→ 401 由认证中间件返回（尚未进入 OData 适配器的错误格式化），403 由 CAP 授权框架按 OData 错误规范返回；前端做错误提示时要区别对待。</td></tr>
+<tr><td>本地 SQLite 上跑通，就等于能上 HANA 吗？</td>
+<td>不等于。差异在<b>类型映射</b>（<code>String</code> 无长度：SQLite <code>NVARCHAR(255)</code> vs HANA <code>NVARCHAR(5000)</code>；时间列 <code>TIMESTAMP_TEXT</code> vs <code>TIMESTAMP</code>）、DDL 方言、HDI 部署与 schema 演进、排序与大小写规则。</td>
+<td>那你要怎么做才算「准备上云」？→ 用 <code>--dialect hana</code>（或 <code>--to hdbtable</code>）核对 DDL + 做一次真实部署 + 在路由上跑冒烟（<code>$metadata</code> 200 与一条业务查询）。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-2">3-2 BTP 开通与环境（<a href="btp.html">btp</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td>CAP 部署时数据库侧要用哪个服务与计划？为什么<b>不是</b> <code>schema</code>？</td>
+<td><code>cf create-service hana hdi-shared demo-hana-db</code>。<code>hdi-shared</code> 提供受 HDI 托管的容器与部署能力（工件比对、技术用户、由 deployer 建表并装载 CSV）；<code>schema</code> 只是裸 schema，没有 HDI 部署语义；<code>tools</code> 是 SAP HANA Cloud 的管理界面订阅计划。</td>
+<td><code>hana-cloud</code> 与 <code>hana</code> 是什么关系？→ 前者是数据库实例本体（试用里经 SAP HANA Cloud Central 创建并映射到 CF），后者是 CAP 投放 schema 的 HDI 容器服务。</td></tr>
+<tr><td>Entitlement 与 Quota 搞错时，各自会看到什么现象？</td>
+<td>Entitlement 决定「能不能用」（有没权利看到该计划）；Quota 决定「能用多少」。缺 Entitlement → Service Marketplace 里搜不到计划；Quota 为 0 → 能看到但建实例失败。</td>
+<td>子账户里补齐配额的入口在哪？→ 子账户 → Entitlements → Edit / Configure Entitlements → Add Service Plans → 勾选并把配额加上限 → Save。<span class="tag">~</span></td></tr>
+<tr><td>要给同事「能部署但不能改账号设置」的权限，两处分别给什么？</td>
+<td>平台侧给子账户角色集合 <b>Subaccount Viewer</b>（只看，不改配置）；部署权限属 Cloud Foundry 侧，在 <b>Org Members / Space Members</b> 里给 <b>Space Developer</b>（按需给 Org Manager 的一个子集）。</td>
+<td>为什么不直接给 Subaccount Administrator？→ 他能改子账户配置、成员与配额（最小权限原则）；共享凭据更是不可追责的做法。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-3">3-3 BAS 环境（<a href="bas.html">bas</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td><b>为什么必须用 Node 的 LTS 版本（20/22），不能用最新的非 LTS？</b></td>
+<td>CAP 9 推荐 20/22 LTS；本地 SQLite 走 <code>@cap-js/sqlite</code>，其背后是原生模块 <code>better-sqlite3</code>，它按 Node 的 <b>ABI（NODE_MODULE_VERSION）</b>发布预编译包。非 LTS 的新版本可能还没有对应 ABI 的预编译包，安装或运行时报 ABI / <code>NODE_MODULE_VERSION</code> 不匹配。本站必须用 Node 22 才能装上（实测 <code>v22.23.2</code>）。</td>
+<td>机器上装不了怎么办？→ 用 <code>npx</code> 临时取一个 22：<code>export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"</code>，然后 <code>node -v</code> 确认；另一种做法是装 nvm 并用 <code>nvm use 22</code>。</td></tr>
+<tr><td>在 BAS 终端 <code>npm install</code> 报 <code>No space left on device</code>，第一步做什么？</td>
+<td>先量化：<code>df -h</code> 看空间、<code>df -ih</code> 看 inode；再清 <code>~/.npm</code>、<code>~/.cache</code>、Trash；仍不够才考虑把项目搬到新 dev space。不要一上来就删 dev space。</td>
+<td>为什么不能只删 <code>node_modules</code>？→ 占空间的往往是 npm 缓存与 inode 耗尽，删 <code>node_modules</code> 后重装会更快把缓存撑大；而且 dev space 磁盘是「预置扩展 + 项目 + 缓存」共用的 4 GB <span class="tag">~</span>。</td></tr>
+<tr><td>要在一个 dev space 里查项目连的是哪个数据库、并把服务暴露到浏览器，分别用什么？</td>
+<td><code>npx cds env get requires.db</code>（加 <code>--profile production</code> / <code>hybrid</code> 看覆盖后的值）；预览用命令面板 <code>Ports: Preview</code>，端口被占住时用 <code>Ports: Stop the process running on the port</code>。</td>
+<td><code>cds env</code> 为什么比 <code>cat package.json</code> 可靠？→ 它把全局默认、项目配置、profile 与环境变量合并成<b>最终生效值</b>；<code>package.json</code> 只是其中一层。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-4">3-4 CDS 建模（<a href="cds.html">cds</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td><b>订单与明细之间为什么不用 <code>Composition</code>，而用显式 <code>Association</code>？</b></td>
+<td>三条基于实测的理由：① <b>语义</b>——本站明细行要能单独 POST / PATCH / DELETE、生命周期与订单头相对独立，不需要「父删子必删」，也不需要 Deep Insert / Update；② <b>物理上两者等价</b>——<code>Composition of many Items on items.order = $self</code> 与 <code>Association to many Items on …</code> 编译出的 DDL <b>逐字相同</b>（<code>diff</code> 无输出），FK 列都在子表 <code>order_ID</code>；③ <b>可预期性</b>——普通关联 + 显式 FK 列让 CSV 表头与查询条件都能写死。</td>
+<td>什么场景<b>该</b>用 Composition？→ 强从属的文档结构（发票行、行程行），并且你想要 Deep Insert 与级联删除、服务里自动暴露。<br><b>注意</b>：不要讲「Composition 会让父表多出 FK 列、导致 <code>$expand</code> 为空」——本站在同版本工具链上无法复现，<a href="cds.html#s5">cds.html §5 的纠偏框</a>有完整说明（题库这一条的措辞与此不一致，见 <a href="#s8">8 疑难问答 Q1</a>）。</td></tr>
+<tr><td><b>为什么 <code>getOrderSummary</code> 这种聚合不能用实体暴露？正确做法是什么？</b></td>
+<td><code>group by</code> 的结果<b>没有主键</b>，而 OData 实体必须可寻址（能按 key 取单行）；暴露它会在编译时报 <code>Expected entity to have a primary key</code>。正确做法：在服务里声明<b>无绑定 function</b>（返回 <code>Decimal</code> 或结构体数组），handler 里用 CQN 聚合返回。</td>
+<td>那什么视图可以暴露？→ 保留了 <code>key</code> 的视图（示例如 <code>OrderItemView</code>），通常再配 <code>@readonly</code> 让它只读。<br>不想让它进数据库？→ 加 <code>@cds.persistence.skip</code>（<code>--to sql</code> 里该视图消失）<span class="tag">~</span></td></tr>
+<tr><td><b><code>$expand=items</code> 返回空数组意味着什么？</b></td>
+<td>意味着<b>子表那一侧的外键列里没有值（或列名不是你想的那个）</b>。三步排查：① <code>cds compile … --to sql</code> 看子表真实的 FK 列名（普通关联是 <code>order_ID</code>；<b>匿名内联 Composition</b> 是 <code>up__ID</code>）；② 直接查子表该列是否有值（<code>select count(*) from 子表 where order_ID is null</code>）；③ 用 join 计数确认父子能对上（本站初始数据明细 9 行、能 join 上订单的也是 9 行）。</td>
+<td>为什么 deploy 还会打印「成功」？→ 外键在库里不一定有约束（SQLite 默认不强制 FK），且 CAP 不会替你校验 CSV 里的外键指向——本站实测 <code>book_ID=9999</code> 时 deploy 仍成功、只是 join 结果为 0，必须自己查「孤儿行」（<code>left join … where b.ID is null</code>）。</td></tr>
+<tr><td><b>改了 <code>db/schema.cds</code>（加/改/删列）之后，为什么常要「删库重建」而不是只重跑 deploy？</b></td>
+<td>三个原因：① <code>cds deploy</code> 是<b>增量</b>行为——本站在 SQLite 上实测「加列会 <code>ALTER</code> 成功、数据保留」，但<b>删列/改语义不会让旧列消失</b>，模型与物理表就会 drift（<a href="cds.html#s10">cds.html 排错 14</a>）；② SQLite 是动态类型，<b>改类型不报错</b>（实测 <code>price</code> 从 <code>DECIMAL</code> 变 <code>INTEGER</code> 照样通过，旧数据保留）→ 与模型不一致且不告警；③ 种子数据只在建库时装载，重跑 deploy 不会清掉你手工造/测试写坏的残留行（第二次跑验收脚本的 6 条 FAIL 就是这么来的）。所以本地正确动作是：<code>rm -f db.sqlite db.sqlite-shm db.sqlite-wal &amp;&amp; npm run deploy</code>（等同 <code>data.reset()</code>）。</td>
+<td>一定要连 <code>-shm</code> / <code>-wal</code> 一起删吗？→ 要。SQLite 的 WAL/SHM 是附属文件，只删主文件会留下不一致状态（课程据此强调「删文件重建」是最彻底的隔离）。<br>生产（HANA）也能删库重建吗？→ <b>不能</b>。生产要走 HDI 的正式演进路径（部署工件 / 迁移文件）。<span class="tag">~</span></td></tr>
+<tr><td><code>orderNo</code> 这种业务键为什么不加 DDL 的 <code>UNIQUE</code>，唯一性谁保证？</td>
+<td>实测 <code>--to sql --dialect hana</code> 里 <code>orderNo NVARCHAR(16) NOT NULL</code> 之后<b>没有 UNIQUE</b>；唯一性由服务层 <code>before('CREATE', BookOrders)</code> 检查，重复时 <code>req.reject(409, '订单号 … 已存在')</code>——好处是错误消息可控、可在同一处做编号生成。</td>
+<td>代价是什么？→ 并发下存在双写窗口（应用层检查不是原子的）；<span class="tag">~</span> 对一致性要求高的场景可考虑数据库约束或序列，但要接受错误消息不再是业务语言。</td></tr>
+<tr><td>匿名内联 Composition（<code>Composition of many { … }</code>）会带来什么意外？</td>
+<td>编译器会在后台生成实体并加一条<b>回链关联 <code>up_</code></b>，子表主键是复合键、FK 列名变成 <code>up__ID</code>（实测 <code>up__ID NVARCHAR(36) NOT NULL</code>）。CSV 表头必须写 <code>up__ID</code>，否则 deploy 失败。</td>
+<td>推荐写法？→ 具名子实体 + 显式关联（本站做法），列名可预期。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-5">3-5 Node.js 服务实现（<a href="node.html">node</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td><b>订单开了 <code>@odata.draft.enabled</code> 之后，<code>before('CREATE', BookOrders)</code> 的校验在哪个请求上执行？</b></td>
+<td>在<b>激活草稿</b>（draftActivate）时执行，不在 POST 建草稿时执行。完整 URL：<code>POST /odata/v4/book-order/BookOrders(ID=&lt;UUID&gt;,IsActiveEntity=false)/BookOrderService.draftActivate</code>（注意动作名带服务名前缀）。POST 只产生草稿：响应 <code>IsActiveEntity=false</code>、<code>orderNo=null</code>。</td>
+<td>为什么测试里「POST 后订单号是 BO-1005」永远失败？→ 把两个 201 混为一谈；只能靠 <code>IsActiveEntity</code> 与 <code>orderNo</code> 是否已生成区分，真正建单要看激活响应。<br>绑定动作的 URL 有什么不同？→ 要带 <code>IsActiveEntity=true</code>：<code>/BookOrders(ID=…,IsActiveEntity=true)/submitOrder</code>，否则可能打到草稿行。</td></tr>
+<tr><td><b><code>@cds.redirection.target</code> 解决什么问题？不加会怎样？</b></td>
+<td>当同一个源实体在一个服务里被投影<b>两次</b>（本站：<code>BookOrderItems</code> 与 <code>OrderItemView</code>）时，<code>BookOrders:items</code> 的导航目标无法自动判定。报错原文就写着修法：<code>Add “@cds.redirection.target” to either … ; can't auto-redirect</code>。本站把它加在 <code>BookOrderItems</code> 上，声明它以导航目标为准。</td>
+<td>不加是编译期还是运行期失败？→ <code>--to edmx</code> 编译期直接 <code>[ERROR]</code>，位置精确到行:列。<br>那用日志/退出码判断吗？→ 不要：本站实测编译打印 <code>[ERROR]</code> 但命令退出码可能仍是 0，门禁脚本必须 <code>grep '[ERROR]'</code> 再 <code>exit 1</code>。</td></tr>
+<tr><td>同一个「汇总」需求，什么时候用 <code>@readonly</code> 实体、什么时候用 <code>function</code>？</td>
+<td>判断标准是<b>结果能不能寻址</b>：带主键、能按 key 取单行 → 用实体（常配 <code>@readonly</code>，如 <code>OrderItemView</code>）；<code>sum</code> / <code>count</code> / <code>group by</code> 的结果没有主键 → 用无绑定 function。</td>
+<td>为什么用「两次查询 + Map 拼装」实现 <code>getOrderSummary</code>？→ 把聚合压在数据库侧（一次 <code>groupBy</code>），避免「先查订单再逐单查合计」的 N+1。</td></tr>
+<tr><td>自定义动作 <code>submitOrder</code> 为什么必须用 <code>on</code> 注册，不能用 <code>after</code>？</td>
+<td>自定义 action/function <b>没有缺省实现</b>；<code>on</code> 是「代替缺省实现」，所以它必须自己实现全部逻辑。<code>after</code> 是在实现之后跑，用 <code>after</code> 注册时请求先走空实现 → 动作不被调用（失败）。<code>before</code> 只能做校验，无法完成状态迁移。</td>
+<td>动作名有什么坑？→ 不要叫 <code>read</code> / <code>create</code> / <code>run</code> 这类与基类方法冲突的名字，可能覆盖框架方法。</td></tr>
+<tr><td><code>after('DELETE', BookOrderItems)</code> 里为什么不能取 <code>req.data.ID</code>？替代方案？</td>
+<td>DELETE 请求没有 body，被删除的行也不会返回键值，<code>req.data</code> 里拿不到可用键；要从 <code>req.params</code> 取（本站写法：<code>req.data?.order_ID ?? req.params[req.params.length - 1]?.order_ID</code>），或在 <code>before('DELETE')</code> 里先记下父键。</td>
+<td>漏了会看到什么？→ 删除明细后父订单的 <code>totalAmount</code> 不更新（合计偏大），而且不报错——正是「测试能守住、肉眼守不住」的典型 bug。</td></tr>
+<tr><td>业务校验失败应该返回 400 还是 500？客户端能看到什么？</td>
+<td>可判定的业务错误用 <code>req.reject(400/404/409, '消息')</code> → 客户端拿到对应状态码 + 可读消息（含 <code>code</code> 与 <code>@Common.numericSeverity</code>）；未捕获异常 → 500，且<b>生产环境 5xx 响应体会被脱敏</b>（只回 <code>500 Internal Server Error</code>），除非显式设置 <code>err.$sanitize = false</code>——所以排 500 必须看服务端日志。</td>
+<td><code>req.reject</code> 和 <code>req.error</code> 的差别？→ <code>reject</code> 会中止请求（内部 throw）；<code>error</code> 只记录错误并继续，适合一次性收集多条校验。</td></tr>
+<tr><td>写出「查 <code>status=OPEN</code> 的订单、只要 <code>ID</code> / <code>orderNo</code>、按 <code>orderNo</code> 倒序、取前 3 条」的 CQN。</td>
+<td><code>await SELECT.from(BookOrders).columns('ID','orderNo').where({ status: 'OPEN' }).orderBy('orderNo desc').limit(3)</code>；生成 SQL 是参数化的（<code>… WHERE status = ? ORDER BY orderNo DESC LIMIT ?</code>），值不会被拼进 SQL 字符串。</td>
+<td>查询某订单的明细合计，where 写哪个字段？→ 外键列 <code>order_ID</code>（不是 <code>order</code>）；写成 <code>order</code> 条件会静默失效、变成全表合计。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-6">3-6 Java 服务实现（<a href="java.html">java</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td>从 Node 版换到 Java 版，哪些东西不用改、哪些必须重写？</td>
+<td>不用改：<code>db/*.cds</code> 领域模型、<code>srv/*.cds</code> 服务定义与注解（含授权与 UI 注解）、<code>db/data/*.csv</code> 种子数据、对外的 API 契约。必须重写：事件处理器（handler）、构建与依赖（pom.xml / Maven）、测试代码与启动方式。</td>
+<td><b>唯一的例外是 <code>@path</code></b>：Node 把 <code>@path</code> 当完整路径，而 CAP Java 会把 servlet 基路径 <code>/odata/v4</code> 加在前面——照抄 Node 的 <code>'/odata/v4/book-order'</code> 会变成 <code>/odata/v4/odata/v4/book-order</code>（实测 404）。Java 侧要写 <code>@path: '/book-order'</code> 才能对外 URL 一致。<br>Java 版为什么能直接用同一份 <code>db/</code>？→ <code>cds-maven-plugin</code> 在构建期调用 <code>cds build --for java</code>，生成 <code>cds.gen.*</code> 类型类与 <code>edmx/</code>、<code>csn.json</code> 等资源。</td></tr>
+<tr><td>Java 里怎么拿到「绑定动作」那一行的主键？</td>
+<td>用 <code>CqnAnalyzer</code> 解析请求的 target（实测 <code>demo-java</code> 的 handler 构造里 <code>analyzer = CqnAnalyzer.create(model)</code>，动作处理器里用 <code>analyzer.analyze(req)</code> 取出 key）。</td>
+<td>Node 里对应什么？→ <code>req.params[req.params.length - 1].ID</code>（绑定动作的键在 params 里）。</td></tr>
+<tr><td>写一个 Java 事件处理器的关键注解是什么？它怎么和 Node 的写法对应？</td>
+<td>类上 <code>@Component</code> + <code>@ServiceName(BookOrderService_.CDS_NAME)</code>，方法上用 <code>@Before</code> / <code>@After</code> / <code>@On</code>（配 <code>event = CqnService.EVENT_CREATE</code> 与 <code>entity = BookOrders_.CDS_NAME</code>）。对应关系：<code>this.before('CREATE', …)</code> ↔ <code>@Before(event = …, entity = …)</code>。</td>
+<td>为什么 Java 版启起来是 8080 而 Node 版是 4004？→ 分别是 Spring Boot 的默认端口与 CAP Node 运行时的默认端口；两边都能改。<span class="tag">~</span></td></tr>
+<tr><td><code>Result.first(Class)</code> 与 <code>Result.single(Class)</code> 有什么区别？</td>
+<td><code>first(X.class)</code> 取第一行、没有行时返回 <code>Optional.empty()</code>（所以要先 <code>.orElse(null)</code> 或 <code>.isPresent()</code>，本机就踩过 <code>Optional&lt;Books&gt; 不能赋给 Books</code>）；<code>single(X.class)</code> 要求<b>恰好一行</b>，0 行或多行都会抛异常。</td>
+<td>什么时候用哪个？→ 已知唯一（按主键查）用 <code>single</code>，语义即「断言唯一」；查询可能为空、想自己判空用 <code>first</code>。<br>这不就是 Node 的 <code>SELECT.one</code> 吗？→ 思路一样，但 <code>SELECT.one</code> 在多于一行时行为不可依赖，所以两边都要保证 where 唯一。</td></tr>
+<tr><td>Java 端点 404 时第一个该打开的页面是什么？为什么？</td>
+<td><b>CAP Index Page</b>（<code>http://localhost:8080/</code>）：它列出所有已注册服务的真实 URL——本机就是靠它发现路径被拼成 <code>/odata/v4/odata/v4/book-order</code> 的。</td>
+<td>Java 侧 <code>@path</code> 与 Node 侧有什么不同？→ 见上一题：Java 的 <code>@path</code> 是相对基路径的，写 <code>'/book-order'</code>。<br><code>mvn compile</code> 生成的 <code>cds.gen</code> 有价值吗？→ 有：类型安全的实体接口与动作上下文（<code>BookOrdersSubmitOrderContext</code> 等），字段/实体名写错会在编译期报错；没有它（全靠字符串）也能跑，但失去这层保护。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-7">3-7 测试体系（<a href="testing.html">testing</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td>四层测试分别抓什么？各举一个「上一层抓不到」的例子。</td>
+<td>第 0 层模型/语法检查（<code>cds compile</code>）：抓语法、未解析关联、缺主键、重定向歧义——例如少了 <code>@cds.redirection.target</code> 直接报 ERROR。<br>第 1 层 <code>cds.test</code>：进程内起服务做细粒度断言——例如「数量 0 → 400 且消息为『数量必须大于 0』」。<br>第 2 层 <code>odata-verify.sh</code>：从外部打 HTTP 的集成验收——例如草稿激活重复订单号 → 409、用错方法 → 405（第 1 层在进程内不易覆盖这些真实往返）。<br>第 3 层 UI 测试（Fiori 层）<span class="tag">~</span>：第 0/1 层都抓不到界面行为（列没显示、按钮不可用）。</td>
+<td>第 0 层抓不到什么？→ handler 里的逻辑错误（例如金额算错、<code>req.data</code> 取不到值）。</td></tr>
+<tr><td>为什么同一份验收脚本第二次运行会出现 6 条 FAIL？</td>
+<td>因为脚本本身写数据，第二次运行时前置条件已变：明细行数 9 → 10、<code>getOrderSummary()</code> 4 → 5 行、BO-1001 已 SUBMITTED（再提交得 409 而非 200）、自动编号 BO-1005 → BO-1006、父订单合计 12000 → 20400 等。修法：跑前 <code>rm -f db.sqlite* &amp;&amp; npm run deploy</code>（或在测试里 <code>data.reset()</code>）。</td>
+<td>这 6 条 FAIL 说明测试有问题吗？→ 不，说明断言<b>绑定了明确的前置条件</b>，这正是有效测试；关键是把它显式化（重置库）而不是放宽断言。</td></tr>
+<tr><td>数据库隔离有哪三种做法，代价分别是什么？</td>
+<td>① 重置现有文件（<code>npm run deploy</code> / <code>data.reset()</code>）：零配置、与手工验证一致；代价：会清掉手工数据，不能与服务同时写。<br>② 删除文件重建（<code>rm -f db.sqlite db.sqlite-shm db.sqlite-wal &amp;&amp; npm run deploy</code>）：最干净、顺带验证「从零建库」；代价：慢，且必须连 WAL/SHM 一起删。<br>③ 独立测试库 / 内存库（<code>credentials.url</code> 指向 <code>db-test.sqlite</code>，或用 <code>cds.test</code> 的 in-memory 模式）：开发数据不受影响、内存库最快；代价：多一份配置，内存库跑完即消失不利排查。</td>
+<td>本站为什么必须在 <code>before()</code> 里 <code>data.reset()</code>？→ 项目把 <code>requires.db.credentials.url</code> 指向 <code>db.sqlite</code>，<code>cds.test</code> 连的就是这个文件，不重置就会污染开发数据。</td></tr>
+<tr><td>为什么 CI 里不能用 <code>cds watch</code>，替代方案是什么？</td>
+<td><code>cds watch</code> 是常驻监视进程、不会退出（CI 会挂到超时），热重载在 CI 里也没有价值。替代：<code>cds compile</code>（或 <code>cds build</code>）做静态/构建检查 + <code>npm start</code>（<code>cds-serve</code>）起稳定服务跑集成测试。</td>
+<td>服务就绪怎么等？→ 轮询健康检查（curl <code>$metadata</code> 返回 200 即继续，设次数上限），不要 <code>sleep</code>。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-8">3-8 认证与授权（<a href="security.html">security</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td><b>401 与 403 的差别是什么？各自怎么确认原因？</b></td>
+<td>401＝<b>未认证</b>，由认证层返回（凭据不存在/不成立），响应体是裸文本 <code>Unauthorized</code>（带 <code>WWW-Authenticate</code>）；403＝<b>已认证但无权限</b>，由 CAP 的授权框架按 <code>@requires</code> / <code>@restrict</code> 返回，响应体是 OData 错误对象（<code>{"error":{"message":"Forbidden","code":"403"}}</code>）。确认原因：401 查 <code>cds env get requires.auth.kind</code> 与凭据是否随请求发出；403 查注解里的角色名与 JWT 的 <code>scope</code> 是否对得上。</td>
+<td>本站实测的两个样本？→ 匿名 GET <code>/BookOrders</code> → 401 纯文本；<code>-u bob:bob</code>（认证成立但无角色）→ 403 OData 错误体；<code>-u alice:alice</code> → 200。</td></tr>
+<tr><td><b><code>mocked</code> 与 <code>dummy</code> 的差别是什么？测匿名 401 该用哪个？</b></td>
+<td><code>dummy</code> 什么都不验证：实现就是 <code>req.user = cds.User.privileged; next()</code>，<b>每个请求都当特权用户</b>，所以匿名也 200——它是「关掉权限」的排障开关，<b>绝不能用来测 401</b>。<code>mocked</code> 是「假的登录」：走 Basic Auth，预定义若干用户（<code>alice</code>/<code>bob</code>/…）并默认带 <code>"*": true</code> 兜底，匿名请求会被 <code>@requires</code> 拦成 401（实测带 <code>WWW-Authenticate: Basic realm="Users"</code>）。测匿名必须用 <code>mocked</code>（或 <code>basic</code> / <code>jwt</code>）。</td>
+<td>为什么 <code>mocked</code> 下 <code>-u 任意用户名:任意密码</code> 也 200？→ 内置 users 配置里 <code>"*": true</code> 放行未配置的用户名，且默认用户没配 password 时密码不校验。要收紧：显式写 <code>"*": false</code> 并给每个用户配 <code>password</code>。<br>那生产能用 <code>mocked</code> / <code>dummy</code> 吗？→ 不能；生产用 <code>xsuaa</code>（或 <code>jwt</code>），并在 <code>[production]</code> 档里显式固定。</td></tr>
+<tr><td>CDS 里写 <code>to: 'submit'</code>，而 <code>xs-security.json</code> 里的 scope 是 <code>$XSAPPNAME.submit</code>——为什么这样才是对的？</td>
+<td>因为 CAP 比对时会把 JWT 中 scope 的 <code>&lt;xsappname&gt;.</code> 前缀剥掉再匹配：JWT 里是 <code>demo-node-trial-dev.submit</code>，对应 CAP 角色名就是 <code>submit</code>，所以 <code>to: 'submit'</code> 正确。三个名字必须分清：<b>scope 名</b>（<code>$XSAPPNAME.submit</code>）、<b>CAP 角色名</b>（<code>submit</code>，写在 <code>to:</code> 上）、<b>role-template 名</b>（<code>OrderAdmin</code>，只是打包单位，<b>不能</b>写进 <code>to:</code>）。</td>
+<td>写错（比如 <code>to: 'sub'</code> 或写 role-template 名）会怎样？→ 本地 <code>mocked</code> 下常看不出问题，<b>部署后必然 403</b>；这就是最常见的「用户已分配角色集合但调用接口 403」的原因。</td></tr>
+<tr><td>为什么 <code>@readonly</code> 不能表达「只有管理员能读」？</td>
+<td><code>@readonly</code> / <code>@insertonly</code> / <code>@Capabilities</code> 属于<b>静态访问控制</b>：它由运行时强制执行，但<b>与用户无关</b>（等价于 <code>@restrict: [{ grant: 'READ' }]</code>，默认 <code>to: 'any'</code>）。按角色控制要写 <code>@restrict</code>（或 <code>@requires</code>），例如 <code>@restrict: [{ grant: 'READ', to: 'BookOrder.View' }]</code>。</td>
+<td><code>@requires: 'Viewer'</code> 等价于哪条 <code>@restrict</code>？→ <code>@restrict: [{ grant: '*', to: 'Viewer' }]</code>。</td></tr>
+<tr><td>实体上写了两段 <code>annotate … with @(restrict: […])</code> 会怎样？</td>
+<td>编译时只有一行 WARNING：<code>Duplicate assignment with "@restrict", using last</code>，运行时<b>后者整体覆盖前者</b>——前一段里声明的权限会静默消失（实测 <code>--to xsuaa</code> 的输出里只剩后一段的角色 scope）。对策：把 <code>@restrict</code> 合并到一处。</td>
+<td>怎么发现这种问题？→ <code>cds compile srv --to xsuaa</code> 看生成的 scopes 是否符合预期 + 把三态断言写进验收脚本。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-9">3-9 Fiori UI（<a href="fiori.html">fiori</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td>「界面由注解生成」的边界在哪里？改界面应该改哪里？</td>
+<td><code>UI.*</code> 注解决定<b>列、筛选、标题、动作、Facets</b>，编译进 <code>$metadata</code> 的 Annotations 段，由 Fiori Elements 渲染；但<b>应用外壳</b>仍然是前端工程的事——<code>manifest.json</code>（用哪个模板、路由怎么走）、<code>Component.js</code>、<code>index.html</code>。所以「加一列」改 CDS，「换模板/改路由」改 <code>manifest.json</code>。</td>
+<td>怎么证明注解真的进了元数据？→ <code>curl -u alice:alice "…/$metadata" | grep -c Annotation</code>（本站实测 166）<span class="tag">~</span>。</td></tr>
+<tr><td>本地打开 Fiori 应用显示 No data / 空白，按什么顺序定位？</td>
+<td>① 先看浏览器网络面板：<code>$metadata</code> 或实体请求是不是 <b>401</b>（本地没有 approuter / XSUAA 做登录跳转，页面不会带 Basic 凭据）→ 用 <code>test/dev-proxy.js</code> 注入 mock 认证；② 是不是 <b>404 / URI 不匹配</b>（<code>manifest.json</code> 的 <code>dataSources.mainService.uri</code> 要与服务 <code>@path</code> 一致）；③ 服务返回 200 但界面空 → 注解没进 metadata（<code>grep Annotation</code>）或 <code>UI.LineItem</code> 没配。</td>
+<td>那个代理能带到生产吗？→ 不能。真实部署由 <b>approuter + XSUAA</b> 负责认证（<code>xs-app.json</code> 的 <code>authenticationType: xsuaa</code> + destination 的 <code>forwardAuthToken</code>）。</td></tr>
+<tr><td>List Report 与 Object Page 是怎么连起来的？</td>
+<td>都在 <code>manifest.json</code> 的 <code>sap.ui5.routing</code> 里：<code>BookOrdersList</code>（<code>sap.fe.templates.ListReport</code>，<code>contextPath: /BookOrders</code>）与 <code>BookOrdersObjectPage</code>（<code>sap.fe.templates.ObjectPage</code>），ListReport 的 <code>navigation.BookOrders.detail.route</code> 指向 ObjectPage 的路由。</td>
+<td>为什么 <code>$expand=items</code> 让 Object Page 能显示明细？→ 明细表绑定的是 <code>BookOrders:items</code> 导航属性，底层就是一条带 <code>$expand</code>/导航的 OData 请求。</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-10">3-10 构建与部署（<a href="deploy.html">deploy</a>）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>问题</th><th>期望答案要点</th><th>追问</th></tr></thead>
+<tbody>
+<tr><td><b>部署链路里每一步的产物是什么？</b></td>
+<td>① <code>npx cds build --production</code> → <code>gen/srv</code>（服务实现 + <code>gen/srv/srv/csn.json</code>、OData EDMX 等运行时资源）与 <code>gen/db</code>（HANA 工件：<code>.hdbtable</code> / <code>.hdbview</code> / <code>.hdbtabledata</code>）；② <code>mbt build -t mta_archives</code> → <code>.mtar</code>（含各模块的内容 + <code>mta.yaml</code> 声明的资源需求）；③ <code>cf deploy …mtar -f</code> → 创建/更新应用（<code>…-srv</code>、<code>…-approuter</code>）与服务实例（XSUAA、HDI 容器），并由 <b>hdb 模块里的 HDI deployer</b> 在 HANA 上建表并装载 CSV；④ 验证 → <code>cf apps</code>（都 started）+ 路由上 <code>curl $metadata</code> 返回 <code>200</code>（证明服务可达、认证通过、模型能序列化）。</td>
+<td>谁真正在云端建表？→ 不是 <code>cds build</code>（它只生成工件），而是部署时 <code>gen/db</code> 模块里的 <code>@sap/hdi-deploy</code>；这也是为什么每次部署都会比对工件。<br>快速迭代时想跳过整体部署怎么办？→ <code>cds deploy --to hana</code>（只把 DB 工件推上去，服务仍本地跑）<span class="tag">~</span>。<br><b>「部署成功但没有表」的根因？</b>→ 归档里没有 <code>gen/db</code>（常因为 <code>production</code> profile 没解析出 <code>db.kind = hana</code>），<code>db-deployer</code> 模块「成功」却什么都没建；验证两条命令：<code>find gen -maxdepth 2 -type d</code>（必须同时有 <code>gen/db</code> 与 <code>gen/srv</code>）与 <code>cf logs demo-node-db-deployer --recent</code>。<br><code>cds build</code> 是谁在执行？→ <code>mbt build</code> 会先跑 <code>mta.yaml</code> 里 <code>build-parameters.before-all</code> 的 <code>npm ci</code> + <code>npx cds build --production</code>，所以「忘记先 build」不会出错，但<b>改了模型没重新打包会部署出旧产物</b>。</td></tr>
+<tr><td><code>mta.yaml</code> 里 hdb 模块与 hdi-container 资源是什么关系？</td>
+<td><code>resources</code> 里声明一个 <code>com.sap.xs.hdi-container</code>（<code>service: hana</code>、<code>service-plan: hdi-shared</code>），然后由<b>服务模块与 hdb 模块引用同一个资源名</b>——这样运行时应用与建表部署器连的是同一个 HDI 容器。</td>
+<td>忘了绑定会怎样？→ 应用起得来但查不到表 / 连接失败；症状与「表名写错」很像，先看 <code>cf services</code> 与应用的绑定（<code>cf env</code>）。</td></tr>
+<tr><td>部署到路由之后 401 或 404，最该查什么？</td>
+<td>① 401：认证链路——<code>xs-security.json</code> 是否随 MTA 部署（role-templates / scopes）、用户是否被分配角色集合、approuter 是否把 token 转发给后端（<code>xs-app.json</code> 的 <code>authenticationType: xsuaa</code> 与 destination 的 <code>forwardAuthToken: true</code>）。② 404：路由与服务路径——<code>@path</code>、approuter 的 <code>xs-app.json</code> 目标、后端应用是否 started。</td>
+<td>用 <code>cf logs &lt;app&gt; --recent</code> 能看到什么？→ 请求日志与错误栈（注意部署后 5xx 的响应体是脱敏的，只能从日志看原因）。</td></tr>
+<tr><td>为什么讲课要强调「本地 26 条断言全绿」而不是「我本地能跑」？</td>
+<td>断言把「能跑」变成<b>可复核的证据</b>：<code>PASS 26 / FAIL 0</code> 里包含匿名 401、草稿激活 409/400、状态迁移 409、只读实体 405、聚合函数 404 等负向场景；同一套脚本可以指向云端地址（<code>BASE=</code>）做部署后验收，是本地与云端之间唯一的共同判据。</td>
+<td>哪三条是硬门禁？→ 模型编译无 <code>[ERROR]</code>、<code>npm test</code> 全绿、<code>bash test/odata-verify.sh</code> 的 <code>FAIL 0</code>。</td></tr>
+</tbody></table></div>
+
+<h2 id="s4">4. 自测题与本节测试的参考答案</h2>
+<p>本节分两部分：<b>4-1</b> 是题库 <code>work/quiz/*.json</code> 里每道自测题的正确选项与一句话要点（按板块分组，与 <a href="quiz.html">自测页</a>同源）；
+<b>4-2</b> 是每个课程页末尾「本节测试」的参考答案要点（页面内 <code>.sectest</code> 的题目，逐页给出）。
+讲课时建议：<b>先让学员自己答，再按 4-1 的「一句话要点」点评；本节测试当堂口述即可，不必写。</b></p>
+
+<h3 id="s4-1">4-1 自测题答案总表（按板块 · 题号 · 正确选项 · 一句话要点 · 页面锚点）</h3>
+<p>「锚点」列指向本课程页里最相关的一节，学员答错时直接让他重读那一节。<b>正确答案以题库文件为准</b>；如果你发现某题的解析与课程页口径不一致，见 <a href="#s8">8 疑难问答</a>（已知一处，已列出）。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>板块</th><th>题号 / 题干</th><th>正确选项</th><th>一句话要点（题库 explain）</th><th>对应页面锚点</th></tr></thead>
+<tbody>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q1<br><small>用一句话说明 CAP 是什么：它用一套模型描述领域与服务，然后自动得到哪三样东西？</small></td><td><b>B</b></td><td>CAP 的价值就在这三样「不用你写」的产物上：服务声明即有 OData 端点，模型编译成数据库表，UI.* 注解驱动 Fiori 渲染。你要写的是模型、业务规则、授权规则与界面注解。</td><td><a href="concept.html#s1">concept.html#s1</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q2<br><small>模型 / 服务 / UI 三层分别对应示范项目的哪些文件？</small></td><td><b>A</b></td><td>依赖方向是单向的：UI 依赖服务，服务依赖模型。改模型的代价最大，因为它同时影响数据库、API 与界面（见 2-1 的影响面表）。</td><td><a href="concept.html#s2">concept.html#s2</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q3<br><small>cds compile 的 --to sql / --to edmx / --to csn 三个产物分别给谁用？</small></td><td><b>C</b></td><td>本机实测：--to sql 输出 CREATE TABLE（命名空间成了表名前缀、managed 补 4 个审计列）；--to edmx 输出 OData V4 契约；--to csn 顶层键是 definitions / meta / $version，运行时读的是它而不是 .cds 文本。</td><td><a href="concept.html#s3">concept.html#s3</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q4<br><small>一次 OData 请求在 CAP 里经过的顺序，哪个是正确的？</small></td><td><b>C</b></td><td>解析与路由由协议适配器完成（URL 里的 /odata/v4/book-order 来自 @path），认证在中间件里，401 与 403 都在授权阶段产生，之后才是 before / on / after 三个 handler 钩子。</td><td><a href="concept.html#s4">concept.html#s4</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q5<br><small>为什么 getOrderSummary 这种聚合查询不能直接暴露成一个实体？</small></td><td><b>D</b></td><td>示范项目因此在服务里声明 unbound function（返回 Decimal 或结构体数组），由 handler 用 CQN 聚合实现——这是 CAP 里最典型的取舍。视图只有带主键时才能作为实体暴露（OrderItemView 就是这样）。</td><td><a href="concept.html#s6">concept.html#s6</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q6<br><small>Node 运行时与 Java 运行时之间，哪些东西是共享的？</small></td><td><b>A</b></td><td>换运行时的真实工作量是重写 handler、重建工程、重跑测试；模型、API 契约、界面注解与授权规则都不用动。这也是本课程把 ⑤ Node 与 ⑥ Java 放在同一份模型上的原因。</td><td><a href="concept.html#s7">concept.html#s7</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q7<br><small>给 ABAP 背景学员做对照：RAP 里的 EML（MODIFY ENTITY 等）在 CAP 里对应什么？</small></td><td><b>C</b></td><td>思路一致、写法不同：RAP 用 EML + 行为实现类，CAP 用 CQN API + before/on/after handler。而 CDS 与 UI 注解的认知可以直接迁移到 CAP，这是 ABAP 学员最大的既有优势。</td><td><a href="concept.html#s9">concept.html#s9</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q8<br><small>打开 @odata.draft.enabled 后，下面哪一项不是它带来的变化？</small></td><td><b>D</b></td><td>授权注解依然生效，而且草稿实体也要考虑授权。draft 是服务端的两阶段写入模型：实测建草稿时 orderNo 为 null、IsActiveEntity 为 false，激活（draftActivate）后才由 before CREATE 生成 BO-1006。</td><td><a href="concept.html#s6-1">concept.html#s6-1</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q9<br><small>关于「注解」，下面哪种理解正确？</small></td><td><b>D</b></td><td>注解会进入 CSN 与 $metadata，是 CAP 各层的行为输入。调试「注解没生效」时，最快的办法是 cds compile --to csn，先在 CSN 里确认注解存在。</td><td><a href="concept.html#s5">concept.html#s5</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q10<br><small>改了 db/data/*.csv 里的种子数据，重启服务后发现数据没变。原因是什么？</small></td><td><b>A</b></td><td>cds deploy 的输出会打印 init from db/data/…csv（本机实测 4 个 CSV 全部导入，之后 Tables 里有 5 行 Books / 3 行 Customers / 4 行 BookOrders / 9 行 BookOrderItems）。改数据要重新部署，改模型结构还要考虑 schema 演进。</td><td><a href="concept.html#s3-1">concept.html#s3-1</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q11<br><small>业务校验失败时，req.reject(409, '消息') 与抛出一个普通 Error，结果有什么不同？</small></td><td><b>D</b></td><td>示范项目全部业务错误都用 req.reject(400/404/409, '…')，本机实测收到的就是对应状态码与可读消息（例如「订单 BO-1005 没有明细，不能提交」），这也是 OData 集成测试能逐条断言的基础。</td><td><a href="concept.html#s4">concept.html#s4</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q12<br><small>「本地 SQLite 通过，就等于能上 HANA」这个说法为什么不对？</small></td><td><b>C</b></td><td>本地 SQLite 验证的是模型与业务逻辑；云端还多出 HDI 容器、schema 演进与部署拓扑。正确做法是用 --to hana（或 --dialect hana）核对 DDL，再做一次真实部署与冒烟测试。</td><td><a href="concept.html#s11">concept.html#s11</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q13<br><small>想快速确认「运行时到底读到了什么模型」，最直接的办法是？</small></td><td><b>B</b></td><td>本机实测：CSN 里 16 个 definitions，既有服务与它的投影实体、函数，也有 srv/*.cds 里 @requires: authenticated-user 这行注解。运行时读 CSN，所以 CSN 是「注解有没有生效」的第一现场。</td><td><a href="concept.html#s3-1">concept.html#s3-1</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q14<br><small>三层架构里，「界面由注解生成」这条结论的边界是什么？</small></td><td><b>D</b></td><td>示范项目 webapp/ 下只有 Component.js / index.html / manifest.json 三件外壳，界面行为几乎全部来自 app/book-orders/annotations.cds 的 UI.HeaderInfo / UI.LineItem / UI.SelectionFields。改界面经常是改 CDS，不是改前端代码。</td><td><a href="concept.html#s2">concept.html#s2</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q15<br><small>团队要选运行时，下面哪条建议最符合本页的对照结论？</small></td><td><b>C</b></td><td>两种运行时的差异在实现层与工程习惯（构建工具、类型安全、DI、事务、测试框架、启动命令、部署形态、学习曲线），性能取舍取决于负载特征，需要按实际压测判断，而不是一概而论。</td><td><a href="concept.html#s7">concept.html#s7</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q16<br><small>学员报「CAP 学不下去」，最常见的认知原因是下面哪一类？</small></td><td><b>A</b></td><td>本页第 11 节列了 12 个常见误解，基本都是「把某个概念归错层」造成的：CDS 是编译器不是数据库；@readonly 是静态约束不是权限；注解是可执行元数据；SQLite 通过只代表模型与逻辑通过。</td><td><a href="concept.html#s11">concept.html#s11</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q17<br><small>服务里写了 entity BookOrders as projection on db.BookOrders，是不是就自动有了访问控制？</small></td><td><b>B</b></td><td>示范项目的服务上有 @requires: 'authenticated-user'，但实体级授权仍是本章练习要补的内容；CAP 文档也明确写着：without authorization modeling, authenticated users have access to all entities。</td><td><a href="concept.html#s11">concept.html#s11</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>概念<br><small>concept.json · 18 题</small></td><td>Q18<br><small>关于 CAP 与 RAP / 传统 ABAP 的关系，哪种说法正确？</small></td><td><b>B</b></td><td>CDS 与 UI 注解的认知可以直接迁移；差异在运行时（ABAP Platform vs Node/Java）、业务实现（行为实现类 + EML vs handler + CQN）、授权（DCL/授权对象 vs @restrict + 角色集合）与部署位置。</td><td><a href="concept.html#s9">concept.html#s9</a><br><a href="quiz.html#q-concept">quiz.html#q-concept</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q1<br><small>SAP BTP 试用账号的时长规则，下面哪一条是对的？</small></td><td><b>B</b></td><td>试用总时长上限 90 天，按区间自动续期；连续 30 天不登录会被挂起（挂起弹窗里有 Extend Trial）；满 90 天自动删除。</td><td><a href="btp.html#s2-1">btp.html#s2-1</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q2<br><small>关于「区域（Region）」，下面哪种说法正确？</small></td><td><b>C</b></td><td>区域是子账户级属性，创建时选定；可编辑的字段只有 Display Name、Description、Parent、Used for production、Labels、Enable beta features，没有 Region。</td><td><a href="btp.html#s3-2">btp.html#s3-2</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q3<br><small>Entitlement 与 Quota 的区别，哪一项描述准确？</small></td><td><b>A</b></td><td>Entitlement = 权利（有哪些服务与计划）；Quota = 数字上限（能用多少）。搞混会出现「搜不到服务」或「配额不足」两类不同现象。</td><td><a href="btp.html#s1-2">btp.html#s1-2</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q4<br><small>CAP 项目要部署的 HDI 容器，正确的服务名与计划名是？</small></td><td><b>D</b></td><td>hdi-shared 属于服务 hana（显示名 SAP HANA Schemas &amp; HDI Containers）。hana-cloud/hana-free 是数据库实例本体；schema 是裸 schema，没有 HDI 部署能力。</td><td><a href="btp.html#s8-3">btp.html#s8-3</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q5<br><small>在 cockpit 里给子账户补服务计划配额，正确的手顺是？</small></td><td><b>B</b></td><td>Entitlements 页面（先 Edit 或 Configure Entitlements）→ Add Service Plans → 勾选 → 把配额加到上限 → Save；否则 Marketplace 里看不到计划或建实例失败。</td><td><a href="btp.html#s4-1">btp.html#s4-1</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q6<br><small>子账户与 Cloud Foundry 的 org 是什么关系？</small></td><td><b>A</b></td><td>CF 环境下一个子账户恰好对应一个 org（1:1），org 下可有多个 space，应用与服务实例都建在 space 里。</td><td><a href="btp.html#s6">btp.html#s6</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q7<br><small>cf CLI 的 -a 参数应该填什么？</small></td><td><b>C</b></td><td>-a 是 CF 的 API 端点（api.cf.&lt;区域&gt;.hana.ondemand.com），必须与子账户区域一致；cli.btp.cloud.sap 是 btp CLI 的服务器地址；passcode 那个是一次性验证码页面。</td><td><a href="btp.html#s7-2">btp.html#s7-2</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q8<br><small>执行 cf create-service hana hdi-shared demo-hana-db 报 “Service plan hdi-shared not found”，最可能是？</small></td><td><b>D</b></td><td>先 cf marketplace -e hana 看计划是否存在，再用 cf api 核对端点；两条都正常时回全局账户检查 entitlement 分配。</td><td><a href="btp.html#s7-3">btp.html#s7-3</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q9<br><small>cf push 之后一直提示 “No org or space targeted”，怎么办？</small></td><td><b>A</b></td><td>登录凭据与目标 org/space 是两件事：登录后用 cf target 选择目标（或 login 时带 -o/-s）。</td><td><a href="btp.html#s6">btp.html#s6</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q10<br><small>试用账号里应用第二天变成 stopped、路由返回 404，原因是？</small></td><td><b>C</b></td><td>SAP Help「Trial Accounts and Free Tier」写明：为清理起见应用每天会自动停止，需要时手动重启。</td><td><a href="btp.html#s10">btp.html#s10</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q11<br><small>关于角色与权限，哪一项正确？</small></td><td><b>B</b></td><td>角色集合是账号级的（全局账户与子账户不互通）；CF 的 org/space 角色在自己的页面分配；试用面向个人探索，不用于团队开发。</td><td><a href="btp.html#s5-1">btp.html#s5-1</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q12<br><small>给同事「能看子账户信息但不能改配置」的权限，最合适的是？</small></td><td><b>D</b></td><td>最小权限原则：只读给 Subaccount Viewer（具备全局/子账户管理员权限才能改配置）。共享凭据既违规也不可追责。</td><td><a href="btp.html#s5-2">btp.html#s5-2</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q13<br><small>btp CLI 在 macOS 上的官方安装方式与登录方式是？</small></td><td><b>A</b></td><td>SAP Help 给出 Homebrew cask 安装方式；推荐 --sso 走浏览器认证（也可 --sso manual 手动打开链接），会话最长 12 小时。</td><td><a href="btp.html#s7-1">btp.html#s7-1</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q14<br><small>btp CLI 命令突然报 token 失效/需要重新登录，最可能的原因与动作是？</small></td><td><b>C</b></td><td>会话上限 12 小时，超时后重新登录即可，不影响账号与实例。</td><td><a href="btp.html#s7-1">btp.html#s7-1</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q15<br><small>建 HANA HDI 容器时长时间处于 create in progress 最后失败，最该先检查什么？</small></td><td><b>B</b></td><td>HDI 容器要落在已映射的 HANA Cloud 数据库上：在 SAP HANA Cloud Central 里把实例映射到对应 CF org（可选 space）后再建容器。</td><td><a href="btp.html#s8-3">btp.html#s8-3</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q16<br><small>试用账号的资源纪律，下面哪一条最合理？</small></td><td><b>D</b></td><td>试用配额有限（4 GB 应用内存、10 路由、40 实例，且按计划限量），且条款规定仅用于个人探索、不得团队开发；及时清理与定期登录是正确姿势。</td><td><a href="btp.html#s10">btp.html#s10</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>① BTP 开通<br><small>btp.json · 17 题</small></td><td>Q17<br><small>试用账号里，SAP HANA Cloud 相关计划的「两层结构」怎么理解？</small></td><td><b>A</b></td><td>SAP HANA Cloud（hana-cloud）提供数据库实例本体（试用里经 SAP HANA Cloud Central 创建并映射到 CF）；SAP HANA Schemas &amp; HDI Containers（hana）的 hdi-shared 计划才是 CAP 部署目标。</td><td><a href="btp.html#s1-3">btp.html#s1-3</a><br><a href="quiz.html#q-btp">quiz.html#q-btp</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q1<br><small>BAS 与本地 VS Code + Node.js 的关系，哪种说法最准确？</small></td><td><b>B</b></td><td>BAS 基于 Code-OSS，菜单、命令面板、launch.json、Git 面板与 VS Code 一致；差别在环境（预装工具、配额、联网）而不是工具链本身。</td><td><a href="bas.html#s1-1">bas.html#s1-1</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q2<br><small>试用/免费计划下，BAS dev space 的三条硬限制是哪一组？</small></td><td><b>B</b></td><td>Trial Plan Restrictions：最多 2 个 dev space、1 个 RUNNING、4 GB 磁盘、1 小时无操作会话超时、30 天不活跃会被删除。Standard 计划才是 10 个 / 2 个同时 / 10 GB。</td><td><a href="bas.html#s2-2">bas.html#s2-2</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q3<br><small>创建 Dev Space 时，做 CAP 项目应该选哪个 Type（Kind）？</small></td><td><b>C</b></td><td>Full Stack Cloud Application 预置 CAP Tools、CDS Graphical Modeler、MTA Tools、SAP HANA Database Explorer、SAP Fiori Tools，是做 CAP 的常规选择。</td><td><a href="bas.html#s2-2">bas.html#s2-2</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q4<br><small>要把 cds watch 起的服务在浏览器里打开，官方文档记载的操作是？</small></td><td><b>B</b></td><td>SAP Help「Application Preview Settings」写明：每个应用监听一个端口，用 Ports: Preview 命令列出已暴露的应用并在新标签打开；端口被占用时用 Ports: Stop the process running on the port。</td><td><a href="bas.html#s5-1">bas.html#s5-1</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q5<br><small>关于 dev space 的 Stop / Start / Delete，哪一项正确？</small></td><td><b>B</b></td><td>Stop → Start 会保留文件与设置（扩展更新也需要这次重启才生效）；Delete 不可恢复。增删扩展必须先把 dev space 置于 STOPPED 状态。</td><td><a href="bas.html#s2-2">bas.html#s2-2</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q6<br><small>cds init 生成的目录里，db/data/*.csv 的文件名规则是？</small></td><td><b>C</b></td><td>初始数据 CSV 按「命名空间-实体名」命名并放在 db/data 下，CAP 才会装载；命名不符时表现为表建了但 0 行。</td><td><a href="bas.html#s4-1">bas.html#s4-1</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q7<br><small>判断当前项目到底连哪个数据库，最可靠的一条命令是？</small></td><td><b>B</b></td><td>cds env 把全局默认、项目配置、profile 与环境变量合并成「最终生效」的配置；默认看到 @cap-js/sqlite，加 --profile production 会看到 @cap-js/hana。</td><td><a href="bas.html#s5-1">bas.html#s5-1</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q8<br><small>在 BAS 终端执行 npm install 报 No space left on device，第一步该做什么？</small></td><td><b>B</b></td><td>dev space 的磁盘（试用/免费 4 GB）与 inode 都可能耗尽；官方 Troubleshooting 给的顺序就是先 df -h / df -ih，再清缓存与 Trash，最后才是把项目搬到新 dev space。</td><td><a href="bas.html#s11">bas.html#s11</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q9<br><small>Dev space 一直卡在 STARTING，官方建议的处置是？</small></td><td><b>A</b></td><td>SAP Help 的 Dev Space 排错条目给出的就是这三步；因此「先 Git 后删」的习惯是关键前提。</td><td><a href="bas.html#s11">bas.html#s11</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q10<br><small>新建的 dev space 创建成功后一直是 STOPPED，最可能的原因？</small></td><td><b>B</b></td><td>官方文档明确：Standard 计划最多 2 个、免费计划 1 个 RUNNING；超出的 dev space 会停在 STOPPED，需要先停掉另一个再启动。</td><td><a href="bas.html#s2-2">bas.html#s2-2</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q11<br><small>关于 CDS 编辑器里的「红线」，哪一项描述正确？</small></td><td><b>B</b></td><td>CAP 要求暴露为 OData 实体/集合的对象必须有主键；聚合（group by）结果拿不到主键，本课程用服务层函数（getOrderTotal / getOrderSummary）绕开。另两类常见红线是关联自动重定向冲突与改列名后未同步。</td><td><a href="bas.html#s6-2">bas.html#s6-2</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q12<br><small>命令行确认模型是否合法（能生成 DDL）的命令是？</small></td><td><b>B</b></td><td>cds compile 把模型编译成目标格式（--to sql / --to edmx 等），编译通过才是硬结论；PROBLEMS 面板只是编辑器视角。</td><td><a href="bas.html#s6-1">bas.html#s6-1</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q13<br><small>往 GitHub push 时，Git 提示输入密码，正确做法是？</small></td><td><b>B</b></td><td>SAP Help 明确建议在支持的情况下用 PAT 代替密码；GitHub 也已停用密码认证。PAT 要定期更新，并具备仓库读写权限。</td><td><a href="bas.html#s7-2">bas.html#s7-2</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q14<br><small>在 BAS 里做部署，最稳妥的「部署前检查」是？</small></td><td><b>B</b></td><td>cf deploy 依赖当前 target 的 org/space；mbt build 读 mta.yaml 的 before-all（npm ci + cds build --production），锁定依赖可避免「本地能跑云端不一样」。</td><td><a href="bas.html#s8-1">bas.html#s8-1</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>② BAS 环境<br><small>bas.json · 15 题</small></td><td>Q15<br><small>教学/团队协作场景下，哪种 dev space 使用习惯最合理？</small></td><td><b>B</b></td><td>dev space 有 4 GB 磁盘与数量上限，node_modules 属于构建产物（写进 .gitignore），业务数据不能只留在 dev space——停止/删除与 30 天回收都会让你付出代价。</td><td><a href="bas.html#s3-3">bas.html#s3-3</a><br><a href="quiz.html#q-bas">quiz.html#q-bas</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q1<br><small>CAP 项目里，决定「数据落到哪个数据库」的是哪一项？</small></td><td><b>B</b></td><td>CAP 把领域模型（db/schema.cds）与数据库实现分开：kind 决定用 @cap-js/sqlite 还是 @cap-js/hana，模型本身不用改。</td><td><a href="hana.html#s2-1">hana.html#s2-1</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q2<br><small>在本地确认当前生效的数据库配置，正确且最可靠的命令是？</small></td><td><b>B</b></td><td>cds env 合并全局默认、项目配置、profile 与环境变量得出「最终生效」的配置。默认看到 @cap-js/sqlite，加 --profile production 会看到 @cap-js/hana。</td><td><a href="hana.html#s5-1">hana.html#s5-1</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q3<br><small>免费层/试用环境下，SAP HANA Cloud 数据库实例的固定规格是？</small></td><td><b>B</b></td><td>免费层/试用只有一个预定义规格的实例：16 GB 内存、1 vCPU、80 GB 存储；付费环境才可在向导里调整大小。</td><td><a href="hana.html#s3-2">hana.html#s3-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q4<br><small>CAP 部署到 Cloud Foundry 时，数据库侧要绑定的是哪一种服务实例？</small></td><td><b>B</b></td><td>hdi-shared 提供受 HDI 管控的容器 schema 与部署能力（表由 hdi-deployer 创建）；hana 是数据库实例本体，tools 是管理界面的订阅计划。</td><td><a href="hana.html#s4-2">hana.html#s4-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q5<br><small>hdi-shared、schema、tools 三者的区别，哪一项正确？</small></td><td><b>B</b></td><td>CAP 需要 HDI 的部署语义（比对工件、创建/更新对象、技术用户连接），所以用 hdi-shared；schema 适合只想拿一个空 schema 的场景；tools 是 SAP HANA Cloud 服务的 Application 计划，用于订阅管理界面。</td><td><a href="hana.html#s4-1">hana.html#s4-1</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q6<br><small>建 HDI 容器容器时，参数里的 database_id 从哪里来？</small></td><td><b>B</b></td><td>创建 HDI 容器（cockpit）时用 JSON 参数把容器指向具体数据库实例：schema 建议名 + database_id（从 Cloud Central 的 ⋯ 菜单复制）。</td><td><a href="hana.html#s4-2">hana.html#s4-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q7<br><small>CAP 生成的 HANA 表名，与 CDS 实体 sap.training.bookorder.BookOrders 的对应关系是？</small></td><td><b>C</b></td><td>plain names 规则：命名空间的分隔点换成下划线，未加引号的标识符再折叠为大写（CAP 文档《Using Native HANA Artifacts》）。本地 SQLite 里同一实体是 sap_training_bookorder_BookOrders。</td><td><a href="hana.html#s6-2">hana.html#s6-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q8<br><small>实体里的关联 customer: Association to Customers 在 HANA 表里生成什么列？</small></td><td><b>B</b></td><td>关联会生成「导航属性名 + _ID」的外键列：BookOrders.customer → CUSTOMER_ID，BookOrderItems.order → ORDER_ID，BookOrderItems.book → BOOK_ID。手动 join 时全靠它对上。</td><td><a href="hana.html#s6-2">hana.html#s6-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q9<br><small>让本地 cds watch 的服务连上云端 HDI 容器，正确的手顺是？</small></td><td><b>B</b></td><td>cds bind 把「去哪里取凭据」写进 .cdsrc-private.json（不落盘凭据），然后用 hybrid profile 启动即可连云端库；拷别人的文件既不安全也常因环境不同而失败。</td><td><a href="hana.html#s5-2">hana.html#s5-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q10<br><small>.cdsrc-private.json 里存的是什么？</small></td><td><b>B</b></td><td>CAP 刻意不把凭据写到磁盘：文件里只有 binding{type, org, space, instance, key, resolved} 这类信息，cds watch 运行到需要时才去 CF 取凭据。</td><td><a href="hana.html#s5-2">hana.html#s5-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q11<br><small>第二天回来应用连不上 HANA，报连接失败/超时，最可能的原因是？</small></td><td><b>B</b></td><td>免费层/试用实例每天夜间自动停止（且 30 天不重启会被删除）。恢复：cf update-service 实例名 -c '{"data":{"serviceStopped":false}}'，或到 Cloud Central 点 Start。</td><td><a href="hana.html#s9">hana.html#s9</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q12<br><small>在 SQL Console 里执行 SELECT 报「表或视图不存在」，但应用能正常查询数据，最可能的原因？</small></td><td><b>B</b></td><td>按规则写成 SAP_TRAINING_BOOKORDER_BOOKORDERS 这类全大写形式；也可以用 SET SCHEMA 先切到正确 schema，再从 Catalog 树复制真实表名。</td><td><a href="hana.html#s9">hana.html#s9</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q13<br><small>创建 HDI 容器失败并提示没有可用数据库 / 未映射，应该先做什么？</small></td><td><b>B</b></td><td>HDI 容器必须落在已映射到 CF 的数据库实例上：Cloud Central → 实例 → Manage Configurations → Instance Mapping → Add Mapping 选 org → Review and Save，再重建容器。</td><td><a href="hana.html#s9">hana.html#s9</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q14<br><small>关于 db/data/*.csv 里的初始数据，哪一项正确？</small></td><td><b>B</b></td><td>capire 明确：HDI 部署 CSV 数据并在后续部署中覆盖它，因此不要通过应用端点修改这些数据；需要保留用户改动的初始数据要用 include_filter 等机制区分。</td><td><a href="hana.html#s8-1">hana.html#s8-1</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q15<br><small>关于「建表与推数据」的三条路径，哪种理解正确？</small></td><td><b>B</b></td><td>cds build --for hana 只生成工件（.hdbtable/.hdbview/.hdbtabledata），真正执行建表的是 HDI deployer：正式路径由 mbt build + cf deploy 触发 hdb 模块，快速迭代路径用 cds deploy --to hana。</td><td><a href="hana.html#s8-1">hana.html#s8-1</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>③ HANA 云<br><small>hana.json · 16 题</small></td><td>Q16<br><small>要确认「云端表里的数据」与「服务返回的数据」一致，最直接的验证是？</small></td><td><b>B</b></td><td>双视角对账：SQL 查 SAP_TRAINING_BOOKORDER_BOOKORDERS + BOOKORDERITEMS 的聚合，与 OData 函数 getOrderTotal 比对；数字一致说明数据库绑定与服务层都正确。</td><td><a href="hana.html#s7-2">hana.html#s7-2</a><br><a href="quiz.html#q-hana">quiz.html#q-hana</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q1<br><small>CAP 项目里三类 .cds 文件的分工，下面哪种说法正确？</small></td><td><b>A</b></td><td>示范项目实测：只编译 db/schema.cds 得到 4 个 CREATE TABLE；加上服务定义后变成 7 个 CREATE VIEW 并有 6 个 CREATE TABLE（多出 draft 表）；再加 annotations.cds，--to sql 输出一字不变，只有 --to edmx 多出 66 条 Annotations。</td><td><a href="cds.html#s1-1">cds.html#s1-1</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q2<br><small>cds compile 支持的 target 里，哪一个产出的是 HANA 列存表定义（部署产物）？</small></td><td><b>B</b></td><td>实测  npx cds compile db/schema.cds --to hdbtable 输出 ----- sap.training.bookorder.Books.hdbtable ----- 与 COLUMN TABLE … 语句；--to sql 是通用建表语句（默认 sqlite 方言，可用 --dialect hana／sqlite／h2／postgres），--to edmx 是 OData $metadata，--to csn 是规范化 JSON 模型。</td><td><a href="cds.html#s1-1">cds.html#s1-1</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q3<br><small>String（不写长度）在 SQLite 与 HANA 上的物理列各是什么？</small></td><td><b>B</b></td><td>同一份类型动物园模型实测：sDef 在 SQLite 上是 NVARCHAR(255)，在 --dialect hana 下是 NVARCHAR(5000)。所以跨库项目必须显式写长度。</td><td><a href="cds.html#s2-2">cds.html#s2-2</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q4<br><small>关于 key ID : UUID 与 entity X : cuid { }，正确的是？</small></td><td><b>B</b></td><td>@sap/cds/common 的原文就是 aspect cuid { key ID : UUID; //&gt; automatically filled in }；官方文档称作 Auto-filled primary keys。审计列来自 managed，不是 cuid。</td><td><a href="cds.html#s3-1">cds.html#s3-1</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q5<br><small>managed 展开后会给实体增加哪些列（SQLite 实测）？</small></td><td><b>B</b></td><td>managed 的定义是 4 个元素（createdAt Timestamp、createdBy User、modifiedAt、modifiedBy，User = String(255)）；实测 DDL 里就是 createdAt TIMESTAMP_TEXT、createdBy NVARCHAR(255)、modifiedAt TIMESTAMP_TEXT、modifiedBy NVARCHAR(255)。validFrom/validTo 属于 temporal aspect。</td><td><a href="cds.html#s4-2">cds.html#s4-2</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q6<br><small>本站示范项目为什么在订单与明细之间用 Association 而不是 Composition？</small></td><td><b>B</b></td><td>实测 diff：Composition of many Items on items.order = $self 与 Association to many Items on items.order = $self 的 DDL 逐字相同，FK 都在子表 order_ID。Composition 的差异在语义（Deep Insert/Update、级联删除、服务自动暴露）。「父表加 FK 列」的说法本地无法复现。</td><td><a href="cds.html#s5">cds.html#s5</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q7<br><small>匿名内联 Composition（Composition of many { key pos : Integer; … }）的子表 FK 列名是什么？</small></td><td><b>B</b></td><td>实测输出：CREATE TABLE demo_t5_Orders_items ( up__ID NVARCHAR(36) NOT NULL, pos INTEGER NOT NULL, quantity INTEGER, PRIMARY KEY(up__ID, pos) )。官方文档也写明会在后台生成实体并用名为 up_ 的回链关联。</td><td><a href="cds.html#s5-3">cds.html#s5-3</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q8<br><small>namespace sap.training.bookorder; 下的 BookOrderItems 与元素 order : Association to BookOrders; 生成的表名与列名分别是？</small></td><td><b>B</b></td><td>命名空间里的点变成下划线作为表名前缀（slugification），关联的 FK 列名规则是 &lt;关联名&gt;_&lt;目标主键&gt;，所以 order → order_ID。若目标实体是复合主键，会为每个主键列生成一列（实测 parent_tenant、parent_no）。</td><td><a href="cds.html#s6">cds.html#s6</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q9<br><small>关于 orderNo 这种业务键，本站的做法是？</small></td><td><b>B</b></td><td>实测 npx cds compile … --to sql --dialect hana 中 orderNo NVARCHAR(16) NOT NULL 之后没有 UNIQUE；重复检查在 book-order-service.js 的 before('CREATE', BookOrders) 里，重复时 req.reject(409, …)。</td><td><a href="cds.html#s3-3">cds.html#s3-3</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q10<br><small>一个 CDS 视图要能被当成 OData 实体暴露，最少需要什么？</small></td><td><b>B</b></td><td>示范项目的 OrderItemView 保留了 key ID 所以能暴露；把无主键视图放进服务里编译时实测报 [ERROR] … Expected entity to have a primary key (in entity:“e.S.V”)。聚合结果没有主键，所以改用无绑定函数 getOrderTotal / getOrderSummary。</td><td><a href="cds.html#s7-1">cds.html#s7-1</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q11<br><small>改完 db/schema.cds 后，确认「表结构真的变了」的正确动作是？</small></td><td><b>B</b></td><td>cds compile 只打印不落库；要用 python3 查 sqlite_master / pragma table_info 才能确认物理表。cds watch 会顺带部署，适合开发时使用。</td><td><a href="cds.html#s9-2">cds.html#s9-2</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q12<br><small>CSV 表头写成 ID,orders_ID,book_ID,quantity,amount 会得到什么结果？</small></td><td><b>B</b></td><td>实测报错：SqliteError: in cds.deploy(): table sap_training_bookorder_BookOrderItems has no column named orders_ID in: INSERT INTO …，随后打印 /&gt; deployment to db.sqlite failed。</td><td><a href="cds.html#s9-3">cds.html#s9-3</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q13<br><small>CSV 里同一主键出现两次，deploy 的结果是？</small></td><td><b>B</b></td><td>实测输出即 UNIQUE constraint failed；整个部署过程失败（打印 /&gt; deployment to db.sqlite failed）。</td><td><a href="cds.html#s9-3">cds.html#s9-3</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q14<br><small>CSV 里某行 book_ID 指向不存在的图书（9999），会发生什么？</small></td><td><b>B</b></td><td>实测：把 book_ID 改成 9999 后 deploy 仍打印 successfully deployed；用 left join … where b.ID is null 能查到 1 行孤儿，而正常 join 计数从 1 变 0。</td><td><a href="cds.html#s9-3">cds.html#s9-3</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q15<br><small>编译报错 Mismatched ‹EOF›, expecting …，最可能的原因与对策是？</small></td><td><b>A</b></td><td>实测复现：{ 未闭合时输出 [ERROR] eof.cds:4:1-1: Mismatched ‹EOF›, expecting ‹Identifier›, ‘}’, ‘@’, ‘key’, ‘virtual’；另一条 Mismatched ‘#’ 来自多写的 # 号。</td><td><a href="cds.html#s10">cds.html#s10</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q16<br><small>服务里两张实体（BookOrderItems 与 OrderItemView）都源自同一张源实体，编译报 can't auto-redirect。对策是？</small></td><td><b>B</b></td><td>实测报错原文就写着修复办法：Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or “BookOrderService.OrderItemView” … can't auto-redirect “BookOrderService.BookOrders:items” otherwise。示范项目把该注解加在 BookOrderItems 上。</td><td><a href="cds.html#s8-3">cds.html#s8-3</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q17<br><small>把 currency : String(3) 改成 currency : Currency（@sap/cds/common 的代码表类型）后，CSV 部署失败，报 has no column named currency。原因是？</small></td><td><b>B</b></td><td>实测 DDL：currency_code NVARCHAR(3) DEFAULT 'JPY'，并额外出现 sap_common_Currencies 与 sap_common_Currencies_texts 两张表。这是「类型影响物理列名」的典型例子。</td><td><a href="cds.html#s4-4">cds.html#s4-4</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>④ CDS 建模<br><small>cds.json · 18 题</small></td><td>Q18<br><small>关于 @mandatory 与数据库的 not null，正确的是？</small></td><td><b>B</b></td><td>实测 --to edmx：a : String(10) @mandatory 生成 &lt;Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/&gt;，而 DDL 里该列没有任何 NOT NULL。要约束数据库请写 not null。</td><td><a href="cds.html#s8-1">cds.html#s8-1</a><br><a href="quiz.html#q-cds">quiz.html#q-cds</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q1<br><small>服务定义里 @path: '/odata/v4/book-order' 的作用是什么？</small></td><td><b>B</b></td><td>不写 @path 时 CAP 会按服务名推导 URL（BookOrderService → /odata/v4/book-order）；显式写死后改了服务名也不会悄悄改掉 URL，前端与测试脚本不用跟着改。</td><td><a href="node.html#s2">node.html#s2</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q2<br><small>为什么 srv/book-order-service.cds 里给 BookOrderItems 的投影加了 @cds.redirection.target？</small></td><td><b>C</b></td><td>BookOrders:items 的目标既可能是 BookOrderItems 也可能是 OrderItemView，编译器报 can't auto-redirect BookOrders:items；加注解（裸注解等价 : true）即声明以它为准。删掉这行重新 cds compile 就能复现 ERROR。</td><td><a href="node.html#s2">node.html#s2</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q3<br><small>关于 @readonly 与「聚合走函数」的取舍，哪一句是对的？</small></td><td><b>B</b></td><td>OData 实体必须有主键；OrderItemView 有 key ID 所以可以 + @readonly 暴露，而 sum/count 这类聚合结果没有可用主键，只能用 function（本站 getOrderTotal / getOrderSummary）。</td><td><a href="node.html#s4-5">node.html#s4-5</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q4<br><small>before、on、after 三类钩子的核心差别是什么？</small></td><td><b>A</b></td><td>before 在通用/自定义实现前跑，可改 req.data 但不能改结果集；on 代替默认实现（返回值即结果）；after 在实现完成、数据已落库后跑，不能改数据但能改结果集。</td><td><a href="node.html#s3">node.html#s3</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q5<br><small>订单开了 @odata.draft.enabled 后，before('CREATE', BookOrders) 里的校验在什么时候执行？</small></td><td><b>C</b></td><td>本站真实日志显示：draftActivate 请求打出后才出现 409「订单号 BO-1001 已存在」与 400「顾客 9999 不存在」—— 校验发生在激活时刻；POST 只建草稿，返回 IsActiveEntity=false 且 orderNo 仍为 null。</td><td><a href="node.html#s4">node.html#s4</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q6<br><small>绑定动作 submitOrder 在 Node.js 里应该用哪个钩子注册，为什么？</small></td><td><b>B</b></td><td>on 是「代替默认实现」；自定义 action/function 没有默认实现，注册到 after 时请求会先走空实现然后失败。before 只能做校验，无法完成状态迁移。</td><td><a href="node.html#s4-4">node.html#s4-4</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q7<br><small>本站 after('DELETE', BookOrderItems) 里为什么用 req.params 取 order_ID 而不是 req.data.ID？</small></td><td><b>A</b></td><td>删除后的行不再返回键值（req.data 里没有可用的 order_ID/ID）。本站的写法是先从 req.data 尝试，再退回 req.params[req.params.length-1]，这是 CAP 里删除场景取键的常规做法。</td><td><a href="node.html#s4-3">node.html#s4-3</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q8<br><small>CQN 里查询某张订单的明细合计，where 条件应该写哪个字段名？</small></td><td><b>B</b></td><td>关联的外键列名是「关联名 + _ID」：order_ID / book_ID / customer_ID。写 order 会匹配不到列，条件静默失效（本站用 db.cqn2sql 打印真实 SQL 来核对）。</td><td><a href="node.html#s5">node.html#s5</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q9<br><small>业务校验失败时应该怎么写？</small></td><td><b>B</b></td><td>req.reject 会把状态码与消息转成标准 OData 错误体（含 code 与 @Common.numericSeverity）。用 throw Error 会变成 500，且生产环境 5xx 响应体会被脱敏，客户端看不到原因。</td><td><a href="node.html#s6-1">node.html#s6-1</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q10<br><small>关于请求事务，本站示范项目的做法是？</small></td><td><b>B</b></td><td>CAP 的承诺是「在事件处理器里你已经在事务中」：before / 实现 / after 共享同一个根事务，成功一起提交、抛错一起回滚。cds.tx() 只用于非请求上下文；cds.spawn() 用于当前事务之外的后台任务。</td><td><a href="node.html#s6-2">node.html#s6-2</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q11<br><small>getOrderSummary() 为什么用「两次查询 + Map 拼装」而不是「先查订单、再对每张订单查合计」？</small></td><td><b>A</b></td><td>一次 groupBy 把聚合压在数据库侧，再在内存里按 order_ID 建 Map 拼装，避免 N+1。这是 CAP 里「聚合视图拿不到主键 → 用函数返回」的标准实现方式。</td><td><a href="node.html#s4-5">node.html#s4-5</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q12<br><small>用 cds watch 观察 handler 是否被调用，最直接的证据是哪一行日志？</small></td><td><b>B</b></td><td>[odata] 行表示请求进入了服务；紧随其后的 [error] 行（含栈里的 文件名:行号）能定位是哪个钩子拒绝的。本站的 [bookorder] 前缀来自 on('error') 里的 cds.log('bookorder')。</td><td><a href="node.html#s3-2">node.html#s3-2</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q13<br><small>npm start(cds-serve) 与 npx cds watch 的差别，说法正确的是？</small></td><td><b>B</b></td><td>本地开发用 watch（改完即生效，本站实测 touch 一个 .js 后自动重启，launched in 191 ms）；跑集成测试与演示用 npm start，因为它不会被文件变化打断。</td><td><a href="node.html#s8-1">node.html#s8-1</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q14<br><small>cds env get requires.auth 的输出能解释哪一个现象？</small></td><td><b>B</b></td><td>mocked 是开发期策略：预定义 alice/bob/carol 等用户，并用 "*": true 放行其他任意登录。要限制必须显式覆盖 "*": false 或改用 basic/jwt（官方文档明确 mocked 不适合生产）。</td><td><a href="node.html#s9">node.html#s9</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q15<br><small>想让 CAP 使用生产/混合配置，正确的方式是？</small></td><td><b>B</b></td><td>CAP 用 profile 区分环境：development（默认本地）、production（部署）、hybrid（本地连云端，由 cds bind 把绑定写进 .cdsrc-private.json 的 [hybrid] 段）。cds watch 的帮助里就有 --profile &lt;profile,...&gt;。</td><td><a href="node.html#s9">node.html#s9</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q16<br><small>$expand=items 返回空数组，最可能的原因是？</small></td><td><b>B</b></td><td>CAP 里文档型 Composition 的父侧外键不会被子表 CSV 自动填充，$expand 就会空。本站示范项目故意不用 Composition，并在 db/schema.cds 注释里写明原因。</td><td><a href="node.html#s11">node.html#s11</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q17<br><small>cds compile 打印了 [ERROR] 但命令看起来「成功」了，正确的是？</small></td><td><b>B</b></td><td>本站实测：缺 @cds.redirection.target 时输出两行 [ERROR]，但管道里的 exit code 仍是 0。把「无 ERROR」写成断言（grep -q）才能真正拦住。</td><td><a href="node.html#s11">node.html#s11</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q18<br><small>本地服务跑起来后，验证「服务确实在跑」最快的一条命令是？</small></td><td><b>A</b></td><td>$metadata 返回 200 同时证明了服务可达、认证通过、模型可序列化（能生成 OData 元数据）。匿名请求返回 401 则是鉴权生效的证据。</td><td><a href="node.html#s10">node.html#s10</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑤ Node 服务<br><small>node.json · 19 题</small></td><td>Q19<br><small>绑定动作的 URL 形态（草稿实体）是哪一个？</small></td><td><b>B</b></td><td>绑定动作属于某一行，URL 里必须带主键；草稿实体还要带 IsActiveEntity。同理激活草稿是 /BookOrders(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate（动作名带服务名前缀）。</td><td><a href="node.html#s7">node.html#s7</a><br><a href="quiz.html#q-node">quiz.html#q-node</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q1<br><small>Java 版与 Node 版共享哪些文件？</small></td><td><b>A</b></td><td>CAP 的卖点就是模型与运行时解耦：模型层（db/ 与 srv/*.cds）是同一份，实现的差异只在 handler（Node 的 .js / Java 的 EventHandler）。唯一要注意的差异是 @path 的语义（Java 侧是相对基路径）。</td><td><a href="java.html#node-vs-java">java.html#node-vs-java</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q2<br><small>CAP Java 里注册 before-CREATE 钩子的正确写法是？</small></td><td><b>A</b></td><td>Java 侧用注解声明（@Before/@After/@On）+ @ServiceName 指定服务；事件常量来自 CqnService（CAP Java 4.x 里没有 CdsService 这个类）。B 是 Node 的写法。</td><td><a href="java.html#handler">java.html#handler</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q3<br><small>绑定动作 submitOrder 里要拿到被调用订单的 ID，正确做法是？</small></td><td><b>B</b></td><td>绑定动作的目标实体与其键在 CQN 里表达，必须用 CqnAnalyzer（由 CdsModel 创建）解析 rootKeys；生成的 context 类型上没有 getID()。自己解析 URL 会在 URL 编码、复合键、draft 场景下出错。</td><td><a href="java.html#handler">java.html#handler</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q4<br><small>代码里写 db.run(Select.from(Books_.class).where(...)).first(Books.class) 后直接当作 Books 用，编译报“Optional&lt;Books&gt; 不適合 Books”，怎么改？</small></td><td><b>B</b></td><td>Result.first(Class) 返回 Optional&lt;T&gt;（用于“可能没有”的场景，配 isPresent/isEmpty），Result.single(Class) 直接返回对象或 null。不要强转 Optional。</td><td><a href="java.html#traps">java.html#traps</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q5<br><small>Java 版照抄 Node 的 @path: '/odata/v4/book-order' 后，所有请求 404，为什么？</small></td><td><b>B</b></td><td>两种运行时的 @path 语义不同：Node 视为完整路径，Java 视为相对 servlet 基路径。Java 版写 '/book-order'，对外 URL 两边一致。排错利器是 CAP 的索引页 http://localhost:8080/。</td><td><a href="java.html#traps">java.html#traps</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q6<br><small>CAP Java 应用起来后，想知道 OData 端点的真实 URL，最快的办法是？</small></td><td><b>B</b></td><td>Servlet IndexPageServlet 映射到 /，页面按服务列出实体、$metadata 与 Fiori 预览链接 —— 端点 404 时的第一站。</td><td><a href="java.html#run">java.html#run</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q7<br><small>cds-maven-plugin 的 cds.generate 生成 cds.gen.* 类型的价值是什么？</small></td><td><b>B</b></td><td>生成的接口（BookOrders、BookOrders_、GetOrderTotalContext…）让处理器代码可被编译器检查，这是 Java 版相对 Node 版最大的工程优势；它不负责连库（那是 PersistenceService/适配器）。</td><td><a href="java.html#types">java.html#types</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q8<br><small>本课程记录的实测现象：Java 侧 $metadata 返回 200，但带认证读实体返回 401。最合理的下一步是？</small></td><td><b>C</b></td><td>$metadata 通常不受实体级授权限制，所以“元数据能读≠数据能读”。正确做法是把本地身份模拟配好（查官方文档的属性名）或走真实 XSUAA；删掉 @requires 只是把安全问题藏起来。</td><td><a href="java.html#fail">java.html#fail</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q9<br><small>Java 侧跑集成测试的命令是？</small></td><td><b>B</b></td><td>Java 侧用 JUnit 5 + MockMvc，通过 Maven 执行。-pl srv 只构建 srv 模块，迭代更快；cds test / npm test 是 Node 侧的方式。</td><td><a href="java.html#test">java.html#test</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q10<br><small>本机实测发现 spring-boot-devtools 的自动重启会让 CAP 的 servlet 注册失效（所有请求 404 由静态资源处理器接管）。课程建议怎么处理？</small></td><td><b>A</b></td><td>这是本地开发环境的坑：devtools 重启后 CAP 的 servlet 注册丢失，表现为 404 且错误来自 ResourceHttpRequestHandler。开发时关掉自动重启最省事（生产本来也不会带 devtools）。</td><td><a href="java.html#traps">java.html#traps</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q11<br><small>Node 版用 SQLite 文件（db.sqlite），Java 版默认用 H2 内存库。这对测试有什么影响？</small></td><td><b>A</b></td><td>H2 内存库随进程重建，schema-h2.sql（含 CSV 的 INSERT）在启动时执行；SQLite 是文件库，脚本跑过就脏了。这也是为什么 Node 侧验收脚本要写明“重跑前先重新 deploy”。</td><td><a href="java.html#node-vs-java">java.html#node-vs-java</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑥ Java 服务<br><small>java.json · 12 题</small></td><td>Q12<br><small>什么时候应该选 Java 运行时而不是 Node？</small></td><td><b>B</b></td><td>选型看团队技能与既有资产，不是性能口号。Node 上手快、迭代快，适合快速验证模型与全栈 JS 团队；Java 适合大团队、强类型、既有 Spring 资产。两者共享模型，模型正确性互相独立于语言。</td><td><a href="java.html#why">java.html#why</a><br><a href="quiz.html#q-java">quiz.html#q-java</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q1<br><small>CAP 项目的四层测试里，第 0 层指的是什么？</small></td><td><b>B</b></td><td>第 0 层是模型检查：秒级、零依赖，能抓语法、未解析关联、缺主键、重定向歧义（例如少了 @cds.redirection.target 时直接报 ERROR），但它抓不到 handler 里的逻辑错误。</td><td><a href="testing.html#s1">testing.html#s1</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q2<br><small>cds.test 与 bash test/odata-verify.sh 的定位差异，哪句最准确？</small></td><td><b>B</b></td><td>前者适合开发期快速细粒度回归（本站 16 个用例 425 ms），后者适合交付验收与已部署环境（脚本支持 BASE= 变量指向云端地址）。</td><td><a href="testing.html#s2">testing.html#s2</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q3<br><small>本站示范项目里 cds.test 测试连跑两次结果一致，主要靠什么？</small></td><td><b>B</b></td><td>项目把 requires.db.credentials.url 指向 db.sqlite，cds.test 也会连这个文件；没有 data.reset() 就会污染数据（本站实测：跑完 BO-1001 变 SUBMITTED、多出 BO-1005）。</td><td><a href="testing.html#s5">testing.html#s5</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q4<br><small>安装 @cap-js/cds-test 时报 ERESOLVE（peer chai@"^6"），原因是？</small></td><td><b>B</b></td><td>要么把 chai 升到 ^6，要么用 --legacy-peer-deps 安装（并知道风险）。本站实测两条错误信息都贴在第 9 节的错误表里。</td><td><a href="testing.html#s9">testing.html#s9</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q5<br><small>断言「POST 明细后父订单合计被回写 = 12000」覆盖了什么？</small></td><td><b>B</b></td><td>一条跨 handler 的业务断言能同时守住两个实现位置，这是「按业务结果断言」比「按函数调用断言」更划算的典型例子。</td><td><a href="testing.html#s3-3">testing.html#s3-3</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q6<br><small>为什么匿名请求必须是 401 而不是 403 或 500？</small></td><td><b>A</b></td><td>服务用 @(requires: 'authenticated-user') 时，未带凭据的请求是「未认证」→ 401；带凭据但角色不足才是 403。把 401 写成 500 会让前端无法区分「请登录」和「服务器坏了」。</td><td><a href="testing.html#s1">testing.html#s1</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q7<br><small>本站脚本第二次运行出现 6 条 FAIL，其中「自动编号 = BO-1005 → got BO-1006」的原因是？</small></td><td><b>B</b></td><td>这条 FAIL 正说明断言是「有价值且脆弱」的：它绑定的是「初始只有 4 张订单」这个前置条件，所以重跑前必须 npm run deploy（或测试里 data.reset()）。</td><td><a href="testing.html#s5-1">testing.html#s5-1</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q8<br><small>把测试接进 CI 时，为什么不能使用 cds watch？</small></td><td><b>B</b></td><td>CI 需要的是「明确成功或失败并退出」。替代方案：cds compile 做静态检查 + npm start（cds-serve）起稳定服务跑集成测试。</td><td><a href="testing.html#s7">testing.html#s7</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q9<br><small>CI 里等待服务就绪的推荐写法是？</small></td><td><b>B</b></td><td>固定 sleep 是 CI 上最常见的不稳定源（冷启动慢时不够、快时浪费）。轮询让「就绪」变成可观察条件，且失败时有明确的次数上限。</td><td><a href="testing.html#s7-1">testing.html#s7-1</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q10<br><small>GitHub Actions 里 actions/setup-node 的 cache 选 npm 时，缓存的是什么？</small></td><td><b>B</b></td><td>不要缓存 node_modules：原生模块（如 better-sqlite3）与 Node ABI 绑定，跨 Node 版本复用会直接崩；版本矩阵下尤其危险。</td><td><a href="testing.html#s7-2">testing.html#s7-2</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q11<br><small>mocha 用例里对 4xx 做断言，推荐写法是？</small></td><td><b>B</b></td><td>cds.test 在 4xx 时会 reject，把错误对象收下来再断言 err.response.status 与 err.response.data.error.message，就能同时验证状态码与业务消息。</td><td><a href="testing.html#s2-1">testing.html#s2-1</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q12<br><small>草稿相关的两个写请求（POST 建草稿、draftActivate 激活）返回的状态码分别是？</small></td><td><b>B</b></td><td>两者都是创建语义所以都是 201，只能靠 IsActiveEntity 与 orderNo 是否已生成来区分；把两者混为一谈是草稿测试最常见的错误。</td><td><a href="testing.html#s3-3">testing.html#s3-3</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q13<br><small>function 用 POST 调用会得到什么？</small></td><td><b>B</b></td><td>function 只允许 GET（参数写在 URL 括号里），action 只允许 POST。误用方法时会得到 405，而不是「找不到」的 404。</td><td><a href="testing.html#s4">testing.html#s4</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q14<br><small>为什么「删掉 db.sqlite* 再 npm run deploy」是一种更彻底的隔离做法？</small></td><td><b>B</b></td><td>只删主文件不删 -wal/-shm 会留下不一致状态；完整删除后重新 deploy 能证明「干净环境也能跑通」，这正是 CI 上发生的事。</td><td><a href="testing.html#s5-2">testing.html#s5-2</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q15<br><small>本站示范项目里，负向用例断言了状态码之外还断言了什么？为什么要这样？</small></td><td><b>B</b></td><td>在本站脚本里对应 self-check：例如 err.response.data.error.message === '数量必须大于 0'。只断言 400 时，任何一条其他校验也能让测试变绿，等于没测。</td><td><a href="testing.html#s3-3">testing.html#s3-3</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q16<br><small>哪些场景下「第 1 层」（cds.test）反而不如「第 2 层」（odata-verify.sh）合适？</small></td><td><b>B</b></td><td>odata-verify.sh 只依赖 bash + curl + python3，可用 BASE= 指向任意环境（含 HANA 上的部署产物），也适合交给不写 Node 代码的同事；代价是断言粒度粗、造数据啰嗦。</td><td><a href="testing.html#s2">testing.html#s2</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑦ 测试体系<br><small>testing.json · 17 题</small></td><td>Q17<br><small>DoD 清单里哪一条属于「硬门禁」？</small></td><td><b>B</b></td><td>硬门禁的标准是「可自动判定、结果二元、阻断合并」。这三条都能在 CI 里一键判定；其余（注释、配色）属于评审项而非门禁。</td><td><a href="testing.html#s8">testing.html#s8</a><br><a href="quiz.html#q-testing">quiz.html#q-testing</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q1<br><small>CAP 里 401 与 403 的分工，下面哪种说法正确？</small></td><td><b>B</b></td><td>本页实测：匿名 GET 返回纯文本 Unauthorized（401，认证层）；带 -u bob:bob（认证成立但无角色）返回 {"error":{"message":"Forbidden","code":"403"}}（授权框架）。两者的响应形状也不同：401 是裸文本，403 是 OData 错误对象。</td><td><a href="security.html#s1">security.html#s1</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q2<br><small>要在本地验证「匿名请求必须返回 401」，cds.requires.auth.kind 应该设成什么？</small></td><td><b>A</b></td><td>本机实测：kind=dummy 时匿名 GET 返回 200（dummy 把每个请求都设成 cds.User.privileged）；kind=mocked 时匿名返回 401，并带回 WWW-Authenticate: Basic realm="Users"。所以测 401 必须用 mocked，不能用 dummy。</td><td><a href="security.html#s3">security.html#s3</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q3<br><small>本地用 mocked，但 -u 任意用户名（例如 zoe:pw）都能 200，最可能的原因是什么？</small></td><td><b>C</b></td><td>@sap/cds 默认的 users 配置包含 alice/bob/… 与 "*": true。本站 OData 验收脚本里「未知用户 → 401」这一条 FAIL（实际 200）就是被它命中；要收紧必须显式写 "*": false 并给用户配 password。</td><td><a href="security.html#s4">security.html#s4</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q4<br><small>要让本地 mocked 只接受你自己配置的用户名与密码，配置里必须写什么？</small></td><td><b>A</b></td><td>自定义 users 是与内置默认值合并的，不覆盖 "*" 就仍然通吃所有用户名；而 verify() 只在用户配了 password 时才比对密码。两条都做，本地认证才有意义。</td><td><a href="security.html#s4-2">security.html#s4-2</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q5<br><small>CDS 里 @restrict 的 to: 'submit'，与 xs-security.json 里的 $XSAPPNAME.submit，是什么关系？</small></td><td><b>C</b></td><td>@sap/cds 9.x 的 jwt-auth.js 里角色来自 scope.replace(xsappname + '.', '')，所以 JWT 里的 demo-node-trial-dev.submit 对应的 CAP 角色就是 submit。role-template 名（OrderAdmin）只是打包单位，不是 CAP 角色。</td><td><a href="security.html#s9-2">security.html#s9-2</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q6<br><small>用户在 cockpit 上被分到订单管理员角色集合，JWT 的 scope 里也有 demo-node-trial-dev.submit，但调用 submitOrder 仍然 403。最先该怀疑什么？</small></td><td><b>D</b></td><td>「三个名字」混淆是这一类 403 的头号原因：scope 名（$XSAPPNAME.submit）、CAP 角色名（submit）、role-template 名（OrderAdmin）。CAP 只按 JWT 的 scope 去前缀后比对。</td><td><a href="security.html#s10">security.html#s10</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q7<br><small>从 CDS 模型生成 XSUAA 授权描述符，应该用哪条命令（或哪组命令）？</small></td><td><b>A</b></td><td>本机实测：cds compile srv --to xsuaa 输出 scopes/attributes/role-templates；cds add xsuaa --for production 会写出 xs-security.json 并给 package.json 加 [production] 档（auth.kind=xsuaa）。只写 authenticated-user 时输出是三个空数组。</td><td><a href="security.html#s9-3">security.html#s9-3</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q8<br><small>示范项目只用 @requires: 'authenticated-user'，为什么 cds compile srv --to xsuaa 的输出是空的？</small></td><td><b>B</b></td><td>伪角色（authenticated-user / any / system-user / internal-user）反映技术认证层级，不由管理员分配，所以不会生成 XSUAA 的 scope；只有业务角色（写在 to: 上的名字）才会生成 scope 与 role-template。</td><td><a href="security.html#s9-3">security.html#s9-3</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q9<br><small>mta.yaml 里把 XSUAA 描述符接进来的正确写法是？</small></td><td><b>D</b></td><td>示范项目的 mta.yaml 就是这个形态（资源名 demo-node-uaa，path: ./xs-security.json，service-plan: application，config 里固定 xsappname 与 tenant-mode）。MTA 的 config 与文件内容合并，冲突时以 MTA 配置优先。</td><td><a href="security.html#s9-4">security.html#s9-4</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q10<br><small>@requires: 'Viewer' 等价于下面哪一条 @restrict？</small></td><td><b>B</b></td><td>CAP 文档明确列了这两个简写：@requires: 'Viewer' ≡ @restrict: [{ grant: '*', to: 'Viewer' }]；@readonly ≡ @restrict: [{ grant: 'READ' }]（默认 to: 'any'）。</td><td><a href="security.html#s6">security.html#s6</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q11<br><small>实体上的 @restrict 里写了 where: (CreatedBy = $user)，对一个 READ 请求意味着什么？</small></td><td><b>D</b></td><td>文档：where 条件对 READ 是结果过滤（过滤 CQN 查询），对 UPDATE / DELETE 是拒绝条件；Java 还会校验 CREATE / UPDATE 的输入数据（不满足返回 400）。Node 对 CREATE 只支持不含模型引用的简单表达式。</td><td><a href="security.html#s8-2">security.html#s8-2</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q12<br><small>同一个实体写了两段 annotate … with @(restrict: […])，编译只有一行 WARNING，运行时表现是？</small></td><td><b>C</b></td><td>本机实测：编译 stderr 打印 Duplicate assignment with "@restrict", using last，且 --to xsuaa 的输出里只剩后一段的角色 scope（前面的 BookOrder.View / BookOrder.Submit 全部消失）。对策是把 @restrict 合并到一处。</td><td><a href="security.html#s7">security.html#s7</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q13<br><small>关于生产环境的认证配置，哪一条是正确做法？</small></td><td><b>B</b></td><td>mocked 不校验身份、dummy 放行一切，两者都不适合生产。CAP 文档也强调 mocked authentication is not suitable for production；正确做法是用 profile 固定生产认证策略。</td><td><a href="security.html#s13">security.html#s13</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q14<br><small>用户刚被加进角色集合，登录后仍拿不到新权限（403）。最可能的原因是？</small></td><td><b>C</b></td><td>scope 是签发时刻写进 JWT 的。加了角色集合后要让用户重新登录或等 token 刷新（token 有效期由 oauth2-configuration.token-validity 决定），排查时用重新取到的 token 复现。</td><td><a href="security.html#s3">security.html#s3</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q15<br><small>通过 approuter 的 URL 请求后端 401，但直连 srv 应用（带同样的 token）是 200。最该检查什么？</small></td><td><b>B</b></td><td>approuter 只有在对后端 destination 转发 token 时，后端才看得到 Authorization 头。示范项目两处都配了：xs-app.json 的路由 authenticationType: xsuaa，以及 mta.yaml destination 的 forwardAuthToken: true。</td><td><a href="security.html#s11">security.html#s11</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q16<br><small>用 client_credentials 取到的技术用户 token，能不能用来验证「订单管理员能提交订单」？</small></td><td><b>D</b></td><td>@sap/cds 的 jwt-auth.js：grant_type 为 client_credentials 时用户 id 变成 system，并附加 system-user 角色（自带的客户端再加 internal-user），业务角色一概没有。验证业务授权必须用业务用户 token（password 或 UI 登录）。</td><td><a href="security.html#s11">security.html#s11</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q17<br><small>关于 @readonly 与授权的关系，下面哪种说法正确？</small></td><td><b>D</b></td><td>CAP 把 @readonly / @insertonly / @Capabilities 归为静态访问控制，由运行时强制执行但与用户无关。示范项目的 OrderItemView 用 @readonly 表示「这个只读视图不允许写」，不代表限制谁能看。</td><td><a href="security.html#s8-1">security.html#s8-1</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑧ 认证授权<br><small>security.json · 18 题</small></td><td>Q18<br><small>要让「匿名必须 401、越权必须 403、授权必须 200」这三条长期有效，最应该做的是？</small></td><td><b>A</b></td><td>CAP 不会自动替你定义授权，模型改动很容易让权限悄悄放开；把三态断言固化到脚本与 CI（示范项目的 odata-verify.sh 就是这个思路），再配合生产 profile 的 auth 设置，才是可持续的做法。</td><td><a href="security.html#s13">security.html#s13</a><br><a href="quiz.html#q-security">quiz.html#q-security</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q1<br><small>判断「该用 Fiori Elements 还是 freestyle」最核心的一条依据是什么？</small></td><td><b>B</b></td><td>Fiori Elements 是读元数据的通用前端：列表、详情、筛选、草稿、消息这些标准形态全部由注解驱动。交互一旦变成向导、多步表单、拖拽看板或自定义可视化，就该 freestyle（或用 FE + 扩展点做少量定制）。</td><td><a href="fiori.html#s1">fiori.html#s1</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q2<br><small>manifest.json 里漏写 sap.ui5.dependencies.libs 中的 sap.fe.templates，最典型的现象是？</small></td><td><b>B</b></td><td>sap.fe.templates 是 Fiori Elements 的模板库，targets 里 name 写的 sap.fe.templates.ListReport 就是这个库里的组件。缺 libs 声明时组件找不到，页面根本渲染不出来 —— 这与「注解没生效」的表现（能渲染但没有列）完全不同。</td><td><a href="fiori.html#s4-2">fiori.html#s4-2</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q3<br><small>sap.app.id 必须与 index.html 里的哪些内容一致？</small></td><td><b>B</b></td><td>sap.app.id 是组件命名空间：资源根把该命名空间映射到当前目录，data-name 用它去加载 Component。三处不一致的典型症状是白屏 + 控制台 Failed to load component。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q4<br><small>routing.routes 里 pattern 写 ":?query:" 与写 "BookOrders({key}):?query:" 分别对应什么？</small></td><td><b>B</b></td><td>这是 Fiori Elements 的固定套路；草稿实体的详情页 URL 会自动带上 IsActiveEntity 参数，不需要你在 pattern 里写出来。</td><td><a href="fiori.html#s4-1">fiori.html#s4-1</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q5<br><small>为什么 UI.LineItem 里可以直接写 customer.name、book.title？</small></td><td><b>B</b></td><td>DataField 的 Value 允许是路径表达式（本站 incidents/orders 等官方示例也大量使用）。前端读元数据后按需 $expand + $select，不需要你手工拼 URL；这也是 autoExpandSelect 设置的意义。</td><td><a href="fiori.html#s5-1">fiori.html#s5-1</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q6<br><small>UI.Facets 里 Target 写 '@UI.FieldGroup#Order' 与写 'items/@UI.LineItem' 的区别是什么？</small></td><td><b>A</b></td><td>Facets 的 Target 是 AnnotationPath，可以指向本实体的注解，也可以穿过关联指向子实体的注解。这就是「一张订单详情页里嵌一张明细表」的标准做法：明细实体自己的 UI.LineItem 定义子表列。</td><td><a href="fiori.html#s5-1">fiori.html#s5-1</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q7<br><small>列表工具栏的「创建」按钮需要在 annotations.cds 里声明吗？</small></td><td><b>B</b></td><td>创建/编辑/保存/取消是草稿编排的一部分，模板自带。你自己声明的动作按钮（如 submitOrder）才需要 UI.DataFieldForAction。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q8<br><small>UI.DataFieldForAction 的 Action 应该怎么写（绑定动作 submitOrder）？</small></td><td><b>B</b></td><td>绑定动作要写「服务名.动作名」（服务名即 EDMX 命名空间，本站是 BookOrderService）。无绑定动作的写法不同，要通过实体容器：'&lt;Service&gt;.EntityContainer/&lt;动作名&gt;'。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q9<br><small>为什么不能把 status @UI.Criticality: #Critical 直接写在元素上？</small></td><td><b>A</b></td><td>词汇表里 UI.Criticality 的 AppliesTo 是 Annotation：真实用法是 UI.DataField 里的 Criticality: 某数值字段，或 LineItem 上的 ![@UI.Criticality]: 某字段。要「按值映射颜色」的 UI.ValueCriticality 在词汇表里被标为实验性，不建议交付项目使用。</td><td><a href="fiori.html#s6">fiori.html#s6</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q10<br><small>本站 statusCriticality 的推荐实现方式是什么？</small></td><td><b>B</b></td><td>virtual 元素不落库、不参与 SQL 查询，after('READ') 里按行赋值即可（本站实测返回 1/1/2/3）。关键点：不加 virtual 的话 CAP 会去查数据库列，报 no such table … statusCriticality。若 criticality 有业务含义（要筛选/排序），才值得加真实列。</td><td><a href="fiori.html#s6">fiori.html#s6</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q11<br><small>本地 cds watch 之后，Fiori 应用的访问路径与「目录地址」分别是什么结果？</small></td><td><b>A</b></td><td>CAP 把 app/&lt;应用&gt;/ 整体静态发布，应用入口在 webapp/ 子目录里（本站实测 200 text/html）。目录地址没有 index.html，所以是 404 —— 这是「路由 404」类问题最常见的原因。</td><td><a href="fiori.html#s7">fiori.html#s7</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q12<br><small>空白页三步定位法的第三步是「看 $metadata 请求」，它的判据是什么？</small></td><td><b>A</b></td><td>注解是编译进 $metadata 的：grep -c 'UI.LineItem' 应为 2（订单头 + 明细，本站实测值）。401 说明是认证层问题；200 但注解数为 0 说明注解层问题（文件不在模型里、实体名写错）。</td><td><a href="fiori.html#s8">fiori.html#s8</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q13<br><small>Fiori 的 Create 按钮点下去之后，第一个请求是什么？正式表里此时有什么？</small></td><td><b>B</b></td><td>草稿编排把「新建」拆成两步：先建草稿（IsActiveEntity=false，orderNo 可能还是 null），编辑若干次 PATCH，最后 draftActivate 才写正式表。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q14<br><small>保存（Save）时对应的请求是哪一个？</small></td><td><b>A</b></td><td>草稿激活的完整 URL 是 /BookOrders(ID=&lt;guid&gt;,IsActiveEntity=false)/draftActivate，本站实测返回 201；此时才触发服务端的 before('CREATE')（自动编号、顾客校验）。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q15<br><small>「我在草稿里填了顾客，为什么保存才报 400？」正确解释是？</small></td><td><b>B</b></td><td>草稿的意义是「让用户慢慢改」，所以草稿阶段不阻断；错误消息会持久化显示在页面上。本站实测：POST 一个 customer_ID=9999 的草稿成功（201），随后 draftActivate 返回 400「顾客 9999 不存在，请先维护主数据」。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q16<br><small>关于草稿锁与草稿清理，哪一句是对的？</small></td><td><b>A</b></td><td>锁默认 15 分钟（cds.fiori.draft_lock_timeout 可配），超时后其他用户可以抢占；非活动草稿默认 30 天清理（cds.fiori.draft_deletion_timeout，可设 false 关闭），且清理是「新建草稿时顺带做」而不是定时任务。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q17<br><small>部署时让 UI 进 HTML5 Application Repository，cds add ui5 与 cds add html5-repo 的顺序为什么重要？</small></td><td><b>B</b></td><td>本站实测：先 cds add ui5（写入 sapux）再 cds add html5-repo，才会生成 scripts.build = ui5 build preload --clean-dest、devDependencies @ui5/cli ^4 + ui5-task-zipper ^3 与 ui5.yaml（archiveName 与 mta.yaml 的 artifacts 必须一致）。</td><td><a href="fiori.html#s10">fiori.html#s10</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑨ Fiori UI<br><small>fiori.json · 18 题</small></td><td>Q18<br><small>部署后 UI 打不开但 $metadata 正常，应该先看哪个模块的日志？</small></td><td><b>B</b></td><td>$metadata 正常说明 srv 与服务绑定没问题；UI 打不开说明静态内容或路由环节出问题 —— app-deployer 负责上传 zip，approuter 负责托管与转发。先用 cf logs demo-node-app-deployer --recent 看上传是否成功，再看 approuter 的日志与 xs-app.json。</td><td><a href="fiori.html#s9">fiori.html#s9</a><br><a href="quiz.html#q-fiori">quiz.html#q-fiori</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q1<br><small>为什么 cds build --production 有时只生成 gen/srv、没有 gen/db？</small></td><td><b>B</b></td><td>本站实测对照：package.json 的 [production] 里只有 auth: xsuaa 时，tasks 只有 { src: 'srv', for: 'nodejs' }；补上 db: { kind: 'hana' } 后变成 { src: 'db', for: 'hana' } + { src: 'srv', for: 'nodejs' }，并生成 gen/db 下的 .hdbtable/.hdiconfig。</td><td><a href="deploy.html#s1">deploy.html#s1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q2<br><small>「部署成功但没有表」的根因通常在哪一层，第一条自检命令是什么？</small></td><td><b>B</b></td><td>gen/db 缺失时 demo-node-db-deployer 模块没有制品可部署，于是「成功」但什么都没建，服务起来后第一个查询就报 no such table。先在本地确认产物，再查 cf logs demo-node-db-deployer --recent。</td><td><a href="deploy.html#s1">deploy.html#s1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q3<br><small>mta.yaml 里 build-parameters.before-all 的作用是？</small></td><td><b>B</b></td><td>所以「忘记先 cds build」不会报错，但「改了模型没重新打包」会把旧产物部署上去。要在打包阶段固定任何步骤，都写在这里。</td><td><a href="deploy.html#s2">deploy.html#s2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q4<br><small>srv 模块的 provides: srv-api 与 approuter 的 requires（group: destinations）之间是什么关系？</small></td><td><b>B</b></td><td>这样写的原因是域名每次部署都可能变，不能硬编码。requires 里的 group: destinations 会生成 approuter 能读到的 destinations 环境变量；其中的 name（srv-api）必须与 app/router/xs-app.json 里写的 destination 名字一致。</td><td><a href="deploy.html#s2">deploy.html#s2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q5<br><small>forwardAuthToken: true 的作用是什么？</small></td><td><b>B</b></td><td>approuter 是唯一入口，负责 XSUAA 登录；把令牌转发给 srv，CAP 的 @requires/@restrict 才能生效。去掉它，后端会看到匿名请求（表现为 401 或权限判断失效）。</td><td><a href="deploy.html#s2">deploy.html#s2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q6<br><small>HANA 资源为什么必须用 hdi-shared 计划？</small></td><td><b>B</b></td><td>mta.yaml 里生成的资源是 type: com.sap.xs.hdi-container + service: hana + service-plan: hdi-shared；换计划等于换容器，表与数据都不在同一个 schema 里。</td><td><a href="deploy.html#s2">deploy.html#s2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q7<br><small>xs-security.json 是怎么来的？改了权限注解之后必须做什么？</small></td><td><b>B</b></td><td>本站实测：只有 @requires: 'authenticated-user' 时，scopes/attributes/role-templates 都是空数组；加上 @(requires: ['bookorder-admin']) 后出现 scope $XSAPPNAME.bookorder-admin 与同名 role-template。不重新生成就部署，会出现「接口 403 但角色看起来都给了」。</td><td><a href="deploy.html#s2-3">deploy.html#s2-3</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q8<br><small>mbt build -t mta_archives 里 -t 的含义与 .mtar 的默认文件名规则是？</small></td><td><b>B</b></td><td>本站项目 ID 是 demo-node、version 1.0.0，所以归档是 mta_archives/demo-node_1.0.0.mtar；要自定义名字用 --mtar，要切换平台用 -p（cf/neo/xsa，默认 cf）。</td><td><a href="deploy.html#s3">deploy.html#s3</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q9<br><small>cf deploy 的 -f 参数是什么意思？</small></td><td><b>B</b></td><td>multiapps 插件里 -f 是 --force：「Force deploy without confirmation for aborting conflicting processes」。版本规则是另一个参数 --version-rule（HIGHER / SAME_HIGHER / ALL）。</td><td><a href="deploy.html#s4-2">deploy.html#s4-2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q10<br><small>--version-rule 的可选值是哪一组？</small></td><td><b>A</b></td><td>来自 multiapps 插件源码里的帮助文本：Version rule (HIGHER, SAME_HIGHER, ALL)。回滚或强制重部署同一版本时常用 ALL。</td><td><a href="deploy.html#s4-2">deploy.html#s4-2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q11<br><small>部署失败时用 Operation ID 取日志的命令是？</small></td><td><b>B</b></td><td>dmol 是 download-mta-op-logs 的别名，参数是 -i OPERATION_ID 与 -d DIRECTORY（默认当前目录）；也可以 cf dmol --mta demo-node --last 3 -d mta-logs 按 MTA 下载最近若干次。不知道 ID 时用 cf mta-ops 查。</td><td><a href="deploy.html#s6-4">deploy.html#s6-4</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q12<br><small>为什么说 MTA「没有一键回滚」？正确的回滚做法是？</small></td><td><b>B</b></td><td>所以实践上要保留每个版本的 .mtar（CI 里作为构建产物）；HDI 默认只增不删（undeploy.json 里没有 hdbtable），应用回滚通常可行，但表结构回滚需要迁移脚本 —— schema 变更要尽量向后兼容。</td><td><a href="deploy.html#s6-2">deploy.html#s6-2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q13<br><small>为什么 --sso 不能用在 CI 流水线里？</small></td><td><b>B</b></td><td>替代方案：给流水线建技术用户，把用户名放变量、密码放 Secret，用 cf login -u … -p …；或用 CAP 官方动作 cap-js/cf-setup@v2 一次完成装 CLI + MTA 插件 + 登录。权限只给 Space Developer 一类的最小集合。</td><td><a href="deploy.html#s4-1">deploy.html#s4-1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q14<br><small>CI 里加 test -d gen/srv / test -d gen/db 这两行门禁，是在提前拦什么问题？</small></td><td><b>B</b></td><td>这样能在消耗部署时间与配额之前就失败，并把原因指向「生产 profile 的数据库类型配置」这个根因，比上线后再去查 db-deployer 日志便宜得多。</td><td><a href="deploy.html#s1">deploy.html#s1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q15<br><small>清理环境时，为什么要「先解绑再删服务实例」？--delete-services 的代价是什么？</small></td><td><b>B</b></td><td>顺序：cf undeploy demo-node -f（保留实例）→ cf services 看绑定 → cf unbind-service &lt;app&gt; &lt;instance&gt;（需要时）→ cf delete-service &lt;instance&gt; -f。要彻底回收配额，再用 cf delete-org 或删子账户（不可逆）。</td><td><a href="deploy.html#s9-2">deploy.html#s9-2</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q16<br><small>把同一份归档部署到 dev / prod，推荐用什么机制区分差异？</small></td><td><b>B</b></td><td>扩展描述符只写差异：_schema-version、ID（-prod 之类）、extends: &lt;原 ID&gt;，以及 modules[].parameters。cds up 也支持 --overlay 传入。这样 mta.yaml 只有一份，不会「改一处忘一处」。</td><td><a href="deploy.html#s1">deploy.html#s1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q17<br><small>试用账号的 HANA Cloud 实例第二天不可用（部署/查询失败），第一步应该做什么？</small></td><td><b>B</b></td><td>试用子账户的 HANA Cloud 实例会按天停止。这也是「部署失败先看实例状态」的原因之一；别的常见原因还有内存配额、版本号重复、路由被占用等（§8 表）。</td><td><a href="deploy.html#s9">deploy.html#s9</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q18<br><small>cf login 时端点写错（与子账户 region 不一致）最典型的现象是？</small></td><td><b>B</b></td><td>端点与子账户的 region 绑定：https://api.cf.&lt;region&gt;.hana.ondemand.com。本站对各区域端点做过可达性实测（/v2/info 返回 200）；中国区使用不同域名。正确端点以 Cockpit 子账户 Overview 里给出的 API Endpoint 为准。</td><td><a href="deploy.html#s4-1">deploy.html#s4-1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+</tbody></table></div>
+
+<h3 id="s4-2">4-2 各页「本节测试」参考答案要点</h3>
+<p>下面是逐页的参考答案要点（题目在对应页面的末尾）。这些题是<b>口试题</b>，考察「能不能说清」，因此答案写的是判分点，不是标准句子。</p>
+
+<h4><a href="index.html">课程总览 · 本节测试（6 题）</a></h4>
+<ol class="steps">
+  <li>三层分别对应哪些文件？→ 模型 <code>db/schema.cds</code>（+ <code>db/data/*.csv</code>）；服务 <code>srv/book-order-service.cds</code> + <code>srv/book-order-service.js</code>；UI <code>app/book-orders/annotations.cds</code> + <code>app/book-orders/webapp/</code>；部署横切 <code>mta.yaml</code>、<code>xs-security.json</code>。</li>
+  <li>为什么用 Node LTS？→ <code>@cap-js/sqlite</code> 背后的原生模块 <code>better-sqlite3</code> 按 Node ABI 发布预编译包，非 LTS 新版本可能没有对应包；CAP 9 推荐 20/22 LTS（本站实测 <code>v22.23.2</code>）。</li>
+  <li>哪个需求不能直接用 OData 实体暴露？→ 聚合（<code>getOrderTotal</code> / <code>getOrderSummary</code>）：<code>group by</code> 结果没有主键，OData 实体必须可寻址，暴露会报 <code>Expected entity to have a primary key</code>；改用无绑定 function。</li>
+  <li>只做 Node 版会漏掉哪两类工程知识点（举两个）？→ Maven 构建与依赖管理（<code>cds-maven-plugin</code>）与 Java 的注解式事件处理器 + 类型化 API（<code>cds.gen.*</code>、<code>CqnAnalyzer</code>）；也可答「可执行 jar + Java buildpack 的部署形态」「JUnit + Spring Boot 测试」。</li>
+  <li>验收脚本与单元测试的区别与各自时机？→ 验收脚本 <code>odata-verify.sh</code> 从外部打 HTTP，可指向任意环境（含已部署的云端），交付/部署后跑；单元测试（<code>cds.test</code> / mocha）在进程内起服务，断言粒度细、反馈快，开发期边写边跑。</li>
+  <li>「高保真重绘」与「本地实机运行」图的使用差别？→ 重绘画面只用来说明界面结构与操作位置（标签文字可能随版本/区域变化，不能当配置值来源）；实机运行的终端输出可以照着复现，图注里给了命令，可作为期望输出的基准。</li>
+</ol>
+
+<h4><a href="concept.html">概念 · 本节测试（8 题）</a></h4>
+<ol class="steps">
+  <li>CAP 是什么 + 自动产生的三样东西？→ 用一套模型描述领域与服务，自动得到 OData V4 API（含 OpenAPI）、数据库 schema、Fiori 可用的界面契约。</li>
+  <li>三层对应文件与依赖方向？→ 模型 <code>db/schema.cds</code>、服务 <code>srv/*.cds + .js</code>、UI <code>app/*/annotations.cds + webapp/</code>；依赖单向：UI → 服务 → 模型（改模型影响面最大：数据库、API、界面同时变）。</li>
+  <li><code>--to sql</code> / <code>--to edmx</code> / <code>--to csn</code> 各给谁？→ sql 给数据库（建表与演进）；edmx 给 OData 客户端与 Fiori（<code>$metadata</code>）；csn 是编译器与运行时之间的规范化中间表示（运行时读 CSN，不读 <code>.cds</code> 文本）。</li>
+  <li>GET 请求的阶段与 401 / 403 的位置？→ 解析（OData → CQN）→ 认证（401）→ 授权（403）→ <code>before</code> → <code>on</code>（缺省实现＝查库）→ <code>after</code> → 响应。</li>
+  <li>聚合为什么不能用实体暴露？正确做法？→ 无主键 → 不可寻址；用服务里的无绑定 function 返回聚合结果（本站 <code>getOrderTotal</code> / <code>getOrderSummary</code>）。</li>
+  <li>Node 与 Java 共享什么、不共享什么，真实工作量在哪？→ 共享领域模型、服务定义与注解（含授权与 UI）、CSV 种子数据、API 契约；不共享 handler 代码、构建与测试脚手架；工作量在重写 handler + 工程结构 + 测试。</li>
+  <li>把「授权对象 + <code>AUTHORITY-CHECK</code>」和「<code>@restrict</code> + 角色集合」对上 → 两者都是「对象 + 权限 + 检查」：ABAP 的检查写在应用代码里显式调用（ABAP 层）；CAP 的 <code>@restrict</code> 由框架在<b>授权阶段</b>强制执行（你不写检查代码，只写规则）；角色集合对应给用户打包授权。<span class="tag">~</span></li>
+  <li>从 12 个误解里挑两个并纠正 → 评分点：能说出「为什么会误解 + 正确理解 + 怎么验证」。常见答案：CDS 不是数据库（它是编译器，产物才是 DDL）；<code>@readonly</code> 不是权限（它是与用户无关的静态约束）；注解不是注释（是可执行元数据）；本地 SQLite 通过 ≠ 云端通过。</li>
+</ol>
+
+<h4><a href="btp.html">① BTP · 本节测试（8 题）</a></h4>
+<ol class="steps">
+  <li>试用账号的总时长上限与「会被挂起」的条件？→ 上限 <b>90 天</b>；连续 <b>30 天不登录</b>会被挂起（弹窗里有 Extend Trial 可恢复）；满 90 天自动删除。<span class="tag">~</span></li>
+  <li>为什么说「区域选定后不可改」？自系统确认方法？→ 区域是子账户创建时的属性，Edit 里可改的只有 Display Name / Description / Parent / Used for production / Labels / Enable beta features，<b>没有 Region</b>；确认方法：Account Explorer 里子账户 tile 的 Region 字段，或 <code>btp get accounts/subaccount &lt;ID&gt;</code> 的输出。<span class="tag">~</span></li>
+  <li>Entitlement 与 Quota 的区别与各自的现象？→ 权利 vs 数量；缺权利 → Service Marketplace 搜不到计划；配额为 0 → 能搜到但建实例失败。</li>
+  <li>CAP 用的 HDI 容器的服务名与计划名？（不是 <code>hana-cloud</code>）→ <code>cf create-service hana hdi-shared demo-hana-db</code>（显示名 SAP HANA Schemas &amp; HDI Containers）。</li>
+  <li>子账户与 CF org / space 的关系？→ 子账户与 org 是 <b>1:1</b>；一个 org 下多个 space；应用与服务实例都建在 space 里。</li>
+  <li><code>cf login -a</code> 填什么？填错区域会怎样？→ 填该子账户区域对应的 CF API 端点（<code>https://api.cf.&lt;region&gt;.hana.ondemand.com</code>）；填错区域会连到别的环境：登录后看不到你的 org/space（典型报错是 <code>No org or space targeted</code> 或目标不存在）。<span class="tag">~</span></li>
+  <li>给同事「能部署但不能改账号设置」两处分别给什么？→ 平台侧 Subaccount Viewer（只读看配置）；CF 侧 Space Developer（部署所需）。<span class="tag">~</span></li>
+  <li>试用账号里应用第二天变成 <code>stopped</code> 为什么、怎么办？→ 试用环境出于资源清理会每天自动停止应用，属设计行为；需要时手动 <code>cf start &lt;app&gt;</code>。<span class="tag">~</span></li>
+</ol>
+
+<h4><a href="bas.html">② BAS · 本节测试（8 题）</a></h4>
+<ol class="steps">
+  <li>试用子账户里 dev space 同时最多 RUNNING 几个？磁盘上限？→ <b>最多 2 个 dev space、同时 1 个 RUNNING、每个 4 GB 磁盘</b>（另有 1 小时无操作超时、30 天不活跃删除）。<span class="tag">~</span></li>
+  <li>Create Dev Space 的 Type 选哪个？→ <b>Full Stack Cloud Application</b>（预置 CAP Tools、MTA Tools、CDS Graphical Modeler、Fiori Tools）。</li>
+  <li>把服务暴露到浏览器的官方命令？端口被占用时用哪条？→ 命令面板 <code>Ports: Preview</code> 并点选应用；占用时用 <code>Ports: Stop the process running on the port</code>。</li>
+  <li><code>app/ db/ srv/</code> 各放什么？CSV 放哪、怎么命名？→ <code>app/</code> UI（注解 + webapp）、<code>db/</code> 领域模型 + <code>data/</code> 种子数据、<code>srv/</code> 服务定义与实现；CSV 放 <code>db/data</code>，命名「<b>命名空间-实体名.csv</b>」，例如 <code>sap.training.bookorder-Books.csv</code>。</li>
+  <li>一条命令判断生效的数据库，为什么要用 <code>--profile</code>？→ <code>npx cds env get requires.db</code>（默认 <code>@cap-js/sqlite</code>）；<code>--profile</code> 因为配置按 profile 合并覆盖：<code>production</code> 会变成 HANA、<code>hybrid</code>（<code>cds bind</code> 写入）会连云端实例。</li>
+  <li><code>cds watch</code> 的哪个参数让进程监听调试端口、默认端口？→ <code>--inspect</code>（还有 <code>--inspect-brk</code>），默认 <code>127.0.0.1:9229</code>；以 <code>npx cds watch --help</code> 的说明为准。<span class="tag">~</span></li>
+  <li>Git 认证时密码位置填什么？两种失败的典型原因？→ 填 <b>Personal Access Token（PAT）</b>；失败原因：token 过期/权限不含仓库读写、仍用账号密码（GitHub 已停用）、HTTPS 远程下没配置凭据管理器。</li>
+  <li>部署到 CF 的完整命令序列与 cockpit 核对位置？→ <code>cf login --sso</code> → <code>cf target</code> 核对 org/space → <code>mbt build -t mta_archives</code> → <code>cf deploy mta_archives/&lt;name&gt;.mtar -f</code>；核对位置：子账户的 <b>Applications</b>（应用 started）与 <b>Service Instances</b>（实例 create succeeded）。</li>
+</ol>
+
+<h4><a href="hana.html">③ HANA · 本节测试（9 题）</a></h4>
+<ol class="steps">
+  <li>只切换本地与云端数据库靠哪一项配置？两条命令看到什么？→ <code>cds.requires.db</code> 的 <code>kind</code> / <code>impl</code>；<code>cds env get requires.db</code>（默认 <code>@cap-js/sqlite</code>）与 <code>--profile production</code>（<code>@cap-js/hana</code>）。</li>
+  <li>本地 SQLite 与 HANA 的时间列类型分别叫什么？→ SQLite <code>TIMESTAMP_TEXT</code>（日期为 <code>DATE_TEXT</code>）；HANA <code>TIMESTAMP</code>（日期 <code>DATE</code>）。</li>
+  <li>HANA 表名怎么从 <code>sap.training.bookorder.BookOrders</code> 变来？关联 <code>customer</code> 变成什么列？→ 命名空间的点换成下划线、未加引号标识符折叠为大写 → <code>SAP_TRAINING_BOOKORDER_BOOKORDERS</code>；<code>customer</code> → <code>CUSTOMER_ID</code>。</li>
+  <li>HDI 容器的 Service / Plan？为什么不用 <code>schema</code>？<code>tools</code> 是什么？→ <code>hana</code> / <code>hdi-shared</code>；<code>schema</code> 只是裸 schema、没有 HDI 的部署与工件比对语义；<code>tools</code> 是 SAP HANA Cloud 的管理界面订阅计划。</li>
+  <li><code>.cdsrc-private.json</code> 里存了什么、没存什么？为什么？→ 只存绑定元数据（platform / org / space / instance / key 等），<b>不存凭据</b>；运行时才去 CF 解析凭据——避免密码落盘与进 Git。</li>
+  <li>本地连云端 HANA 联调的完整命令序列？用哪条命令验证？→ <code>cf login --sso</code> → <code>cf target</code> → <code>cds bind db --to &lt;实例名&gt;</code> → <code>cds watch --profile hybrid</code>；验证用 <code>cds env get requires.db --profile hybrid</code>（应显示 <code>kind: hana</code>）。</li>
+  <li>免费层/试用实例为什么第二天连不上？用哪条命令恢复？→ 实例夜间被自动停止（30 天不重启会被删除）；恢复：<code>cf update-service &lt;实例&gt; -c '{"data":{"serviceStopped":false}}'</code>，或到 Cloud Central 点 Start。<span class="tag">~</span></li>
+  <li>三条建表/推数据路径的差别？→ <code>cds deploy --to sqlite</code>：本地开发；HDI deployer（<code>mbt build</code> + <code>cf deploy</code> 的 hdb 模块，即 <code>gen/db</code> 里的 <code>@sap/hdi-deploy</code>）：正式部署，建表并装载 CSV；<code>cds deploy --to hana</code>：把 DB 工件直接推到云端、服务仍本地跑（快速迭代）。</li>
+  <li>为什么不能把业务数据放 <code>db/data/*.csv</code>？→ HDI 部署会装载 CSV 并在<b>后续每次部署覆盖</b>（且 deployer 取得所有权），用户的改动会被回退；CSV 只适合配置类/初始数据。需要保留用户改动要另做机制。<span class="tag">~</span></li>
+</ol>
+
+<h4><a href="cds.html">④ CDS 建模 · 本节测试（3 题）</a></h4>
+<ol class="steps">
+  <li>三个 <code>.cds</code> 文件里哪个的改动会让 <code>--to sql</code> 变化？为什么？→ <code>db/schema.cds</code>（表结构）与 <code>srv/*.cds</code>（服务级视图、以及开启草稿后多出的 draft 表）会让它变；<code>app/*/annotations.cds</code> 不会——它只影响 <code>$metadata</code>（<code>--to edmx</code>），实测加了注解后 <code>--to sql</code> 输出一字不变。</li>
+  <li><code>--to sql --dialect hana</code> 与 <code>--to hdbtable</code> 的区别与用法？→ 前者是通用 SQL 建表语句（HANA 方言），用来阅读/核对列与类型；后者是 HANA 原生的列存工件（<code>---- sap.training.bookorder.Books.hdbtable ----</code> + <code>COLUMN TABLE</code>），是部署到 HANA 的实际产物（HDI 使用）。</li>
+  <li>想确认「服务里有没有漏掉某个实体」，跑什么命令、看哪一段？→ <code>npx cds compile srv --to edmx</code> 看 <code>EntitySet</code> 列表（本站 5 个），或 <code>--to csn</code> 看 <code>definitions</code>；也可 <code>curl …/$metadata | grep -c '&lt;EntitySet'</code>。</li>
+</ol>
+
+<h4><a href="node.html">⑤ Node 服务 · 本节测试（7 题）</a></h4>
+<ol class="steps">
+  <li><code>@path</code> 不写会怎样？为什么仍建议显式写？→ CAP 会按服务名推导 URL（<code>BookOrderService</code> → <code>/odata/v4/book-order</code>）；显式写死的好处是以后改服务名 URL 不变，前端与测试脚本不用跟着改。</li>
+  <li>为什么 <code>BookOrderItems</code> 那行必须加 <code>@cds.redirection.target</code>？不加的报错关键词？→ 因为服务里有两个实体源自 <code>db.BookOrderItems</code>（<code>BookOrderItems</code> 与 <code>OrderItemView</code>），<code>BookOrders:items</code> 无法自动重定向；报错关键词 <code>can't auto-redirect</code>（原文还写着 <code>Add "@cds.redirection.target" to either …</code>）。</li>
+  <li>什么时候用 <code>@readonly</code> 实体、什么时候用 <code>function</code>？→ 判断标准：结果能不能按主键寻址。带主键的视图 → 实体（+ <code>@readonly</code>）；<code>sum</code> / <code>count</code> / <code>group by</code> 无主键 → 无绑定 function。</li>
+  <li>草稿下 <code>before('CREATE')</code> 在哪个请求执行？完整 URL？→ 在 draftActivate 请求上：<code>POST /odata/v4/book-order/BookOrders(ID=&lt;UUID&gt;,IsActiveEntity=false)/BookOrderService.draftActivate</code>。</li>
+  <li><code>after('DELETE', BookOrderItems)</code> 为什么不能取 <code>req.data.ID</code>？替代方案？→ DELETE 没有 body、被删行不返回键值；用 <code>req.params</code>（本站兜底写法），或在 <code>before('DELETE')</code> 里先记下父键。</li>
+  <li>业务校验失败返回 400 还是 500？客户端各自看到什么？→ 用 <code>req.reject(400, …)</code>：客户端看到 400 + 可读消息（含 <code>code</code> 与 <code>@Common.numericSeverity</code>）；未捕获异常 → 500，且生产环境的 5xx 响应体被脱敏，只有服务端日志能看到原因。</li>
+  <li>CQN fluent API（status=OPEN、只取 ID/orderNo、orderNo 倒序、前 3 条）？→ <code>SELECT.from(BookOrders).columns('ID','orderNo').where({ status: 'OPEN' }).orderBy('orderNo desc').limit(3)</code>。</li>
+</ol>
+
+<h4><a href="testing.html">⑦ 测试体系 · 本节测试（7 题）</a></h4>
+<ol class="steps">
+  <li>四层各抓什么？各给一个「上一层抓不到」的例子。→ 见 <a href="#s3-7">3-7 第 1 题</a>。例子：第 0 层抓不到 handler 逻辑错误（金额算错）；第 2 层能抓「方法用错 → 405」「草稿激活 → 409」这类真实 HTTP 语义，而第 1 层在进程内不易覆盖。</li>
+  <li><code>cds.test</code> 与 <code>odata-verify.sh</code> 的定位差异，什么时候必须用后者？→ 前者进程内、细粒度快反馈；后者从外部打 HTTP、可指向任意环境（<code>BASE=</code> 指向云端部署产物）、可用非 Node 工具跑；<b>必须用后者</b>：交付验收、部署后验证、交接给不写 Node 的同事。</li>
+  <li>写一条负向断言（数量 0 → 400 且消息为「数量必须大于 0」）→ <code>cds.test</code> 风格：<code>const err = await POST(`/odata/v4/book-order/BookOrderItems`, { order_ID: ID, book_ID: 1001, quantity: 0 }).catch(e =&gt; e)</code>，然后 <code>expect(err.response.status).to.equal(400)</code>、<code>expect(err.response.data.error.message).to.equal('数量必须大于 0')</code>；<code>chk</code> 风格：<code>chk 'POST 数量 0 → 400' 400 -X POST "$SVC/BookOrderItems" -d '{"order_ID":"…","book_ID":1001,"quantity":0}'</code>（再断言消息）。</li>
+  <li>为什么第二次运行出现 6 条 FAIL？对应什么数据变化、怎么修？→ 脚本自己写数据：明细 9→10、<code>getOrderSummary()</code> 4→5、父订单合计 12000→20400、BO-1001 已 SUBMITTED（重复提交 409）、自动编号 BO-1005→BO-1006、<code>OrderItemView</code> 行数与首行订单号变化；修法：跑前 <code>rm -f db.sqlite* &amp;&amp; npm run deploy</code>（或 <code>data.reset()</code>）。</li>
+  <li>三种数据库隔离做法与代价？→ 见 <a href="#s3-7">3-7 第 3 题</a>（重置现有文件 / 删除文件重建 / 独立测试库或内存库）。</li>
+  <li>CI 里为什么不能用 <code>cds watch</code>？替代它的两条命令？→ 常驻不退、CI 会挂到超时，热重载无用；替代：<code>cds compile</code>（静态检查）与 <code>npm start</code>（<code>cds-serve</code> 起稳定服务）。</li>
+  <li>DoD 里哪几条是硬门禁？→ 模型编译无 <code>[ERROR]</code>、<code>npm test</code> 全绿、<code>bash test/odata-verify.sh</code> 的 <code>FAIL 0</code>（<code>FAIL&gt;0</code> 即非 0 退出）——标准是「可自动判定、结果二元、阻断合并」。</li>
+</ol>
+
+<h4><a href="security.html">⑧ 权限 · 本节测试（8 题）</a></h4>
+<ol class="steps">
+  <li>401 与 403 分别由链路上哪一环产生？怎么确认原因？→ 401 认证层（未认证，裸文本 + <code>WWW-Authenticate</code>）；403 CAP 授权框架（已认证但角色/条件不足，OData 错误体）。确认：<code>cds env get requires.auth.kind</code> 与凭据、注解里的角色名 / JWT 的 <code>scope</code>。</li>
+  <li>为什么测匿名 401 不能用 <code>kind: dummy</code>？用它测出来是什么？→ <code>dummy</code> 直接把每个请求设成特权用户（<code>req.user = cds.User.privileged</code>），匿名也返回 200，永远测不出 401；测匿名要用 <code>mocked</code>（或 <code>basic</code> / <code>jwt</code>）。</li>
+  <li><code>mocked</code> 下 <code>-u anyname:whatever</code> 也 200 的原因？要只认自己配的用户怎么做？→ 内置 mock 用户配置里有 <code>"*": true</code> 兜底放行未配置用户名，且默认用户没配 <code>password</code> 时密码不校验；收紧：显式写 <code>"*": false</code> 并给每个用户配 <code>password</code>。</li>
+  <li><code>to: 'sub'</code>（少一个字母）而 <code>xs-security.json</code> 里是 <code>$XSAPPNAME.submit</code> 会发生什么？为什么？→ 编译/本地常常看不出问题，<b>部署后调用必然 403</b>：CAP 把 JWT scope 去掉 <code>&lt;xsappname&gt;.</code> 前缀后得到 <code>submit</code>，与 <code>to: 'sub'</code> 不匹配。</li>
+  <li>服务级 <code>@requires</code> 与实体级 <code>@restrict</code> 同时存在时的判断规则？→ 两者<b>都要满足</b>：请求先过服务级要求（<code>authenticated-user</code> 是伪角色、由运行时自动附加），再过实体级的 <code>grant</code> / <code>to</code> / <code>where</code> 判定；任一层不满足即拒绝（403）。</li>
+  <li>同一实体两段 <code>annotate … with @(restrict: […])</code>，最终生效哪一段？编译时提示？→ <b>后者整体覆盖前者</b>；编译只有一行 WARNING <code>Duplicate assignment with "@restrict", using last</code>，前一段的权限静默消失（<code>--to xsuaa</code> 输出里能看出只剩后一段的 scope）。</li>
+  <li><code>@readonly</code> 是「只读」还是「权限控制」？要「只有管理员能读」怎么写？→ 它是与用户无关的静态访问控制（等价 <code>@restrict: [{ grant: 'READ' }]</code>，默认 <code>to: 'any'</code>）；按角色控制写 <code>@restrict: [{ grant: 'READ', to: 'BookOrder.View' }]</code>（<code>to</code> 里是 CAP 角色名）。</li>
+  <li>角色集合、角色模板、scope、CAP 角色名的关系（画箭头链）？→ <code>xs-security.json</code> 的 <code>scopes</code>（<code>$XSAPPNAME.submit</code>）→ <code>role-templates</code>（<code>OrderAdmin</code>，<code>scope-references</code> 指向该 scope）→ 管理员在 cockpit 组装 <b>role-collection</b> 并分配给用户 → XSUAA 签发 JWT，把 scope 写进 <code>scope</code> 声明 → CAP 的 jwt 认证剥掉 <code>&lt;xsappname&gt;.</code> 前缀 → 得到 <b>CAP 角色名</b> <code>submit</code> → 与 CDS 里 <code>to: 'submit'</code> 比对。</li>
+</ol>
+
+<h4><a href="java.html">⑥ Java 服务 · 本节测试（8 题）</a></h4>
+<ol class="steps">
+  <li>Java 版与 Node 版共享哪些文件？哪些必须各写一份？→ 共享 <code>db/*.cds</code>（领域模型）、<code>srv/*.cds</code>（服务定义与注解，含 <code>@path</code> 之外的授权与 UI 注解）、<code>db/data/*.csv</code>；各写一份：<code>pom.xml</code>（父 POM + srv 模块）、Java 事件处理器、JUnit 测试、Application 启动类。</li>
+  <li><code>@Before</code> / <code>@After</code> / <code>@On</code> 对应 Node 的什么？→ <code>this.before(event, Entity, cb)</code> / <code>this.after(...)</code> / <code>this.on(...)</code>；Java 用注解声明（<code>@ServiceName</code> 指定服务、<code>event</code> / <code>entity</code> 指定目标），写错实体名在<b>编译或启动期</b>报错，而 Node 写错是运行时静默不触发。</li>
+  <li>绑定动作的键为什么必须用 <code>CqnAnalyzer</code> 取？→ 键不在请求体里，而在请求的目标（CQN）上；Java 侧请求本身就是 CQN，需要用 <code>CqnAnalyzer</code> 从 target 解析出实体键（Node 侧对应 <code>req.params[req.params.length-1].ID</code>）。</li>
+  <li><code>Result.first(Class)</code> 与 <code>Result.single(Class)</code> 的区别？→ <code>first</code> 返回 <code>Optional</code>（无行即空，需 <code>orElse(null)</code> / <code>isPresent()</code>）；<code>single</code> 要求恰好一行，0 行或多行都抛异常。</li>
+  <li>为什么 CAP Java 里 <code>@path</code> 不能照抄 Node 的写法？→ Node 把 <code>@path</code> 当完整路径，CAP Java 会再加一次 servlet 基路径 <code>/odata/v4</code>，于是变成 <code>/odata/v4/odata/v4/book-order</code>（实测 404）；Java 侧写 <code>@path: '/book-order'</code>。</li>
+  <li>端点 404 时第一个该打开的页面？为什么？→ <code>http://localhost:8080/</code>（CAP Index Page）：它列出所有服务的真实 URL，本机就是靠它发现路径被拼了两遍。</li>
+  <li><code>mvn compile</code> 生成的 <code>cds.gen</code> 有什么价值？没有它可行吗？→ 价值是<b>类型安全</b>：实体接口（<code>getOrderNo()</code> 等）、动作上下文（<code>BookOrdersSubmitOrderContext</code>）、常量（<code>BookOrders_.CDS_NAME</code>），字段/实体名写错编译期就报错；不用它也能跑（全靠字符串），但失去这层保护。</li>
+  <li>§10 里那条 401 说明了什么？要修的话第一步做什么？→ 说明「<b><code>$metadata</code> 能打开 ≠ 数据能读</b>」：本地 mock 用户没生效时，匿名与具名请求都被拒（所以「匿名 401」这条断言没有区分度）。第一步：按 CAP Java 官方文档核对<b>当前版本（4.9.1）</b>的 mock 用户属性名与层级并打开配置诊断日志；或者直接建真实 XSUAA + <code>cds bind</code> 走真实认证。<b>注意 <code>cds.requires.auth.kind: dummy</code> 是 Node 侧写法，Java 侧不适用</b>。</li>
+</ol>
+
+<h4><a href="fiori.html">⑨ Fiori UI · 本节测试（15 题）</a></h4>
+<ol class="steps">
+  <li>「列表 → 详情」之外举两个必须 freestyle 的场景并说明原因 → 向导/多步表单（一个页面改多个实体集的复杂编排）、自定义可视化（甘特图 / 地图 / 拖拽看板，超出 FE 的 Chart / DataPoint）、批量编辑 + 即时计算、与第三方 UI 库或非 OData 接口深度混用、非业务形态页面（大屏）。原因：Fiori Elements 是「标准业务形态」的模板，硬拗要用大量扩展点；折中方案是「FE 为主 + 少量自定义扩展」。</li>
+  <li><code>sap.app.id</code> 必须和 <code>index.html</code> 的哪些属性一致？不一致的症状？→ 与 <code>data-sap-ui-resource-roots</code> 的键、<code>data-sap-ui-component</code> 的 <code>data-name</code> 一致（本站 <code>demo.node.book-orders</code>）；不一致的症状是 console 报 <code>Failed to load component</code> 一类的加载失败、整页空白。</li>
+  <li>两条 routing pattern 各对应哪个页面？→ <code>:?query:</code> → List Report（<code>BookOrdersList</code>）；<code>BookOrders({key}):?query:</code> → Object Page（<code>BookOrdersObjectPage</code>）。</li>
+  <li>为什么 <code>UI.LineItem</code> 里能直接写 <code>customer.name</code> / <code>book.title</code>？前端会发什么请求？→ 它们是关联路径，FE 会用 <code>$expand</code>（导航属性）把相关字段一并取回来（一条请求带 expand，不是 N+1）。</li>
+  <li><code>Target: 'items/@UI.LineItem'</code> 与 <code>'@UI.FieldGroup#Order'</code> 的区别？→ 前者指向<b>关联路径上的注解</b>（明细表分节，即「订单下面的明细表」的来源）；后者指向<b>本实体</b>的限定注解组（字段分组，供 Facets 引用）。</li>
+  <li>列表的「创建」按钮要在注解里声明吗？→ 不需要：草稿注解 <code>@odata.draft.enabled</code> 自动带来 Create/Edit/Save/取消。</li>
+  <li><code>UI.DataFieldForAction</code> 的 <code>Action</code> 写 <code>submitOrder</code> 还是 <code>BookOrderService.submitOrder</code>？→ 绑定动作必须写<b>服务名.动作名</b>：<code>'BookOrderService.submitOrder'</code>；无绑定动作要写 <code>'&lt;Service&gt;.EntityContainer/&lt;动作名&gt;'</code>。写错/动作没定义 → 按钮点了 404 或按钮不显示。</li>
+  <li>OPEN / SUBMITTED / CLOSED 的 criticality 数值？为什么不能把 <code>UI.Criticality</code> 直接标在 <code>status</code> 上？→ 本站映射 <code>OPEN=1</code>（Negative）、<code>SUBMITTED=2</code>（Critical）、<code>CLOSED=3</code>（Positive）（另有 0 Neutral / 5 New Item）。不能直接标的原因：<code>UI.Criticality</code> 的作用域是<b>注解的注解</b>（要写在 <code>UI.LineItem</code> 内或 <code>UI.DataField</code> 的 <code>Criticality</code> 属性里），而且状态值是字符串、criticality 要数值——本站用 <code>virtual</code> 元素 + <code>after('READ')</code> 计算（不加 <code>virtual</code> 会去查数据库列，报 <code>no such table … statusCriticality</code>）。</li>
+  <li>本地访问路径是什么？为什么 <code>/book-orders/index.html</code> 是 404？→ <code>http://localhost:4004/book-orders/webapp/index.html</code>（<code>app/&lt;应用&gt;/</code> 是整体静态发布）；<code>/book-orders/index.html</code> 404 因为入口文件在 <code>webapp/</code> 子目录下，目录地址没有 index.html（实测 <code>webapp/index.html</code> 200、<code>annotations.cds</code> 也 200）。</li>
+  <li>空白页三步定位法各看什么、判据是什么？→ ① Network 面板：<code>index.html</code> / <code>manifest.json</code> / <code>sap-ui-core.js</code> 的状态码（判据：全 200；任一 404/5xx → 静态资源层，<code>sap-ui-core.js</code> 失败 = CDN 不可达）；② console <b>第一条</b>报错（判据：没有 <code>Failed to load component</code> / <code>Template … not found</code>；模板类查 <code>libs: { sap.fe.templates: {} }</code> 与 <code>minUI5Version</code>，组件类查 <code>sap.app.id</code> 与资源根）；③ <code>$metadata</code> 请求（判据：200 且 <code>grep -c 'UI.LineItem'</code> &gt; 0；401 → 认证层；200 无注解 → 注解层）。</li>
+  <li>Create 点下去第一次请求是什么？为什么正式表里没有数据？→ <code>POST /odata/v4/book-order/BookOrders</code>，返回一条草稿（<code>IsActiveEntity:false</code>）；草稿只写在草稿表里，正式行要等 <code>draftActivate</code>。</li>
+  <li>「草稿里填了顾客，为什么保存才报 400？」→ 草稿编排的语义：PATCH 阶段即使数据不合法也照常保存草稿（让用户继续改，错误消息持久显示），<b>正式校验只在激活（draftActivate）时做</b>。实测：草稿带 <code>customer_ID:9999</code> → 201；激活 → 400「顾客 9999 不存在，请先维护主数据」。</li>
+  <li>草稿锁默认多久？非活动草稿默认多久清理？怎么改？→ 草稿锁 <b>15 分钟</b>（<code>cds.fiori.draft_lock_timeout</code>）；非活动草稿 <b>30 天</b>清理（<code>cds.fiori.draft_deletion_timeout</code>，可设 <code>false</code> 关闭；清理是「新建草稿时顺带做」，不是定时任务）。</li>
+  <li><code>cds add ui5</code> 与 <code>cds add html5-repo</code> 的顺序为什么重要？反了会看到什么？→ 必须先 <code>ui5</code> 再 <code>html5-repo</code>（后者要检测到 UI5 工程才会写打包脚本）；顺序反了 <code>app/*/package.json</code> 里只有 <code>{"name":"book-orders"}</code>、没有 <code>build</code> 脚本，打包阶段以 <code>Missing script: "build"</code> 失败。修法：删掉 html5-repo 生成的文件后重跑 <code>cds add ui5 &amp;&amp; cds add html5-repo</code>。</li>
+  <li>部署后 UI 打不开但 <code>$metadata</code> 正常，先看哪个模块的日志？为什么？→ 先看 <b>app-deployer</b>（<code>cf logs demo-node-app-deployer --recent</code>）：<code>$metadata</code> 正常说明 srv 没问题，UI 打不开是「UI 没被打进归档或没上传到 HTML5 仓库」——核对 <code>tar -tf …mtar | grep book-orders.zip</code> 与 <code>ui5.yaml</code> 的 <code>archiveName</code> 是否一致。</li>
+</ol>
+
+<h4><a href="deploy.html">⑩ 部署 · 本节测试（15 题）</a></h4>
+<ol class="steps">
+  <li>为什么 <code>cds build --production</code> 有时只生成 <code>gen/srv</code>？怎么确认？→ 因为 <code>production</code> profile 里没有解析出 <code>db.kind = hana</code>（例如只写了 <code>"[production]": { "auth": "xsuaa" }</code>），构建就只产出 nodejs 那部分；确认：<code>find gen -maxdepth 2 -type d</code>（有没有 <code>gen/db</code>）、<code>cds env get requires.db --profile production</code>、<code>ls gen/db/src/gen</code>（有没有 <code>*.hdbtable</code>）。</li>
+  <li>「部署成功但没有表」的根因在哪一层？两条自验证命令？→ 在<b>归档/构建层</b>：<code>gen/db</code> 缺失 → <code>db-deployer</code> 模块没有制品，「成功」却什么都没建。两条命令：<code>find gen -maxdepth 2 -type d</code> 与 <code>cf logs demo-node-db-deployer --recent</code>。</li>
+  <li><code>build-parameters.before-all</code> 的作用？删掉会怎样？→ 它在<b>打包前</b>执行命令（本站是 <code>npm ci</code> + <code>npx cds build --production</code>）；删掉后不会自动构建，模块拿到的 <code>gen/</code> 是旧产物或不存在 → 部署出旧版本、或应用缺依赖起不来。</li>
+  <li><code>provides: srv-api</code> 与 <code>requires: - name: srv-api / group: destinations</code> 的关系？为什么不硬写后端 URL？→ <code>provides</code> 把本模块 URL 暴露为提供物（<code>srv-url: ${default-url}</code>），approuter 用 <code>requires</code> + <code>group: destinations</code> 通过 <code>~{srv-url}</code> 引用它；不硬写是因为每次部署路由域名都可能变。</li>
+  <li><code>forwardAuthToken: true</code> 的作用？去掉后会怎样？→ 让 approuter 把用户 token 转发给后端 destination；去掉后后端收不到 <code>Authorization</code>，通过 approuter 访问会 401（直连 srv 带 token 仍 200）。</li>
+  <li>HDI 容器为什么必须用 <code>hdi-shared</code>？换 <code>schema</code> 会怎样？→ <code>hdi-shared</code> 提供受 HDI 托管的容器与部署语义（工件比对、技术用户、由 deployer 建表并装载 CSV）；<code>schema</code> 是裸 schema，没有部署器能力 → 表建不出来（部署「成功」但库里没有表）。</li>
+  <li><code>xs-security.json</code> 是手写的吗？改了权限注解之后要做什么？→ 不是：由 CDS 注解生成（<code>cds compile srv --to xsuaa</code> / <code>cds add xsuaa --for production</code>）。改了权限注解要<b>重新生成并重新构建部署</b>（scope 变了，角色集合里的引用也要跟着更新）。</li>
+  <li><code>mbt build -t mta_archives</code> 里 <code>-t</code> 的含义？<code>.mtar</code> 默认文件名规则？→ <code>-t</code> 是<b>输出目录</b>；默认文件名是 <code>&lt;MTA ID&gt;_&lt;version&gt;.mtar</code>（本站 <code>demo-node_1.0.0.mtar</code>）。</li>
+  <li>用 Operation ID 取部署日志的完整命令？日志怎么看？→ <code>cf dmol -i &lt;operation ID&gt; -d mta-logs</code>；不知道 ID 时 <code>cf mta-ops</code> 或 <code>cf dmol --mta demo-node --last 3 -d mta-logs</code>。日志按模块拆分，先看<b>失败的那个模块</b>（srv / db-deployer / approuter），<code>Process finished.</code> 才是整体成功。</li>
+  <li>回滚 MTA 的正确做法？为什么说没有一键回滚？数据库要不要一起回滚？→ 保留每个版本的 <code>.mtar</code>，回滚时<b>按旧版本号重新打包并重新部署</b>（必要时 <code>--version-rule ALL</code>）；因为 MTA 部署是<b>声明式同步</b>（把云端对齐到归档）而不是保存快照。数据库要单独考虑：HDI 默认「只增不删」（<code>undeploy.json</code> 不含 <code>hdbtable</code>），回滚应用通常能成功，回滚表结构要自己写迁移——所以 schema 变更要向后兼容（先加列、双写、再切换、最后清理）。</li>
+  <li>为什么 <code>--sso</code> 不能用在 CI？替代方案与权限注意？→ 它需要浏览器交互（打印一次性验证码后打开浏览器），CI runner 没有浏览器；<code>--sso-passcode</code> 的一次性码也无法自动续期。替代：流水线里用<b>专用技术用户的凭据</b>（例如 <code>cap-js/cf-setup</code> 之类的 action 自动登录），权限给最小集（Space Developer），并定期轮换凭据。</li>
+  <li>CI 里 <code>test -d gen/srv</code> / <code>test -d gen/db</code> 在拦什么？→ 拦「构建产物缺失」：缺 <code>gen/db</code> 就会变成「部署成功但没有表」（最常见的生产事故形态），缺 <code>gen/srv</code> 会部署出空应用；把存在性写进门禁能提前在流水线 fail。</li>
+  <li>清理环境时为什么「先解绑再删服务实例」？<code>--delete-services</code> 的代价？→ 绑着应用的服务实例删不掉，所以要先 <code>cf unbind-service</code>；<code>cf undeploy … --delete-services</code> 会连服务实例一起删，<b>数据库内容随之消失</b>（确认后再加）。</li>
+  <li>同一份归档部署到 dev / prod，推荐用什么机制区分差异？→ 用 <b>MTA 扩展描述符</b>（<code>-e prod.mtaext</code> / <code>dev.mtaext</code>）覆盖实例数、内存、计划等差异，<code>mta.yaml</code> 只保留一份（<code>cds up --overlay</code> 也支持）。</li>
+  <li>试用账号的 HANA 实例第二天不可用，第一步做什么？→ 先确认状态（SAP HANA Cloud Central 里是否 stopped、<code>cf services</code> 的 last operation），再启动它（<code>cf update-service &lt;实例&gt; -c '{"data":{"serviceStopped":false}}'</code> 或 Cloud Central 的 Start），最后重试应用与部署。<span class="tag">~</span></li>
+</ol>
+
+<h4>其余页面的「本节测试 / 验收建议」答案要点（项目 · 源码 · 排错 · 术语表 · 任务 · 学员版 · 自测）</h4>
+<p>这些页面的题目形式不完全是问答（有的是给学员的验收动作），答案写的是<b>判分点</b>。</p>
+<ol class="steps">
+  <li><a href="project.html">示范项目</a>（7 题）：① 换运行时不用改 <code>db/schema.cds</code>、<code>srv/*.cds</code>、<code>db/data/*.csv</code>、<code>app/*/annotations.cds</code>；各写一份的是服务实现（<code>.js</code> vs <code>.java</code>）、构建（<code>package.json</code> vs <code>pom.xml</code>）、测试与启动方式。② 合计必须由服务端回写：真相是子表的 <code>sum(amount)</code>，父表 <code>totalAmount</code> 只是缓存，客户端能改就会不一致（本站还在 <code>before('UPDATE')</code> 里删掉客户端提交的 <code>totalAmount</code>）。③ 因为脚本自己写数据（新增明细、提交订单、自动建 BO-1005），前置条件变了；重跑前 <code>rm -f db.sqlite* &amp;&amp; npm run deploy</code>。④ 颜色来自 <code>annotations.cds</code> 里 <code>UI.DataField</code> 的 <code>Criticality</code>，数值由服务端 <code>virtual statusCriticality</code> + <code>after('READ')</code> 计算（OPEN=1 / SUBMITTED=2 / CLOSED=3）。⑤ 会得到 <b>401</b>（浏览器里的页面不带 Basic 凭据）→ 显示 No data；本地要用 <code>test/dev-proxy.js</code>，真实部署由 approuter + XSUAA 认证。⑥ 表由 MTA 的 <b>db-deployer（type: hdb）</b>在 <code>cf deploy</code> 过程中建，并顺带装载 CSV。⑦ 依赖顺序：<code>db/schema.cds</code>（+ CSV）→ <code>srv/*.cds</code> → <code>srv</code> 实现 → <code>app/*/annotations.cds</code> → <code>app/*/webapp/manifest.json</code> → <code>xs-security.json</code> → <code>mta.yaml</code>。</li>
+  <li><a href="code.html">源码页</a>（3 题）：① 「金额 = 单价 × 数量」在 <code>before('CREATE'/'UPDATE', BookOrderItems)</code>——before 能改 <code>req.data</code> 且在任何写入之前，放 after 则数据已落库（改值要再写一次、失败也拦不住）。② Java 用生成的类型接口 + 类型化 CQL：字段/实体名写错<b>编译期</b>报错、重构安全，代价是首次构建慢、代码更长；Node 用普通对象与字符串列名：写得快，但错字要到运行期或测试才暴露。③ Node 在 <code>after('DELETE')</code> 里从 <code>req.params</code> 取父键（兜底 <code>req.data?.order_ID</code>）；Java 在 <code>before</code> 阶段先把父键查出来保存，再在 after 里回写——因为删除之后结果集不再返回键值。</li>
+  <li><a href="issues.html">排错页</a>（6 题）：① <code>文件:行:列</code> → 编译期；<code>&gt; init from …</code> 之后的失败 → 部署/灌数据期；HTTP 状态码 → 运行期（业务或认证）。不能跳层：分类错了就会拿错工具（编译器 / CSV 表头 / handler）。② <code>$expand</code> 空数组 → 子表外键列没值或列名不符；改列名后老数据 0 行 → <b>schema drift</b>。确认命令：<code>npx cds compile … --to sql</code> 与 <code>python3</code> 查 <code>sqlite_master</code> / <code>pragma table_info</code>。③ 200 但规则没生效 → 先确认实现文件有没有被装配（<code>[odata]</code> 请求行后有没有你的日志/错误；Node 的 <code>.js</code> 是否与 <code>.cds</code> 同名同目录；Java 的 handler 是否被 <code>@Component</code> + <code>@ServiceName</code> 扫到并出现在启动日志）。④ <code>UPDATE(BookOrders, {…})</code> 是「按对象里的键更新一行」（找不到就 0 行）；<code>UPDATE(BookOrders).where({…})</code> 是条件更新（可能命中多行）。0 行不抛异常 → 要自己检查影响行数，或先 <code>SELECT</code> 再更新。⑤ <code>dummy</code> 把每个请求都当特权用户 → 匿名也 200，断言必失败；<code>mocked</code> 内置 <code>"*": true</code> 且默认不校验密码 → 未知名用户也 200。⑥ 三步：Network 面板（静态资源状态码）→ console 第一条报错 → <code>$metadata</code>（401 / 注解计数）；验证 <code>sap.fe.*</code> 不在 OpenUI5：拿 CDN 上的 <code>sap/fe/templates/…</code> 路径做一次 <code>curl</code>（OpenUI5 站 404、SAPUI5 站 200）。<span class="tag">~</span></li>
+  <li><a href="glossary.html">术语表</a>（6 题）：① CSN = Core Schema Notation（编译后的规范化 JSON 模型，运行时读它）；CQN = Core Query Notation（查询对象 / fluent API）；EDMX = Entity Data Model for XML（OData <code>$metadata</code> 契约）；VCAP_SERVICES = Cloud Foundry 注入的环境变量，装着绑定服务的凭据。② 切面=aspect、绑定动作=bound action、权利=entitlement、服务绑定=service binding（<code>cds bind</code>）、目标=destination。③ 用 <b>function</b>：聚合结果无主键，用 entity/projection 暴露会报 <code>Expected entity to have a primary key</code>。④ 草稿在草稿表（<code>BookOrderService_BookOrders_drafts</code> 与 <code>DRAFT_DraftAdministrativeData</code>）里；由 <code>@odata.draft.enabled</code> 开启；保存（draftActivate）时触发 <code>before('CREATE')</code> 并写入正式表。⑤ 用 entitlement（有没有权利）与 quota（能用多少）解释：缺权利 → Marketplace 里根本看不到/不能用该计划；配额 0 → 能搜到但建实例失败。⑥ <code>dummy</code> 下匿名也 200 → 401 断言必然失败；改成 <code>kind: mocked</code>（或 basic/jwt）并显式写 <code>"*": false</code> + 给用户配 <code>password</code>，期望匿名 <b>401</b>、授权用户 <b>200</b>。</li>
+  <li><a href="tasks.html">任务索引</a>（3 条验收建议）：① 现场挑 3 个任务演示——建议选 <b>CDS-07</b>（Association/Composition 的 <code>diff</code>）、<b>NODE-04</b>（草稿激活才触发 before-CREATE）、<b>BAS-12</b> 或 <b>HANA-10</b>（部署/三条建表路径），三条都带可观察基准。② 必修的五个板块任务（CDS 建模 / Node 服务 / 测试 / Fiori / 部署）全过 → 折算进 <a href="#s7">评分</a>的任务分。③ Java 板块底线：跑通同一份模型 + 写一个事件处理器。</li>
+  <li><a href="worksheet.html">学员版</a>（5 题）：① <code>cds_outbox_Messages</code> 是 CAP 框架自带的事件/outbox 表，不是领域模型产生的表，所以「6 张表」指的是领域表 + draft 支撑表。② 看脚本末尾的 <code>PASS 26 / FAIL 0</code> 与退出码（<code>exit=0</code>），且每条断言都打印了自己的 <code>PASS</code> 行——只有计数与退出码才能证明它没提前退出。③ 第二步（<code>draftActivate</code>）触发；证据是日志里 <code>POST …/draftActivate</code> 之后才出现业务校验结果（409/400），而 POST 建草稿的响应里 <code>orderNo=null</code>。④ 能互相解释：两题都在「草稿只在激活时做正式校验 + 用 <code>req.reject</code> 表达业务错误」这一条链上；若不能解释，说明草稿流程或错误处理有一处还没通。⑤ 无法复现就补「命令」栏（可执行命令 + 期望输出），不要只补结论。</li>
+  <li><a href="quiz.html">自测页</a>（3 条合格判定）：① 正确率 ≥ 75%（页面顶部成绩条）；② 分配给你的任务全部达到「完成基准」；③ 能不复述资料讲清 CAP 三层结构、请求生命周期、Node/Java 差异、草稿流程、部署链路。<b>三条都对应 <a href="#s7">第 7 节</a>的评分构成</b>。</li>
+</ol>
+
+<div class="box warn"><b class="t">讲师提醒（改卷时最容易被追问的三点）</b>
+<ul>
+  <li><b>401 的响应体是裸文本</b>，所以「前端拿 <code>error.message</code> 显示提示」对 401 无效——这条经常被学员答反。</li>
+  <li><b>dummy 不是「更严格」</b>，它是「关掉权限」；把 dummy 与 mocked 的严厉程度答反的学员，要让他回去看 <a href="security.html#s3">security.html §3</a> 的实测表。</li>
+  <li><b>草稿相关的两个 201</b>（POST 与 draftActivate）必须用 <code>IsActiveEntity</code> 与 <code>orderNo</code> 区分；把「POST 后订单号已生成」当正确答案的要当场演示一遍。</li>
+</ul></div>
+
+<h2 id="s5">5. 常见学员卡点与现场处置（15 条）</h2>
+<p>用法：学员举手时先在这一列里找「现象」，按「你怎么引导」的顺序让他自己发现原因——<b>不要直接给答案</b>，最后一句才给他「一句话解释」收尾。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>现象</th><th>学员会怎么做错</th><th>你怎么引导</th><th>一句话解释</th></tr></thead>
+<tbody>
+<tr><td><code>curl</code> 返回 <code>401</code>，学员说「服务没起来」</td><td>重启服务、换端口、怀疑 SQLite</td><td>让他加上 <code>-u alice:alice</code> 再打一次，然后看 <code>curl -o /dev/null -w '%{http_code}'</code> 的两个数字</td><td>401 是<b>服务活着但要求认证</b>的证据；真没起来是 <code>Connection refused</code>（curl 退出码 7）。</td></tr>
+<tr><td>POST 建订单后 <code>orderNo</code> 是 <code>null</code>、校验好像没跑</td><td>去改 <code>before('CREATE')</code> 的代码</td><td>让他看响应里的 <code>IsActiveEntity</code>，再让他调一次 <code>BookOrderService.draftActivate</code></td><td>开了草稿的实体，POST 只建草稿；<b><code>before('CREATE')</code> 在激活时才触发</b>。</td></tr>
+<tr><td>改了 <code>db/data/*.csv</code>，重启服务数据没变</td><td>反复重启、怀疑缓存</td><td>让他重跑 <code>npm run deploy</code>，注意输出里的 <code>&gt; init from db/data/…csv</code></td><td>CSV 只在<b>建库（deploy）时</b>装载；重启服务不会重新灌数据。</td></tr>
+<tr><td>改了模型，表没变 / 报 <code>no such table</code></td><td>只跑 <code>cds compile</code>（只打印不落库）</td><td>让他跑 <code>npm run deploy</code>，再用 <code>python3</code> 查 <code>sqlite_master</code> 或 <code>pragma table_info</code></td><td><code>cds compile</code> 只是「看」，<b>落库要 deploy</b>；改了列名/类型还要删库重建。</td></tr>
+<tr><td>deploy 成功但 <code>$expand=items</code> 返回 <code>[]</code></td><td>去改服务的授权注解、或以为 <code>$expand</code> 需要开开关</td><td>三步：① <code>--to sql</code> 看子表真实 FK 列名；② 查该列有没有值；③ 用 join 计数对账（本站应为 9）</td><td><b>空数组＝子表那一侧的外键没有值</b>（或列名不是 <code>order_ID</code>）；不要讲「Composition 会给父表加列」。</td></tr>
+<tr><td>deploy 失败：<code>has no column named orders_ID</code> / <code>currency</code></td><td>把 CSV 表头改成 CDS 元素名、凭猜改列</td><td>让他先 <code>cds compile … --to sql</code> 把列名抄下来，再改表头</td><td>CSV 表头必须是<b>物理列名</b>：关联是 <code>order_ID</code>，代码表类型是 <code>currency_code</code>。</td></tr>
+<tr><td>匿名请求也能 200，测不出 401</td><td>改注解、改角色、加 <code>@requires</code></td><td>让他跑 <code>cds env get requires.auth.kind</code></td><td><code>kind: dummy</code> 会把每个请求都当特权用户——<b>它是关掉权限的开关</b>，测认证要用 <code>mocked</code>。</td></tr>
+<tr><td><code>mocked</code> 下 <code>-u 随便一个名字:随便密码</code> 也 200</td><td>以为认证失效了</td><td>让他打开内置 mock 用户配置，找 <code>"*": true</code>；再让他显式写 <code>"*": false</code> + 配 password 复测</td><td>内置配置有 <code>"*": true</code> 兜底，且未配 <code>password</code> 的用户不校验密码——<b>mocked 不是真认证</b>。</td></tr>
+<tr><td>用户已被分到角色集合，调用业务接口仍 403</td><td>去查数据库、重启应用</td><td>让他对比三处名字：JWT 的 <code>scope</code>、<code>to:</code> 的值、role-template 名</td><td><code>to:</code> 里必须是 <b>CAP 角色名</b>（scope 去掉 <code>$XSAPPNAME.</code> 前缀），不能写 role-template 名。</td></tr>
+<tr><td>删除明细后父订单合计不变</td><td>以为 <code>after</code> 没被调用（去加日志）</td><td>让他打印 <code>req.data</code> 与 <code>req.params</code></td><td>DELETE <b>没有 body</b>，被删行不返回键值；要从 <code>req.params</code> 取父键（或在 before 里先记下）。</td></tr>
+<tr><td>业务校验失败返回 <code>500</code>，客户端看不到原因</td><td>去改前端错误处理</td><td>让他把 <code>throw new Error(...)</code> 改成 <code>req.reject(400, ...)</code>，再对比两次响应体</td><td>可判定的业务错误用 <code>req.reject</code>；<b>生产环境 5xx 响应体会被脱敏</b>，只能看服务端日志。</td></tr>
+<tr><td>验收脚本第二次跑出现 6 条 FAIL</td><td>改断言让它们通过</td><td>让他先 <code>rm -f db.sqlite* &amp;&amp; npm run deploy</code> 再跑一次，然后逐条解释那 6 条为什么「失败得有价值」</td><td>脚本自己写数据，<b>前置条件变了</b>；重跑前必须重置库（CI 里天然是干净库）。</td></tr>
+<tr><td>本地能用 <code>cds watch</code>，CI 里却挂到超时</td><td>在 CI 里加 <code>sleep</code> 或忽略</td><td>让他把 <code>watch</code> 换成 <code>cds compile</code> + <code>npm start</code>，再加轮询健康检查</td><td><code>cds watch</code> 是<b>常驻监视进程不会退出</b>；CI 需要的是能明确成功/失败并退出的命令。</td></tr>
+<tr><td>Fiori 页面 No data / 空白</td><td>去改模型、改注解</td><td>先看浏览器网络面板：401 还是 404？401 用 <code>test/dev-proxy.js</code> 注入 mock 认证；404 就核对 <code>manifest.json</code> 的 <code>uri</code> 与服务的 <code>@path</code></td><td>本地没有 approuter/XSUAA，页面不会带凭据 → <b>先看 401 再看 URI</b>，最后才怀疑注解。</td></tr>
+<tr><td><code>mvn spring-boot:run</code> 起不来（Java 版本 / 依赖解析失败）</td><td>去改 handler 代码</td><td>看日志第一屏：<code>enforcer</code> 的 RequireJavaVersion / RequireMavenVersion 是否 pass，再看 <code>cds-maven-plugin</code> 的三个 goal 是否执行</td><td>Java 段的问题九成在<b>工具链版本</b>（JDK 17/21、Maven 3.9+）与首次依赖下载，不在业务代码。</td></tr>
+</tbody></table></div>
+
+<div class="box ok"><b class="t">现场处置的四条纪律</b>
+<ol class="steps">
+  <li><b>先要证据</b>：让他把命令与输出贴出来（不是「报错了」）。没有输出的问题，多半是他没说清。</li>
+  <li><b>先分类再定位</b>：这个错误是「编译期 / 部署期 / 运行期 / 认证」哪一类？分类之后一半的排查路径自动被排除。</li>
+  <li><b>一次只改一个变量</b>：同时改模型、注解、认证配置会让结论不可用；改完必须能指出「是这一处导致的」。</li>
+  <li><b>把修复变成回归</b>：解决后让他把它写成一条断言（<code>chk</code> 或 <code>it(...)</code>），下次它会自己报警。</li>
+</ol></div>
+
+<h2 id="s6">6. 课堂演示脚本（两个 15 分钟连续演示）</h2>
+<p>两个演示都要<b>提前把终端字体调大、把浏览器与终端并排</b>。演示的价值不在「跑通」，而在「让学员看到一条因果链」。</p>
+
+<h3 id="s6-1">演示 A（15 分）：从改动一个 <code>.cds</code> 到看到 OData 结果与 Fiori 变化</h3>
+<div class="stepmeta"><span class="k">cds watch · curl · 浏览器</span><span class="f">app/book-orders/annotations.cds · db/schema.cds · db/data/*.csv</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+  <li><b>0–2 分｜建立基线</b>：服务已在跑（<code>npm start</code>），先记录「改之前」的三个数字，写在白板上——这是后面判断变化的依据。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order
+
+# ① 服务可达（200）+ 元数据里的注解条数
+curl -s -o /dev/null -w 'metadata=%{http_code}\n' -u alice:alice "$SVC/\$metadata"
+curl -s -u alice:alice "$SVC/\$metadata" | grep -c Annotation        # 基线：166
+
+# ② 数据现状（OData 视角）
+curl -s -u alice:alice "$SVC/BookOrders?\$select=orderNo,status,totalAmount&\$orderby=orderNo" | python3 -m json.tool | head -20</code></pre>
+  </li>
+  <li><b>2–7 分｜改注解（界面变化，不碰数据库）</b>：在 <code>app/book-orders/annotations.cds</code> 里给 <code>UI.LineItem</code> 加一列（例如 <code>note</code>），保存。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># cds watch 会自动重编译；确认注解真的进了元数据（条数比基线变大）
+curl -s -u alice:alice "$SVC/\$metadata" | grep -c Annotation        # 变化后可 > 166
+
+# 关键对照：注解不会改变数据库
+npx cds compile db/schema.cds srv/book-order-service.cds app/book-orders/annotations.cds --to sql | head -5</code></pre>
+    <p>让学员说出结论：<b>改界面 = 改 CDS 注解，不是改前端代码</b>；<code>--to sql</code> 输出没变，说明注解只影响 <code>$metadata</code>。</p>
+  </li>
+  <li><b>7–12 分｜改模型（数据层变化，必须 deploy）</b>：给 <code>Books</code> 加一个 <code>stock : Integer;</code>，同步在 <code>db/data/sap.training.bookorder-Books.csv</code> 加一列表头与值（表头必须是物理列名），然后：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 1) 看 DDL 是否出现新列
+npx cds compile db/schema.cds --to sql | grep -A3 'CREATE TABLE sap_training_bookorder_Books'
+
+# 2) 只改模型不 deploy → 服务会报列不存在（先把现象演出来）
+curl -s -u alice:alice "$SVC/Books?\$select=title,stock" | head -3
+
+# 3) 落库：本地改模型后最干净的固定动作（删库重建）
+rm -f db.sqlite db.sqlite-shm db.sqlite-wal && npm run deploy
+
+# 4) 再查：OData 已经能返回新列
+curl -s -u alice:alice "$SVC/Books?\$select=title,stock&\$orderby=title" | python3 -m json.tool | head -12</code></pre>
+  </li>
+  <li><b>12–15 分｜看界面</b>：刷新浏览器（List Report 的「图书」或直接打开服务根页面）确认新字段可见；然后<b>停下来做一次复盘</b>：白板上的三个数字里哪个变了、哪个没变——<b>「注解影响界面、模型影响数据库」</b>这句话要由学员自己说出来。</li>
+</ol>
+<div class="box warn"><b class="t">演示 A 的三个可控点</b>
+<ul>
+  <li>如果 <code>cds watch</code> 没自动重编译（很少见），手动 Ctrl-C 再重启一次，别等。</li>
+  <li>故意把 CSV 表头写成 <code>Stock</code>（大写）或 <code>stocks</code>，让 deploy 失败一次——<b>这个失败比成功更有教学价值</b>，控制在 1 分钟内。</li>
+  <li>改完记得把模型恢复原状（或明确说「这条列留在项目里了」），避免影响后续实操。</li>
+</ul></div>
+
+<h3 id="s6-2">演示 B（15 分）：制造一个 409 业务错误并当场定位到 handler 行号</h3>
+<div class="stepmeta"><span class="k">cds watch · curl · grep -n</span><span class="f">srv/book-order-service.js（before CREATE BookOrders）</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+  <li><b>0–3 分｜先正常一次</b>：用草稿流程建一张订单，拿到 201 与自动编号——这样学员知道「正常的样子」。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order
+
+# ① 建草稿（注意：此时 orderNo 还是 null）
+ID=$(curl -s -u alice:alice -X POST "$SVC/BookOrders" \
+      -H 'Content-Type: application/json' -d '{"customer_ID":1000}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["ID"])')
+
+# ② 激活（这一刻才触发 before('CREATE')）
+curl -s -u alice:alice -X POST \
+  "$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/BookOrderService.draftActivate" \
+  -H 'Content-Type: application/json' -d '{}' | python3 -c 'import sys,json;d=json.load(sys.stdin);print("orderNo =",d.get("orderNo"))'</code></pre>
+  </li>
+  <li><b>3–8 分｜制造 409</b>：把订单号指定成已存在的 <code>BO-1001</code>，走同样的草稿 + 激活两步，激活时拿到 <b>409</b>。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># ① 建草稿时就把订单号写成已存在的 BO-1001
+ID=$(curl -s -u alice:alice -X POST "$SVC/BookOrders" \
+      -H 'Content-Type: application/json' \
+      -d '{"customer_ID":1000,"orderNo":"BO-1001"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["ID"])')
+
+# ② 激活 → 观察状态码与错误体
+curl -s -w '\nHTTP=%{http_code}\n' -u alice:alice -X POST \
+  "$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/BookOrderService.draftActivate" \
+  -H 'Content-Type: application/json' -d '{}'</code></pre>
+    <p>期望形状：<code>{"error":{"message":"订单号 BO-1001 已存在，请更换","code":"409","@Common.numericSeverity":4}}</code>。</p>
+  </li>
+  <li><b>8–12 分｜定位到行号</b>：三件事按顺序做，让学员看到「怎么从现象走到代码」。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># ① 服务端日志：cds watch 的终端里找这一行（[error] 行里带 文件:行号）
+#    [error] - 409 - Error: 订单号 BO-1001 已存在，请更换
+#      at BookOrderService.beforeCreateOrder (…/srv/book-order-service.js:41:22)
+
+# ② 用消息文本反查代码位置（比翻文件快）
+grep -n '已存在' srv/book-order-service.js
+
+# ③ 直接把那一行连同上下文打出来（讲师投屏用）
+sed -n '30,50p' srv/book-order-service.js</code></pre>
+    <p>引导问题：<b>为什么错误发生在激活请求上，而不是 POST 请求上？</b>（答案：草稿实体的 <code>CREATE</code> 只发生在 draftActivate）——把演示 B 与 <a href="#s3-5">3-5 第 1 题</a>扣起来。</p>
+  </li>
+  <li><b>12–15 分｜把它变成回归</b>：现场加一条断言，让这个 409 以后自动被守住。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 在 test/odata-verify.sh 里追加一行（chk 风格：期望状态码）
+chk '重复订单号激活 → 409' 409 -X POST \
+  "$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/BookOrderService.draftActivate" \
+  -H 'Content-Type: application/json' -d '{}'</code></pre>
+    <p>要点：<b>能复现的问题都要变成断言</b>；断言里除了状态码，还要尽量断言业务消息（「状态码只能证明拒绝了，消息才能证明按预期原因拒绝了」）。</p>
+  </li>
+</ol>
+<div class="box ok"><b class="t">演示 B 的验收（学员当场演示版）</b>
+<p>让学员在 <b>30 秒内</b>回答三个问题：① 这个 409 是谁返回的（CAP 授权框架还是你的代码）？② 触发它的钩子叫什么、在哪一行？③ 如果要把消息改成「订单号重复，请使用其他编号」，你改哪里？——三个都答对才给这一项的满分。</p></div>
+
+<h2 id="s7">7. 评分标准：把自测、任务完成度与课堂演示折成百分制</h2>
+<p>总分 100 分，由三块构成。<b>这一节要提前发给学员</b>，让他们知道分是从哪里来的——尤其是「证据」这一项。</p>
+
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>构成</th><th>分值</th><th>怎么算</th><th>数据来源</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>自测（quiz）</b></td><td><b>40 分</b></td>
+  <td>正确率 = 答对题数 ÷ 总题数（<span class="tag">186</span> 题）；得分 = 正确率 × 40。<br>
+      <b>硬线：正确率低于 75% 直接判不合格</b>（与课程既定的合格线一致），不再看后面两块。</td>
+  <td><a href="quiz.html">自测页</a>（题库 <code>work/quiz/*.json</code>）</td>
+</tr>
+<tr>
+  <td><b>任务完成度</b></td><td><b>40 分</b></td>
+  <td>每个板块的得分 = 该板块「通过的任务数 ÷ 该板块任务数」×（该板块任务数 ÷ 全部任务数 × 40）。<br>
+      通过的定义：该任务「完成基准」里的可观察判据全部成立，且能出示命令与输出。</td>
+  <td><a href="tasks.html">任务索引</a>（<code>work/tasks/*.json</code>，共 <span class="tag">108</span> 条）</td>
+</tr>
+<tr>
+  <td><b>课堂演示与答辩</b></td><td><b>20 分</b></td>
+  <td>① <a href="#s6">演示 A</a>（改 <code>.cds</code> → OData / Fiori 变化）7 分；② <a href="#s6">演示 B</a>（制造 409 并定位到行号）7 分；③ 必问问题口头答辩（抽 <a href="#s3">第 3 节</a>的题，<b>含追问</b>）6 分。</td>
+  <td>现场</td>
+</tr>
+</tbody></table></div>
+
+<h3 id="s7-1">7-1 任务完成度的板块权重</h3>
+<p>下表按题库里的任务条数自动折算（多出的任务不影响比重原则：<b>做得多的板块权重自然大</b>）。系数 = 该板块任务数 ÷ 全部任务数 × 40。</p>
+<div class="tblwrap"><table class="tbl small"><thead><tr><th>板块</th><th>任务条数</th><th>折算分值（满分 40）</th><th>板块页面</th></tr></thead><tbody><tr><td>概念</td><td>8 条</td><td>3.0 分</td><td><a href="concept.html">concept.html</a></td></tr>
+<tr><td>① BTP 开通</td><td>17 条</td><td>6.3 分</td><td><a href="btp.html">btp.html</a></td></tr>
+<tr><td>② BAS 环境</td><td>13 条</td><td>4.8 分</td><td><a href="bas.html">bas.html</a></td></tr>
+<tr><td>③ HANA 云</td><td>12 条</td><td>4.4 分</td><td><a href="hana.html">hana.html</a></td></tr>
+<tr><td>④ CDS 建模</td><td>13 条</td><td>4.8 分</td><td><a href="cds.html">cds.html</a></td></tr>
+<tr><td>⑤ Node 服务</td><td>6 条</td><td>2.2 分</td><td><a href="node.html">node.html</a></td></tr>
+<tr><td>⑥ Java 服务</td><td>11 条</td><td>4.1 分</td><td><a href="java.html">java.html</a></td></tr>
+<tr><td>⑦ 测试体系</td><td>6 条</td><td>2.2 分</td><td><a href="testing.html">testing.html</a></td></tr>
+<tr><td>⑧ 认证授权</td><td>10 条</td><td>3.7 分</td><td><a href="security.html">security.html</a></td></tr>
+<tr><td>⑨ Fiori UI</td><td>6 条</td><td>2.2 分</td><td><a href="fiori.html">fiori.html</a></td></tr>
+<tr><td>⑩ 部署</td><td>6 条</td><td>2.2 分</td><td><a href="deploy.html">deploy.html</a></td></tr>
+<tr><td><b>合计</b></td><td><b>108 条</b></td><td><b>40 分</b></td><td>—</td></tr></tbody></table></div>
+
+<h3 id="s7-2">7-2 界线（A / B / C / 不合格）</h3>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>等级</th><th>总分</th><th>还应同时满足（否则降一级）</th><th>能力画像（给评语用）</th></tr></thead>
+<tbody>
+<tr><td><b>A</b></td><td>≥ 90</td><td>自测正确率 ≥ 90%；三条硬门禁全过；能独立完成演示 A 或 B 中的一个</td><td>能自己搭环境、自己排错、能给别人讲清「为什么」；可直接上手项目</td></tr>
+<tr><td><b>B</b></td><td>80 – 89</td><td>自测正确率 ≥ 85%；三条硬门禁全过</td><td>能照手顺独立走完全流程，遇到新错误需要提示方向；再练一两个真实需求即可独立</td></tr>
+<tr><td><b>C</b></td><td>70 – 79</td><td>自测正确率 ≥ 75%；硬门禁至少「模型编译」与「验收脚本」两条通过</td><td>能在指导下完成，能读懂报错但定位慢；需要有人带一次真实交付</td></tr>
+<tr><td><b>不合格</b></td><td>&lt; 70<br>或任一硬线不满足</td><td>自测正确率 &lt; 75%，或三条硬门禁任一不过</td><td>流程未走通；按<a href="#s5">卡点表</a>补齐后重测（自测可重考一次，取最高分）</td></tr>
+</tbody></table></div>
+
+<div class="box info"><b class="t">三条硬门禁（自动判定、结果二元、阻断合并）</b>
+<ol class="steps">
+  <li><b>模型编译无 <code>[ERROR]</code></b>：<code>npx cds compile db/schema.cds srv/book-order-service.cds --to edmx</code> 的输出里不含 <code>[ERROR]</code>（注意：命令的退出码可能仍是 0，脚本必须 <code>grep</code> 后再 <code>exit 1</code>）。</li>
+  <li><b><code>npm test</code> 全绿</b>：<code>cds.test</code> / mocha 用例全部通过。</li>
+  <li><b><code>bash test/odata-verify.sh</code> 的 <code>FAIL 0</code></b>：脚本以非 0 退出即视为未通过（跑之前必须先重置库：<code>rm -f db.sqlite* &amp;&amp; npm run deploy</code>）。</li>
+</ol></div>
+
+<h3 id="s7-3">7-3 一次完整的算分示例（讲师照着改数字即可）</h3>
+<p>某学员：自测正确率 <b>80.6%</b>（例如 186 题里答对 150 题）→ 自测得分 <code>0.806 × 40 ≈ 32.2</code>；任务完成度按板块加权 <b>80%</b> → <code>≈ 32</code>；演示 A 拿 5 分、演示 B 拿 6 分、答辩拿 4 分 → 演示共 15 分。<b>总分 ≈ 79.2 → C</b>。评语：「全流程能走通，草稿与权限两块要在追问下才答得清；下次交付前先练演示 B 的日志定位。」</p>
+
+<div class="box warn"><b class="t">打分时容易产生争议的四种情况（建议提前跟学员约定）</b>
+<ul>
+  <li><b>「我本地能跑」但没有输出</b>：不给分。评分对象是<b>可复核的证据</b>（命令 + 输出 + 行数）。</li>
+  <li><b><span class="tag">~</span> 类问题答错</b>：BAS 配额、试用规则、cockpit 菜单名这类随版本变化的内容，答错只提示不扣分；能说出「自系统确认方法」（例如 <code>npx cds watch --help</code>）反而加分。</li>
+  <li><b>负向场景做了但没断言</b>：给一半分（说明理解到位，工程习惯没到位）。</li>
+  <li><b>把「课程不一致处」答成题库的措辞</b>（如 Composition 的父表 FK 说法）：<b>不扣分，但要当场纠偏</b>——见 <a href="#s8">第 8 节 Q1</a>。</li>
+</ul></div>
+
+<h2 id="s8">8. 疑难问答：学员最容易追问的「为什么不…」（12 条）</h2>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>学员的追问</th><th>正确回答（可直接照着讲）</th><th>常见误解回答（要当场纠偏）</th></tr></thead>
+<tbody>
+<tr><td>「为什么不干脆用 Composition？它看起来更『正式』」</td>
+<td>因为本站的明细行是<b>独立可寻址的业务对象</b>（要能单独 POST / PATCH / DELETE），也不需要「父删子必删」和 Deep Insert；而且两种写法编译出的 DDL <b>逐字相同</b>，Composition 的差异在运行时语义（Deep Insert / Update、级联删除、服务自动暴露）。详见 <a href="cds.html#s5">cds.html §5</a>。</td>
+<td>「因为 Composition 会让父表多出 FK 列，CSV 填不到。」——本站在同一版本工具链上 <code>diff</code> 不出这个现象，<a href="cds.html#s5">cds.html §5 的纠偏框</a>有实测；题库 <code>node.json</code> 第 16 题沿用了这个旧说法，教学请以 cds.html 为准。</td></tr>
+<tr><td>「为什么聚合不能直接暴露成实体？加个 <code>key</code> 不就行了？」</td>
+<td>OData 实体必须<b>可寻址</b>（能按 key 取单行）。<code>sum</code> / <code>count</code> / <code>group by</code> 的结果里没有能唯一标识一行的键，随便加个 key 也只是「不报错」，语义上仍然没有单行标识。正确做法是无绑定 function。</td>
+<td>「加 <code>@readonly</code> 就能暴露。」——<code>@readonly</code> 管的是「能不能写」，不管「有没有主键」。</td></tr>
+<tr><td>「为什么改了模型要删库重建？框架不能自动迁移吗？」</td>
+<td>本地开发用的 <code>cds deploy</code> 是<b>增量</b>行为：加列会 <code>ALTER</code> 成功、旧数据保留；<b>删列/改语义不会让旧列消失</b>；SQLite 是动态类型，<b>改类型根本不报错</b>（实测 <code>DECIMAL</code> → <code>INTEGER</code> 照样通过）——不删库你无法确认「手里这个库就是模型描述的那个库」。删库重建还顺带验证「从零建库」这条路径（CI 就是这么跑的）。</td>
+<td>「生产也这么干。」——<b>不行</b>。生产要走 HDI 的正式演进路径（部署工件 / 迁移），删库等于丢数据。<span class="tag">~</span></td></tr>
+<tr><td>「为什么非要 Node LTS？我装最新版不行吗？」</td>
+<td>因为 <code>@cap-js/sqlite</code> 依赖原生模块 <code>better-sqlite3</code>，原生模块按 Node 的 <b>ABI（NODE_MODULE_VERSION）</b>发布预编译包。非 LTS 的新版本常常还没有对应 ABI 的包，安装或运行就会失败；CAP 9 的推荐是 20/22 LTS。</td>
+<td>「LTS」= 长期支持，是「稳定」而不是「更旧」；本课程用 22 LTS（不是 21）。</td></tr>
+<tr><td>「为什么不能在 handler 里自己 <code>cds.tx()</code> 开事务？显式一点不是更好吗？」</td>
+<td>CAP 的承诺是「<b>事件处理器里你已经在事务中</b>」：一个请求 = 一个根事务，<code>before</code> / 实现 / <code>after</code> 共享它，成功一起提交、抛错一起回滚。在 handler 里再开事务属于误用，<b>在 SQLite 上还可能导致死锁</b>。<code>cds.tx()</code> 只用于非请求上下文（脚本、定时任务），<code>cds.spawn()</code> 用于当前事务之外的后台任务。</td>
+<td>「不用事务就没有一致性。」——一致性的来源是「请求事务 + 回写失败会抛出 → 一起回滚」，本站的汇总回写正是靠这一点。</td></tr>
+<tr><td>「为什么 <code>@readonly</code> 不算权限？我明明挡住了写操作。」</td>
+<td>因为它是<b>静态访问控制</b>：对所有用户一视同仁（等价 <code>@restrict: [{ grant: 'READ' }]</code>，默认 <code>to: 'any'</code>），与「谁」无关。要按角色控制必须写 <code>@restrict</code>（<code>grant</code> / <code>to</code> / <code>where</code>）或服务级 <code>@requires</code>。</td>
+<td>「加了 <code>@readonly</code> 就等于只有管理员能读。」——它连「谁能读」都没表达。</td></tr>
+<tr><td>「为什么负向测试不能只断言状态码？400 对不就说明拦住了吗？」</td>
+<td>状态码只能证明「被拒绝了」，不能证明「按预期的原因拒绝」。库里有多条校验时，任何一条触发都会是 400；只有断言业务消息（例如「数量必须大于 0」）才能证明你测的是目标规则。</td>
+<td>「消息会变，断言消息太脆。」——消息是你的业务契约的一部分，改消息本来就该同步改测试。</td></tr>
+<tr><td>「为什么生产不能用 <code>mocked</code>？本地用得挺顺。」</td>
+<td>因为 <code>mocked</code> 不校验真实身份（内置用户 + <code>"*": true</code> 兜底、默认不校验密码），<code>dummy</code> 更是直接把每个请求当特权用户。正确做法是在 <code>package.json</code> 的 <code>[production]</code> 档显式把 <code>auth.kind</code> 设为 <code>xsuaa</code>（或 <code>jwt</code>），并确保没有 <code>mocked</code> / <code>dummy</code> 流进生产。</td>
+<td>「生产用 mocked 一样安全。」——它连「你是谁」都不知道，授权注解全是空转。</td></tr>
+<tr><td>「为什么 <code>orderNo</code> 不加数据库 <code>UNIQUE</code>？不会重复吗？」</td>
+<td>本站刻意把唯一性交给服务层（<code>before('CREATE')</code> 查重 → <code>req.reject(409, …)</code>），这样错误消息是业务语言、编号生成与查重在同一处；实测 DDL 里确实没有 UNIQUE。</td>
+<td>「服务层检查等于数据库保证。」——不是原子的，并发下有窗口；<span class="tag">~</span> 强一致场景应加数据库约束或序列，并接受错误消息不再可读。</td></tr>
+<tr><td>「为什么 <code>.cdsrc-private.json</code> 里看不到密码？云端不用密码怎么连？」</td>
+<td>它只存<b>绑定元数据</b>（平台 / org / space / 实例名 / 服务键名），凭据在运行时才由框架去 CF 解析。这样文件可以安全地留在本地而不进 Git，也不会随代码泄露。</td>
+<td>「把同事的文件拷过来就能用。」——既不安全，也常因环境不同（org/space/实例）而失败；正确做法是自己 <code>cds bind</code>。</td></tr>
+<tr><td>「为什么一定要写 <code>@cds.redirection.target</code>？编译器猜不出来吗？」</td>
+<td>因为服务里有两张实体都源自同一张源实体（<code>BookOrderItems</code> 与 <code>OrderItemView</code>），<code>BookOrders:items</code> 指向谁在语义上不唯一，编译器<b>必须</b>由你指定，报错原文里就给了修法。</td>
+<td>「随便挑一张应该也行。」——选错会让 <code>$metadata</code> 里的导航绑定指向另一张实体，前端能显示但关联字段可能不对。</td></tr>
+<tr><td>「为什么服务里建议显式写 <code>@path</code>？让框架推导不是更省事？」</td>
+<td>框架推导的 URL 会随服务名变化（<code>BookOrderService</code> → <code>/odata/v4/book-order</code>）。显式写死以后，改服务名不会悄悄改掉 URL，前端 <code>manifest.json</code> 与测试脚本都不用跟着改。</td>
+<td>「<code>@path</code> 决定数据库文件路径。」——它只管服务在 URL 上的前缀。</td></tr>
+</tbody></table></div>
+
+
+<div class="sectest">
+  <b class="t">本节测试（讲师自查：能不能拿着这一页上课）</b>
+  <ol>
+    <li>不看别的资料，说出本课程的 11 个板块名称与它们的先后顺序（含 <a href="concept.html">概念</a> 与 <a href="project.html">示范项目</a> 的位置）。</li>
+    <li><a href="#s1">课表</a>里 30 分钟环境检查的三件事分别是什么？为什么它不能挪到第一天下午？</li>
+    <li>从 <a href="#s2">采分点</a>里挑任意一个板块，说出它的「必须掌握的能力 / 可观察的证据 / 不给分的表现」三列各一条。</li>
+    <li><a href="#s3">必问问题</a>里挑出你<b>最没把握</b>的两题，写下你的答案要点，再对照本页的参考答案找差距。</li>
+    <li>某学员的 <code>bash test/odata-verify.sh</code> 第二次跑出现 6 条 FAIL：按 <a href="#s5">第 5 节</a>你该说什么、让他做什么？</li>
+    <li>按 <a href="#s7">评分标准</a>算一次你手上班级的分数：谁的硬门禁没过？谁的自测正确率低于 75%？</li>
+    <li>举出本课程里至少两处「以官方文档为准、与课程页口径不一致或未验证」的地方（提示：Composition 的父表 FK、Java 侧本地 mock 认证）。</li>
+  </ol>
+  <p class="go">相关页面：<a href="quiz.html">自测</a> · <a href="worksheet.html">学员版</a> · <a href="tasks.html">任务索引</a> · <a href="issues.html">排错</a>。</p>
+</div>
+
+<div class="box ok"><b class="t">收尾：把这一页变成你的备课资产</b>
+<ul>
+  <li>上课前一天跑一次 <a href="#s1">环境检查</a>，把当天最容易集体踩的 3 条抄到白板上。</li>
+  <li>每次课结束把新出现的卡点补进 <a href="#s5">第 5 节</a>（现象 → 引导 → 一句话解释），下一次课就有现成的处置手册了。</li>
+  <li>发现课程页与官方文档冲突时，<b>以官方文档为准</b>，并在这一页里记下冲突点（目前已记录一处：Composition 的父表 FK 说法）。</li>
+</ul></div>
+
+<h2>9. 下一步与相关页面</h2>
+<div class="flow">
+  <span class="node">讲师：先读 <a href="#s1">课表</a> 再读 <a href="#s2">采分点</a></span><span class="arrow">→</span>
+  <span class="node">学员：<a href="worksheet.html">学员版记入表</a> + <a href="quiz.html">自测</a></span><span class="arrow">→</span>
+  <span class="node">动手：<a href="tasks.html">任务索引</a> 按板块打勾</span><span class="arrow">→</span>
+  <span class="node">验收：<a href="#s7">第 7 节评分标准</a></span>
+</div>
+<div class="box info"><b class="t">配套页面</b>
+<ul>
+  <li><a href="quiz.html">自测页</a>：全部自测题（自动判分，合格 75%）；本页 <a href="#s4">第 4 节</a>给出每题答案与要点。</li>
+  <li><a href="worksheet.html">学员版</a>：可打印的记入表；与 <a href="#s2">采分点</a>一一对应。</li>
+  <li><a href="tasks.html">任务索引</a>：全部实训任务与完成基准（评分第 2 项的数据来源）。</li>
+  <li><a href="code.html">源码</a> · 速查 · <a href="issues.html">排错</a> · <a href="glossary.html">术语表</a>：上课随时要翻的四页。</li>
+  <li><a href="project.html">示范项目</a>：端到端验收对象（模型 → 服务 → 测试 → Fiori → 部署）。</li>
+</ul></div>
+<p class="kicker">本页的答案与数字来自：课程各页的实测内容、题库 <code>work/quiz/*.json</code>、任务表 <code>work/tasks/*.json</code>、示范项目 <code>project-code/demo-node/README.md</code> 与 <code>work/evidence/*</code>。带 <span class="tag">~</span> 的条目为随版本/租户变化或本地无法实测的内容，授课时请以你所在环境与官方文档为准。</p>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site"><div class="inner"><p class="copy">© <span data-year>2026</span> SAP CAP 培训课程</p></div></footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

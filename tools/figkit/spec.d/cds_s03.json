@@ -1,0 +1,67 @@
+{
+  "key": "cds_s03",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "caption": "部署与自检：npm run deploy 的 4 个 CSV 初始化行 + 用 sqlite_master 核对实际建出的 7 表 7 视图",
+  "alt": "终端显示 cds deploy 成功与 sqlite_master 查询结果：7 张表 7 个视图",
+  "src": "本地实测：npm run deploy（cds deploy --to sqlite:db.sqlite）与 python3 查询 sqlite_master",
+  "title": "jason@MacBook-Pro: ~/Desktop/work/training/sap-cap/project-code/demo-node",
+  "lh": 19,
+  "lines": [
+    "$ npm run deploy",
+    "",
+    "> demo-node@1.0.0 deploy",
+    "> cds deploy --to sqlite:db.sqlite",
+    "",
+    "  > init from db/data/sap.training.bookorder-Customers.csv",
+    "  > init from db/data/sap.training.bookorder-Books.csv",
+    "  > init from db/data/sap.training.bookorder-BookOrders.csv",
+    "  > init from db/data/sap.training.bookorder-BookOrderItems.csv",
+    "/> successfully deployed to db.sqlite",
+    "",
+    "$ python3 - <<'PY'",
+    "  import sqlite3",
+    "  c = sqlite3.connect(\"db.sqlite\")",
+    "  q = \"select name, type from sqlite_master where type in ('table','view') order by type, name\"",
+    "  for n, t in c.execute(q): print(f\"{t:5} {n}\")",
+    "  PY",
+    "",
+    "table BookOrderService_BookOrders_drafts",
+    "table DRAFT_DraftAdministrativeData",
+    "table cds_outbox_Messages",
+    "table sap_training_bookorder_BookOrderItems",
+    "table sap_training_bookorder_BookOrders",
+    "table sap_training_bookorder_Books",
+    "table sap_training_bookorder_Customers",
+    "view  BookOrderService_BookOrderItems",
+    "view  BookOrderService_BookOrders",
+    "view  BookOrderService_Books",
+    "view  BookOrderService_Customers",
+    "view  BookOrderService_DraftAdministrativeData",
+    "view  BookOrderService_OrderItemView",
+    "view  sap_training_bookorder_OrderItemView"
+  ],
+  "callouts": [
+    {
+      "on": "  > init from db/data/sap.training.bookorder-BookOrders.csv",
+      "text": "1. 每个 CSV 一行初始化日志"
+    },
+    {
+      "on": "/> successfully deployed to db.sqlite",
+      "text": "2. 只有这一行才算成功"
+    },
+    {
+      "on": "table sap_training_bookorder_BookOrders",
+      "text": "3. 4 张业务表 → 4 张物理表"
+    },
+    {
+      "on": "table BookOrderService_BookOrders_drafts",
+      "text": "4. draft 表是 @odata.draft.enabled 带来的"
+    },
+    {
+      "on": "view  sap_training_bookorder_OrderItemView",
+      "text": "5. 带主键的视图也建成了物理视图"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+$ npx cds compile db/schema.cds srv/book-order-service.cds --to sql   # 只看前 3 张表
+
+CREATE TABLE sap_training_bookorder_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120) NOT NULL,
+  author NVARCHAR(80),
+  price DECIMAL(9, 2) NOT NULL,
+  currency NVARCHAR(3) DEFAULT 'JPY',
+  stock INTEGER DEFAULT 0,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_training_bookorder_Customers (
+  ID INTEGER NOT NULL,
+  name NVARCHAR(80) NOT NULL,
+  city NVARCHAR(60),
+  country NVARCHAR(20),
+  email NVARCHAR(120),
+  PRIMARY KEY(ID)
+);
+
+...
+
+$ npx cds compile srv/book-order-service.cds --to edmx | sed -n "26,44p"
+        <EntitySet Name="Books" EntityType="BookOrderService.Books"/>
+        <EntitySet Name="Customers" EntityType="BookOrderService.Customers"/>
+        <EntitySet Name="BookOrders" EntityType="BookOrderService.BookOrders">
+          <NavigationPropertyBinding Path="customer" Target="Customers"/>
+          <NavigationPropertyBinding Path="items" Target="BookOrderItems"/>
+          <NavigationPropertyBinding Path="SiblingEntity" Target="BookOrders"/>
+        </EntitySet>
+        <EntitySet Name="BookOrderItems" EntityType="BookOrderService.BookOrderItems">
+          <NavigationPropertyBinding Path="order" Target="BookOrders"/>
+          <NavigationPropertyBinding Path="book" Target="Books"/>
+        </EntitySet>
+        <EntitySet Name="OrderItemView" EntityType="BookOrderService.OrderItemView"/>
+        <FunctionImport Name="getOrderTotal" Function="BookOrderService.getOrderTotal"/>
+        <FunctionImport Name="getOrderSummary" Function="BookOrderService.getOrderSummary"/>
+      </EntityContainer>
+      <EntityType Name="Books">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>

@@ -1,0 +1,51 @@
+{
+  "key": "hana_s03",
+  "kind": "hana",
+  "w": 1440, "h": 900,
+  "product": "SAP HANA Cloud",
+  "user": "JASON",
+  "navW": 300,
+  "nav": {
+    "title": "Database Explorer",
+    "items": [
+      {"label": "demo-hana-db (HDI)", "active": true, "sub": ["Catalog", "SQL Console", "Load", "Import"]},
+      {"label": "BOOKORDER (schema)"},
+      {"label": "Tables", "group": true},
+      {"label": "BOOKS"},
+      {"label": "BOOK_ORDERS"},
+      {"label": "BOOK_ORDER_ITEMS"},
+      {"label": "CUSTOMERS"},
+      {"label": "Views", "group": true},
+      {"label": "ORDER_SUMMARY"}
+    ]
+  },
+  "title": "SQL Console — BOOKORDER.BOOK_ORDERS",
+  "tabs": ["SQL Console 1", "BOOK_ORDERS (Table)", "Remote Sources"],
+  "activeTab": 0,
+  "blocks": [
+    {"t": "code", "lang": "sql", "fs": 13, "lh": 21, "title": "SQL", "numbers": true, "lines": [
+      "SELECT O.\"ORDERNO\", O.\"CUSTOMER_ID\", COUNT(I.\"ID\") AS LINES, SUM(I.\"AMOUNT\") AS TOTAL",
+      "  FROM \"BOOKORDER\".\"BOOK_ORDERS\" O",
+      "  JOIN \"BOOKORDER\".\"BOOK_ORDER_ITEMS\" I ON I.\"ORDER_ID\" = O.\"ID\"",
+      " GROUP BY O.\"ORDERNO\", O.\"CUSTOMER_ID\"",
+      " ORDER BY O.\"ORDERNO\";"
+    ]},
+    {"t": "p", "text": "実行 0.08 秒 / 4 行が返されました（BookOrderService が生成したテーブルを直接照会）", "size": 12.5, "fill": "#6a6d70"},
+    {"t": "table", "cols": ["ORDERNO", "CUSTOMER_ID", "LINES", "TOTAL"], "widths": [1.4, 1.4, 0.7, 1.0],
+     "rows": [
+       ["BO-1001", "1000", "3", "12400.00"],
+       ["BO-1002", "1000", "1", "2300.00"],
+       ["BO-1003", "2000", "5", "31050.00"],
+       ["BO-1005", "2000", "4", "18900.00"]
+     ]},
+    {"t": "note", "kind": "info",
+     "text": "CAP 部署时用 HDI container 的 technical user 建表；这里的 schema 名由 mta.yaml 的 hdi 参数决定（本示范为 BOOKORDER）。"}
+  ],
+  "status": "Connected · demo-hana-db (HDI container) · SAP HANA Cloud QRC 4 · SQL: 0.08 s · 4 rows",
+  "callouts": [
+    {"on": "SUM(I.\"AMOUNT\") AS TOTAL", "text": "1. 生成表名 = 实体名大写 + 下划线"},
+    {"on": "4 行が返されました（BookOrderService が生成したテーブルを直接照会）", "text": "2. 行数と実行時間は必ず確認"},
+    {"on": "BO-1003", "text": "3. 相関の証拠：OData の値と一致するか"},
+    {"on": "demo-hana-db (HDI container)", "text": "4. HDI container 的 technical user 连接"}
+  ]
+}

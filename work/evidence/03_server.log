@@ -1,0 +1,89 @@
+
+> demo-node@1.0.0 start
+> cds-serve
+
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 296 ms
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - POST /odata/v4/book-order/$batch 
+[odata] - > GET /BookOrders {
+  '$count': 'true',
+  '$select': 'HasActiveEntity,HasDraftEntity,ID,IsActiveEntity,orderDate,orderNo,status,statusCriticality,totalAmount',
+  '$expand': 'DraftAdministrativeData($select=DraftUUID,InProcessByUser),customer($select=ID,name)',
+  '$filter': '(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)',
+  '$skip': '0',
+  '$top': '30'
+}
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - POST /odata/v4/book-order/$batch 
+[odata] - > GET /BookOrders {
+  '$count': 'true',
+  '$select': 'HasActiveEntity,HasDraftEntity,ID,IsActiveEntity,orderDate,orderNo,status,statusCriticality,totalAmount',
+  '$expand': 'DraftAdministrativeData($select=DraftUUID,InProcessByUser),customer($select=ID,name)',
+  '$filter': '(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)',
+  '$skip': '0',
+  '$top': '30'
+}
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - POST /odata/v4/book-order/$batch 
+[odata] - > GET /BookOrders {
+  '$count': 'true',
+  '$select': 'HasActiveEntity,HasDraftEntity,ID,IsActiveEntity,orderDate,orderNo,status,statusCriticality,totalAmount',
+  '$expand': 'DraftAdministrativeData($select=DraftUUID,InProcessByUser),customer($select=ID,name)',
+  '$filter': '(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)',
+  '$skip': '0',
+  '$top': '30'
+}
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - POST /odata/v4/book-order/$batch 
+[odata] - > GET /BookOrders {
+  '$count': 'true',
+  '$select': 'HasActiveEntity,HasDraftEntity,ID,IsActiveEntity,orderDate,orderNo,status,statusCriticality,totalAmount',
+  '$expand': 'DraftAdministrativeData($select=DraftUUID,InProcessByUser),customer($select=ID,name)',
+  '$filter': '(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)',
+  '$skip': '0',
+  '$top': '30'
+}
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'JA' }
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - POST /odata/v4/book-order/$batch 
+[odata] - > GET /BookOrders {
+  '$count': 'true',
+  '$select': 'HasActiveEntity,HasDraftEntity,ID,IsActiveEntity,orderDate,orderNo,status,statusCriticality,totalAmount',
+  '$expand': 'DraftAdministrativeData($select=DraftUUID,InProcessByUser),customer($select=ID,name)',
+  '$filter': '(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)',
+  '$skip': '0',
+  '$top': '30'
+}
+[odata] - GET /odata/v4/book-order/$metadata { 'sap-language': 'ZH' }
+[odata] - HEAD /odata/v4/book-order/ 
+[odata] - POST /odata/v4/book-order/$batch 
+[odata] - > GET /BookOrders {
+  '$count': 'true',
+  '$select': 'HasActiveEntity,HasDraftEntity,ID,IsActiveEntity,orderDate,orderNo,status,statusCriticality,totalAmount',
+  '$expand': 'DraftAdministrativeData($select=DraftUUID,InProcessByUser),customer($select=ID,name)',
+  '$filter': '(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)',
+  '$skip': '0',
+  '$top': '30'
+}
+[odata] - GET /odata/v4/book-order/$metadata 

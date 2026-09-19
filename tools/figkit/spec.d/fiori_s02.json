@@ -1,0 +1,34 @@
+{
+  "key": "fiori_s02",
+  "kind": "fiori",
+  "w": 1440, "h": 900,
+  "mode": "app",
+  "product": "SAP Fiori",
+  "user": "JASON",
+  "title": "图书受注管理 / Manage Book Orders",
+  "subtitle": "Table",
+  "crumbs": "Home  ›  图书受注管理  ›  受注一覧",
+  "toolbar": {"items": [{"label": "作成 / Create", "primary": true}, {"label": "削除"}, {"label": "エクスポート"}], "search": "受注番号・得意先で検索"},
+  "filter": [["受注番号 (orderNo)", ""], ["得意先 (customer)", ""], ["受注日 (orderDate)", ""]],
+  "blocks": [
+    {"t": "table", "fs": 12.5, "selected": 1,
+     "cols": ["受注番号", "得意先", "受注日", "状態", "明細数", "合計 (JPY)"],
+     "widths": [1.2, 2.0, 1.0, 0.8, 0.7, 1.1],
+     "rows": [
+       ["BO-1001", "1000 東京書籍商事", "2026-09-01", "OPEN", "3", "12,400"],
+       ["BO-1002", "1000 東京書籍商事", "2026-09-03", "OPEN", "1", "2,300"],
+       ["BO-1003", "2000 大阪出版センター", "2026-09-05", "SHIPPED", "5", "31,050"],
+       ["BO-1004", "3000 名古屋ブックス", "2026-09-08", "CLOSED", "2", "7,600"],
+       ["BO-1005", "2000 大阪出版センター", "2026-09-11", "OPEN", "4", "18,900"]
+     ]},
+    {"t": "p", "text": "5 件中 1–5 を表示", "size": 12.5, "fill": "#6a6d70"},
+    {"t": "note", "kind": "success",
+     "text": "注文 BO-1002 が保存されました（合計 2,300 JPY）。一覧は自動更新されます。"}
+  ],
+  "callouts": [
+    {"on": "作成 / Create", "text": "1. Create → Object Page へ遷移"},
+    {"on": "受注番号", "on_index": 1, "text": "2. 列は annotations.cds の UI.LineItem で決まる"},
+    {"on": "CLOSED", "text": "3. 状態の色は UI.Criticality 由来"},
+    {"on": "5 件中 1–5 を表示", "text": "4. 件数はサーバ側の $count の結果"}
+  ]
+}

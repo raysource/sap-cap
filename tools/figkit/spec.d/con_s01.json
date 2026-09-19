@@ -1,0 +1,201 @@
+{
+  "key": "con_s01",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "window": "schema.cds - demo-node - SAP Business Application Studio",
+  "caption": "三层架构的落点：db/schema.cds（Model）→ srv/（Service）→ app/（UI），一个工程里一眼能分开",
+  "src": "工程结构与文件内容同示范项目 project-code/demo-node",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds",
+          "tag": "M"
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "label": "data"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.js"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "app",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "label": "book-orders"
+        },
+        {
+          "d": 2,
+          "k": "file",
+          "label": "annotations.cds"
+        },
+        {
+          "d": 2,
+          "k": "folder",
+          "label": "webapp"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "approuter",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "xs-app.json"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "test",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "odata.test.js"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "xs-security.json"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "mta.yaml"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "schema.cds",
+    "book-order-service.cds"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node › db › schema.cds",
+  "editor": {
+    "lang": "cds",
+    "fs": 12.5,
+    "lh": 20,
+    "hl": [
+      9,
+      10,
+      11,
+      21
+    ],
+    "lines": [
+      "namespace sap.training.bookorder;",
+      "",
+      "using { cuid, managed } from '@sap/cds/common';",
+      "",
+      "entity Books {",
+      "  key ID       : Integer;",
+      "      title    : String(120) not null;",
+      "      author   : String(80);",
+      "entity Customers {",
+      "  key ID      : Integer;",
+      "      name    : String(80) not null;",
+      "      city    : String(60);",
+      "      country : String(20);",
+      "      email   : String(120);",
+      "}",
+      "",
+      "  key ID          : UUID;",
+      "      orderNo     : String(16) not null;",
+      "      customer    : Association to Customers;",
+      "      orderDate   : Date default $now;",
+      "      status      : String(10) default 'OPEN';",
+      "      totalAmount : Decimal(13,2) default 0;",
+      "      items       : Association to many BookOrderItems on items.order = $self;",
+      "}"
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 110,
+    "extraTabs": [
+      "PROBLEMS",
+      "OUTPUT"
+    ],
+    "lines": [
+      "$ npx cds watch",
+      "@@> loaded model from 4 file(s): annotations.cds / book-order-service.cds /",
+      "@@>   schema.cds / @sap/cds/common.cds",
+      "@@> serving BookOrderService { at: [ '/odata/v4/book-order' ] }"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.23.2",
+    "CAP 9.9.3",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        712
+      ],
+      "text": "1. Model 层：唯一事实来源"
+    },
+    {
+      "at": [
+        60,
+        748
+      ],
+      "text": "2. Service 层：投影 + handler"
+    },
+    {
+      "at": [
+        60,
+        784
+      ],
+      "text": "3. UI / 部署各有自己目录"
+    }
+  ]
+}

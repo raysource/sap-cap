@@ -1,0 +1,218 @@
+[
+ {
+  "tag": "概念",
+  "q": "用一句话说明 CAP 是什么：它用一套模型描述领域与服务，然后自动得到哪三样东西？",
+  "opts": {
+   "A": "Fiori 启动台、SAP GUI 事务码、ABAP 报表",
+   "B": "OData V4（含 OpenAPI）API、数据库 schema、Fiori 可用的界面契约",
+   "C": "Kubernetes 集群、消息队列、对象存储",
+   "D": "测试脚本、CI 流水线、监控面板"
+  },
+  "answer": "B",
+  "explain": "CAP 的价值就在这三样「不用你写」的产物上：服务声明即有 OData 端点，模型编译成数据库表，UI.* 注解驱动 Fiori 渲染。你要写的是模型、业务规则、授权规则与界面注解。"
+ },
+ {
+  "tag": "概念",
+  "q": "模型 / 服务 / UI 三层分别对应示范项目的哪些文件？",
+  "opts": {
+   "A": "模型 = db/schema.cds；服务 = srv/*.cds + srv/*.js；UI = app/book-orders/annotations.cds + webapp/",
+   "B": "模型 = app/；服务 = db/；UI = srv/",
+   "C": "模型 = mta.yaml；服务 = package.json；UI = xs-security.json",
+   "D": "三层都在 db/schema.cds 里，其余文件只是配置"
+  },
+  "answer": "A",
+  "explain": "依赖方向是单向的：UI 依赖服务，服务依赖模型。改模型的代价最大，因为它同时影响数据库、API 与界面（见 2-1 的影响面表）。"
+ },
+ {
+  "tag": "操作",
+  "q": "cds compile 的 --to sql / --to edmx / --to csn 三个产物分别给谁用？",
+  "opts": {
+   "A": "csn 是压缩包，部署时解压成 sql",
+   "B": "sql 给前端、edmx 给数据库、csn 给用户",
+   "C": "sql 给数据库（建表/演进）、edmx 给 OData 客户端与 Fiori、csn 给编译器与运行时之间的中间表示",
+   "D": "三者内容相同，只是格式不同"
+  },
+  "answer": "C",
+  "explain": "本机实测：--to sql 输出 CREATE TABLE（命名空间成了表名前缀、managed 补 4 个审计列）；--to edmx 输出 OData V4 契约；--to csn 顶层键是 definitions / meta / $version，运行时读的是它而不是 .cds 文本。"
+ },
+ {
+  "tag": "概念",
+  "q": "一次 OData 请求在 CAP 里经过的顺序，哪个是正确的？",
+  "opts": {
+   "A": "on → before → 认证 → 授权 → after → 响应",
+   "B": "认证 → 解析 → 授权 → after → before → 响应",
+   "C": "解析（OData → CQN）→ 认证 → 授权 → before → on（缺省实现 = 查询数据库）→ after → 响应",
+   "D": "授权 → 解析 → before → 认证 → after → 响应"
+  },
+  "answer": "C",
+  "explain": "解析与路由由协议适配器完成（URL 里的 /odata/v4/book-order 来自 @path），认证在中间件里，401 与 403 都在授权阶段产生，之后才是 before / on / after 三个 handler 钩子。"
+ },
+ {
+  "tag": "排错",
+  "q": "为什么 getOrderSummary 这种聚合查询不能直接暴露成一个实体？",
+  "opts": {
+   "A": "因为 CAP 只允许暴露 CSV 里的表",
+   "B": "因为聚合结果的列数超过了限制",
+   "C": "因为 OData V4 不支持函数",
+   "D": "因为聚合结果没有主键，OData 实体必须可寻址，暴露会报 Expected entity to have a primary key"
+  },
+  "answer": "D",
+  "explain": "示范项目因此在服务里声明 unbound function（返回 Decimal 或结构体数组），由 handler 用 CQN 聚合实现——这是 CAP 里最典型的取舍。视图只有带主键时才能作为实体暴露（OrderItemView 就是这样）。"
+ },
+ {
+  "tag": "概念",
+  "q": "Node 运行时与 Java 运行时之间，哪些东西是共享的？",
+  "opts": {
+   "A": "db/*.cds 领域模型、srv/*.cds 服务定义与注解（含授权与 UI 注解）、CSV 种子数据",
+   "B": "只有 mta.yaml",
+   "C": "什么都不共享，必须重写模型",
+   "D": "handler 代码、构建脚本、测试用例"
+  },
+  "answer": "A",
+  "explain": "换运行时的真实工作量是重写 handler、重建工程、重跑测试；模型、API 契约、界面注解与授权规则都不用动。这也是本课程把 ⑤ Node 与 ⑥ Java 放在同一份模型上的原因。"
+ },
+ {
+  "tag": "概念",
+  "q": "给 ABAP 背景学员做对照：RAP 里的 EML（MODIFY ENTITY 等）在 CAP 里对应什么？",
+  "opts": {
+   "A": "manifest.json",
+   "B": "CDS 注解",
+   "C": "CQN 查询 API（SELECT / INSERT / UPDATE / DELETE）",
+   "D": "mta.yaml 的资源段"
+  },
+  "answer": "C",
+  "explain": "思路一致、写法不同：RAP 用 EML + 行为实现类，CAP 用 CQN API + before/on/after handler。而 CDS 与 UI 注解的认知可以直接迁移到 CAP，这是 ABAP 学员最大的既有优势。"
+ },
+ {
+  "tag": "概念",
+  "q": "打开 @odata.draft.enabled 后，下面哪一项不是它带来的变化？",
+  "opts": {
+   "A": "数据库里多出草稿支撑表（如 BookOrderService_BookOrders_drafts、DRAFT_DraftAdministrativeData）",
+   "B": "URL 多出 IsActiveEntity 维度，同一张单有草稿态与激活态",
+   "C": "handler 触发时机变化（例如 before CREATE 在激活时触发）",
+   "D": "服务的授权注解会被自动忽略"
+  },
+  "answer": "D",
+  "explain": "授权注解依然生效，而且草稿实体也要考虑授权。draft 是服务端的两阶段写入模型：实测建草稿时 orderNo 为 null、IsActiveEntity 为 false，激活（draftActivate）后才由 before CREATE 生成 BO-1006。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于「注解」，下面哪种理解正确？",
+  "opts": {
+   "A": "注解只在 Java 运行时生效",
+   "B": "注解必须写在 srv/ 下，写在 db/ 里无效",
+   "C": "注解只是给前端看的注释，运行时忽略",
+   "D": "注解是可执行的元数据：@readonly / @Capabilities / @restrict 由运行时强制执行，UI.* 驱动 Fiori 渲染，@cds.autoexpose 会改变实体是否可直接访问"
+  },
+  "answer": "D",
+  "explain": "注解会进入 CSN 与 $metadata，是 CAP 各层的行为输入。调试「注解没生效」时，最快的办法是 cds compile --to csn，先在 CSN 里确认注解存在。"
+ },
+ {
+  "tag": "排错",
+  "q": "改了 db/data/*.csv 里的种子数据，重启服务后发现数据没变。原因是什么？",
+  "opts": {
+   "A": "CSV 只在建库（部署）时导入，需要重新 cds deploy（或删掉 sqlite 文件再部署）",
+   "B": "CSV 必须转成 JSON 才能导入",
+   "C": "数据库会缓存 24 小时",
+   "D": "必须在 CSV 里写 BOM"
+  },
+  "answer": "A",
+  "explain": "cds deploy 的输出会打印 init from db/data/…csv（本机实测 4 个 CSV 全部导入，之后 Tables 里有 5 行 Books / 3 行 Customers / 4 行 BookOrders / 9 行 BookOrderItems）。改数据要重新部署，改模型结构还要考虑 schema 演进。"
+ },
+ {
+  "tag": "排错",
+  "q": "业务校验失败时，req.reject(409, '消息') 与抛出一个普通 Error，结果有什么不同？",
+  "opts": {
+   "A": "req.reject 返回 200 但 body 里带错误码",
+   "B": "抛异常会被静默吞掉，客户端收到 204",
+   "C": "完全相同，都是 500",
+   "D": "req.reject 返回带消息的 4xx（例如 409），未捕获的异常变成 500 且消息不适合给终端用户"
+  },
+  "answer": "D",
+  "explain": "示范项目全部业务错误都用 req.reject(400/404/409, '…')，本机实测收到的就是对应状态码与可读消息（例如「订单 BO-1005 没有明细，不能提交」），这也是 OData 集成测试能逐条断言的基础。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "「本地 SQLite 通过，就等于能上 HANA」这个说法为什么不对？",
+  "opts": {
+   "A": "因为本地不能做业务校验",
+   "B": "因为 SQLite 不支持 SQL",
+   "C": "因为两者在类型映射、DDL、HDI 部署、schema 演进与排序规则上都不同，上云前要按 HANA 方言编译并做真实部署验证",
+   "D": "因为 HANA 不能跑 CAP"
+  },
+  "answer": "C",
+  "explain": "本地 SQLite 验证的是模型与业务逻辑；云端还多出 HDI 容器、schema 演进与部署拓扑。正确做法是用 --to hana（或 --dialect hana）核对 DDL，再做一次真实部署与冒烟测试。"
+ },
+ {
+  "tag": "操作",
+  "q": "想快速确认「运行时到底读到了什么模型」，最直接的办法是？",
+  "opts": {
+   "A": "打开 node_modules 逐个文件看",
+   "B": "cds compile srv --to csn（顶层是 definitions / meta / $version，注解与实际定义都在里面）",
+   "C": "重启电脑",
+   "D": "把 db 换成 HANA 再看"
+  },
+  "answer": "B",
+  "explain": "本机实测：CSN 里 16 个 definitions，既有服务与它的投影实体、函数，也有 srv/*.cds 里 @requires: authenticated-user 这行注解。运行时读 CSN，所以 CSN 是「注解有没有生效」的第一现场。"
+ },
+ {
+  "tag": "概念",
+  "q": "三层架构里，「界面由注解生成」这条结论的边界是什么？",
+  "opts": {
+   "A": "只对 Java 项目成立",
+   "B": "只有桌面浏览器成立",
+   "C": "完全成立：webapp 里不需要任何文件",
+   "D": "注解决定列、筛选、标题与动作（编译进 $metadata 的 Annotations 段），但应用外壳（manifest.json / Component.js / index.html）仍然是前端工程的事"
+  },
+  "answer": "D",
+  "explain": "示范项目 webapp/ 下只有 Component.js / index.html / manifest.json 三件外壳，界面行为几乎全部来自 app/book-orders/annotations.cds 的 UI.HeaderInfo / UI.LineItem / UI.SelectionFields。改界面经常是改 CDS，不是改前端代码。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "团队要选运行时，下面哪条建议最符合本页的对照结论？",
+  "opts": {
+   "A": "Node 不能连 HANA，所以生产必须用 Java",
+   "B": "只能二选一，选了一个就不能用另一个",
+   "C": "学习与快速验证用 Node（反馈快、示例多），已有 Java 团队或需要强类型/既有库时用 Java；两者可并存于同一 MTA 并共享 db/ 模型",
+   "D": "Java 一定比 Node 快，所以生产必须用 Java"
+  },
+  "answer": "C",
+  "explain": "两种运行时的差异在实现层与工程习惯（构建工具、类型安全、DI、事务、测试框架、启动命令、部署形态、学习曲线），性能取舍取决于负载特征，需要按实际压测判断，而不是一概而论。"
+ },
+ {
+  "tag": "排错",
+  "q": "学员报「CAP 学不下去」，最常见的认知原因是下面哪一类？",
+  "opts": {
+   "A": "把 CDS 当成数据库、把 @readonly 当成权限、以为注解只是注释、以为本地通过就等于云端通过",
+   "B": "没用 SAP GUI",
+   "C": "没有 S/4HANA 系统",
+   "D": "不会写 ABAP"
+  },
+  "answer": "A",
+  "explain": "本页第 11 节列了 12 个常见误解，基本都是「把某个概念归错层」造成的：CDS 是编译器不是数据库；@readonly 是静态约束不是权限；注解是可执行元数据；SQLite 通过只代表模型与逻辑通过。"
+ },
+ {
+  "tag": "排错",
+  "q": "服务里写了 entity BookOrders as projection on db.BookOrders，是不是就自动有了访问控制？",
+  "opts": {
+   "A": "是，投影本身就是权限边界",
+   "B": "不是：投影只决定「暴露什么」，CDS 服务默认没有访问控制，授权要写 @requires / @restrict",
+   "C": "是，只要加了 @readonly 就自动有权限",
+   "D": "不是，因为投影不能暴露给 OData"
+  },
+  "answer": "B",
+  "explain": "示范项目的服务上有 @requires: 'authenticated-user'，但实体级授权仍是本章练习要补的内容；CAP 文档也明确写着：without authorization modeling, authenticated users have access to all entities。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于 CAP 与 RAP / 传统 ABAP 的关系，哪种说法正确？",
+  "opts": {
+   "A": "CAP 是 RAP 的新名字，实现方式一样",
+   "B": "两者是同一套 CDS 与 UI 注解思想在两个执行环境：RAP 在 ABAP 平台内（紧耦合扩展），CAP 在 BTP 等容器平台（模型 + Node/Java 运行时）",
+   "C": "CAP 只能在 HANA 上跑，所以和 ABAP 一样",
+   "D": "RAP 不支持 CDS 注解"
+  },
+  "answer": "B",
+  "explain": "CDS 与 UI 注解的认知可以直接迁移；差异在运行时（ABAP Platform vs Node/Java）、业务实现（行为实现类 + EML vs handler + CQN）、授权（DCL/授权对象 vs @restrict + 角色集合）与部署位置。"
+ }
+]

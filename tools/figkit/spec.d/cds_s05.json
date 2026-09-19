@@ -1,0 +1,55 @@
+{
+  "key": "cds_s05",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "caption": "建模期最常见的四类报错（本地实测原样）：词法错误、EOF 不配对、多实体同源的重定向、CSV 列名与物理列不符",
+  "alt": "终端显示四条 CAP 报错：Mismatched #、Mismatched EOF、can't auto-redirect、no column named",
+  "src": "本地实测：npx cds compile / npx cds deploy（cds-dk 9.9.6）；长行已截断",
+  "title": "jason@MacBook-Pro: ~/Desktop/work/training/sap-cap/project-code/demo-node",
+  "lh": 19,
+  "lines": [
+    "$ npx cds compile /tmp/cdserr/hash.cds --to sql",
+    "[ERROR] hash.cds:2:30-31: Mismatched ‘#’, expecting ‹Identifier›, ‘}’, ‘@’, ‘key’, ‘virtual’",
+    "",
+    "$ npx cds compile /tmp/cdserr/eof.cds --to sql",
+    "[ERROR] eof.cds:4:1-1: Mismatched ‹EOF›, expecting ‹Identifier›, ‘}’, ‘@’, ‘key’, ‘virtual’",
+    "",
+    "$ npx cds compile db/schema.cds srv/no_redir.cds --to edmx",
+    "[ERROR] srv/no_redir.cds:16:10: Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or",
+    "        “BookOrderService.OrderItemView” to select the entity as redirection target for",
+    "        “sap.training.bookorder.BookOrderItems” ... can't auto-redirect “BookOrders:items” otherwise",
+    "",
+    "$ npx cds deploy --to sqlite:db.sqlite      # CSV 表头写成 orders_ID",
+    "  > init from db/data/sap.training.bookorder-BookOrderItems.csv",
+    "/> deployment to db.sqlite failed",
+    "",
+    "SqliteError: in cds.deploy(): table sap_training_bookorder_BookOrderItems has no column",
+    "named orders_ID in: INSERT INTO ... (ID,orders_ID,book_ID,quantity,amount,...)",
+    "",
+    "$ npx cds compile /tmp/cdsue/c6.cds --to sql",
+    "[ERROR] c6.cds:8:39-40: Unmanaged associations can't be used in expressions in queries",
+    "        (in entity:“ue.V”/column:“n”)",
+    "",
+    "$ npx cds compile /tmp/cdserr/nokey_view.cds --to edmx    # 服务里暴露无主键视图",
+    "[ERROR] nokey_view.cds:3:20: Expected entity to have a primary key (in entity:“e.S.V”)"
+  ],
+  "callouts": [
+    {
+      "on": "[ERROR] hash.cds:2:30-31: Mismatched ‘#’, expecting ‹Identifier›, ‘}’, ‘@’, ‘key’, ‘virtual’",
+      "text": "1. 位置精确到列，先看报错行"
+    },
+    {
+      "on": "        “sap.training.bookorder.BookOrderItems” ... can't auto-redirect “BookOrders:items” otherwise",
+      "text": "2. 报错里直接给了修复注解名"
+    },
+    {
+      "on": "named orders_ID in: INSERT INTO ... (ID,orders_ID,book_ID,quantity,amount,...)",
+      "text": "3. CSV 表头 = 物理列名，写错就整批回滚"
+    },
+    {
+      "on": "[ERROR] nokey_view.cds:3:20: Expected entity to have a primary key (in entity:“e.S.V”)",
+      "text": "4. 视图没有 key，cds2edm 直接拒绝"
+    }
+  ]
+}

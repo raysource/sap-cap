@@ -1,0 +1,67 @@
+{
+  "key": "fiori_launchpad",
+  "kind": "fiori",
+  "w": 1440,
+  "h": 900,
+  "mode": "launchpad",
+  "product": "SAP Fiori",
+  "user": "JASON",
+  "title": "My Home",
+  "subtitle": "本地 sandbox 启动台（app/fiori-apps.html + app/appconfig/fioriSandboxConfig.json）",
+  "caption": "本地开发用的 Fiori 启动台：cds watch 时访问 /fiori-apps.html，磁贴直接打开 app/ 下的应用（部署到 BTP 后换成 Work Zone / 子账户的 HTML5 应用）",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）",
+  "sections": [
+    {
+      "label": "图书受注管理",
+      "cols": 3,
+      "items": [
+        {
+          "title": "管理订单",
+          "sub": "Manage Book Orders · List Report + Object Page",
+          "chip": "草稿已启用"
+        },
+        {
+          "title": "订单明细",
+          "sub": "BookOrderItems · 只读视图",
+          "chip": "只读"
+        },
+        {
+          "title": "客户",
+          "sub": "Customers · 无注解的最小实体",
+          "chip": "默认列表"
+        }
+      ]
+    },
+    {
+      "label": "诊断",
+      "cols": 3,
+      "items": [
+        {
+          "title": "Fiori 预览",
+          "sub": "本地 index 页的 Fiori preview 链接",
+          "chip": "仅本地"
+        },
+        {
+          "title": "$metadata",
+          "sub": "/odata/v4/book-order/$metadata",
+          "chip": "HTTP 200"
+        }
+      ]
+    }
+  ],
+  "callouts": [
+    {
+      "on": "app/fiori-apps.html",
+      "text": "1. 本地启动台是静态页"
+    },
+    {
+      "on": "草稿已启用",
+      "text": "2. 磁贴指向路由"
+    },
+    {
+      "on": "仅本地",
+      "text": "3. 预览仅本地"
+    }
+  ]
+}

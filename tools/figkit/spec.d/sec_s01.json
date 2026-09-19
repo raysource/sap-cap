@@ -1,0 +1,129 @@
+{
+  "key": "sec_s01",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP Business Technology Platform",
+  "caption": "子账户 Security → Trust Configuration：用户身份到底由谁签发（CAP 只认 JWT，不关心 IdP 是哪个）",
+  "crumbs": [
+    "Global Account: trial-eu10-9f3a2b (trial)",
+    "Subaccount: trial"
+  ],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {
+        "label": "Overview"
+      },
+      {
+        "label": "Instances and Subscriptions"
+      },
+      {
+        "label": "Cloud Foundry",
+        "sub": [
+          "Org Members",
+          "Spaces",
+          "Service Marketplace"
+        ]
+      },
+      {
+        "label": "Security",
+        "group": true
+      },
+      {
+        "label": "Role Collections",
+        "active": true,
+        "sub": [
+          "Users",
+          "Trust Configuration",
+          "OAuth Clients"
+        ]
+      }
+    ]
+  },
+  "title": "Trust Configuration",
+  "subtitle": "Subaccount: trial · 认证发生在 CAP 之外",
+  "tabs": [
+    "Identity Providers",
+    "~Security Settings"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "table",
+      "cols": [
+        "Origin Key",
+        "Name",
+        "Type",
+        "Status"
+      ],
+      "widths": [
+        1.1,
+        1.9,
+        1.5,
+        0.7
+      ],
+      "rows": [
+        [
+          "sap.default",
+          "Default Identity Provider",
+          "~SAP ID service",
+          "Active"
+        ],
+        [
+          "~corp-azuread",
+          "Corporate IdP（企业接入示例）",
+          "OIDC",
+          "Inactive"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "身份由 IdP 证明，权限由 XSUAA 的角色集合决定，CAP 只读取请求里的 JWT。"
+    },
+    {
+      "t": "h3",
+      "text": "同一个 Security 菜单下的三个入口"
+    },
+    {
+      "t": "list",
+      "ordered": true,
+      "items": [
+        "Trust Configuration（本页）：用户从哪个 IdP 来、密码/证书策略",
+        "Role Collections：哪些角色组成一个可发放的包",
+        "Users：把角色集合发给具体的人（email + origin）"
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "换企业 IdP 只改这一层；CDS 模型与 @requires / @restrict 一行都不用动。"
+    }
+  ],
+  "status": "● 1 active identity provider · Subaccount: trial · Region: ap10",
+  "callouts": [
+    {
+      "at": [
+        110,
+        620
+      ],
+      "text": "1. 身份的最终来源"
+    },
+    {
+      "at": [
+        110,
+        656
+      ],
+      "text": "2. 角色集合在这一层"
+    },
+    {
+      "at": [
+        110,
+        692
+      ],
+      "text": "3. 换 IdP 不改模型"
+    }
+  ]
+}

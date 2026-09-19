@@ -1,0 +1,16 @@
+$ curl -s -u alice:alice "$SVC/BookOrders?\$select=orderNo,status,totalAmount&\$orderby=orderNo"
+{"@odata.context":"$metadata#BookOrders","value":[{"orderNo":"BO-1001","status":"OPEN","totalAmount":16000,"ID":"4a1f8c03-0001-4000-8000-000000000001","IsActiveEntity":true},{"orderNo":"BO-1002","status":"OPEN","totalAmount":3600,"ID":"4a1f8c03-0002-4000-8000-000000000002","IsActiveEntity":true},{"orderNo":"BO-1003","status":"SUBMITTED","totalAmount":17400,"ID":"4a1f8c03-0003-4000-8000-000000000003","IsActiveEntity":true},{"orderNo":"BO-1004","status":"CLOSED","totalAmount":7600,"ID":"4a1f8c03-0004-4000-8000-000000000004","IsActiveEntity":true}]}
+
+$ curl -s -u alice:alice "$SVC/getOrderSummary()"
+{"@odata.context":"$metadata#Collection(BookOrderService.OrderSummaryRow)","value":[{"orderNo":"BO-1001","customerName":"北京华信书业","orderDate":"2026-09-01","status":"OPEN","itemCount":3,"totalAmount":16000},{"orderNo":"BO-1002","customerName":"北京华信书业","orderDate":"2026-09-03","status":"OPEN","itemCount":1,"totalAmount":3600},{"orderNo":"BO-1003","customerName":"上海博文出版中心","orderDate":"2026-09-05","status":"SUBMITTED","itemCount":3,"totalAmount":17400},{"orderNo":"BO-1004","customerName":"广州南方图书","orderDate":"2026-09-08","status":"CLOSED","itemCount":2,"totalAmount":7600}]}
+
+$ curl -s -u alice:alice -X POST "$SVC/BookOrders" -H "Content-Type: application/json" -d "{\"customer_ID\":1000}"
+{"@odata.context":"$metadata#BookOrders/$entity","createdAt":"2026-09-19T11:47:50.261Z","createdBy":"alice","modifiedAt":"2026-09-19T11:47:50.261Z","modifiedBy":"alice","ID":"33f68968-b47b-4e2f-9473-120e0425e080","orderNo":null,"customer_ID":1000,"orderDate":"2026-09-19","status":"OPEN","note":null,"totalAmount":0,"statusCriticality":2,"HasActiveEntity":false,"DraftMessages":[],"HasDraftEntity":false,"IsActiveEntity":false}
+
+$ ID=33f68968-b47b-4e2f-9473-120e0425e080
+$ curl -s -o- -w 'HTTP %{http_code}' -u alice:alice -X POST "$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/BookOrderService.draftActivate" -d '{}'
+HTTP 201
+{"@odata.context":"../$metadata#BookOrders/$entity","createdAt":"2026-09-19T11:47:50.318Z","createdBy":"alice","modifiedAt":"2026-09-19T11:47:50.318Z","modifiedBy":"alice","ID":"33f68968-b47b-4e2f-9473-120e0425e080","orderNo":"BO-1005","customer_ID":1000,"orderDate":"2026-09-19","status":"OPEN","note":null,"totalAmount":0,"statusCriticality":2,"HasActiveEntity":false,"HasDraftEntity":false,"IsActiveEntity":true}
+$ curl -s -o- -w 'HTTP %{http_code}' -u alice:alice -X POST "$SVC/BookOrders(ID=4a1f8c03-0001-4000-8000-000000000001,IsActiveEntity=true)/submitOrder" -d '{}'
+HTTP 200
+{"@odata.context":"../$metadata#Edm.String","value":"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）"}

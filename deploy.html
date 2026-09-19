@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>构建与部署：从本地到 Cloud Foundry · SAP CAP 培训课程</title>
+<meta name="description" content="把 CAP 项目部署到 SAP BTP Cloud Foundry：cds build --production 的产物与 profile 差异、mta.yaml 逐段详解、xs-security.json 的 scopes/role-templates、mbt build 与 .mtar 检查、cf login --sso / cf target / cf deploy 手顺与参数、部署后验证清单、更新与回滚、cf dmol 取日志、GitHub Actions 的 CI/CD 工作流与 --sso 冲突、常见错误表与发布后运维。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a class="active" href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>⑩ 构建与部署</span></p>
+<h1>构建与部署：从本地到 Cloud Foundry</h1>
+<p class="kicker">覆盖对象：<code>cds build --production</code> 的 <code>gen/</code> 产物 · <code>mta.yaml</code> 的模块与资源 · <code>xs-security.json</code> · <code>mbt build</code> 与 <code>.mtar</code> · <code>cf login --sso</code> / <code>cf target</code> / <code>cf deploy</code> / <code>cf dmol</code> · 部署后验证清单 · GitHub Actions 的 CI/CD。本页的 <code>cds build</code> 与生成物输出都来自本站示范项目 <code>project-code/demo-node</code> 的本地实测；<code>mbt</code>、<code>cf</code> 的云端输出为「重绘」，图注里逐张标明。</p>
+
+<div class="toc">
+  <a href="#s0">0. 本页地图与部署链路</a>
+  <a href="#s1">1. 构建：cds build 的产物与 profile 差异</a>
+  <a href="#s2">2. mta.yaml 逐段详解与 xs-security.json</a>
+  <a href="#s3">3. 手顺：mbt build 打出 .mtar</a>
+  <a href="#s4">4. 手顺：cf login / target / deploy</a>
+  <a href="#s5">5. 部署后验证清单</a>
+  <a href="#s6">6. 更新、回滚、多版本与取日志</a>
+  <a href="#s7">7. CI/CD：GitHub Actions 与 --sso 的冲突</a>
+  <a href="#s8">8. 常见错误表（14 条）</a>
+  <a href="#s9">9. 发布后的运维与资源清理</a>
+  <a href="#s10">10. 版本号、命名与环境分离</a>
+  <a href="#s11">11. 交付前检查清单</a>
+  <a href="#s12">12. 练习（3 个）与完成基准</a>
+  <a href="#s13">13. 本节测试</a>
+  <a href="#s14">14. 小结与下一步</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>说清 <code>cds build --production</code> 为什么有时只生成 <code>gen/srv</code>、有时还生成 <code>gen/db</code>，以及「部署成功但没有表」的根因；</li>
+  <li>读懂 <code>mta.yaml</code> 里每一个模块与资源（srv / db-deployer / approuter / app-deployer / html5 / hana / xsuaa / html5-apps-repo），并能按需要改实例数、内存、计划；</li>
+  <li>用 <code>mbt build -t mta_archives</code> 打出 <code>.mtar</code>，用 <code>tar -tf</code> 检查归档内容与版本号；</li>
+  <li>用 <code>cf login --sso</code> → <code>cf target</code> → <code>cf deploy</code> 完成一次真实部署，并逐条执行「部署后验证清单」；</li>
+  <li>部署失败时用 <code>cf dmol -i &lt;operation ID&gt;</code> 取日志定位到具体模块；更新与回滚都说得清（含 <code>--version-rule</code>）；</li>
+  <li>写一条能跑的 GitHub Actions 工作流（含 XSUAA 密码凭据），并解释为什么 <code>--sso</code> 不能用在 CI 里。</li>
+</ul></div>
+
+<div class="box warn"><b class="t">事实口径与环境</b>
+<p>环境：<b>Node 22.23.2</b>、<b>@sap/cds 9.9.3</b>、<b>@sap/cds-dk 9.9.6</b>。本页里<b>本地实测</b>的部分包括：<code>cds build --production</code> 的真实输出与 <code>gen/</code> 目录树、<code>cds add hana xsuaa approuter mta</code> / <code>cds add ui5</code> / <code>cds add html5-repo</code> 真实生成的 <code>mta.yaml</code>、<code>app/router/*</code>、<code>app/book-orders/{package.json,ui5.yaml}</code>、<code>xs-security.json</code>，以及各区域 CF API 端点的可达性。凡是没在本机实跑的（<code>mbt build</code>、<code>cf</code> 命令输出、BTP Cockpit 界面）都标「重绘」，并给出命令与参数的官方来源；<b>不冒充实机截图或实跑输出</b>。</p></div>
+
+<h2 id="s0">0. 本页地图与部署链路</h2>
+
+<p>本地跑得通只是「在这台机器上跑得通」。部署要解决三件事：<b>把代码变成可部署的产物</b>（构建 + 打包）、<b>把产物放到云上并建好它依赖的东西</b>（应用 + 服务实例 + 数据库表）、<b>证明它真的在工作</b>（验证 + 日志）。CAP 把这条链路收敛成一条命令链：</p>
+
+<div class="flow">
+  <span class="node">cds build<br><small>--production → gen/</small></span>
+  <span class="arrow">→</span>
+  <span class="node">mbt build<br><small>按 mta.yaml 打包 → .mtar</small></span>
+  <span class="arrow">→</span>
+  <span class="node">cf deploy<br><small>上传并编排</small></span>
+  <span class="arrow">→</span>
+  <span class="node">HDI deployer<br><small>建表 / 建视图</small></span>
+  <span class="arrow">→</span>
+  <span class="node">approuter<br><small>暴露 UI 与 OData</small></span>
+</div>
+
+<table class="tbl">
+  <tr><th>环节</th><th>谁在做</th><th>产物 / 结果</th><th>失败了看什么</th></tr>
+  <tr><td>构建</td><td><code>cds build --production</code>（由 <code>mbt build</code> 的 <code>before-all</code> 自动调用）</td><td><code>gen/srv</code>（Node 服务 + 模型）、<code>gen/db</code>（HDI 建表制品）</td><td><code>gen/db</code> 有没有生成（§1）</td></tr>
+  <tr><td>打包</td><td><code>mbt build</code></td><td><code>mta_archives/demo-node_1.0.0.mtar</code></td><td><code>mbt build</code> 的 INFO 行与退出码（§3）</td></tr>
+  <tr><td>部署编排</td><td><code>cf deploy</code>（multiapps 插件）+ MTA 部署服务</td><td>应用、服务实例、路由</td><td><code>cf dmol -i &lt;operation ID&gt;</code>（§6）</td></tr>
+  <tr><td>建表</td><td><code>demo-node-db-deployer</code>（<code>type: hdb</code>，HDI deployer）</td><td>HANA 里出现 <code>sap_training_bookorder_*</code> 等表</td><td><code>cf logs demo-node-db-deployer --recent</code></td></tr>
+  <tr><td>对外暴露</td><td><code>demo-node</code>（<code>approuter.nodejs</code>）</td><td><code>https://&lt;org&gt;-&lt;space&gt;-demo-node.&lt;landscape&gt;</code></td><td><code>cf logs demo-node --recent</code> + <code>curl</code> 路由</td></tr>
+</table>
+
+<div class="box ok"><b class="t">验收（本页的地基）</b>
+<p>你能画出上面五个环节，并在每一步说出「产物是什么、失败时先看哪条日志」，后面的手顺就都只是填空了。<b>最省事的路径</b>（CAP 官方推荐）：<span class="cmd">cds up</span> 一次完成「装依赖 → cds build → mbt build → cf deploy」，适合已经跑通一遍之后；<b>第一次必须手动一步步来</b>，因为你要看得见每一步的产物。</p></div>
+
+<h2 id="s1">1. 构建：cds build 的产物与 profile 差异</h2>
+
+<p><code>cds build</code> 做的事是「把 <code>.cds</code> 模型编译成目标平台能用的东西」。目标平台不同，产物不同；而<b>选哪个目标，取决于运行 profile 下的配置</b>——这是本节唯一需要记住的因果链。</p>
+
+<figure class="fig" data-fig="deploy_gen">
+  <a class="zoom" href="assets/fig/deploy_gen.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/deploy_gen.svg" alt="同一个项目、同一台机器：只加一行 profile 配置（db.kind=hana），构建任务就从 1 个变成 2 个 —— 少了 db/hana 这一步，部署上去表是空的" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">同一个项目、同一台机器：只加一行 profile 配置（db.kind=hana），构建任务就从 1 个变成 2 个 —— 少了 db/hana 这一步，部署上去表是空的</span><span class="kind real">本地实机运行</span><span class="src">本地实测：cds build --production（Node 22.23.2 / @sap/cds 9.9.3 / cds-dk 9.9.6）</span></figcaption>
+</figure>
+
+<h3 id="s1-1">1-1 期望中的产物长什么样</h3>
+
+<table class="tbl">
+  <tr><th>路径</th><th>内容</th><th>谁消费</th></tr>
+  <tr><td><code>gen/srv/</code></td><td>Node.js 服务用的资源：<code>package.json</code>、<code>srv/csn.json</code>（编译后的模型）、服务实现文件、i18n 文件</td><td><code>demo-node-srv</code> 模块（<code>path: gen/srv</code>），部署后由 <code>cds-serve</code> 启动</td></tr>
+  <tr><td><code>gen/db/</code></td><td>HDI 制品：<code>.hdbtable</code> / <code>.hdbview</code> / <code>.hdbtabledata</code> / <code>.hdiconfig</code> / <code>.hdinamespace</code>、<code>undeploy.json</code>、<code>package.json</code></td><td><code>demo-node-db-deployer</code> 模块（<code>type: hdb</code>，<code>path: gen/db</code>），由 HDI deployer 执行建表</td></tr>
+  <tr><td><code>gen/app/</code>（启用 <code>html5-repo</code> 时）</td><td>每个 Fiori 应用打包出的 <code>&lt;app&gt;.zip</code>，由 app-deployer 模块放进这个目录再上传</td><td><code>demo-node-app-deployer</code> 模块（<code>type: com.sap.application.content</code>）</td></tr>
+</table>
+
+<p>本站实测（<code>cds build --production</code>）的输出与目录树：</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ npx cds build --production
+building project with {
+  versions: { cds: '9.9.3', compiler: '6.9.5', dk: '9.9.6' },
+  target: 'gen',
+  tasks: [
+    { src: 'srv', for: 'nodejs', options: { model: ['db','srv','app','app/*'] } }
+  ]
+}
+done > wrote output to:
+   gen/srv/package.json
+   gen/srv/srv/csn.json
+build completed in 49 ms
+
+$ find gen -maxdepth 2 -type d
+gen
+gen/srv
+gen/srv/srv                 # ← 没有 gen/db：HDI 部署器将无事可做</code></pre>
+
+<h3 id="s1-2">1-2 profile 差异：为什么有时没有 gen/db</h3>
+
+<p>构建任务列表由「当前 profile 下解析出来的数据库类型」决定。开发环境默认是 SQLite（<code>@cap-js/sqlite</code> 在 devDependencies 里），所以<b>本地跑 <code>cds build</code> 常常只编译 srv</b>；要让 HDI 制品真的生成，必须让生产 profile 下解析出 <code>db.kind = hana</code>。本站实测的对照（同一个项目、只改一行配置）：</p>
+
+<table class="tbl small">
+  <tr><th>package.json 里的 <code>cds.requires</code></th><th>实测构建任务</th><th>实测产物</th></tr>
+  <tr><td><code>"[production]": { "auth": "xsuaa" }</code>（只有授权）</td><td>只 <code>{ src: 'srv', for: 'nodejs' }</code></td><td><code>gen/srv</code> 只有服务；<b>没有 <code>gen/db</code></b></td></tr>
+  <tr><td><code>"[production]": { "auth": "xsuaa", "db": { "kind": "hana" } }</code></td><td><code>{ src: 'db', for: 'hana' }</code> + <code>{ src: 'srv', for: 'nodejs' }</code></td><td><code>gen/db/package.json</code>、<code>gen/db/src/gen/.hdiconfig</code>、<code>.hdinamespace</code>、<code>*.hdbtable</code>、<code>gen/db/undeploy.json</code></td></tr>
+</table>
+
+<div class="box danger"><b class="t">部署成功但没有表：先把这条因果链走一遍</b>
+<p><code>gen/db</code> 缺目录 → <code>demo-node-db-deployer</code> 模块没有制品可部署 → 部署日志里它「成功完成」但什么都没建 → 服务起来后第一个查询报 <code>no such table …</code>。<b>验证方式</b>：<span class="cmd">find gen -maxdepth 2 -type d</span> 必须同时看到 <code>gen/db</code> 与 <code>gen/srv</code>；再看 <code>gen/db/src/gen/</code> 下有没有 <code>*.hdbtable</code>。</p></div>
+
+<h3 id="s1-3">1-3 相关配置与 profile 的三种用法</h3>
+
+<table class="tbl small">
+  <tr><th>profile</th><th>用途</th><th>典型配置位置</th></tr>
+  <tr><td><code>development</code>（默认）</td><td>本地开发：SQLite / 内存库、mocked 认证</td><td><code>cds.requires.db.credentials.url: db.sqlite</code>、<code>cds.requires.auth.kind: mocked</code></td></tr>
+  <tr><td><code>production</code></td><td>构建与云端运行时：HANA + XSUAA</td><td><code>"[production]": { "auth": "xsuaa", "db": { "kind": "hana" } }</code></td></tr>
+  <tr><td><code>hybrid</code></td><td>本地进程连云端服务（<code>cds bind</code> 写入）</td><td>由 <code>cds bind</code> 生成的私有配置段</td></tr>
+</table>
+
+<ol class="steps">
+  <li><b>动作</b>：确认生产 profile 解析出的数据库类型与授权方式。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds env get requires.db --profile production     # 期望 { kind: 'hana' }
+npx cds env get requires.auth --profile production   # 期望 'xsuaa'</code></pre>
+  </li>
+  <li><b>动作</b>：清理后重跑构建，核对两个目录都在。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">rm -rf gen &amp;&amp; npx cds build --production
+find gen -maxdepth 2 -type d        # 期望：gen/db 与 gen/srv 同时出现
+ls gen/db/src/gen | head -5         # 期望：*.hdbtable / .hdiconfig / .hdinamespace</code></pre>
+  </li>
+  <li><b>验证</b>：<code>gen/db/undeploy.json</code> 存在，内容默认是「不删除表」的清单（删表会导致数据丢失，官方明确警告）。
+    <pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">[
+  "src/gen/&#42;&#42;/*.hdbview",
+  "src/gen/&#42;&#42;/*.hdbindex",
+  "src/gen/&#42;&#42;/*.hdbconstraint",
+  "src/gen/&#42;&#42;/*_drafts.hdbtable",
+  "src/gen/&#42;&#42;/*.hdbcalculationview"
+]</code></pre>
+    <b>注意</b>：不要把 <code>hdbtable</code> 写进这个清单 —— HDI 部署默认「只增不删」，删表会让所有不在本次部署集里的表丢数据。</li>
+</ol>
+
+<h2 id="s2">2. mta.yaml 逐段详解与 xs-security.json</h2>
+
+<p><code>mta.yaml</code> 是部署描述符：它说清「有哪些模块（要跑的东西）」「有哪些资源（要建的服务实例）」，以及模块之间怎么绑定。<b>不要手写第一版</b>，用 <code>cds add</code> 生成后按需改。</p>
+
+<figure class="fig" data-fig="deploy_mta">
+  <a class="zoom" href="assets/fig/deploy_mta.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/deploy_mta.svg" alt="mta.yaml 的模块与资源：srv(nodejs, gen/srv) / db-deployer(hdb, gen/db) / approuter(nodejs, app/router) 三个模块 + xsuaa、hdi-container、html5-apps-repo 三组资源（本站真实生成文件的片段）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">mta.yaml 的模块与资源：srv(nodejs, gen/srv) / db-deployer(hdb, gen/db) / approuter(nodejs, app/router) 三个模块 + xsuaa、hdi-container、html5-apps-repo 三组资源（本站真实生成文件的片段）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（内容取自 cds-dk 9.9.x 在本地真实生成的 mta.yaml）</span></figcaption>
+</figure>
+
+<h3 id="s2-1">2-1 生成整份描述符（本站实测的真实输出）</h3>
+<div class="stepmeta"><span class="k">cds add</span><span class="f">mta.yaml · xs-security.json · app/router/*</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：按需一次性补齐 facet（顺序：先数据库/授权/路由，再加 UI 相关；UI 部分见 <a href="fiori.html#s10">⑨ Fiori UI §10</a>）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds add hana xsuaa approuter mta     # 数据库 / 授权 / approuter / mta.yaml
+npx cds add ui5                          # 声明 app/book-orders 是 UI5 工程
+npx cds add html5-repo                   # UI 走 HTML5 Application Repository</code></pre>
+  </li>
+  <li><b>动作</b>：生成物核对（本站实测的目录与文件）。
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">mta.yaml                  ← 部署描述符
+xs-security.json          ← XSUAA 的 scopes / role-templates（由 cds compile --to xsuaa 派生）
+app/router/package.json   ← {"name":"approuter","dependencies":{"@sap/approuter":"^22.0.0"},"scripts":{"start":"node node_modules/@sap/approuter/approuter.js"}}
+app/router/xs-app.json    ← 路由规则：^/(.*)$ → destination srv-api（csrfProtection: true）
+app/router/default-env.json
+app/book-orders/package.json · ui5.yaml   ← Fiori 应用打包脚本（ui5-task-zipper）</code></pre>
+  </li>
+  <li><b>验证</b>：<code>mta.yaml</code> 里应有 5 个模块与 4 个资源（本站实测数字）：<code>demo-node-srv</code>、<code>demo-node-db-deployer</code>、<code>demo-node</code>（approuter）、<code>demo-node-app-deployer</code>、<code>demonodebookorders</code>（html5）；资源是 <code>demo-node-auth</code>、<code>demo-node-db</code>、<code>demo-node-html5-repo-host</code>、<code>demo-node-html5-runtime</code>。<span class="cmd">grep -c '^  - name:' mta.yaml</span></li>
+</ol>
+
+<h3 id="s2-2">2-2 全文与逐段解释（本站项目真实生成物）</h3>
+
+<pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml">_schema-version: 3.3.0
+ID: demo-node
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: demo-node-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: demo-node-auth
+      - name: demo-node-db
+
+  - name: demo-node-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: demo-node-db
+
+  - name: demo-node
+    type: approuter.nodejs
+    path: app/router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: demo-node-auth
+      - name: demo-node-html5-runtime
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
+
+  - name: demo-node-app-deployer
+    type: com.sap.application.content
+    path: gen
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: demonodebookorders
+          artifacts:
+            - book-orders.zip
+          target-path: app/
+    requires:
+      - name: demo-node-auth
+      - name: srv-api
+      - name: demo-node-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+
+  - name: demonodebookorders
+    type: html5
+    path: app/book-orders
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms: []
+
+resources:
+  - name: demo-node-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: demo-node-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+          redirect-uris:
+            - https://*~{app-api/app-uri}/&#42;&#42;
+    requires:
+      - name: app-api
+  - name: demo-node-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
+  - name: demo-node-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: demo-node-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime</code></pre>
+
+<table class="tbl small">
+  <tr><th>段落</th><th>含义</th><th>改它会发生什么</th></tr>
+  <tr><td><code>_schema-version</code></td><td>MTA 描述符的语法版本</td><td>别动；<code>3.3.0</code> 是当前生成值</td></tr>
+  <tr><td><code>ID</code> / <code>version</code></td><td>MTA 的名字与版本</td><td><b>决定 <code>.mtar</code> 文件名</b>（<code>ID_version.mtar</code>）与部署时的版本判断（§3、§10）</td></tr>
+  <tr><td><code>parameters.enable-parallel-deployments</code></td><td>允许模块并行部署</td><td>关掉会明显变慢（默认开）</td></tr>
+  <tr><td><code>parameters.deploy_mode: html5-repo</code></td><td>声明 UI 走 HTML5 仓库</td><td>由 <code>cds add html5-repo</code> 写入；删掉后 app-deployer / html5 模块失去意义</td></tr>
+  <tr><td><code>build-parameters.before-all</code></td><td>打包前先跑的命令</td><td><b>这就是 <code>mbt build</code> 会自动执行 <code>npm ci</code> + <code>cds build --production</code> 的地方</b>；手工指定的构建步骤要加在这里，否则部署出来的还是旧产物</td></tr>
+  <tr><td><code>modules[].type: nodejs</code><br><code>path: gen/srv</code></td><td>srv 模块：Node.js 应用，代码取构建产物</td><td>把 <code>instances</code> 调大 = 多实例（注意会话/草稿锁仍只在数据库层共享）；<code>buildpack: nodejs_buildpack</code> 指定运行时</td></tr>
+  <tr><td><code>build-parameters.builder: npm-ci</code></td><td>srv 模块在打包阶段执行 <code>npm ci</code>，把依赖装进归档</td><td>没有它，云端启动会缺依赖（Node.js 构建包也可以在云上装依赖，但把依赖打进 <code>.mtar</code> 更可控）</td></tr>
+  <tr><td><code>provides: srv-api</code> + <code>srv-url: ${default-url}</code></td><td>把本模块的 URL 作为「提供物」暴露给别的模块</td><td>approuter 通过 <code>~{srv-url}</code> 引用它 —— <b>不要手写 URL</b>，每次部署域名都可能变；<code>keep-existing-routes: true</code> 会尽量保留已有路由</td></tr>
+  <tr><td><code>modules[].type: hdb</code></td><td>HDI 部署器模块（db-deployer）</td><td>它只做一件事：把 <code>gen/db</code> 里的制品推到 HDI 容器。<b><code>gen/db</code> 缺失时它能「成功」但什么也不建</b></td></tr>
+  <tr><td><code>modules[].type: approuter.nodejs</code><br><code>path: app/router</code></td><td>应用路由：UI 与 OData 的唯一入口</td><td><code>requires</code> 里的 <code>group: destinations</code> 就是给它配置 destination（名字 <code>srv-api</code> 必须与 <code>xs-app.json</code> 里写的一致）；<code>forwardAuthToken: true</code> 把用户令牌转给 srv，服务里 <code>req.user</code> 才有值</td></tr>
+  <tr><td><code>type: com.sap.application.content</code></td><td>内容部署器：把 <code>book-orders.zip</code> 上传到 HTML5 仓库</td><td><code>build-result: app/</code> 与上面的 <code>artifacts: book-orders.zip</code> 必须和 <code>ui5.yaml</code> 的 <code>archiveName</code> 一致（<a href="fiori.html#s10">⑨ §10</a> 有本页真实生成物）</td></tr>
+  <tr><td><code>type: html5</code></td><td>Fiori 应用的构建模块</td><td>命令是 <code>npm ci &amp;&amp; npm run build</code>；<b>若 <code>app/book-orders/package.json</code> 没有 build 脚本，这里会以 <code>Missing script: "build"</code> 失败</b></td></tr>
+  <tr><td><code>resources[].type: com.sap.xs.hdi-container</code><br><code>service: hana</code> / <code>service-plan: hdi-shared</code></td><td>HANA 上的 HDI 容器</td><td><b>CAP 必须用 <code>hdi-shared</code></b>（<code>schema</code>、<code>tools</code> 等计划不能让 HDI deployer 建表）；换计划 = 换容器 = 表全没了</td></tr>
+  <tr><td><code>resources[].type: org.cloudfoundry.managed-service</code><br><code>service: xsuaa</code></td><td>授权实例，参数来自 <code>xs-security.json</code></td><td><code>xsappname</code> 用 <code>${org}/${space}</code> 占位，保证同一子账户不同 space 不冲突；<code>tenant-mode: dedicated</code> 是单租户</td></tr>
+  <tr><td><code>html5-apps-repo</code> 的 <code>app-host</code> / <code>app-runtime</code></td><td>UI 内容的存储与运行时</td><td>两个计划的角色不同：<code>app-host</code> 接收上传（给 app-deployer），<code>app-runtime</code> 在运行时被 approuter 访问</td></tr>
+</table>
+
+<h3 id="s2-3">2-3 xs-security.json：scopes 与 role-templates 是从哪来的</h3>
+
+<p>这个文件<b>不是手写的</b>，是从模型里的授权注解派生出来的：<code>cds compile --to xsuaa</code> 会把 <code>@requires</code> / <code>@restrict</code> 里的角色翻译成 scopes 与 role-templates。本站示范项目只有一个 <code>@requires: 'authenticated-user'</code>（内置角色，不产生 scope），所以实测生成的是<b>三个空数组</b>：</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">// 本站示范项目：cds compile srv --to xsuaa 的真实输出
+{
+  "scopes": [],
+  "attributes": [],
+  "role-templates": []
+}</code></pre>
+
+<p>一旦模型里出现自定义角色，输出就会长出对应条目。本站实测：给服务加 <code>annotate BookOrderService with @(requires: ['bookorder-admin'])</code> 后再编译，得到：</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "scopes": [
+    { "name": "$XSAPPNAME.bookorder-admin", "description": "bookorder-admin" }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "bookorder-admin",
+      "description": "generated",
+      "scope-references": ["$XSAPPNAME.bookorder-admin"],
+      "attribute-references": []
+    }
+  ]
+}</code></pre>
+
+<div class="box warn"><b class="t">改权限注解之后必须重新生成</b>
+<ol>
+  <li>模型里改了 <code>@requires</code> / <code>@restrict</code> → 重新跑 <code>cds compile --to xsuaa</code>（或直接用 <code>cds add xsuaa</code> 重新生成）→ <b>再部署</b>。只改模型不重新生成，云上的 scope 与模型对不上，症状是「接口 403，但角色集合看起来都给了」。</li>
+  <li>scope 名里的 <code>$XSAPPNAME</code> 是占位符，运行时替换成实例的 <code>xsappname</code>（本站 <code>demo-node-${org}-${space}</code>）。</li>
+  <li>role-template 只是「模板」，用户要到子账户里通过<b>角色集合</b>（role collection）才能拿到权限；MTA 里可以顺带生成角色集合（生成的 <code>config.role-collections</code> 段落），也可以手工在 Cockpit 里建。</li>
+</ol></div>
+
+<h3 id="s2-4">2-4 另一种做法：手动建实例再让 MTA 绑定</h3>
+
+<p>MTA 会自动创建资源（<code>resources</code> 段落），这也是推荐做法。但有时你想先手工建好实例（例如试用账号里 HANA 要提前启动、或者要复用已有容器），此时在子账户里建实例必须选对服务与计划：</p>
+
+<figure class="fig" data-fig="deploy_wizard">
+  <a class="zoom" href="assets/fig/deploy_wizard.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/deploy_wizard.svg" alt="如果不想让 MTA 建库，也可以在 Cockpit 里手动建：服务选 hana-cloud、计划必须选 hdi-shared —— 选错计划（如 schema/tools）部署会直接失败" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">如果不想让 MTA 建库，也可以在 Cockpit 里手动建：服务选 hana-cloud、计划必须选 hdi-shared —— 选错计划（如 schema/tools）部署会直接失败</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+
+<table class="tbl small">
+  <tr><th>资源用途</th><th>服务</th><th>计划</th><th>备注</th></tr>
+  <tr><td>HANA 数据库</td><td><code>hana-cloud</code></td><td><b><code>hdi-shared</code></b></td><td>CAP 必需；<code>schema</code>/<code>tools</code> 不能用于 HDI 部署</td></tr>
+  <tr><td>授权</td><td><code>xsuaa</code></td><td><code>application</code></td><td>参数文件 <code>./xs-security.json</code>；<code>broker</code>/<code>application</code> 两种计划，CAP 用后者</td></tr>
+  <tr><td>UI 内容</td><td><code>html5-apps-repo</code></td><td><code>app-host</code> + <code>app-runtime</code></td><td>两个实例（两个计划），app-deployer 用 host，approuter 运行时用 runtime</td></tr>
+  <tr><td>UI 路由</td><td><b>不需要额外实例</b></td><td>—</td><td>approuter 是随应用部署的一个 Node.js 模块（<code>app/router/</code>）</td></tr>
+</table>
+
+<h2 id="s3">3. 手顺：mbt build 打出 .mtar</h2>
+
+<h3 id="s3-1">3-1 安装 MTA Build Tool：npm 还是 brew</h3>
+
+<table class="tbl">
+  <tr><th>方式</th><th>命令</th><th>实际差异</th></tr>
+  <tr><td>npm（官方文档推荐，跨平台一致）</td><td><span class="cmd">npm i -g mbt</span></td><td>装的是 Node 包装层，首次运行会按平台取对应二进制；CI 里最方便；卸载用 <code>npm rm -g mbt</code></td></tr>
+  <tr><td>Homebrew（macOS）</td><td><span class="cmd">brew install mbt</span></td><td>装的是编译好的原生二进制（本机核对：<code>brew info mbt</code> 显示 <code>stable 1.2.49 (bottled)</code>），版本由 formula 维护；<b>升级靠 <code>brew upgrade</code></b>，与 npm 装的那份互不干扰（PATH 里谁在前用谁）</td></tr>
+  <tr><td>手工下载二进制</td><td>从 release 页取对应平台压缩包，解压后把 <code>mbt</code> 放进 <code>/usr/local/bin</code></td><td>无包管理器环境（内网机器）使用；<b>Windows 还需要 GNU Make</b></td></tr>
+</table>
+
+<ol class="steps">
+  <li><b>动作</b>：装好后确认在 PATH 里。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">mbt -v                     # 期望：Cloud MTA Build Tool version 1.2.x
+cf -v                      # 期望：cf version 8.x（MTA 部署要求 8 以上）</code></pre>
+  </li>
+  <li><b>验证</b>：两条命令都有版本输出。少任何一条，后面的手顺都会在第一步就失败（<code>command not found</code>）。</li>
+</ol>
+
+<h3 id="s3-2">3-2 打包与检查</h3>
+<div class="stepmeta"><span class="k">mbt build</span><span class="f">mta.yaml → mta_archives/*.mtar</span><span class="c">耗时 10 分</span></div>
+
+<figure class="fig" data-fig="deploy_mbt">
+  <a class="zoom" href="assets/fig/deploy_mbt.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/deploy_mbt.svg" alt="Cloud MTA Build Tool 把项目打成部署单元 .mtar：MTA 名字与版本决定文件名（ID_version.mtar），-t 指定输出目录" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">Cloud MTA Build Tool 把项目打成部署单元 .mtar：MTA 名字与版本决定文件名（ID_version.mtar），-t 指定输出目录</span><span class="kind">高保真重绘</span><span class="src">本站重绘：MBT 1.2.x 输出形态（未在本机实跑 mbt，命令与参数见 MBT 官方 Usage）</span></figcaption>
+</figure>
+
+<ol class="steps">
+  <li><b>动作</b>：在项目根目录打包（<code>-t</code> 指定输出目录，默认就是 <code>mta_archives</code>）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+mbt build -t mta_archives
+# 想指定文件名：mbt build -t mta_archives --mtar demo-node_1.0.0.mtar
+# 想指定平台：mbt build -p cf（默认就是 cf；可选 neo / xsa）</code></pre>
+    <b>关键点</b>：<code>mbt build</code> 会先执行 <code>mta.yaml</code> 里 <code>build-parameters.before-all</code> 的两条命令（<code>npm ci</code> 与 <code>npx cds build --production</code>），<b>再</b>逐个构建模块。所以「忘记先 cds build」不会出错，但「改了模型没重新打包」会部署出旧产物。</li>
+  <li><b>动作</b>：检查归档内容（不看内容就上传，等于把问题交给云端）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">ls -lh mta_archives/
+tar -tf mta_archives/demo-node_1.0.0.mtar | head -8
+# META-INF/mtad.yaml                     ← 部署描述符（由 mta.yaml 转换而来）
+# ~META-INF/MANIFEST.MF
+# demo-node-srv/                         ← srv 模块（已含 node_modules）
+# demo-node-db-deployer/
+# demo-node/                             ← approuter
+# book-orders.zip                        ← Fiori 应用包（有 html5-repo 时）</code></pre>
+  </li>
+  <li><b>验证</b>：<code>META-INF/mtad.yaml</code> 存在，且模块数量与 <code>mta.yaml</code> 一致；启用了 UI 时要能看到 <code>book-orders.zip</code>。<b>归档大小</b>也是判据：几 MB（只含 srv）和几十 MB（含 node_modules）完全不同，前者往往说明依赖没打进去。</li>
+</ol>
+
+<h3 id="s3-3">3-3 版本号策略</h3>
+<ul class="check">
+  <li><code>version</code> 与 <code>ID</code> 共同决定文件名与部署版本；<b>同一个版本号重复部署要加 <code>-f</code></b>（见 §4），否则会因「已存在」被拒；</li>
+  <li>人工部署阶段用 <code>1.0.x</code> 递增即可；进入 CI 后建议用「语义版本 + 构建号」，例如在流水线里改写 <code>version: 1.0.0-${GITHUB_RUN_NUMBER}</code>；</li>
+  <li><b>不要用时间戳当版本</b>：MTA 的版本比较按语义版本规则，时间戳会让 <code>--version-rule HIGHER</code> 的行为难以预测；</li>
+  <li>版本号写在 <code>mta.yaml</code>（<code>version:</code>）与 <code>MTA 部署服务</code>的记录里；回滚时靠的是「重新部署旧版本」而不是云端快照（§6）。</li>
+</ul>
+
+<h2 id="s4">4. 手顺：cf login / target / deploy</h2>
+
+<h3 id="s4-1">4-1 登录：--sso 与 API 端点</h3>
+<div class="stepmeta"><span class="k">cf login / cf target</span><span class="f">CF CLI v8 + multiapps 插件</span><span class="c">耗时 10 分</span></div>
+
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 1) 装 MTA 插件（只需一次）
+cf add-plugin-repo CF-Community https://plugins.cloudfoundry.org
+cf install-plugin -f multiapps
+
+# 2) 登录：--sso 打开浏览器做单点登录（推荐；不用把密码写进终端历史）
+cf login -a https://api.cf.ap10.hana.ondemand.com --sso
+
+# 3) 确认目标
+cf target</code></pre>
+
+<table class="tbl small">
+  <tr><th>region 代号</th><th>API 端点（实测可达）</th><th>地理含义（~ 以子账户创建时选的 region 为准）</th></tr>
+  <tr><td><code>eu10</code></td><td><code>https://api.cf.eu10.hana.ondemand.com</code></td><td>~ 欧洲（法兰克福）</td></tr>
+  <tr><td><code>eu20</code></td><td><code>https://api.cf.eu20.hana.ondemand.com</code></td><td>~ 欧洲（荷兰）</td></tr>
+  <tr><td><code>us10</code></td><td><code>https://api.cf.us10.hana.ondemand.com</code></td><td>~ 美东</td></tr>
+  <tr><td><code>us20</code> / <code>us21</code></td><td><code>https://api.cf.us20.hana.ondemand.com</code></td><td>~ 美西 / 美东（备用区域代号）</td></tr>
+  <tr><td><code>ap10</code> / <code>ap11</code> / <code>ap12</code></td><td><code>https://api.cf.ap10.hana.ondemand.com</code></td><td>~ 亚太（新加坡一带）</td></tr>
+  <tr><td><code>ap20</code> / <code>ap21</code></td><td><code>https://api.cf.ap20.hana.ondemand.com</code></td><td>~ 亚太（澳大利亚一带）</td></tr>
+  <tr><td><code>jp10</code> / <code>jp20</code></td><td><code>https://api.cf.jp10.hana.ondemand.com</code></td><td>~ 日本</td></tr>
+  <tr><td><code>br10</code> / <code>br20</code></td><td><code>https://api.cf.br10.hana.ondemand.com</code></td><td>~ 南美（巴西）</td></tr>
+</table>
+
+<div class="box warn"><b class="t">端点必须与子账户的 region 一致</b>
+<p>端点和子账户的 region 是绑定的：<code>cf login -a</code> 写错 region，症状是「登录成功但看不到自己的 org」或 <code>cf target</code> 里没有目标空间。本站对上面这些端点做过可达性实测（<code>GET https://api.cf.&lt;region&gt;.hana.ondemand.com/v2/info</code> 返回 200，响应 <code>description</code> 为 <code>SAP BTP Cloud Foundry environment</code>）；<b>中国区的端点使用不同域名</b>，不在上表。要确认自己的端点：Cockpit 里子账户 Overview 会给出 Cloud Foundry 的 API Endpoint。</p></div>
+
+<figure class="fig" data-fig="deploy_cf">
+  <a class="zoom" href="assets/fig/deploy_cf.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/deploy_cf.svg" alt="从登录到部署完成：--sso 打开浏览器单点登录、cf target 确认 org/space、cf deploy 上传 .mtar 并建应用与服务实例；最后一行给出取日志的命令" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 5</span><span class="cap">从登录到部署完成：--sso 打开浏览器单点登录、cf target 确认 org/space、cf deploy 上传 .mtar 并建应用与服务实例；最后一行给出取日志的命令</span><span class="kind">高保真重绘</span><span class="src">本站重绘：CF CLI v8 + multiapps 插件的真实输出形态（未在本机实跑 cf）</span></figcaption>
+</figure>
+
+<h3 id="s4-2">4-2 cf deploy：参数逐个解释</h3>
+
+<table class="tbl small">
+  <tr><th>写法</th><th>作用</th><th>什么时候用</th></tr>
+  <tr><td><code>cf deploy mta_archives/demo-node_1.0.0.mtar</code></td><td>部署（= 新建或增量同步已有 MTA）</td><td>常规部署</td></tr>
+  <tr><td><code>-f</code>（<code>--force</code>）</td><td><b>强制部署，不再询问是否中止冲突中的操作</b>（例如上一个部署还在跑，或同版本已存在）</td><td>重复部署同一版本、上一次部署卡住需要抢占时</td></tr>
+  <tr><td><code>--version-rule HIGHER | SAME_HIGHER | ALL</code></td><td>版本规则：只部署更高版本 / 同版本或更高 / 任意版本</td><td>回滚或强制重部署时用 <code>ALL</code>；正常流水线用默认</td></tr>
+  <tr><td><code>-e &lt;扩展描述符&gt;</code></td><td>用 MTA 扩展文件覆盖参数（例如只改实例数、内存）</td><td>同一份归档部署到多环境（dev/test/prod）</td></tr>
+  <tr><td><code>-m &lt;模块名&gt;</code> / <code>-r &lt;资源名&gt;</code></td><td>只部署指定模块 / 资源</td><td>只重推 srv、或只重建某个服务实例</td></tr>
+  <tr><td><code>--no-start</code></td><td>部署但不启动应用</td><td>先建服务与表，再统一启动</td></tr>
+  <tr><td><code>--strategy</code>（如 <code>blue-green</code> 相关）</td><td>部署策略：逐个替换或蓝绿</td><td>要求零停机的场景（另一条命令是 <code>cf bg-deploy</code>）</td></tr>
+  <tr><td><code>cf undeploy demo-node -f --delete-services</code></td><td>卸载 MTA（可顺带删除服务实例）</td><td>清理环境（§9）</td></tr>
+</table>
+
+<div class="box info"><b class="t">部署过程中屏幕上会发生什么（判据）</b>
+<ol>
+  <li><b>上传与校验</b>：<code>Uploading 1 files...</code> → <code>OK</code>，然后给出 <code>Operation ID</code>（<b>记住它</b>，出问题就靠它取日志）；</li>
+  <li><b>应用与服务</b>：<code>Deploying applications...</code> 与 <code>Deploying services...</code> 两段，逐行显示 <code>started</code> / <code>created</code>；</li>
+  <li><b>结束语</b>：<code>Process finished.</code> 这一行<b>才是成功</b>。看到 <code>Use "cf dmol -i &lt;operation ID&gt;" to download the logs of the process.</code> 说明可以取全量日志；</li>
+  <li><b>失败时</b>：出现 <code>Error</code> / <code>Process has failed</code>，此时<b>不要立刻重试</b>，先按 §6 取日志。</li>
+</ol></div>
+
+<h3 id="s4-3">4-3 用三条命令确认部署结果</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf apps                       # 应用与状态（requested state / processes / routes）
+cf services                   # 已创建的服务实例与新绑定关系
+cf logs demo-node-srv --recent | tail -20    # 应用启动日志（看 CDS 起了哪个服务、连的哪个库）
+cf marketplace -e hana-cloud  # 需要确认 HANA 计划时（hdi-shared 必须出现在列表里）</code></pre>
+
+<h2 id="s5">5. 部署后验证清单</h2>
+
+<p>部署成功 ≠ 系统可用。下面五条是「从外到里」的验收顺序，每条都要有可观察的证据；只跑一条就宣布成功，是初学者最常见的坑。</p>
+
+<figure class="fig" data-fig="deploy_verify">
+  <a class="zoom" href="assets/fig/deploy_verify.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/deploy_verify.svg" alt="部署后四问：$metadata 通不通、数据取得到吗、应用与路由的状态对不对、日志里服务在用什么数据库；四条命令的输出就是验收证据" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">部署后四问：$metadata 通不通、数据取得到吗、应用与路由的状态对不对、日志里服务在用什么数据库；四条命令的输出就是验收证据</span><span class="kind">高保真重绘</span><span class="src">本站重绘：CF CLI v8 + curl 的真实输出形态（域名按 trial org/space 规则）</span></figcaption>
+</figure>
+
+<ul class="check">
+  <li><b>① 路由可达 + 元数据可用</b>：<span class="cmd">curl -s -o /dev/null -w '%{http_code}' https://&lt;org&gt;-&lt;space&gt;-demo-node.&lt;landscape&gt;/odata/v4/book-order/$metadata</span> → <b>200</b>（未登录时可能是 401，说明认证在生效，也算通过这一层）。</li>
+  <li><b>② 能取到数据</b>：<span class="cmd">curl -u &lt;user&gt;: -G ".../BookOrders" --data-urlencode '$top=2'</span> → 返回 <code>BO-1001</code> 等行，且 <code>totalAmount</code>=16000（与本地 CSV 初始值一致 —— 这一条同时验证了「表建好了」与「数据导入成功」）。</li>
+  <li><b>③ HANA 里表真的建好了</b>：两种看法之一 —— (a) HANA Cloud 的 Database Explorer / SQL Console 里查 <code>sap_training_bookorder_BOOK_ORDERS</code> 之类的表名（schema 属于该 HDI 容器）；(b) <code>cf logs demo-node-db-deployer --recent</code> 的最后几行显示部署成功。</li>
+  <li><b>④ 应用与路由状态正确</b>：<span class="cmd">cf apps</span> 里 <code>demo-node-srv</code> 与 <code>demo-node</code>（approuter）都是 <code>started</code>，各 1 个进程；路由域名符合 <code>&lt;org&gt;-&lt;space&gt;-&lt;app&gt;</code> 规则。</li>
+  <li><b>⑤ Fiori 页面能打开</b>：浏览器打开 approuter 根地址 → 若出现 XSUAA 登录页说明授权链路正常；登录后能看到订单列表（这一步同时验证了 <code>html5-apps-repo</code>、app-deployer 与 <code>forwardAuthToken</code>）。</li>
+</ul>
+
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 一条命令跑完 ①②（把 R 换成自己的路由）
+R=https://trial-dev-demo-node.cfapps.ap10.hana.ondemand.com
+curl -s -o /dev/null -w 'metadata %{http_code}\n' "$R/odata/v4/book-order/\$metadata"
+curl -s -u alice: -G "$R/odata/v4/book-order/BookOrders" \
+  --data-urlencode '$select=orderNo,status,totalAmount' --data-urlencode '$top=2'
+# ③④ 云端状态
+cf apps
+cf logs demo-node-srv --recent | tail -5
+# 期望能看到： serving BookOrderService { at: '/odata/v4/book-order' } 与 using HANA from service demo-node-db</code></pre>
+
+<figure class="fig" data-fig="deploy_cockpit">
+  <a class="zoom" href="assets/fig/deploy_cockpit.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/deploy_cockpit.svg" alt="部署后子账户里出现的服务实例：HANA 的 hdi-shared 容器、XSUAA 授权实例、html5-apps-repo 的两个计划（app-host / app-runtime）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 7</span><span class="cap">部署后子账户里出现的服务实例：HANA 的 hdi-shared 容器、XSUAA 授权实例、html5-apps-repo 的两个计划（app-host / app-runtime）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+
+<div class="box danger"><b class="t">「部署成功但没有数据」的三步定位</b>
+<ol>
+  <li><b>先看 <code>gen/db</code> 有没有生成</b>（§1）—— 这是最常见的根因，本地就能查，不用上云；</li>
+  <li>再看 <code>cf logs demo-node-db-deployer --recent</code>：如果这里报错，说明制品有但部署失败（权限、容器被别的实例占用、CSV 格式错）；</li>
+  <li>最后看 srv 日志里的 <code>no such table …</code> 或 <code>using HANA from service …</code>：后者说明连库正常，<b>前者说明表没建</b>。</li>
+</ol></div>
+
+<h2 id="s6">6. 更新、回滚、多版本与取日志</h2>
+
+<h3 id="s6-1">6-1 更新：正常迭代怎么做</h3>
+<ol class="steps">
+  <li><b>动作</b>：改完代码后<b>提升版本号</b>（<code>mta.yaml</code> 的 <code>version:</code>），重新打包。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds build --production
+mbt build -t mta_archives
+cf deploy mta_archives/demo-node_1.0.1.mtar</code></pre>
+  </li>
+  <li><b>验证</b>：部署过程中会看到 <code>Deploying applications...</code> 里显示<b>新旧实例替换</b>（先起新实例再停旧实例，滚动替换）；完成后 <code>cf apps</code> 的 <code>processes</code> 仍是 <code>web:1/1</code>，路由不变。做得好的话用户无感。</li>
+</ol>
+
+<h3 id="s6-2">6-2 回滚：重新部署旧版本</h3>
+<div class="box warn"><b class="t">MTA 没有「一键回滚」</b>
+<p>Cloud Foundry 的 MTA 部署是<b>声明式同步</b>：它把云端状态对齐到归档，而不是保存快照。<b>回滚的做法是按旧版本号重新打包、重新部署</b>。因此两个实践很重要：</p>
+<ol>
+  <li><b>保留每个版本的 <code>.mtar</code></b>（CI 里作为构建产物上传），回滚时直接部署旧归档；</li>
+  <li><b>数据库回滚是另一件事</b>：HDI 默认「只增不删」（<code>undeploy.json</code> 里没有 <code>hdbtable</code>），所以「回滚应用」通常能成功，但「回滚表结构」需要自己写迁移（删列、改类型都不会自动发生）。<b>这也是为什么 schema 变更要尽量向后兼容</b>：先加新列、双写，再切换，最后清理旧列。</li>
+</ol>
+<p>强制重部署同一版本时，用 <code>-f</code> 与更宽松的版本规则：<span class="cmd">cf deploy mta_archives/demo-node_1.0.0.mtar -f --version-rule ALL</span></p></div>
+
+<h3 id="s6-3">6-3 多版本 MTA 与操作记录</h3>
+<table class="tbl small">
+  <tr><th>命令</th><th>作用</th><th>典型用途</th></tr>
+  <tr><td><code>cf mtas</code></td><td>列出当前 space 里所有 MTA 及其版本</td><td>确认线上到底跑的是哪个版本</td></tr>
+  <tr><td><code>cf mta demo-node</code></td><td>看某个 MTA 的健康与状态</td><td>排查「部署过了但状态不对」</td></tr>
+  <tr><td><code>cf mta-ops</code></td><td>列出进行中/最近的操作</td><td>找到那个卡住的 deployment 并拿 Operation ID</td></tr>
+  <tr><td><code>cf deploy -i &lt;operation ID&gt; -a monitor|abort|retry|resume</code></td><td>对一个进行中的操作继续监视 / 中止 / 重试 / 继续</td><td>操作被网络中断后的补救（<b>不用重新上传</b>）</td></tr>
+  <tr><td><code>cf bg-deploy mta_archives/…mtar</code></td><td>蓝绿部署：新版本起好后再切流量，可暂停验证再提交</td><td>要求零停机的上线</td></tr>
+</table>
+
+<h3 id="s6-4">6-4 部署失败时怎么取日志（cf dmol）</h3>
+<ol class="steps">
+  <li><b>动作</b>：用 Operation ID 下载整份操作的日志（<code>-d</code> 指定目录，默认当前目录）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf dmol -i 8f2c41d9-6b7e-11f0-9a3c-0242ac110002 -d mta-logs
+ls mta-logs      # 每个模块/资源一份日志文件
+# 不知道 operation ID 时：
+cf mta-ops
+# 也可以按 MTA 取最近若干次的操作日志：
+cf dmol --mta demo-node --last 3 -d mta-logs</code></pre>
+  </li>
+  <li><b>验证</b>：目录里能看到各模块的日志；<b>先看失败模块那一份</b>（文件名里带模块名），再看它的最后 30 行 —— 云端错误信息通常非常具体（构建包报错、内存不足、服务创建失败）。</li>
+  <li><b>动作</b>：如果失败在应用启动阶段，改用应用日志（更实时）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf logs demo-node-srv --recent | tail -40
+cf logs demo-node-db-deployer --recent | tail -40
+cf logs demo-node-app-deployer --recent | tail -20      # UI 上传失败看这个</code></pre>
+  </li>
+</ol>
+
+<h2 id="s7">7. CI/CD：GitHub Actions 与 --sso 的冲突</h2>
+
+<h3 id="s7-1">7-1 为什么 --sso 不能进流水线</h3>
+<div class="box danger"><b class="t">--sso 是给人用的，不是给流水线用的</b>
+<ol>
+  <li><b>它要交互</b>：<code>--sso</code> 先在终端打印一次性验证码、再打开浏览器完成单点登录。CI runner 上没有浏览器，也没有人能点确认；</li>
+  <li><b>验证码有效期很短</b>（几分钟），就算把代码硬塞进去也会过期；</li>
+  <li><b>即便用 <code>--sso-passcode</code></b>，一次性码也无法自动续期，下一次流水线又要人工介入 —— 那就不是 CI 了。</li>
+</ol>
+<p><b>正确做法</b>：为流水线建一个<b>技术用户</b>（platform user），把用户名放明文变量、密码放 Secret，用 <code>cf login -u … -p …</code> 登录；或者让 CAP 官方动作 <code>cap-js/cf-setup@v2</code> 代为完成「装 CF CLI + MTA 插件 + 登录」。权限上给这个用户<b>只够部署的角色</b>（如 Space Developer），不要给全局管理员。</p></div>
+
+<h3 id="s7-2">7-2 CAP 自带的工作流（先看生成物）</h3>
+<p><span class="cmd">npx cds add github-actions</span> 会生成 <code>.github/workflows/</code> 下的一套工作流（含 <code>cf.yaml</code>、<code>test.yaml</code>、<code>release.yaml</code>）。本站核对过该模板的结构，关键几行是：</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml"># .github/workflows/cf.yaml（cds add github-actions 生成的骨架，节选）
+env:
+  APP_NAME: demo-node
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: cap-js/cf-setup@v2          # 装 CF CLI + MTA 插件并登录
+        with:
+          api: ${{ vars.CF_API }}
+          org: ${{ vars.CF_ORG }}
+          space: ${{ vars.CF_SPACE }}
+          username: ${{ vars.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+      - run: npm install
+      - run: npx cds up                   # 装依赖 + cds build + mbt build + cf deploy
+      - run: cf logs "${{ env.APP_NAME }}-srv" --recent
+        if: always()                      # 失败也要打印日志，方便排查</code></pre>
+
+<h3 id="s7-3">7-3 显式版工作流（每一步都看得见）</h3>
+<p>学习与排错阶段建议用「显式版」：把构建与部署拆开，失败时一眼看出是哪一步。下面这份工作流与 §3/§4 的手顺一一对应：</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml">name: Deploy to Cloud Foundry
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:            # 允许手工触发，便于验证凭据
+
+permissions:
+  contents: read
+
+concurrency:                     # 同分支只允许一个部署在跑
+  group: cf-demo-node-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APP_NAME: demo-node
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖（冻结版本）
+        run: npm ci
+
+      - name: 构建（cds build --production）
+        run: npx cds build --production
+
+      - name: 校验构建产物（缺 gen/db 就直接失败）
+        run: |
+          test -d gen/srv || { echo "缺少 gen/srv"; exit 1; }
+          test -d gen/db  || { echo "缺少 gen/db：检查 [production].db.kind"; exit 1; }
+
+      - name: 打包 .mtar
+        run: |
+          npm i -g mbt
+          mbt build -t mta_archives
+
+      - uses: cap-js/cf-setup@v2      # 装 CF CLI + multiapps 插件并登录（不用 --sso）
+        with:
+          api: ${{ vars.CF_API }}       # 变量：https://api.cf.ap10.hana.ondemand.com
+          org: ${{ vars.CF_ORG }}
+          space: ${{ vars.CF_SPACE }}
+          username: ${{ vars.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+
+      - name: 部署
+        run: cf deploy mta_archives/demo-node_1.0.0.mtar -f
+
+      - name: 失败时打印日志
+        if: always()
+        run: |
+          cf logs "${APP_NAME}-srv" --recent || true
+          cf logs "${APP_NAME}-db-deployer" --recent || true</code></pre>
+
+<table class="tbl small">
+  <tr><th>要准备的变量 / 密钥</th><th>放哪</th><th>例子</th></tr>
+  <tr><td><code>CF_API</code></td><td>Repository variables</td><td><code>https://api.cf.ap10.hana.ondemand.com</code>（与 region 一致）</td></tr>
+  <tr><td><code>CF_ORG</code> / <code>CF_SPACE</code></td><td>Repository variables</td><td><code>trial</code> / <code>dev</code></td></tr>
+  <tr><td><code>CF_USERNAME</code></td><td>Repository variables</td><td>技术用户的邮箱</td></tr>
+  <tr><td><code>CF_PASSWORD</code></td><td><b>Secret</b>（不要用变量）</td><td>技术用户密码；定期轮换</td></tr>
+</table>
+
+<div class="box info"><b class="t">CI 上的三条实践</b>
+<ol>
+  <li><b>把「gen/db 是否存在」写成门禁</b>（上面那段 <code>test -d</code>）：这是最能提前拦住「部署成功但没有表」的一行；</li>
+  <li><b>版本号由流水线注入</b>（如 <code>1.0.0-${GITHUB_RUN_NUMBER}</code>），避免「同一个版本号重复部署」；</li>
+  <li><b>流水线里不要跑 <code>cds deploy --to sqlite</code> 之外的数据准备</b>：测试数据用 <code>cds.test</code>/内存库，云端初始数据只走 <code>db/data/*.csv</code>（HDI 部署时自动导入）。</li>
+</ol></div>
+
+<h2 id="s8">8. 常见错误表（14 条）</h2>
+
+<table class="tbl small">
+  <tr><th>错误 / 症状</th><th>原因</th><th>处理与验证</th></tr>
+  <tr><td><code>Invalid MTA Archive</code> / 归档校验失败</td><td><code>.mtar</code> 不完整或被手工改过；<code>mta.yaml</code> 语法错（缩进、缺冒号）</td><td>重新 <code>mbt build</code>；用 <code>tar -tf</code> 确认 <code>META-INF/mtad.yaml</code> 在；<code>mta.yaml</code> 用 YAML 校验器过一遍</td></tr>
+  <tr><td><code>No such app</code> / 找不到应用</td><td>部署到了错误的 space、或应用名与 <code>mta.yaml</code> 里的 <code>modules[].name</code> 不一致</td><td><code>cf target</code> 确认 org/space；<code>cf apps</code> 看真实名字（本站是 <code>demo-node-srv</code> / <code>demo-node</code>）</td></tr>
+  <tr><td><code>HDI container is already bound to another application</code> / 容器已被绑定</td><td>同一个 HDI 实例被两个应用绑定（典型：手工建的实例又被 MTA 引用）</td><td>一个 HDI 容器只服务一个应用；要么在 <code>mta.yaml</code> 里让它自己建，要么先解绑旧应用（<code>cf unbind-service</code>）</td></tr>
+  <tr><td>内存超配额（<code>You have exceeded your organization's memory limit</code>）</td><td>试用账号内存配额有限（常见 4 GB），旧应用没删就部署新版本</td><td><code>cf apps</code> 看内存占用；删掉不用的应用（<code>cf delete</code>）或调小 <code>parameters.memory</code>；<code>cf scale demo-node-srv -m 256M</code></td></tr>
+  <tr><td>approuter 404（根地址打不开）</td><td>approuter 起来了但没找到 <code>welcomeFile</code>；或 UI 没上传到 HTML5 仓库；或 <code>xs-app.json</code> 路由与 destination 名字不匹配</td><td>看 <code>app/router/xs-app.json</code> 与 <code>mta.yaml</code> 里 <code>destinations.name</code> 是否都是 <code>srv-api</code>；看 <code>cf logs demo-node-app-deployer --recent</code></td></tr>
+  <tr><td>部署成功但表为空 / 表不存在</td><td><code>gen/db</code> 没生成（生产 profile 里 <code>db.kind</code> 不是 hana）；或 db-deployer 失败</td><td>本地 <code>find gen -maxdepth 2 -type d</code> 必须有 <code>gen/db</code>；再查 <code>cf logs demo-node-db-deployer --recent</code>（§1、§5）</td></tr>
+  <tr><td>xsuaa 角色没生效 / 接口 403</td><td>模型里改了 <code>@requires</code> 但没重新生成 <code>xs-security.json</code>；或用户的角色集合没分配</td><td><code>cds compile --to xsuaa</code> 重新生成后重新部署；在 Cockpit 的 Role Collections 里把角色集合分配给用户（重新登录后生效）</td></tr>
+  <tr><td>org / space 不对（部署到了别处）</td><td>终端里保留了上一次 <code>cf target</code>，与预期不符</td><td>每次部署前 <code>cf target</code>；脚本里显式 <code>cf target -o trial -s dev</code>；CI 里用 <code>cap-js/cf-setup</code> 的 org/space 输入</td></tr>
+  <tr><td>路由被占用（<code>Route ... is already in use</code>）</td><td>同名路由已绑定到另一个应用（常见于换了 MTA 名但保留旧路由）</td><td><code>cf routes</code> 找到占用者：删旧应用或 <code>cf unmap-route</code>；<code>keep-existing-routes: true</code> 也可能导致新旧共用</td></tr>
+  <tr><td>版本号重复（<code>MTA with the same version already exists</code>）</td><td>用同一个 <code>version</code> 重复部署</td><td>提高 <code>mta.yaml</code> 的 <code>version</code>；或 <code>cf deploy … -f --version-rule ALL</code> 强制覆盖</td></tr>
+  <tr><td>cf API endpoint 与 region 不一致</td><td><code>cf login -a</code> 用错了 region 端点（或子账户在别的 region）</td><td>用 Cockpit Overview 里给出的 API Endpoint；对照 §4-1 表；<code>cf api</code> 可随时查看/切换当前端点</td></tr>
+  <tr><td>试用账号的实例被停（HANA 每天停）</td><td>试用子账户的 HANA Cloud 实例会按天停止，第二天部署/查询失败</td><td>先在 Cockpit 的 Instances 里点 <b>Start</b>（等几分钟状态变成 Running），再重试部署；这也是「部署失败先看实例状态」的原因</td></tr>
+  <tr><td><code>Missing script: "build"</code>（打包阶段）</td><td><code>cds add html5-repo</code> 在 <code>cds add ui5</code> 之前执行，Fiori 应用的 <code>package.json</code> 没有 <code>build</code> 脚本（详见 <a href="fiori.html#s10">⑨ §10</a>）</td><td>按正确顺序重跑 <code>cds add ui5</code> → <code>cds add html5-repo</code>；验证 <code>app/book-orders/package.json</code> 里有 <code>"build": "ui5 build preload --clean-dest"</code></td></tr>
+  <tr><td><code>mbt: command not found</code> / <code>make: command not found</code>（Windows）</td><td>MBT 未安装；或 Windows 上缺少 GNU Make</td><td><code>npm i -g mbt</code>（或 <code>brew install mbt</code>）；Windows 额外装 GNU Make（MBT 在打包阶段会调用它）</td></tr>
+</table>
+
+<h2 id="s9">9. 发布后的运维与资源清理</h2>
+
+<h3 id="s9-1">9-1 日常运维三条线</h3>
+<table class="tbl">
+  <tr><th>线</th><th>看什么</th><th>怎么做</th></tr>
+  <tr><td>日志</td><td>应用 stdout/stderr（CDS 启动信息、请求日志、错误栈）</td><td><code>cf logs &lt;app&gt; --recent</code> 看最近；<code>cf logs &lt;app&gt;</code> 跟随；长期留存接 Application Logging / 日志服务（试用账号配额有限）</td></tr>
+  <tr><td>指标 / 健康</td><td>实例数与内存/CPU、启动失败次数、路由响应</td><td><code>cf app demo-node-srv</code> 看用量；<code>cf apps</code> 看 <code>started</code>/<code>crashed</code>；生产建议加健康检查端点（CAP 提供 <code>/health</code> 之类的能力，按需配置）</td></tr>
+  <tr><td>成本 / 配额</td><td>内存总量、服务实例数、HANA 实例规格</td><td>试用账号：内存约 4 GB、30 天有效期；正式账号：HANA 实例是主要成本项，不用时停掉或删除；用 <code>cf apps</code> + Cockpit 的 Quota 页核对</td></tr>
+</table>
+
+<h3 id="s9-2">9-2 清理资源（顺序很重要）</h3>
+<ol class="steps">
+  <li><b>动作</b>：先卸载 MTA。这一步会删掉它创建的应用与路由；加 <code>--delete-services</code> 会连服务实例一起删（<b>数据库内容随之消失，确认后再加</b>）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf mtas                                  # 先看清要删的是哪个、哪个版本
+cf undeploy demo-node -f                 # 只删应用/路由，保留服务实例
+cf undeploy demo-node -f --delete-services   # 连服务实例一起删（数据会丢）</code></pre>
+  </li>
+  <li><b>验证</b>：<span class="cmd">cf apps</span> 里不再有 <code>demo-node*</code>；<span class="cmd">cf mtas</span> 里不再有该 MTA。</li>
+  <li><b>动作</b>：如果实例是自己手工建的（或 MTA 没带 <code>--delete-services</code>），逐个删。<b>先解绑再删</b>：绑着应用的服务实例删不掉。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf services                                  # 看实例与绑定关系
+cf unbind-service &lt;app&gt; &lt;service-instance&gt;   # 需要时先解绑
+cf delete-service demo-node-db -f            # 删 HANA 容器（数据一起删）
+cf delete-service demo-node-auth -f          # 删 XSUAA 实例
+cf delete-service demo-node-html5-repo-host -f
+cf delete-service demo-node-html5-runtime -f</code></pre>
+  </li>
+  <li><b>验证</b>：<span class="cmd">cf services</span> 列表为空（或只剩你要保留的）；Cockpit 的 Instances and Subscriptions 里也同步消失（同一份数据两个入口）。<b>配额恢复</b>的判据：再部署时不再报内存/实例数超限。</li>
+  <li><b>动作</b>：彻底不要了就连空间/子账户一起处理（<b>不可逆</b>）：<code>cf delete-org trial -f</code> 或 Cockpit 里删除子账户；试用账号到期后资源会被回收，但在此之前配额一直被占用。</li>
+</ol>
+
+<h2 id="s10">10. 版本号、命名与环境分离</h2>
+
+<table class="tbl small">
+  <tr><th>主题</th><th>建议做法</th><th>反例（会踩的坑）</th></tr>
+  <tr><td>MTA ID 命名</td><td>与项目/应用名一致、全小写（本站 <code>demo-node</code>）；路由自动变成 <code>&lt;org&gt;-&lt;space&gt;-&lt;ID&gt;</code></td><td>中途改 ID = 换了一套应用与路由，旧资源残留、配额被吃</td></tr>
+  <tr><td>资源命名</td><td>用带前缀的固定名（<code>demo-node-db</code>、<code>demo-node-auth</code>），MTA 会按名字复用已有实例</td><td>让 MTA 随机命名 = 每次部署都可能新建实例，成本与配额失控</td></tr>
+  <tr><td>版本号</td><td>语义版本；CI 里追加构建号；保留历史 <code>.mtar</code></td><td>用时间戳导致 <code>--version-rule</code> 行为不可预期</td></tr>
+  <tr><td>环境分离</td><td>用 MTA 扩展描述符（<code>-e dev.mtaext</code>）覆盖「实例数 / 内存 / 计划」等差异，<code>mta.yaml</code> 只保留一份</td><td>为每个环境复制一份 <code>mta.yaml</code>，改一处忘一处</td></tr>
+  <tr><td>凭据</td><td>技术用户 + Secret；角色只给 Space Developer</td><td>在 <code>mta.yaml</code> 或仓库里写密码（<code>mta.yaml</code> 会被打包进归档）</td></tr>
+</table>
+
+<div class="box info"><b class="t">扩展描述符长什么样</b>
+<pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml"># prod.mtaext：只覆盖生产需要的差异
+_schema-version: 3.3.0
+ID: demo-node-prod
+extends: demo-node
+modules:
+  - name: demo-node-srv
+    parameters:
+      instances: 2          # 生产双实例
+      memory: 512M</code></pre>
+<p>部署时：<span class="cmd">cf deploy mta_archives/demo-node_1.0.0.mtar -e prod.mtaext</span>。<code>cds up</code> 也支持 <code>--overlay</code> 传入扩展描述符。</p></div>
+
+<h2 id="s11">11. 交付前检查清单</h2>
+
+<ul class="check">
+  <li><b>构建</b>：<code>cds env get requires.db --profile production</code> 是 <code>hana</code>；<code>gen/db</code> 与 <code>gen/srv</code> 都存在；<code>gen/db/src/gen</code> 下有 <code>.hdbtable</code>。</li>
+  <li><b>打包</b>：<code>mbt build -t mta_archives</code> 无错误；<code>tar -tf</code> 里能看到所有模块与（启用 UI 时的）<code>book-orders.zip</code>；归档大小合理。</li>
+  <li><b>描述符</b>：<code>mta.yaml</code> 的 <code>version</code> 已提升；数据库资源是 <code>com.sap.xs.hdi-container</code> + <code>hdi-shared</code>；授权资源带 <code>path: ./xs-security.json</code>；UI 相关模块名与 <code>ui5.yaml</code> 的 <code>archiveName</code> 一致。</li>
+  <li><b>授权</b>：<code>xs-security.json</code> 已按最新注解重新生成（改了 <code>@requires</code>/<code>@restrict</code> 就必须重生成）。</li>
+  <li><b>登录与目标</b>：<code>cf target</code> 显示的 org/space 是本次的部署目标；端点的 region 与子账户一致。</li>
+  <li><b>部署后验证</b>：§5 的五条逐条打勾（<code>$metadata</code> 200 → 有数据 → 表存在 → 应用 started → Fiori 能打开）。</li>
+  <li><b>失败兜底</b>：记下了 Operation ID；知道 <code>cf dmol -i …</code> 与三个模块的日志命令。</li>
+  <li><b>清理预案</b>：知道怎么 <code>cf undeploy</code>（以及 <code>--delete-services</code> 会删数据）。</li>
+</ul>
+
+<h2 id="s12">12. 练习（3 个）与完成基准</h2>
+
+<h3 id="s12-1">练习 1：让「部署成功但没有表」复现并修好（必做）</h3>
+<p><b>要求</b>：故意把 <code>package.json</code> 里 <code>[production].db.kind</code> 去掉，跑一次 <code>cds build --production</code>，记录产物差异；再改回来，记录修复后的产物。<b>基准</b>：能说出「为什么构建任务列表变了」，并能用 <code>find gen -maxdepth 2 -type d</code> 的证据说明结论。</p>
+
+<h3 id="s12-2">练习 2：把 srv 的内存与实例数改成可配置（必做）</h3>
+<p><b>要求</b>：写一个 <code>dev.mtaext</code> / <code>prod.mtaext</code>，用 <code>-e</code> 覆盖 <code>demo-node-srv</code> 的 <code>memory</code> 与 <code>instances</code>。<b>基准</b>：<code>cf deploy … -e prod.mtaext</code> 之后 <code>cf apps</code> 显示的内存与实例数与扩展文件一致；<code>mta.yaml</code> 本体没有被改。</p>
+
+<h3 id="s12-3">练习 3：写一条 CI 工作流并在 PR 上跑通构建门禁（必做）</h3>
+<p><b>要求</b>：工作流包含「npm ci → cds build → 校验 gen/db → mbt build」，其中部署步骤只在 <code>main</code> 分支触发。<b>基准</b>：PR 上流水线通过且不消耗 CF 配额（不部署）；合并到 main 后自动部署，且失败时工作流会打印 srv 与 db-deployer 的日志。</p>
+
+<h3 id="s12-4">完成基准（自检清单）</h3>
+<ul class="check">
+  <li>能画出五环节链路，并说出每环节的产物与失败时的第一条日志命令；</li>
+  <li>能解释 <code>mta.yaml</code> 里每个模块与资源的作用（至少 srv / db-deployer / approuter / hdi-container / xsuaa）；</li>
+  <li>能在 5 分钟内说清 <code>--version-rule</code> 与 <code>-f</code> 的区别；</li>
+  <li>能解释 <code>--sso</code> 为什么不能进流水线，并写出替代方案；</li>
+  <li>§5 的五条验证全部亲手跑过一次，并留下输出证据。</li>
+</ul>
+
+<h2 id="s13">13. 本节测试</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>为什么 <code>cds build --production</code> 有时只生成 <code>gen/srv</code>？怎么确认？</li>
+    <li>「部署成功但没有表」的根因通常在哪一层？给出两条能自己验证的命令。</li>
+    <li><code>mta.yaml</code> 里 <code>build-parameters.before-all</code> 的作用是什么？删掉它会怎样？</li>
+    <li><code>provides: srv-api</code> 与 <code>requires: - name: srv-api / group: destinations</code> 之间的关系是什么？为什么不要在 approuter 里硬写后端 URL？</li>
+    <li><code>forwardAuthToken: true</code> 的作用是什么？去掉之后服务端会发生什么？</li>
+    <li>HDI 容器为什么必须用 <code>hdi-shared</code> 计划？换成 <code>schema</code> 会怎样？</li>
+    <li><code>xs-security.json</code> 是手写的吗？改了权限注解之后要做什么？</li>
+    <li><code>mbt build -t mta_archives</code> 里 <code>-t</code> 的含义？<code>.mtar</code> 的默认文件名规则是什么？</li>
+    <li>写出用 Operation ID 取部署日志的完整命令，并说明日志文件怎么看。</li>
+    <li>回滚一个 MTA 部署的正确做法是什么？为什么说 MTA「没有一键回滚」？数据库要不要一起回滚？</li>
+    <li>为什么 <code>--sso</code> 不能用在 CI 里？替代方案是什么？权限上要注意什么？</li>
+    <li>CI 里那两条 <code>test -d gen/srv</code> / <code>test -d gen/db</code> 是在拦什么问题？</li>
+    <li>清理环境时，为什么「先解绑再删服务实例」？<code>--delete-services</code> 的代价是什么？</li>
+    <li>把同一份归档部署到 dev / prod 两个环境，推荐用什么机制区分差异？</li>
+    <li>试用账号的 HANA 实例第二天不可用，你的第一步操作是什么？</li>
+  </ol>
+  <p class="go">对应自测题见自测页「构建与部署」组（题库文件 <code>work/quiz/deploy.json</code>，共 18 题）。</p>
+</div>
+
+<h2 id="s14">14. 小结与下一步</h2>
+
+<div class="grid cards">
+  <div class="card"><h3>一句话总结</h3>
+    <p>部署 = <b>构建出正确的产物</b>（<code>gen/srv</code> + <code>gen/db</code>）→ <b>按描述符打包</b>（<code>mta.yaml</code> → <code>.mtar</code>）→ <b>让云端建好应用、服务与表</b>（<code>cf deploy</code>）→ <b>用证据证明它可用</b>（§5 五条）。任何一步「看起来成功了」都不算完成。</p></div>
+  <div class="card"><h3>最容易翻车的三处</h3>
+    <p>① 生产 profile 里没解析出 <code>db.kind = hana</code> → 没有 <code>gen/db</code> → 表是空的；② <code>cds add ui5</code> / <code>html5-repo</code> 顺序错 → 打包阶段 <code>Missing script: "build"</code>；③ 用 <code>--sso</code> 做自动化 → 流水线永远需要人工点一次。</p></div>
+  <div class="card"><h3>与前一页的关系</h3>
+    <p>上一页交付了能打开的 Fiori 界面（<a href="fiori.html">⑨ Fiori UI</a>），本页把它连服务一起推上云；两页共享同一条访问链路：本地 <code>/book-orders/webapp/index.html</code> ↔ 云端 approuter 根地址。</p></div>
+  <div class="card"><h3>下一步</h3>
+    <p>回到课程主线，把这条链路沉淀成可检查的清单与命令速查：<code>cli.html</code>（速查页） 里有 <code>cds</code> / <code>cf</code> / <code>curl</code> 常用命令；出问题先查 <code>issues.html</code>（排错页）；把本页五条验证写成脚本，就得到属于你自己的部署验收工具。</p></div>
+</div>
+
+<div class="box info"><b class="t">回读清单</b>
+<p>读完这页你应该能做到：拿到一个陌生的 CAP 项目，10 分钟内说清「它会生成哪些产物、部署到哪个 space、会创建哪些服务实例、UI 从哪里来」；并且能独立完成一次部署 + 验证。做不到的话回到 §1（构建产物）、§2（mta.yaml）与 §5（验证清单）重读一遍。</p></div>
+
+<p class="kicker">本页 <code>cds build</code> / <code>cds add</code> / <code>xs-security.json</code> / API 端点可达性为本地实测（Node 22.23.2 / @sap/cds 9.9.3 / @sap/cds-dk 9.9.6）；<code>mbt build</code> 与 <code>cf</code> 命令输出为「重绘」（本站未安装 mbt、未登录 BTP），命令与参数依据 MBT 官方 Usage 与 CF multiapps 插件源码/帮助文本；配额、计划与日志文案随区域与版本而异，以你自己环境为准。</p>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,12 @@
+{
+  "name": "demo-node-approuter",
+  "version": "1.0.0",
+  "description": "应用路由：对外入口，负责 XSUAA 认证并把请求转发到 CAP 服务",
+  "private": true,
+  "dependencies": {
+    "@sap/approuter": "^16"
+  },
+  "scripts": {
+    "start": "node node_modules/@sap/approuter/approuter.js"
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "key": "fiori_listreport",
+  "kind": "fiori",
+  "w": 1440,
+  "h": 900,
+  "mode": "app",
+  "product": "SAP Fiori",
+  "user": "JASON",
+  "title": "图书受注管理",
+  "subtitle": "List Report · Table",
+  "crumbs": "Home  ›  图书受注管理  ›  订单列表",
+  "caption": "注解生效后的 List Report：筛选字段来自 UI.SelectionFields，表格列来自 UI.LineItem，状态列的颜色来自 Criticality —— 数据是本站示范项目的 CSV 初始值",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）",
+  "toolbar": {
+    "items": [
+      {
+        "label": "创建",
+        "primary": true
+      },
+      {
+        "label": "删除"
+      },
+      {
+        "label": "导出"
+      }
+    ],
+    "search": "订单号 · 客户 · 状态"
+  },
+  "filter": [
+    [
+      "订单号 (orderNo)",
+      ""
+    ],
+    [
+      "状态 (status)",
+      ""
+    ],
+    [
+      "订单日期 (orderDate)",
+      ""
+    ]
+  ],
+  "blocks": [
+    {
+      "t": "table",
+      "fs": 13,
+      "selected": 3,
+      "cols": [
+        "订单号",
+        "客户",
+        "订单日期",
+        "状态",
+        "合计 (JPY)"
+      ],
+      "widths": [
+        1.1,
+        2.2,
+        1.1,
+        1.0,
+        1.1
+      ],
+      "rows": [
+        [
+          "BO-1001",
+          "1000 北京华信书业",
+          "2026-09-01",
+          "OPEN",
+          "16,000"
+        ],
+        [
+          "BO-1002",
+          "1000 北京华信书业",
+          "2026-09-03",
+          "OPEN",
+          "3,600"
+        ],
+        [
+          "BO-1003",
+          "2000 上海博文出版中心",
+          "2026-09-05",
+          "SUBMITTED",
+          "17,400"
+        ],
+        [
+          "BO-1004",
+          "3000 广州南方图书",
+          "2026-09-08",
+          "CLOSED",
+          "7,600"
+        ]
+      ]
+    },
+    {
+      "t": "p",
+      "text": "显示 4 行中的第 1–4 行（行数是服务端 $count 的结果）",
+      "size": 12.5,
+      "fill": "#6a6d70"
+    },
+    {
+      "t": "note",
+      "kind": "success",
+      "text": "订单 BO-1003 合计 17,400 JPY = 明细 4,200 + 10,400 + 2,800（由服务端汇总回写维护）"
+    }
+  ],
+  "callouts": [
+    {
+      "on": "状态 (status)",
+      "text": "1. 筛选字段来源"
+    },
+    {
+      "on": "SUBMITTED",
+      "text": "2. 状态着色来源"
+    },
+    {
+      "on": "合计 (JPY)",
+      "text": "3. 列定义来源"
+    },
+    {
+      "on": "创建",
+      "text": "4. 创建走草稿"
+    }
+  ]
+}

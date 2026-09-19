@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>示范项目：端到端可运行（含 Fiori） · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP 培训课程的完整示范项目：图书受注管理。从需求、CDS 模型、种子数据、Node.js 服务与业务规则、26 条 OData 验收断言、Fiori Elements 界面、Java 运行时对照到 MTA 部署，全部给出可复制的命令与本机实测输出。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a class="active" href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>示范项目（端到端）</span></p>
+<h1>示范项目：图书受注管理 —— 从需求到 Fiori 到部署</h1>
+<p class="kicker">项目本体在 <code>project-code/demo-node/</code> 与 <code>project-code/demo-java/</code> · 本页每一步都给命令 + 期望输出 + 验证方法</p>
+
+<div class="toc">
+  <a href="#req">1. 需求</a><a href="#files">2. 交付物与文件树</a><a href="#step1">3. 环境与安装</a>
+  <a href="#step2">4. 领域模型</a><a href="#step3">5. 种子数据</a><a href="#step4">6. 服务定义</a>
+  <a href="#step5">7. 业务逻辑</a><a href="#step6">8. OData 验收</a><a href="#step7">9. Fiori 界面</a>
+  <a href="#step8">10. Java 运行时</a><a href="#step9">11. 部署</a><a href="#final">12. 总验收</a>
+</div>
+
+<div class="box ok"><b class="t">这个项目已经在本机真实跑通（可以直接复现）</b>
+<ul>
+  <li>建库：<code>npm run deploy</code> → <b>6 张表</b>（Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9 行）</li>
+  <li>服务：<code>npm start</code> → <code>http://localhost:4004/odata/v4/book-order</code></li>
+  <li>验收：<code>bash test/odata-verify.sh</code> → <b>PASS 26 / FAIL 0</b></li>
+  <li>界面：Fiori Elements List Report 在浏览器里列出订单（下方有<b>真实截图</b>）</li>
+</ul>
+全部原始输出保存在 <code>work/evidence/01…08_*.txt</code>，本页引用时都标了出处。</div>
+
+<h2 id="req">1. 需求：一页看懂这个项目</h2>
+<p><b>业务背景</b>：一家图书批发商需要一个「订单录入与跟进」的小服务：录入订单与明细、自动算钱、跟踪状态、在浏览器里看得见。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>#</th><th>需求（可验证的写法）</th><th>实现位置</th><th>怎么证明做到了</th></tr></thead>
+<tbody>
+<tr><td>R1</td><td>维护图书与顾客主数据，价格以主数据为准</td><td><code>db/schema.cds</code> + CSV</td><td>读 <code>/Books</code> 有 5 条，读 <code>/Customers</code> 有 3 条</td></tr>
+<tr><td>R2</td><td>订单号由服务端生成，不能重复</td><td>before CREATE</td><td>不传订单号 → 自动得到 <code>BO-1005</code>；传已存在的 → 409</td></tr>
+<tr><td>R3</td><td>明细金额 = 图书单价 × 数量，客户端不能自己算</td><td>before CREATE/UPDATE 明细</td><td>POST <code>quantity:3, book:1003</code> → 返回 <code>amount:8400</code></td></tr>
+<tr><td>R4</td><td>订单合计随明细变化自动汇总（新增/修改/删除）</td><td>after 明细</td><td>明细变化后读订单 → <code>totalAmount</code> 更新</td></tr>
+<tr><td>R5</td><td>没有明细、或合计为 0 的订单不能提交</td><td>绑定动作 <code>submitOrder</code></td><td>空订单提交 → 400；正常订单 → 200 且状态变 SUBMITTED</td></tr>
+<tr><td>R6</td><td>能看到「按订单汇总的行数与金额」</td><td>函数 <code>getOrderSummary()</code></td><td>返回 4 行，BO-1001 的 <code>totalAmount=16000</code></td></tr>
+<tr><td>R7</td><td>只有登录用户能访问</td><td><code>@(requires: 'authenticated-user')</code></td><td>匿名 → 401；带凭据 → 200</td></tr>
+<tr><td>R8</td><td>在浏览器里能列出订单、能进明细页</td><td><code>app/book-orders/</code></td><td>截图见 §9</td></tr>
+<tr><td>R9</td><td>同一个模型能在 Java 运行时上跑</td><td><code>project-code/demo-java/</code></td><td>编译成功 + 服务启动 + <code>$metadata</code> 200（见 §10 的诚实说明）</td></tr>
+<tr><td>R10</td><td>能打包部署到 Cloud Foundry</td><td><code>mta.yaml</code> + <code>xs-security.json</code></td><td>本机未实测（需 BTP 账号），命令与验证清单见 §11</td></tr>
+</tbody></table></div>
+<div class="box info"><b class="t">为什么选“图书受注”这个场景</b>
+它足够小（4 张表），但把 CAP 的核心知识点全占了：主数据 + 主从单据、服务端编号、派生字段、
+父子汇总、状态迁移动作、聚合函数、草稿编辑、界面注解、部署描述。
+换成你公司自己的业务，改的是字段名与规则，结构完全一样。</div>
+
+<h2 id="files">2. 交付物与文件树</h2>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">project-code/
+├── demo-node/                       ① Node.js 运行时（本机实测通过）
+│   ├── db/schema.cds                领域模型：Books / Customers / BookOrders / BookOrderItems / OrderItemView
+│   ├── db/data/*.csv                种子数据（4 个文件，表头 = 物理列名）
+│   ├── srv/book-order-service.cds   服务定义（投影 / 草稿 / 动作 / 函数 / 授权）
+│   ├── srv/book-order-service.js    业务逻辑（before / after / on）
+│   ├── app/book-orders/
+│   │   ├── annotations.cds          Fiori 的 UI.* 注解（列、字段组、动作按钮、Criticality）
+│   │   └── webapp/{index.html,manifest.json,Component.js}
+│   ├── test/odata-verify.sh         26 条 OData 验收断言（curl）
+│   ├── test/dev-proxy.js            本地给浏览器注入 mock 认证的小代理（看 Fiori 用）
+│   ├── approuter/{package.json,xs-app.json}   部署时的对外入口
+│   ├── mta.yaml / xs-security.json  部署描述 + 授权定义
+│   └── package.json                 npm scripts + cds 配置（sqlite / mocked 认证）
+└── demo-java/                       ② Java 运行时（同一套 db/ 与 srv/*.cds）
+    ├── pom.xml + srv/pom.xml        父 POM + Maven 模块（cds-maven-plugin 链）
+    ├── db/, srv/book-order-service.cds
+    └── srv/src/{main,test}/…        Application / Handler / application.yaml / JUnit 测试</code></pre>
+<p>逐文件全文见 <a href="code.html">源码页</a>；每个文件有稳定锚点（<code>code.html#f-12</code>）。</p>
+
+<h2 id="step1">3. STEP 1：环境与安装</h2>
+<div class="stepmeta"><span class="k">Node 20/22 LTS</span><span class="f">project-code/demo-node/package.json</span><span class="c">首次约 2 分钟</span></div>
+<ol class="steps">
+<li><b>切到 LTS 的 Node</b>（本机系统 Node 26 装不上 <code>better-sqlite3</code> 的原生模块）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+node -v          # → v22.23.2</code></pre>
+<span>验证：版本号的<b>主版本是偶数 LTS</b>（20 或 22）。奇数版本没有对应的预编译原生模块。</span></li>
+<li><b>安装依赖</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npm install</code></pre>
+<span>验证：结尾出现 <code>added 328 packages</code>。若看到 <code>npm warn install-scripts better-sqlite3</code>，
+说明原生模块的安装脚本被 npm 拦下了 —— 本机这样做：
+<code>npm install-scripts approve better-sqlite3 &amp;&amp; npm rebuild better-sqlite3</code>，
+然后用一行 node 命令确认 <code>new (require('better-sqlite3'))(':memory:')</code> 不报错。</span></li>
+<li><b>确认 cds 版本成对</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds --version
+# @sap/cds: 9.9.3   @sap/cds-dk: 9.x   Node.js: v22.23.2</code></pre>
+<span>验证：<code>@sap/cds</code> 与 <code>@sap/cds-dk</code> 的<b>大版本一致</b>（cds-dk 10 要求 cds ≥ 9）。</span></li>
+</ol>
+
+<h2 id="step2">4. STEP 2：领域模型（<code>db/schema.cds</code>）</h2>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">namespace sap.training.bookorder;
+using { cuid, managed } from '@sap/cds/common';
+
+entity Books {
+  key ID       : Integer;
+      title    : String(120) not null;
+      author   : String(80);
+      price    : Decimal(9,2) not null;
+      currency : String(3) default 'JPY';     // 不用 Currency 型：本地 SQLite 会校验 codelist
+      stock    : Integer default 0;
+}
+
+entity Customers {
+  key ID : Integer;  name : String(80) not null;  city : String(60);
+  country : String(20);  email : String(120);
+}
+
+entity BookOrders : managed {
+  key ID            : UUID;
+      orderNo       : String(16) not null;
+      customer      : Association to Customers;
+      orderDate     : Date default $now;
+      status        : String(10) default 'OPEN';
+      note          : String(255);
+      totalAmount   : Decimal(13,2) default 0;
+      statusCriticality : Integer default 2;   // 派生字段：给 Fiori 状态列着色
+      items         : Association to many BookOrderItems on items.order = $self;
+}
+
+entity BookOrderItems : managed {
+  key ID       : UUID;
+      order    : Association to BookOrders;
+      book     : Association to Books;
+      quantity : Integer default 1;
+      amount   : Decimal(13,2);
+}
+
+/* 带主键的视图 → 可以直接暴露为只读实体 */
+entity OrderItemView as select from BookOrderItems {
+  key ID,
+      order.orderNo   as orderNo,
+      order.orderDate as orderDate,
+      book.ID         as bookID,
+      book.title      as bookTitle,
+      book.price      as unitPrice,
+      quantity,
+      amount
+};</code></pre>
+<div class="box warn"><b class="t">三个刻意的设计决定（都是踩坑后的结论）</b>
+<ul>
+<li><b>不用 <code>Composition</code></b>：managed composition 会在<b>父表</b>加 FK 列，用 CSV 播种时父侧 FK 是空的 →
+<code>$expand=items</code> 返回 <code>[]</code>。改成子表放普通 FK 列 + 父表声明 <code>Association to many … on</code>，两边都正常。</li>
+<li><b>通信用 <code>String(3)</code> 而不是 <code>Currency</code></b>：<code>Currency</code> 会校验 <code>sap_common_Currencies</code> 代码表，
+本地部署时那张表是空的，写入 <code>JPY</code> 会被拒。</li>
+<li><b>视图必须有主键才能当实体暴露</b>：聚合（group by）视图拿不到主键，所以汇总走服务层的函数（见 §7 的 ⑤）。</li>
+</ul></div>
+
+<h2 id="step3">5. STEP 3：种子数据（<code>db/data/*.csv</code>）</h2>
+<p>每个文件对应一张表，文件名是 <code>&lt;命名空间&gt;-&lt;实体名&gt;.csv</code>，<b>表头必须写物理列名</b>
+（关联字段是 <code>&lt;关联名&gt;_&lt;目标主键&gt;</code>，例如 <code>customer_ID</code>、<code>book_ID</code>）。</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">db/data/sap.training.bookorder-BookOrders.csv
+ID,orderNo,customer_ID,orderDate,status,note,totalAmount,statusCriticality
+4a1f8c03-0001-4000-8000-000000000001,BO-1001,1000,2026-09-01,OPEN,首次订货,16000,2
+4a1f8c03-0002-4000-8000-000000000002,BO-1002,1000,2026-09-03,OPEN,,3600,2
+4a1f8c03-0003-4000-8000-000000000003,BO-1003,2000,2026-09-05,SUBMITTED,加急,17400,3
+4a1f8c03-0004-4000-8000-000000000004,BO-1004,3000,2026-09-08,CLOSED,已结案,7600,0</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm run deploy          # = cds deploy --to sqlite:db.sqlite
+#   > init from db/data/sap.training.bookorder-Customers.csv
+#   > init from db/data/sap.training.bookorder-Books.csv
+#   > init from db/data/sap.training.bookorder-BookOrders.csv
+#   > init from db/data/sap.training.bookorder-BookOrderItems.csv
+# /> successfully deployed to db.sqlite</code></pre>
+<p>部署输出<b>看起来成功也可能实际失败</b>（一行坏列会让整个事务回滚，而输出里只有一段 cds.ql dump）。
+所以务必用 SQL 直接核对表与行数（本机实测）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 ../../work/sqlite_tables.py db.sqlite
+# TABLES: ['BookOrderService_BookOrders_drafts', 'DRAFT_DraftAdministrativeData', 'cds_outbox_Messages',
+#          'sap_training_bookorder_BookOrderItems', 'sap_training_bookorder_BookOrders',
+#          'sap_training_bookorder_Books', 'sap_training_bookorder_Customers']
+#   sap_training_bookorder_BookOrderItems 9 rows
+#   sap_training_bookorder_BookOrders  4 rows
+#   sap_training_bookorder_Books       5 rows
+#   sap_training_bookorder_Customers   3 rows</code></pre>
+<div class="box info"><b class="t">读出来的规律</b>
+实体 <code>sap.training.bookorder.BookOrders</code> → 表 <code>sap_training_bookorder_BookOrders</code>
+（命名空间的点变成下划线，表名保持大小写）。带草稿的实体还会多出 <code>*_drafts</code> 表与 CAP 自己的
+<code>DRAFT_*</code>、<code>cds_outbox_*</code> 表。</div>
+
+<h2 id="step4">6. STEP 4：服务定义（<code>srv/book-order-service.cds</code>）</h2>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">using { sap.training.bookorder as db } from '../db/schema';
+
+@path: '/odata/v4/book-order'                                  // Node 运行时：@path 即完整路径
+service BookOrderService @(requires: 'authenticated-user') {
+
+  entity Books     as projection on db.Books;
+  entity Customers as projection on db.Customers;
+
+  @odata.draft.enabled                                         // Fiori 编辑需要草稿
+  entity BookOrders as projection on db.BookOrders
+                    actions { action submitOrder() returns String; };
+
+  @cds.redirection.target                                      // 两张实体都源自同一张表 → 必须指定重定向目标
+  entity BookOrderItems as projection on db.BookOrderItems;
+
+  @readonly
+  entity OrderItemView as projection on db.OrderItemView;
+
+  function getOrderTotal(orderNo : String) returns Decimal(13,2);
+
+  type OrderSummaryRow : { orderNo:String(16); customerName:String(80); orderDate:Date;
+                           status:String(10); itemCount:Integer; totalAmount:Decimal(13,2); };
+  function getOrderSummary() returns array of OrderSummaryRow;
+}</code></pre>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>写法</th><th>为什么需要它</th><th>少了会怎样</th></tr></thead>
+<tbody>
+<tr><td><code>@(requires: 'authenticated-user')</code></td><td>整服务要求登录</td><td>任何人都能读写数据</td></tr>
+<tr><td><code>@odata.draft.enabled</code></td><td>Fiori Elements 的编辑走 draft</td><td>界面上没有可编辑的 Create/Edit</td></tr>
+<tr><td><code>@cds.redirection.target</code></td><td>两张实体（BookOrderItems 与 OrderItemView）都指向同一张表</td><td>启动报 <code>can't auto-redirect BookOrders:items</code></td></tr>
+<tr><td><code>@readonly</code></td><td>视图实体不允许写入</td><td>对视图 POST 会落到基表，语义变得含糊（现在返回 405）</td></tr>
+<tr><td>聚合用 <code>function</code> 而非实体</td><td>聚合视图没有主键</td><td><code>cds2edm: Expected entity to have a primary key</code></td></tr>
+</tbody></table></div>
+
+<h2 id="step5">7. STEP 5：业务逻辑（<code>srv/book-order-service.js</code>）</h2>
+<p>五类实现位置，每一类都给「代码 → 目的 → 失败模式」：</p>
+<h3>① before CREATE 订单头：编号 + 查重 + 主数据校验 + 派生字段</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.before('CREATE', BookOrders, async (req) =&gt; {
+  const data = req.data;
+  if (!data.orderNo) {
+    data.orderNo = await nextOrderNo();                    // BO-#### 自增
+  } else {
+    const dup = await SELECT.one.from(BookOrders).where({ orderNo: data.orderNo });
+    if (dup) req.reject(409, `订单号 ${data.orderNo} 已存在，请更换`);
+  }
+  if (!data.orderDate) data.orderDate = new Date().toISOString().slice(0, 10);
+  if (data.status == null) data.status = 'OPEN';
+  data.statusCriticality = criticalityOf(data.status);
+  if (data.customer_ID != null) {
+    const cust = await SELECT.one.from(Customers).where({ ID: data.customer_ID });
+    if (!cust) req.reject(400, `顾客 ${data.customer_ID} 不存在，请先维护主数据`);
+  }
+});</code></pre>
+<div class="box warn"><b class="t">失败模式</b>
+用 <code>throw new Error(...)</code> 会变成 <b>500</b>（客户端拿到的是"内部错误"）；
+必须用 <code>req.reject(4xx, msg)</code> 才能把业务消息带出去。另外：<code>BookOrders</code> 开了草稿，
+所以这个钩子在<b>激活草稿</b>时触发 —— 用 curl 直接 POST 会先拿到一个 draft 行（<code>IsActiveEntity=false</code>），
+要再调 <code>…/BookOrderService.draftActivate</code> 才真正落库。</div>
+
+<h3>② before 明细：金额派生计算</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.before(['CREATE', 'UPDATE'], BookOrderItems, async (req) =&gt; {
+  const data = req.data;
+  if (data.quantity != null &amp;&amp; data.quantity &lt;= 0) req.reject(400, '数量必须大于 0');
+  const book = await SELECT.one.from(Books).where({ ID: data.book_ID });
+  if (!book) req.reject(400, `图书 ${data.book_ID} 不存在`);
+  data.amount = round2(Number(book.price) * Number(data.quantity));
+});</code></pre>
+<p>验证：<code>POST /BookOrderItems {order_ID, book_ID:1003, quantity:3}</code> → 返回 <code>amount = 8400</code>（2800 × 3）。</p>
+
+<h3>③ after 明细：父表汇总回写（含删除）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">const recalc = async (orderID) =&gt; {
+  const row = await SELECT.one.from(BookOrderItems)
+    .columns('sum(amount) as total').where({ order_ID: orderID });
+  await UPDATE(BookOrders).set({ totalAmount: round2(Number(row?.total ?? 0)) }).where({ ID: orderID });
+};
+this.after('CREATE', BookOrderItems, async (_, req) =&gt; recalc(req.data.order_ID));
+this.after('UPDATE', BookOrderItems, async (_, req) =&gt; recalc(req.data.order_ID));
+this.after('DELETE', BookOrderItems, async (_, req) =&gt; {   // 删除后的行不在结果里，键要从请求取
+  const orderID = req.data?.order_ID ?? req.params?.[req.params.length - 1]?.order_ID;
+  await recalc(orderID);
+});</code></pre>
+<div class="box warn"><b class="t">两个坑</b>
+① <code>UPDATE(entity, keyValue).with({...})</code> 只在主键<b>恰好叫 ID</b> 时可用，否则要用
+<code>UPDATE(entity).set({...}).where({...})</code>（本项目就是后者）。
+② after DELETE 的 <code>each</code> 里<b>没有</b>被删行的字段 —— 键只能从 <code>req</code> 里取。</div>
+
+<h3>④ 绑定动作 submitOrder：状态迁移 + 业务校验</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.on('submitOrder', BookOrders, async (req) =&gt; {
+  const ID = req.params[req.params.length - 1].ID;
+  const order = await SELECT.one.from(BookOrders).where({ ID });
+  if (!order) req.reject(404, `订单 ${ID} 不存在`);
+  if (['SUBMITTED', 'CLOSED'].includes(order.status))
+    req.reject(409, `订单 ${order.orderNo} 当前状态为 ${order.status}，不能重复提交`);
+  const items = await SELECT.from(BookOrderItems).where({ order_ID: ID });
+  if (items.length === 0) req.reject(400, `订单 ${order.orderNo} 没有明细，不能提交`);
+  if (Number(order.totalAmount) &lt;= 0) req.reject(400, `订单 ${order.orderNo} 合计金额为 0，请检查明细金额`);
+  await UPDATE(BookOrders).set({ status: 'SUBMITTED', statusCriticality: criticalityOf('SUBMITTED') })
+    .where({ ID });
+  return `订单 ${order.orderNo} 已提交，合计 ${Number(order.totalAmount).toFixed(2)} JPY（${items.length} 行）`;
+});</code></pre>
+<p>调用（注意绑定动作要在 URL 上带目标键）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -u alice:alice -X POST \
+  "http://localhost:4004/odata/v4/book-order/BookOrders(ID=4a1f8c03-0001-4000-8000-000000000001,IsActiveEntity=true)/submitOrder" \
+  -H 'Content-Type: application/json' -d '{}'</code></pre>
+
+<h3>⑤ 无绑定函数：聚合（视图没有主键，只能这样暴露）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.on('getOrderTotal', async (req) =&gt; {
+  const { orderNo } = req.data;
+  const order = await SELECT.one.from(BookOrders).where({ orderNo });
+  if (!order) req.reject(404, `订单号 ${orderNo} 不存在`);
+  const row = await SELECT.one.from(BookOrderItems).columns('sum(amount) as total')
+    .where({ order_ID: order.ID });
+  return round2(Number(row?.total ?? 0));
+});
+
+this.on('getOrderSummary', async () =&gt; {
+  const orders = await SELECT.from(BookOrders)
+    .columns('ID','orderNo','orderDate','status','customer.name as customerName').orderBy('orderNo');
+  const agg = await SELECT.from(BookOrderItems)
+    .columns('order_ID','count(ID) as itemCount','sum(amount) as totalAmount').groupBy('order_ID');
+  const byOrder = new Map(agg.map(a =&gt; [a.order_ID, a]));
+  return orders.map(o =&gt; ({ ...o, itemCount: Number(byOrder.get(o.ID)?.itemCount ?? 0),
+                            totalAmount: round2(Number(byOrder.get(o.ID)?.totalAmount ?? 0)) }));
+});</code></pre>
+
+<h2 id="step6">8. STEP 6：启动服务并做 OData 验收</h2>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm start
+# [cds] - serving BookOrderService { at: [ '/odata/v4/book-order' ], impl: 'srv/book-order-service.js' }
+# [cds] - server listening on { url: 'http://localhost:4004' }
+
+# 另一个终端：
+bash test/odata-verify.sh</code></pre>
+<p>验收脚本把 26 条断言按 7 组跑一遍，每组都给期望值与实际值。本机实测结果（完整输出在
+<code>work/evidence/04_odata.txt</code>）：</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>组</th><th>断言（节选）</th><th>本机实测</th></tr></thead>
+<tbody>
+<tr><td>1 服务与认证</td><td><code>$metadata</code> 200 / 匿名 401 / bob 200 / 任意用户名在 mocked 下 200</td><td><b>4 / 4 PASS</b><br><small>mocked 认证不是真认证，放行任意用户 —— 这条本身就是教学点</small></td></tr>
+<tr><td>2 读</td><td>过滤 OPEN → 2 条；<code>$expand=items</code> → 3 行；只读视图 9 条；视图带关联列名</td><td><b>4 / 4 PASS</b></td></tr>
+<tr><td>3 函数</td><td><code>getOrderTotal('BO-1003')=17400</code>；不存在 → 404；汇总 4 行；BO-1001 合计 16000</td><td><b>4 / 4 PASS</b></td></tr>
+<tr><td>4 写</td><td>POST 明细金额 = 2800×3 = 8400；父订单合计回写 12000</td><td><b>2 / 2 PASS</b></td></tr>
+<tr><td>5 负向</td><td>数量 0 → 400；图书不存在 → 400；只读实体 POST → 405</td><td><b>3 / 3 PASS</b></td></tr>
+<tr><td>6 草稿</td><td>POST 得到草稿；重复订单号激活 → 409；顾客不存在 → 400；正常激活 → 201 且自动编号 BO-1005</td><td><b>5 / 5 PASS</b></td></tr>
+<tr><td>7 绑定动作</td><td>空订单提交 400；正常提交 200；状态变 SUBMITTED；重复提交 409</td><td><b>4 / 4 PASS</b></td></tr>
+<tr><td colspan="2"><b>合计</b></td><td><b>PASS 26 / FAIL 0</b></td></tr>
+</tbody></table></div>
+<div class="box info"><b class="t">脚本不幂等 —— 这是设计上的取舍</b>
+验收脚本会真的改数据（加明细、提交订单、自动建 BO-1005）。想再跑一次：
+<code>rm -f db.sqlite &amp;&amp; npm run deploy</code> 后重启服务。
+若要可重复，把断言写在 mocha + <code>cds.test</code> 里（每次起独立进程与干净库），写法见
+<a href="testing.html">⑦ 测试体系</a>。</div>
+
+<h2 id="step7">9. STEP 7：Fiori Elements 界面</h2>
+<p>界面由三样东西决定：<b>OData 服务</b>（CAP 已就绪）+ <b>注解</b>（<code>app/book-orders/annotations.cds</code>）
++ <b>manifest</b>（<code>webapp/manifest.json</code> 用哪个模板、路由怎么走）。</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">annotate service.BookOrders with @(
+  UI.HeaderInfo: { TypeName: '订单', TypeNamePlural: '订单',
+                   Title: { Value: orderNo }, Description: { Value: customer.name } },
+  UI.SelectionFields: [ orderNo, status, customer_ID ],
+  UI.LineItem: [
+    { $Type:'UI.DataField', Label:'订单号',     Value: orderNo },
+    { $Type:'UI.DataField', Label:'顾客',       Value: customer.name },
+    { $Type:'UI.DataField', Label:'订单日期',   Value: orderDate },
+    { $Type:'UI.DataField', Label:'状态',       Value: status, Criticality: statusCriticality },
+    { $Type:'UI.DataField', Label:'合计 (JPY)', Value: totalAmount },
+    { $Type:'UI.DataFieldForAction', Label:'提交订单',
+      Action:'BookOrderService.BookOrders/submitOrder', Inline:true, Determining:true }
+  ],
+  UI.Facets: [ { $Type:'UI.ReferenceFacet', Label:'订单信息', Target:'@UI.FieldGroup#OrderData' },
+               { $Type:'UI.ReferenceFacet', Label:'订单明细', Target:'items/@UI.LineItem' } ],
+  totalAmount: @readonly, statusCriticality: @UI.Hidden, items: @UI.Hidden
+);</code></pre>
+<p>在本地打开界面（CAP 服务要求认证，而浏览器不会主动带凭据，所以要用自带的注入认证的小代理）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">node test/dev-proxy.js       # 4005 → 4004，给每个请求补 Authorization: Basic alice:alice
+# open http://localhost:4005/book-orders/webapp/index.html
+# 或者一条命令起全套：
+bash tools/serve_demo.sh start && bash tools/serve_demo.sh status</code></pre>
+<figure class="fig real">
+  <a class="zoom" href="assets/fig/real/fiori_list_report.png" target="_blank" title="点击看原图"><img src="assets/fig/real/fiori_list_report.png" alt="本机运行的 Fiori Elements List Report：图书受注管理的订单列表，含订单号、顾客、订单日期、状态（按 Criticality 着色）、合计（JPY）与行内「提交订单」按钮" width="1600" height="913" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">Fiori Elements List Report 的实际渲染结果：4 张种子订单，状态列 OPEN 为橙色（Criticality 2）、SUBMITTED 为绿色（3）、CLOSED 为中性（0）；每行右侧是绑定动作「提交订单」按钮；列名与筛选字段来自 annotations.cds</span><span class="kind real">本地实机运行</span><span class="src">本机实测：cds watch + node test/dev-proxy.js → Chrome 截图（tools/shot.js）</span></figcaption>
+</figure>
+<div class="box warn"><b class="t">Fiori 三个真实踩坑（本机都发生过）</b>
+<ul>
+<li><b>页面全白</b>：<code>html</code>/<code>body</code>/<code>#container</code> 没有确定高度 → 容器 computed height = 0px。
+用 <code>data-sap-ui-component</code> 自动挂载时更容易踩；本项目改成显式
+<code>new sap.ui.core.ComponentContainer({ height: "100%" })</code> 并在页面上写了四行 CSS。</li>
+<li><b><code>sap.fe.*</code> 不在 OpenUI5 里</b>：<code>sdk.openui5.org</code> 上 <code>/resources/sap/fe/</code> 是 404，
+必须用 <code>ui5.sap.com</code> 的 SAPUI5；并且要挑 CDN 上真带 <code>sap.fe</code> 的版本（本项目用 1.136.0）。</li>
+<li><b>注解写错会让页面崩</b>：<code>UI.LineItem</code> 里写了 <code>Value: items.$count</code> →
+UI5 抛 <code>DataField::items::$count - Stable Id could not be generated…</code> 并连带
+<code>TypeError: Cannot read properties of undefined (reading 'map')</code>，整个表格不渲染。删掉该列即恢复。</li>
+</ul></div>
+
+<h2 id="step8">10. STEP 8：换成 Java 运行时</h2>
+<p>把 <code>db/</code> 与 <code>srv/book-order-service.cds</code> 复制到 Maven 工程里，业务逻辑改写成事件处理器。
+手顺、代码与踩坑见 <a href="java.html">⑥ CAP Java 服务实现</a>。这里只放<b>本机实测的结论</b>：</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>检查项</th><th>结果</th></tr></thead>
+<tbody>
+<tr><td><code>mvn compile</code>（71 个源文件）</td><td>✅ <code>BUILD SUCCESS</code></td></tr>
+<tr><td>服务启动 / 模型注册 / CSV 灌入 H2 / handler 挂载</td><td>✅ 启动日志全部出现</td></tr>
+<tr><td><code>GET /odata/v4/book-order/$metadata</code></td><td>✅ 200</td></tr>
+<tr><td>带认证读实体、函数、动作</td><td>⚠ <b>未通过</b>：本地 mock 用户配置在本会话没找出正确写法，一律 401。<br>完整记录与排查方向在 <a href="java.html#fail">java.html §10</a></td></tr>
+</tbody></table></div>
+<div class="box info"><b class="t">这条“未通过”为什么值得留在教材里</b>
+它演示了两件事：① 两种运行时的 <code>@path</code> 语义不同（Java 侧是相对 servlet 基路径的，
+照抄 Node 的写法会得到 <code>/odata/v4/odata/v4/book-order</code>）；② <code>$metadata</code> 能打开
+<b>不等于</b>数据能读（元数据通常不受实体级授权限制）。排错第一步永远是打开 CAP 的索引页
+<code>http://localhost:8080/</code> 看真实 URL。</div>
+
+<h2 id="step9">11. STEP 9：打包与部署（需 BTP 账号）</h2>
+<div class="stepmeta"><span class="k">cf CLI</span><span class="k">mbt</span><span class="f">mta.yaml / xs-security.json</span><span class="c">本机未实测</span></div>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm ci
+npx cds build --production          # → gen/srv（服务）、gen/db（HDI 建表描述）
+npm i -g mbt &amp;&amp; mbt build -t mta_archives
+cf login -a https://api.cf.ap10.hana.ondemand.com --sso
+cf deploy mta_archives/demo-node_1.0.0.mtar -f
+cf apps                             # 期望：demo-node-srv / demo-node-approuter 都是 started</code></pre>
+<p><code>mta.yaml</code> 里声明的四个东西决定了“部署后能不能用”：</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>声明</th><th>作用</th><th>验证</th></tr></thead>
+<tbody>
+<tr><td><code>demo-node-srv</code>（nodejs 模块）</td><td>跑 CAP 服务</td><td><code>cf logs demo-node-srv --recent</code> 里出现 <code>serving BookOrderService</code></td></tr>
+<tr><td><code>demo-node-approuter</code>（nodejs 模块）</td><td>对外入口 + 认证（<code>forwardAuthToken: true</code>）</td><td>路由上访问首页返回 200</td></tr>
+<tr><td><code>demo-node-db</code>（hana / hdi-shared）</td><td>HDI 容器，部署时由 hdi-deployer 建表</td><td>Database Explorer 里能看到 4 张表</td></tr>
+<tr><td><code>demo-node-uaa</code>（xsuaa / application + xs-security.json）</td><td>scopes 与角色模板（OrderViewer / OrderEditor / OrderAdmin）</td><td>cockpit 的 Role Collections 里能看到 role-template</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="t">诚实声明</b>
+本机没有开通 BTP 试用账号，<code>mbt build</code> 与 <code>cf deploy</code> <b>未在本机执行</b>，
+上述命令与验证清单来自官方文档（详见 <a href="deploy.html">⑩ 构建与部署</a>），请在实际环境中按手顺执行并核对输出。</div>
+
+<h2 id="final">12. 总验收清单（可以当作实训评分表）</h2>
+<ul class="check">
+<li>能不看文档说出：4 张表的作用、订单与明细的关系、金额与合计由谁计算</li>
+<li><code>npm run deploy</code> 后能用 SQL 列出 6 张表并说出各自行数</li>
+<li>能解释为什么不用 <code>Composition</code>、为什么聚合不能做成实体</li>
+<li>能说出 <code>@cds.redirection.target</code> 解决的是哪个报错</li>
+<li><code>bash test/odata-verify.sh</code> 全绿，并能解释其中 3 条断言的业务含义</li>
+<li>能自己设计一个新的负向用例（例如「数量为负」）并说出期望状态码与消息来源</li>
+<li>能画出草稿流程：POST → PATCH → draftActivate，并指出 before-CREATE 在哪一步触发</li>
+<li>浏览器里能打开 List Report、看到 4 张订单、点进 Object Page 看到明细</li>
+<li>能说出 Fiori 页面全白的两个常见原因（容器高度 0px、sap.fe 库加载失败）</li>
+<li>能列出部署链路的每一步产物：<code>cds build</code> → <code>gen/</code>；<code>mbt build</code> → <code>.mtar</code>；<code>cf deploy</code> → 应用 + HDI 容器</li>
+<li>Java 版能编译并启动，能解释 <code>@path</code> 与 Node 的差异</li>
+<li>能说明「<code>$metadata</code> 200 但数据 401」意味着什么，以及下一步查什么</li>
+</ul>
+
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>这个项目里哪些文件换运行时也不用改？哪些必须各写一份？</li>
+    <li>为什么订单合计要在 after 钩子里回写，而不是让客户端直接提交 <code>totalAmount</code>？</li>
+    <li><code>test/odata-verify.sh</code> 为什么要先 redeploy 才能重跑？</li>
+    <li>Fiori 页面里「状态」列的颜色是从哪里来的？</li>
+    <li>如果没有 <code>test/dev-proxy.js</code>，在浏览器里直接打开 <code>localhost:4004</code> 的应用会发生什么？为什么？</li>
+    <li>部署到 CF 后，数据库里的表是谁建的？什么时候建的？</li>
+    <li>把本项目改成你公司的业务，需要动哪些文件？按依赖顺序写出来。</li>
+  </ol>
+  <p class="go">参考答案见 <a href="instructor.html">讲师版</a>；在线自测见 <a href="quiz.html">自测页</a>。</p>
+</div>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

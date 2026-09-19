@@ -1,0 +1,163 @@
+{
+  "key": "bas_s06",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "caption": "cds init 生成的 CAP 项目结构与 cds watch 的首次输出（服务路径与本地端口）",
+  "alt": "cds init 生成的 CAP 项目结构与 cds watch 的首次输出（服务路径与本地端口）",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 终端行为本地实测：npx cds watch（教材项目 demo-node，Node v22 / CAP 9.9.x）",
+  "window": "package.json - demo-node - SAP Business Application Studio",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "app"
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "open": true,
+          "label": "book-orders"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "annotations.cds"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db"
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "open": true,
+          "label": "data"
+        },
+        {
+          "d": 2,
+          "k": "file",
+          "label": "sap.training.bookorder-Books.csv"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.js"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "mta.yaml"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "xs-security.json"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "package.json"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node  ›  package.json",
+  "editor": {
+    "lang": "json",
+    "fs": 12.5,
+    "lh": 21,
+    "hl": [
+      19,
+      20,
+      21,
+      22
+    ],
+    "lines": [
+      "{",
+      "  \"dependencies\": { \"@sap/cds\": \"^9\" },",
+      "  \"devDependencies\": { \"@cap-js/sqlite\": \"^2\", \"@sap/cds-dk\": \"^9\" },",
+      "  \"scripts\": {",
+      "    \"watch\":  \"cds watch\",",
+      "    \"deploy\": \"cds deploy --to sqlite:db.sqlite\",",
+      "    \"build\":  \"cds build --production\",",
+      "    \"lint:model\": \"cds compile db/schema.cds --to sql\""
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 250,
+    "extraTabs": [
+      "PROBLEMS",
+      "OUTPUT",
+      "DEBUG CONSOLE"
+    ],
+    "lines": [
+      "$ npx cds init bookorder --add sample   # 或在 wizard 里 New Project from Template",
+      "$ cd bookorder && npx cds watch",
+      "@[cds] - loaded model from 3 file(s):",
+      "@  srv/book-order-service.cds   db/schema.cds   node_modules/@sap/cds/common.cds",
+      "@[cds] - connect to db > sqlite { url: 'db.sqlite' }",
+      "@[cds] - serving BookOrderService {",
+      "@  at: [ '/odata/v4/book-order' ],",
+      "@  impl: 'srv/book-order-service.js' }",
+      "@[cds] - server listening on { url: 'http://localhost:4004' }",
+      "#  首次访问 http://localhost:4004 会触发端口提示，选择在新标签打开"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.20.0",
+    "CAP 9.9.3",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "on": "$ npx cds init bookorder --add sample   # 或在 wizard 里 New Project from Template",
+      "text": "1. 生成 app/ db/ srv/ 骨架"
+    },
+    {
+      "on": "sap.training.bookorder-Books.csv",
+      "text": "2. 初始数据放在 db/data，文件名=命名空间-实体"
+    },
+    {
+      "on": "    \"deploy\": \"cds deploy --to sqlite:db.sqlite\",",
+      "text": "3. 本地建库脚本（写进 package.json）"
+    },
+    {
+      "on": "[cds] - server listening on { url: 'http://localhost:4004' }",
+      "text": "4. 服务地址：/odata/v4/book-order"
+    }
+  ]
+}

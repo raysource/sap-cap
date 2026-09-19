@@ -1,0 +1,140 @@
+{
+ "key": "btp_s05",
+ "kind": "dialog",
+ "w": 1440,
+ "h": 900,
+ "dw": 800,
+ "dh": 620,
+ "caption": "Create Subaccount 对话框：Display Name / Subdomain / Region 三项最容易填错",
+ "alt": "BTP cockpit 的 Create Subaccount 对话框，含 Display Name、Subdomain、Region、Provider 与 Advanced 选项",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 字段依据 SAP Help「Create a Subaccount」与「Change Subaccount Details」",
+ "under": {
+  "kind": "cockpit",
+  "product": "SAP Business Technology Platform",
+  "crumbs": [
+   "Global Account: trial-9f3a2b (trial)"
+  ],
+  "nav": {
+   "title": "Global account: trial-9f3a2b",
+   "items": [
+    {
+     "label": "Account Explorer",
+     "active": true
+    },
+    {
+     "label": "Entitlements"
+    },
+    {
+     "label": "Users"
+    },
+    {
+     "label": "Security"
+    }
+   ]
+  },
+  "title": "Subaccounts",
+  "subtitle": "全局账户作用域",
+  "blocks": [
+   {
+    "t": "table",
+    "cols": [
+     "Subaccount",
+     "Region",
+     "Environment",
+     "State"
+    ],
+    "widths": [
+     1.2,
+     0.9,
+     1.3,
+     0.7
+    ],
+    "rows": [
+     [
+      "trial",
+      "ap21",
+      "Cloud Foundry",
+      "OK"
+     ]
+    ]
+   }
+  ],
+  "status": "Global account: trial-9f3a2b (trial)"
+ },
+ "title": "Create Subaccount",
+ "subtitle": "新建的子账户是空的：还要各自 Enable Cloud Foundry、分配额、加成员",
+ "blocks": [
+  {
+   "t": "form",
+   "cols": 2,
+   "rowh": 46,
+   "fields": [
+    [
+     "Display Name",
+     "trial-dev"
+    ],
+    [
+     "Description",
+     "CAP 培训用（可选）"
+    ],
+    [
+     "Subdomain",
+     "jasontrialdev"
+    ],
+    [
+     "Region",
+     "ap21 — Singapore"
+    ],
+    [
+     "Provider",
+     "Microsoft Azure"
+    ],
+    [
+     "Parent",
+     "trial-9f3a2b (Global Account)"
+    ],
+    [
+     "Used for production",
+     "off"
+    ],
+    [
+     "Enable beta features",
+     "off"
+    ]
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "warn",
+   "text": "Subdomain 同区域唯一，且会出现在应用 URL 里；Region 选完就只能靠新建子账户换。"
+  }
+ ],
+ "buttons": [
+  {
+   "label": "Cancel"
+  },
+  {
+   "label": "Create",
+   "primary": true
+  }
+ ],
+ "callouts": [
+  {
+   "on": "Display Name",
+   "text": "1. 只影响显示名"
+  },
+  {
+   "on": "ap21 — Singapore",
+   "text": "2. 区域创建后不可改"
+  },
+  {
+   "on": "Subdomain",
+   "text": "3. 同区域唯一，进 URL"
+  },
+  {
+   "on": "Enable beta features",
+   "text": "4. beta 开了不能关"
+  }
+ ]
+}

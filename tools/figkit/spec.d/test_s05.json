@@ -1,0 +1,52 @@
+{
+  "key": "test_s05",
+  "kind": "hana",
+  "w": 1440, "h": 900,
+  "product": "SAP HANA Cloud",
+  "user": "JASON",
+  "navW": 292,
+  "nav": {
+    "title": "Database Explorer",
+    "items": [
+      {"label": "demo-hana-db (HDI)", "active": true, "sub": ["Catalog", "SQL Console", "Load", "Import"]},
+      {"label": "BOOKORDER (schema)"},
+      {"label": "Tables", "group": true},
+      {"label": "BOOKS"},
+      {"label": "BOOKORDERS"},
+      {"label": "BOOKORDERITEMS"},
+      {"label": "CUSTOMERS"},
+      {"label": "Views", "group": true},
+      {"label": "ORDERITEMVIEW"}
+    ]
+  },
+  "title": "SQL Console — BOOKORDER.BOOKORDERS",
+  "tabs": ["SQL Console 1", "BOOKORDERS (Table)", "Remote Sources"],
+  "activeTab": 0,
+  "blocks": [
+    {"t": "code", "lang": "sql", "fs": 13, "lh": 21, "title": "SQL", "numbers": true, "lines": [
+      "SELECT O.\"ORDERNO\", COUNT(I.\"ID\") AS LINES, SUM(I.\"AMOUNT\") AS TOTAL",
+      "  FROM \"BOOKORDERS\" O",
+      "  JOIN \"BOOKORDERITEMS\" I ON I.\"ORDER_ID\" = O.\"ID\"",
+      " GROUP BY O.\"ORDERNO\"",
+      " ORDER BY O.\"ORDERNO\";"
+    ]},
+    {"t": "p", "text": "4 行返回（与本地 SQLite 上的 getOrderSummary() 输出逐行对照：明细数、合计必须一致）", "size": 12.5, "fill": "#6a6d70"},
+    {"t": "table", "cols": ["ORDERNO", "LINES", "TOTAL"], "widths": [1.2, 0.7, 1.0],
+     "rows": [
+       ["BO-1001", "3", "16000.00"],
+       ["BO-1002", "1", "3600.00"],
+       ["BO-1003", "3", "17400.00"],
+       ["BO-1004", "2", "7600.00"]
+     ]},
+    {"t": "note", "kind": "info",
+     "text": "表名与 schema 名以 cds build --production 生成的 gen/db/*.hdbtable 为准：本示范为 BOOKORDER + 大写实体名（无下划线），名称随项目的 namespace 与 hdi 参数而变，请以自己项目为准。"}
+  ],
+  "status": "Connected · demo-hana-db (HDI container) · SQL: 0.09 s · 4 rows",
+  "caption": "同一套业务数据在云端 HANA Cloud 的直接核对：本地测过还不够，部署到 HANA 后要用 SQL 复核一遍关键数字",
+  "callouts": [
+    {"on": "  FROM \"BOOKORDERS\" O", "text": "1. 部署后的表名由 cds build 生成"},
+    {"on": "  JOIN \"BOOKORDERITEMS\" I ON I.\"ORDER_ID\" = O.\"ID\"", "text": "2. 外键列名 = 关联名 + _ID"},
+    {"on": "17400.00", "text": "3. 与 getOrderTotal(BO-1003)=17400 对齐"},
+    {"on": "gen/db/*.hdbtable", "text": "4. 名称不确定就打开 gen/db 查"}
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "key": "sec_s06",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "window": "xs-security.json - demo-node - SAP Business Application Studio",
+  "caption": "示范项目里真实维护的 xs-security.json：scopes 是权限点，role-templates 把权限打成一包发给用户",
+  "src": "文件全文与示范项目 project-code/demo-node/xs-security.json 一致；结构依据 SAP Help《Application Security Descriptor Configuration Syntax》",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.js"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "mta.yaml"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "xs-security.json",
+          "tag": "M"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "xs-security.json",
+    "mta.yaml"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node › xs-security.json",
+  "editor": {
+    "lang": "json",
+    "fs": 11.5,
+    "lh": 15.5,
+    "hl": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "lines": [
+      "  \"scopes\": [",
+      "    {",
+      "      \"name\": \"$XSAPPNAME.view\",",
+      "      \"description\": \"查看订单与主数据\"",
+      "    },",
+      "    {",
+      "      \"name\": \"$XSAPPNAME.edit\",",
+      "      \"description\": \"创建与修改订单\"",
+      "    },",
+      "    {",
+      "      \"name\": \"$XSAPPNAME.submit\",",
+      "      \"description\": \"提交订单（状态迁移，业务上等同于放行）\"",
+      "    }",
+      "  ],",
+      "  \"attributes\": [],",
+      "  \"role-templates\": [",
+      "    {",
+      "      \"name\": \"OrderViewer\",",
+      "      \"description\": \"订单只读\",",
+      "      \"scope-references\": [",
+      "        \"$XSAPPNAME.view\"",
+      "      ]",
+      "    },",
+      "    {",
+      "      \"name\": \"OrderEditor\",",
+      "      \"description\": \"订单维护（新建与修改，含明细）\",",
+      "      \"scope-references\": [",
+      "        \"$XSAPPNAME.view\",",
+      "        \"$XSAPPNAME.edit\"",
+      "      ]",
+      "    },",
+      "    {",
+      "      \"name\": \"OrderAdmin\",",
+      "      \"description\": \"订单管理员：可提交订单并触发状态迁移\",",
+      "      \"scope-references\": [",
+      "        \"$XSAPPNAME.view\",",
+      "        \"$XSAPPNAME.edit\",",
+      "        \"$XSAPPNAME.submit\"",
+      "      ]",
+      "    }",
+      "  ]",
+      "  ...   (attributes 之后到结尾，全文见 code.html)"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "JSON with Comments",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        788
+      ],
+      "text": "1. scope 名去前缀比对"
+    },
+    {
+      "at": [
+        60,
+        824
+      ],
+      "text": "2. 这个包 = 订单管理员"
+    }
+  ]
+}

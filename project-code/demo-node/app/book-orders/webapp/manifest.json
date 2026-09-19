@@ -1,0 +1,104 @@
+{
+  "_version": "1.32.0",
+  "sap.app": {
+    "id": "sap.training.bookorder.manage",
+    "type": "application",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "图书受注管理 / Manage Book Orders",
+    "description": "SAP CAP 培训课程示范项目 —— Fiori Elements List Report + Object Page（OData V4）",
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/book-order/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": false
+    },
+    "supportedThemes": [
+      "sap_horizon"
+    ]
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.136.0",
+      "libs": {
+        "sap.ui.core": {},
+        "sap.m": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true,
+          "groupId": "$auto",
+          "updateGroupId": "$auto"
+        }
+      }
+    },
+    "routing": {
+      "config": {},
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "BookOrdersList",
+          "target": "BookOrdersList"
+        },
+        {
+          "pattern": "BookOrders({key}):?query:",
+          "name": "BookOrdersObjectPage",
+          "target": "BookOrdersObjectPage"
+        }
+      ],
+      "targets": {
+        "BookOrdersList": {
+          "type": "Component",
+          "id": "BookOrdersList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/BookOrders",
+              "variantManagement": "Control",
+              "initialLoad": "Enabled",
+              "navigation": {
+                "BookOrders": {
+                  "detail": {
+                    "route": "BookOrdersObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "BookOrdersObjectPage": {
+          "type": "Component",
+          "id": "BookOrdersObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/BookOrders",
+              "editableHeaderContent": false,
+              "navigation": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

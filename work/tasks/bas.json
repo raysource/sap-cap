@@ -1,0 +1,93 @@
+[
+ {
+  "no": "BAS-01",
+  "title": "确认 BAS 订阅与角色，并进入业务应用 Studio",
+  "basis": "Subscriptions 里能看到 SAP Business Application Studio（状态 Subscribed）；点 Go to Application 能打开 BAS Lobby",
+  "time": "10 分",
+  "rel": "bas.html#s2-1"
+ },
+ {
+  "no": "BAS-02",
+  "title": "创建 Full Stack Cloud Application dev space",
+  "basis": "Dev Space Manager 里出现该 dev space，Type = Full Stack Cloud Application，STATUS 从 STARTING 变为 RUNNING",
+  "time": "15 分",
+  "rel": "bas.html#s2-2"
+ },
+ {
+  "no": "BAS-03",
+  "title": "dev space 生命周期演练：Stop → Start → （在副本上）Delete",
+  "basis": "Stop 后 Start，项目文件与设置仍在；扩展编辑在 STOPPED 状态下才可保存",
+  "time": "10 分",
+  "rel": "bas.html#s2-2"
+ },
+ {
+  "no": "BAS-04",
+  "title": "跑起服务并做端口预览（两条路径都试）",
+  "basis": "Ports: Preview 列表里能看到 http://localhost:4004；浏览器打开 /odata/v4/book-order/$metadata 返回 XML",
+  "time": "15 分",
+  "rel": "bas.html#s3-2"
+ },
+ {
+  "no": "BAS-05",
+  "title": "用 cds init 创建 CAP 项目并核对目录与 package.json",
+  "basis": "项目里有 app/ db/ srv/ package.json；db/data 下 4 个 CSV 命名为「命名空间-实体.csv」；cds compile --to sql 有 CREATE TABLE 输出",
+  "time": "15 分",
+  "rel": "bas.html#s4-1"
+ },
+ {
+  "no": "BAS-06",
+  "title": "终端三连：cds watch / npm run deploy / cds env",
+  "basis": "deploy 输出 successfully deployed to db.sqlite；cds watch 日志出现 serving BookOrderService 与 server listening on http://localhost:4004；cds env get requires.db 显示 kind: sqlite",
+  "time": "15 分",
+  "rel": "bas.html#s5-1"
+ },
+ {
+  "no": "BAS-07",
+  "title": "在 dev space 里查看 SQLite 表名与运行日志",
+  "basis": "脚本输出里能看到 sap_training_bookorder_Books 与 sap_training_bookorder_BookOrderItems；终端日志里能看到 OData 请求行",
+  "time": "10 分",
+  "rel": "bas.html#s5-2"
+ },
+ {
+  "no": "BAS-08",
+  "title": "创建 launch.json 并用 attach 命中断点",
+  "basis": "终端出现 Debugger listening on ws://127.0.0.1:9229/…；触发 submitOrder 时停在断点行，VARIABLES 面板显示变量值",
+  "time": "20 分",
+  "rel": "bas.html#s5-3"
+ },
+ {
+  "no": "BAS-09",
+  "title": "制造并消除三类「红线」",
+  "basis": "分别复现：视图缺主键、关联自动重定向冲突、改列名未同步；每类都能用 cds compile 复现报错并修复到编译通过",
+  "time": "20 分",
+  "rel": "bas.html#s6-2"
+ },
+ {
+  "no": "BAS-10",
+  "title": "把项目推到 GitHub（HTTPS + PAT）",
+  "basis": "git status 为 clean；git log --oneline -1 有提交；浏览器打开仓库能看到 db/ srv/ package.json 且 node_modules 未被提交",
+  "time": "15 分",
+  "rel": "bas.html#s7-1"
+ },
+ {
+  "no": "BAS-11",
+  "title": "部署前准备：cds add hana mta、cds build、mbt -v",
+  "basis": "mta.yaml 里同时有 type: nodejs 与 type: hdb 模块及 hdi-container 资源；cds build --production 生成 gen/；mbt -v 与 cf -v 都有版本输出",
+  "time": "20 分",
+  "rel": "bas.html#s8-1"
+ },
+ {
+  "no": "BAS-12",
+  "title": "从 BAS 部署到 Cloud Foundry 并在 cockpit 验收",
+  "basis": "cf target 的 org/space 正确；mbt build 生成 MTAR；cf deploy 后应用 started、服务实例 create succeeded；<route>/odata/v4/book-order/BookOrders?$filter=status eq 'OPEN' 返回 2 条",
+  "time": "30 分",
+  "rel": "bas.html#s9-1"
+ },
+ {
+  "no": "BAS-13",
+  "title": "磁盘与配额自查 + 错误表演练",
+  "basis": "df -h 与 df -ih 的已用比例低于 80%；能从错误表里指出「npm ERR! No space left」与「端口打不开」的处置顺序",
+  "time": "10 分",
+  "rel": "bas.html#s11"
+ }
+]

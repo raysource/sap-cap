@@ -1,0 +1,182 @@
+[
+ {
+  "tag": "概念",
+  "q": "BAS 与本地 VS Code + Node.js 的关系，哪种说法最准确？",
+  "opts": {
+   "A": "BAS 是另一套工具链，命令与 VS Code 完全不同",
+   "B": "BAS 基于 Code-OSS（VS Code 底座），同一套 CAP 工具链只是跑在云端 dev space 里",
+   "C": "BAS 只能做 SAP Fiori，CAP 必须用本地 VS Code",
+   "D": "BAS 是 VS Code 的插件市场，需要本地装 VS Code 才能用"
+  },
+  "answer": "B",
+  "explain": "BAS 基于 Code-OSS，菜单、命令面板、launch.json、Git 面板与 VS Code 一致；差别在环境（预装工具、配额、联网）而不是工具链本身。"
+ },
+ {
+  "tag": "操作",
+  "q": "试用/免费计划下，BAS dev space 的三条硬限制是哪一组？",
+  "opts": {
+   "A": "最多 5 个 dev space、同时 3 个 RUNNING、每个 10 GB",
+   "B": "最多 2 个 dev space、同时 1 个 RUNNING、每个 4 GB 磁盘",
+   "C": "不限数量，但每个只能 1 GB",
+   "D": "最多 10 个 dev space、同时 2 个 RUNNING、每个 4 GB"
+  },
+  "answer": "B",
+  "explain": "Trial Plan Restrictions：最多 2 个 dev space、1 个 RUNNING、4 GB 磁盘、1 小时无操作会话超时、30 天不活跃会被删除。Standard 计划才是 10 个 / 2 个同时 / 10 GB。"
+ },
+ {
+  "tag": "操作",
+  "q": "创建 Dev Space 时，做 CAP 项目应该选哪个 Type（Kind）？",
+  "opts": {
+   "A": "Basic",
+   "B": "SAP Fiori",
+   "C": "Full Stack Cloud Application",
+   "D": "SAP Mobile Application"
+  },
+  "answer": "C",
+  "explain": "Full Stack Cloud Application 预置 CAP Tools、CDS Graphical Modeler、MTA Tools、SAP HANA Database Explorer、SAP Fiori Tools，是做 CAP 的常规选择。"
+ },
+ {
+  "tag": "操作",
+  "q": "要把 cds watch 起的服务在浏览器里打开，官方文档记载的操作是？",
+  "opts": {
+   "A": "在浏览器输入 dev space 的私网地址",
+   "B": "命令面板输入 Ports: Preview，然后在列表里点选该应用",
+   "C": "先 cf push 到 Cloud Foundry 再访问路由",
+   "D": "修改 hosts 文件把 localhost 指向 dev space"
+  },
+  "answer": "B",
+  "explain": "SAP Help「Application Preview Settings」写明：每个应用监听一个端口，用 Ports: Preview 命令列出已暴露的应用并在新标签打开；端口被占用时用 Ports: Stop the process running on the port。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于 dev space 的 Stop / Start / Delete，哪一项正确？",
+  "opts": {
+   "A": "Stop 会清空 dev space 里的文件，Start 后需要重新克隆项目",
+   "B": "Stop 后文件与设置保留；Delete 不可恢复，建议先同步到 Git",
+   "C": "Delete 后可以在一周内恢复",
+   "D": "扩展的增删可以在 RUNNING 状态下直接生效"
+  },
+  "answer": "B",
+  "explain": "Stop → Start 会保留文件与设置（扩展更新也需要这次重启才生效）；Delete 不可恢复。增删扩展必须先把 dev space 置于 STOPPED 状态。"
+ },
+ {
+  "tag": "操作",
+  "q": "cds init 生成的目录里，db/data/*.csv 的文件名规则是？",
+  "opts": {
+   "A": "随便起名，CAP 按内容匹配",
+   "B": "「实体名.csv」",
+   "C": "「命名空间-实体名.csv」，例如 sap.training.bookorder-Books.csv",
+   "D": "服务名_实体名.csv」"
+  },
+  "answer": "C",
+  "explain": "初始数据 CSV 按「命名空间-实体名」命名并放在 db/data 下，CAP 才会装载；命名不符时表现为表建了但 0 行。"
+ },
+ {
+  "tag": "操作",
+  "q": "判断当前项目到底连哪个数据库，最可靠的一条命令是？",
+  "opts": {
+   "A": "cat db/schema.cds",
+   "B": "npx cds env get requires.db（需要时加 --profile）",
+   "C": "npx cds version",
+   "D": "ls -l db.sqlite"
+  },
+  "answer": "B",
+  "explain": "cds env 把全局默认、项目配置、profile 与环境变量合并成「最终生效」的配置；默认看到 @cap-js/sqlite，加 --profile production 会看到 @cap-js/hana。"
+ },
+ {
+  "tag": "排错",
+  "q": "在 BAS 终端执行 npm install 报 No space left on device，第一步该做什么？",
+  "opts": {
+   "A": "重装 Node.js",
+   "B": "用 df -h 与 df -ih 看磁盘与 inode 用量，再清 ~/.npm、~/.cache、Trash",
+   "C": "立刻删掉 dev space 重建",
+   "D": "改用 yarn 安装"
+  },
+  "answer": "B",
+  "explain": "dev space 的磁盘（试用/免费 4 GB）与 inode 都可能耗尽；官方 Troubleshooting 给的顺序就是先 df -h / df -ih，再清缓存与 Trash，最后才是把项目搬到新 dev space。"
+ },
+ {
+  "tag": "排错",
+  "q": "Dev space 一直卡在 STARTING，官方建议的处置是？",
+  "opts": {
+   "A": "等 5 分钟后重试；仍不行就新建 dev space 并用 Git 把项目拉回来，同时把 ws-id 报给 SAP 支持",
+   "B": "反复点 Stop / Start 直到成功",
+   "C": "删掉子账户重建",
+   "D": "改用本地 VS Code 即可，无法恢复"
+  },
+  "answer": "A",
+  "explain": "SAP Help 的 Dev Space 排错条目给出的就是这三步；因此「先 Git 后删」的习惯是关键前提。"
+ },
+ {
+  "tag": "排错",
+  "q": "新建的 dev space 创建成功后一直是 STOPPED，最可能的原因？",
+  "opts": {
+   "A": "扩展没装全",
+   "B": "已经有一个 dev space 处于 RUNNING（试用计划同时只能 1 个）",
+   "C": "名称里有非法字符",
+   "D": "磁盘超额"
+  },
+  "answer": "B",
+  "explain": "官方文档明确：Standard 计划最多 2 个、免费计划 1 个 RUNNING；超出的 dev space 会停在 STOPPED，需要先停掉另一个再启动。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于 CDS 编辑器里的「红线」，哪一项描述正确？",
+  "opts": {
+   "A": "红线一定是编辑器缓存错误，重启即可",
+   "B": "聚合视图没有主键时不能作为 OData 实体暴露，是红线（或运行期报错）的常见来源",
+   "C": "只要 cds watch 能启动，红线可以忽略",
+   "D": "红线只在部署时出现"
+  },
+  "answer": "B",
+  "explain": "CAP 要求暴露为 OData 实体/集合的对象必须有主键；聚合（group by）结果拿不到主键，本课程用服务层函数（getOrderTotal / getOrderSummary）绕开。另两类常见红线是关联自动重定向冲突与改列名后未同步。"
+ },
+ {
+  "tag": "操作",
+  "q": "命令行确认模型是否合法（能生成 DDL）的命令是？",
+  "opts": {
+   "A": "cds watch",
+   "B": "cds compile db/schema.cds srv/book-order-service.cds --to sql",
+   "C": "npm test",
+   "D": "cds version"
+  },
+  "answer": "B",
+  "explain": "cds compile 把模型编译成目标格式（--to sql / --to edmx 等），编译通过才是硬结论；PROBLEMS 面板只是编辑器视角。"
+ },
+ {
+  "tag": "操作",
+  "q": "往 GitHub push 时，Git 提示输入密码，正确做法是？",
+  "opts": {
+   "A": "输入 GitHub 登录密码",
+   "B": "粘贴 Personal Access Token（PAT）作为密码",
+   "C": "留空直接回车",
+   "D": "输入邮箱验证码"
+  },
+  "answer": "B",
+  "explain": "SAP Help 明确建议在支持的情况下用 PAT 代替密码；GitHub 也已停用密码认证。PAT 要定期更新，并具备仓库读写权限。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "在 BAS 里做部署，最稳妥的「部署前检查」是？",
+  "opts": {
+   "A": "直接 cf deploy，失败再看日志",
+   "B": "cf login --sso 后 cf target 核对 org/space，再 mbt build，最后 cf deploy；并保留 package-lock.json",
+   "C": "只跑 mbt build，不用登录 CF",
+   "D": "先在本地 Windows 上打包再上传"
+  },
+  "answer": "B",
+  "explain": "cf deploy 依赖当前 target 的 org/space；mbt build 读 mta.yaml 的 before-all（npm ci + cds build --production），锁定依赖可避免「本地能跑云端不一样」。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "教学/团队协作场景下，哪种 dev space 使用习惯最合理？",
+  "opts": {
+   "A": "所有项目都塞进同一个 dev space，减少创建次数",
+   "B": "一个项目一个 dev space；扩展按需最小化；改完即 commit/push",
+   "C": "把 node_modules 也提交进 Git 以免重装",
+   "D": "用 dev space 长期保存业务数据"
+  },
+  "answer": "B",
+  "explain": "dev space 有 4 GB 磁盘与数量上限，node_modules 属于构建产物（写进 .gitignore），业务数据不能只留在 dev space——停止/删除与 30 天回收都会让你付出代价。"
+ }
+]

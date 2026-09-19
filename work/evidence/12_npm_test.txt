@@ -1,0 +1,30 @@
+=== cds serve -? | grep -A3 log-levels ===
+
+=== ls test/ ===
+total 24
+drwxr-xr-x   4 jason  staff   128  9月 19 20:42 .
+drwxr-xr-x  13 jason  staff   416  9月 19 20:43 ..
+-rw-r--r--   1 jason  staff  2027  9月 19 20:42 dev-proxy.js
+-rw-r--r--   1 jason  staff  7391  9月 19 20:40 odata-verify.sh
+
+=== npm test ===
+
+> demo-node@1.0.0 test
+> mocha --reporter spec --timeout 20000 test/*.test.js
+
+[31mError: No test files found: "test/*.test.js"[39m
+npm test exit=1
+
+=== npx cds test -? ===
+Error: Cannot find module '@cap-js/cds-test/bin/chest.js'
+Require stack:
+- /Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds-dk/bin/test.js
+- /Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds-dk/bin/cds.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at resolve (node:internal/modules/helpers:157:19)
+    at require (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds-dk/bin/test.js:3:33)
+    at Object.<anonymous> (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds-dk/bin/test.js:5:18)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)

@@ -1,0 +1,68 @@
+{
+  "key": "sec_s07",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap — 从模型生成 XSUAA 描述符",
+  "label": "本地实机运行",
+  "src": "本地实测：npx cds compile srv --to xsuaa / npx cds add xsuaa --for production（CAP 9.9.3）",
+  "caption": "模型里的 to: 角色会被编译成 scopes + role-templates；一个也没写时（只写 authenticated-user）输出是三个空数组",
+  "lh": 19,
+  "lines": [
+    "$ npx cds compile srv --to xsuaa     # 示范项目原样（只写 authenticated-user）",
+    "{",
+    "  \"scopes\": [],",
+    "  \"attributes\": [],",
+    "  \"role-templates\": []",
+    "}",
+    "",
+    "$ npx cds compile srv --to xsuaa     # 加了 to: 'view' / 'edit' / 'submit' 之后",
+    "{",
+    "  \"scopes\": [",
+    "    { \"name\": \"$XSAPPNAME.view\",   \"description\": \"view\" },",
+    "    { \"name\": \"$XSAPPNAME.edit\",   \"description\": \"edit\" },",
+    "    { \"name\": \"$XSAPPNAME.submit\", \"description\": \"submit\" }",
+    "  ],",
+    "  \"attributes\": [],",
+    "  \"role-templates\": [",
+    "    { \"name\": \"view\",   \"description\": \"generated\",",
+    "      \"scope-references\": [ \"$XSAPPNAME.view\" ], \"attribute-references\": [] },",
+    "    ...",
+    "  ]",
+    "}",
+    "",
+    "# 结论：模型里的 to: 名 → scope 名（加前缀）；role-template 名由你决定（生成的是 to: 名）",
+    "# 示范项目把 role-templates 改成了 OrderViewer / OrderEditor / OrderAdmin —— scope 引用不变",
+    "# 同一目标重复 annotate @restrict 时只有 [WARNING]，后者会把前者整体覆盖"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        660
+      ],
+      "text": "1. 没写 to: 无 scope"
+    },
+    {
+      "at": [
+        60,
+        696
+      ],
+      "text": "2. to: → 一个 scope"
+    },
+    {
+      "at": [
+        60,
+        732
+      ],
+      "text": "3. 模板名可自己起"
+    },
+    {
+      "at": [
+        60,
+        768
+      ],
+      "text": "4. 重复注解会覆盖"
+    }
+  ]
+}

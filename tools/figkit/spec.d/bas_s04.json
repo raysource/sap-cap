@@ -1,0 +1,104 @@
+{
+  "key": "bas_s04",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "caption": "首次进入 BAS 的 Get Started 页：New Project from Template / Open Folder / Clone Repository 三条起步路径",
+  "alt": "首次进入 BAS 的 Get Started 页：New Project from Template / Open Folder / Clone Repository 三条起步路径",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 入口名称出自 SAP Help「Create a Project」与 SAP Tutorials（BAS + CAP）",
+  "window": "Get Started - demo-node - SAP Business Application Studio",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "NO FOLDER OPENED",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "file",
+          "label": "Open Folder"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "Clone Repository"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "Get Started",
+    "schema.cds - demo-node"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "h2",
+      "text": "欢迎使用 SAP Business Application Studio"
+    },
+    {
+      "t": "p",
+      "text": "三种起步路径；命令面板（F1）可以访问全部功能，终端在 Terminal 菜单里。"
+    },
+    {
+      "t": "tiles",
+      "cols": 3,
+      "h": 118,
+      "items": [
+        {
+          "title": "New Project from Template",
+          "sub": "Template Wizard：CAP Project / SAP Fiori / MTA",
+          "glyph": "NP",
+          "chip": "推荐"
+        },
+        {
+          "title": "Open Folder",
+          "sub": "打开 /home/user/projects 下已有项目",
+          "glyph": "OF"
+        },
+        {
+          "title": "Clone Repository",
+          "sub": "从 Git 克隆已有项目（含教材项目）",
+          "glyph": "CR"
+        }
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "命令面板：F1 或 Command + Shift + P（Mac）/ Ctrl + Shift + P。终端：Terminal > New Terminal，或在文件上右键 Open in Integrated Terminal。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "本地 VS Code 需要自己装 cds-dk / mbt / cf CLI；BAS 的 dev space 已经预装，但磁盘只有 4 GB，npm 安装必须联网。"
+    }
+  ],
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.20.0",
+    "CAP 9.9.3 / cds-dk 9.9.6",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "on": "New Project from Template",
+      "text": "1. 向导建项目（也可用终端 cds init）"
+    },
+    {
+      "on": "Clone Repository",
+      "text": "2. 已有 Git 仓库先用这条"
+    },
+    {
+      "on": "Open Folder",
+      "text": "3. 打开已克隆 / 已导入的项目"
+    },
+    {
+      "on": "Open in Integrated Terminal",
+      "text": "4. F1 = 命令面板入口"
+    }
+  ]
+}

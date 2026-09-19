@@ -1,0 +1,41 @@
+{
+  "key": "node_s06",
+  "kind": "terminal",
+  "w": 1440, "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — 草稿与绑定动作实测",
+  "lh": 19,
+  "caption": "草稿流程的真实 HTTP 往返：POST 只产生未激活草稿（orderNo=null）→ draftActivate 返回 201 并自动编号 BO-1005；绑定动作 submitOrder 成功返回业务消息，没有明细 400、重复提交 409（JSON 字段有省略）",
+  "label": "本地实机运行",
+  "src": "本地实测：curl（CSV 初始数据状态）",
+  "lines": [
+    "$ SVC=http://localhost:4004/odata/v4/book-order ; A='-u alice:alice'",
+    "$ curl -s $A -X POST \"$SVC/BookOrders\" -H 'Content-Type: application/json' -d '{\"customer_ID\":1000}'",
+    "{\"@odata.context\":\"$metadata#BookOrders/$entity\",\"createdAt\":\"2026-09-19T11:47:50.261Z\",\"createdBy\":\"alice\",",
+    " \"ID\":\"33f68968-b47b-4e2f-9473-120e0425e080\",\"orderNo\":null,\"customer_ID\":1000,\"orderDate\":\"2026-09-19\",",
+    " \"status\":\"OPEN\",\"totalAmount\":0,\"HasActiveEntity\":false,\"IsActiveEntity\":false}",
+    "$ ID=33f68968-b47b-4e2f-9473-120e0425e080",
+    "$ curl -s -w 'HTTP %{http_code}' $A -X POST \"$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/BookOrderService.draftActivate\" -d '{}'",
+    "HTTP 201",
+    "{\"@odata.context\":\"../$metadata#BookOrders/$entity\",\"ID\":\"33f68968-b47b-4e2f-9473-120e0425e080\",",
+    " \"orderNo\":\"BO-1005\",\"customer_ID\":1000,\"orderDate\":\"2026-09-19\",\"status\":\"OPEN\",\"totalAmount\":0,\"IsActiveEntity\":true}",
+    "",
+    "$ curl -s -w 'HTTP %{http_code}' $A -X POST \"$SVC/BookOrders(ID=4a1f8c03-0001-…,IsActiveEntity=true)/submitOrder\" -d '{}'",
+    "HTTP 200",
+    "{\"@odata.context\":\"../$metadata#Edm.String\",\"value\":\"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）\"}",
+    "",
+    "$ curl -s -w 'HTTP %{http_code}' $A -X POST \"$SVC/BookOrders(ID=4a1f8c03-0003-…,IsActiveEntity=true)/submitOrder\" -d '{}'",
+    "HTTP 409",
+    "{\"error\":{\"message\":\"订单 BO-1003 当前状态为 SUBMITTED，不能重复提交\",\"code\":\"409\",\"@Common.numericSeverity\":4}}",
+    "",
+    "$ curl -s -w 'HTTP %{http_code}' $A -X POST \"$SVC/BookOrders(ID=c64c5095-…,IsActiveEntity=true)/submitOrder\" -d '{}'",
+    "HTTP 400",
+    "{\"error\":{\"message\":\"订单 BO-1005 没有明细，不能提交\",\"code\":\"400\",\"@Common.numericSeverity\":4}}"
+  ],
+  "callouts": [
+    {"on": " \"status\":\"OPEN\",\"totalAmount\":0,\"HasActiveEntity\":false,\"IsActiveEntity\":false}", "text": "1. POST 只建草稿：orderNo=null"},
+    {"on": " \"orderNo\":\"BO-1005\",\"customer_ID\":1000,\"orderDate\":\"2026-09-19\",\"status\":\"OPEN\",\"totalAmount\":0,\"IsActiveEntity\":true}", "text": "2. draftActivate → before-CREATE 编号"},
+    {"on": "{\"@odata.context\":\"../$metadata#Edm.String\",\"value\":\"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）\"}", "text": "3. 动作返回字符串直接进 value"},
+    {"on": "{\"error\":{\"message\":\"订单 BO-1003 当前状态为 SUBMITTED，不能重复提交\",\"code\":\"409\",\"@Common.numericSeverity\":4}}", "text": "4. 重复提交 → 409"},
+    {"on": "{\"error\":{\"message\":\"订单 BO-1005 没有明细，不能提交\",\"code\":\"400\",\"@Common.numericSeverity\":4}}", "text": "5. 业务前置条件不满足 → 400"}
+  ]
+}

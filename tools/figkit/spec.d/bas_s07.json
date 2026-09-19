@@ -1,0 +1,52 @@
+{
+  "key": "bas_s07",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "caption": "本地实测：cds env get requires.db 看到生效配置、cds compile --to sql 看到生成的 DDL、cds deploy 装载 CSV",
+  "alt": "本地实测：cds env get requires.db 看到生效配置、cds compile --to sql 看到生成的 DDL、cds deploy 装载 CSV",
+  "label": "本地实机运行",
+  "src": "本地实测：项目根目录执行 npx cds env get requires.db / npx cds compile --to sql / npm run deploy",
+  "title": "jason@MacBook-Pro: ~/projects/demo-node",
+  "lines": [
+    "$ npx cds env get requires.db",
+    "  { \"impl\": \"@cap-js/sqlite\", \"kind\": \"sqlite\",",
+    "    \"credentials\": { \"url\": \"db.sqlite\" }, \"data\": [ \"db/data\" ] }",
+    "",
+    "$ npx cds env get requires.db --profile production",
+    "  { \"impl\": \"@cap-js/hana\", \"kind\": \"hana\" }   # 生产 profile 决定用 HANA",
+    "",
+    "$ npx cds compile db/schema.cds srv/book-order-service.cds --to sql | head -3",
+    "  CREATE TABLE sap_training_bookorder_Books (",
+    "    ID INTEGER NOT NULL,",
+    "    title NVARCHAR(120) NOT NULL,",
+    "    price DECIMAL(9, 2) NOT NULL,",
+    "    PRIMARY KEY(ID) );",
+    "",
+    "$ npm run deploy",
+    "@> cds deploy --to sqlite:db.sqlite",
+    "#  > init from db/data/sap.training.bookorder-Books.csv",
+    "#  > init from db/data/sap.training.bookorder-BookOrders.csv",
+    "#  > init from db/data/sap.training.bookorder-BookOrderItems.csv",
+    "#  > init from db/data/sap.training.bookorder-Customers.csv",
+    "@ successfully deployed to db.sqlite"
+  ],
+  "callouts": [
+    {
+      "on": "$ npx cds env get requires.db",
+      "text": "1. 先看「生效的」配置"
+    },
+    {
+      "on": "  { \"impl\": \"@cap-js/hana\", \"kind\": \"hana\" }   # 生产 profile 决定用 HANA",
+      "text": "2. 切 profile 就换数据库"
+    },
+    {
+      "on": "  CREATE TABLE sap_training_bookorder_Books (",
+      "text": "3. 表名 = 命名空间+实体（点→下划线）"
+    },
+    {
+      "on": "successfully deployed to db.sqlite",
+      "text": "4. 建库成功的判据"
+    }
+  ]
+}

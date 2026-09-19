@@ -1,0 +1,46 @@
+{
+  "name": "demo-node",
+  "version": "1.0.0",
+  "description": "SAP CAP 培训示范项目（Node.js 运行时）—— 图书受注管理",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@sap/cds": "^9"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": "^9",
+    "chai": "^5",
+    "mocha": "^10"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch",
+    "deploy": "cds deploy --to sqlite:db.sqlite",
+    "build": "cds build --production",
+    "test": "mocha --reporter spec --timeout 20000 test/*.test.js",
+    "lint:model": "cds compile db/schema.cds srv/book-order-service.cds --to sql"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      },
+      "auth": {
+        "kind": "mocked"
+      }
+    }
+  },
+  "mocha": {
+    "reporter": "spec"
+  },
+  "allowScripts": {
+    "better-sqlite3": true
+  }
+}

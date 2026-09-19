@@ -1,0 +1,8 @@
+[
+  {"no": "NODE-01", "title": "给订单头加一条 before-CREATE 校验（备注中不允许出现「测试」）", "basis": "srv/book-order-service.js 的 before('CREATE', BookOrders) 钩子；@odata.draft.enabled 的实体要在 draftActivate 时才触发校验", "time": "15 分", "rel": "node.html#s12-1"},
+  {"no": "NODE-02", "title": "加一个 after-READ 的计算字段 itemCount（并判断是否需要改模型）", "basis": "after('READ', BookOrders) 的结果集形态（单行/数组）、用一次 groupBy 聚合避免 N+1、未在模型声明的字段会被 OData 序列化丢掉", "time": "25 分", "rel": "node.html#s12-2"},
+  {"no": "NODE-03", "title": "把 on('submitOrder') 改成 after('submitOrder')，记录差异并给出结论", "basis": "on 代替默认实现 vs after 在实现之后；自定义动作没有默认实现", "time": "20 分", "rel": "node.html#s12-3"},
+  {"no": "NODE-04", "title": "用 cds watch + curl 证明「草稿激活才触发 before-CREATE」", "basis": "草稿流程 URL（IsActiveEntity=false → draftActivate）、[odata]/[error] 日志行、栈里的文件名:行号", "time": "20 分", "rel": "node.html#s3-2"},
+  {"no": "NODE-05", "title": "写出「查 status=OPEN 的订单、只取 ID/orderNo、按 orderNo 倒序、前 3 条」的 CQN 并用 cqn2sql 核对 SQL", "basis": "SELECT.from(...).columns(...).where(...).orderBy(...).limit(...)；外键列命名；参数化（? 占位）", "time": "20 分", "rel": "node.html#s5"},
+  {"no": "NODE-06", "title": "用 cds env 核对本机与 production profile 的 requires.db 差异", "basis": "cds env get / cds env --profile production；profile 覆盖与 cds bind 的 hybrid 段", "time": "15 分", "rel": "node.html#s9"}
+]

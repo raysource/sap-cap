@@ -1,0 +1,142 @@
+{
+  "key": "hana_s08",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "caption": "hybrid 模式下的配置与验证：.cdsrc-private.json 里只有绑定元数据；cds env get requires.db 确认 kind 变成 hana",
+  "alt": "hybrid 模式下的配置与验证：.cdsrc-private.json 里只有绑定元数据；cds env get requires.db 确认 kind 变成 hana",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· JSON 结构出自 capire「Hybrid Testing」文档示例（实例名替换为本教材项目）",
+  "window": ".cdsrc-private.json - demo-node - SAP Business Application Studio",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "file",
+          "label": ".cdsrc-private.json",
+          "b": true
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "mta.yaml"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.js"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "test"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "odata-verify.sh"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    ".cdsrc-private.json",
+    "mta.yaml"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node  ›  .cdsrc-private.json",
+  "editor": {
+    "lang": "json",
+    "fs": 12,
+    "lh": 20,
+    "hl": [
+      4,
+      9,
+      10,
+      11
+    ],
+    "lines": [
+      "{",
+      "  \"requires\": {",
+      "    \"[hybrid]\": {",
+      "      \"db\": {",
+      "        \"kind\": \"hana\",",
+      "        \"binding\": {",
+      "          \"type\": \"cf\",",
+      "          \"org\": \"trial\",",
+      "          \"space\": \"dev\",",
+      "          \"instance\": \"demo-hana-db\",",
+      "          \"key\": \"demo-hana-db-key\",",
+      "          \"resolved\": false } } } } }"
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 200,
+    "extraTabs": [
+      "PROBLEMS",
+      "OUTPUT"
+    ],
+    "lines": [
+      "$ npx cds env get requires.db --profile hybrid",
+      "@{ \"kind\": \"hana\", \"binding\": { \"type\": \"cf\", \"instance\": \"demo-hana-db\" } }",
+      "#  验证 1：kind 从 sqlite 变成 hana → 绑定被解析",
+      "$ npx cds watch --profile hybrid",
+      "#  验证 2：服务能起来，且 /odata/v4/book-order/BookOrders 返回云端表里的数据",
+      "#  常见失败：Cloud Foundry 未登录 / space 不对 / 实例被停止"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.20.0",
+    "CAP 9.9.3 / cds-dk 9.9.6",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "on": "          \"instance\": \"demo-hana-db\",",
+      "text": "1. 只存实例与 key 名"
+    },
+    {
+      "on": "          \"resolved\": false } } } } }",
+      "text": "2. 凭据运行时才解析，不落盘"
+    },
+    {
+      "on": "$ npx cds env get requires.db --profile hybrid",
+      "text": "3. 验证：kind 变成 hana"
+    },
+    {
+      "on": "验证 2：服务能起来，且 /odata/v4/book-order/BookOrders 返回云端表里的数据",
+      "text": "4. 端到端验证：查一条真实数据"
+    }
+  ]
+}

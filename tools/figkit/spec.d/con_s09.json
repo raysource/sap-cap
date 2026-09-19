@@ -1,0 +1,163 @@
+{
+  "key": "con_s09",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "window": "BookOrderServiceHandler.java - demo-java - SAP Business Application Studio",
+  "caption": "Java 运行时的同一个服务：同样的 .cds 模型，handler 换成注解 + 生成的类型安全访问器（本机未安装 JDK/Maven，此画面为重绘）",
+  "src": "本站自绘（依据 CAP Java 文档：srv/src/main/java 与 srv/src/gen/java、mvn spring-boot:run；本机 JDK 21 + Maven 3.9.16 已就绪，实跑见第 ⑥ 章）",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-JAVA (WORKSPACE)",
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds",
+          "tag": "M"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "pom.xml"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "open": true,
+          "label": "src/main/java",
+          "b": true
+        },
+        {
+          "d": 2,
+          "k": "file",
+          "label": "BookOrderServiceHandler.java",
+          "tag": "M"
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "label": "src/gen/java"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "app",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "label": "book-orders"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "BookOrderServiceHandler.java"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-java › srv › src › main › java › BookOrderServiceHandler.java",
+  "editor": {
+    "lang": "java",
+    "fs": 12,
+    "lh": 19,
+    "hl": [
+      3,
+      13,
+      24
+    ],
+    "lines": [
+      "@Component",
+      "@ServiceName(BookOrderService_.CDS_NAME)",
+      "public class BookOrderServiceHandler implements EventHandler {",
+      "",
+      "  private final PersistenceService db;",
+      "",
+      "  public BookOrderServiceHandler(PersistenceService db) {",
+      "    this.db = db;",
+      "  }",
+      "",
+      "  /* 绑定动作 submitOrder：状态迁移 */",
+      "  @On(event = \"submitOrder\")",
+      "  public void onSubmitOrder(SubmitOrderContext context) {",
+      "    var order = db.run(Select.from(BOOK_ORDERS).byId(context.getID())).single();",
+      "    if (order.getStatus().equals(\"SUBMITTED\")) {",
+      "      throw new ServiceException(ErrorStatuses.CONFLICT, \"不能重复提交\");",
+      "    }",
+      "    db.run(Update.entity(BOOK_ORDERS).byId(order.getID())",
+      "           .data(BookOrders.STATUS, \"SUBMITTED\"));",
+      "    context.setResult(\"订单 \" + order.getOrderNo() + \" 已提交\");",
+      "  }",
+      "",
+      "  /* before / after 同样是注解 */",
+      "  @Before(event = CqnService.EVENT_CREATE, entity = BookOrders_.CDS_NAME)",
+      "  public void beforeCreate(CdsCreateEventContext context) { /* ... */ }",
+      "}"
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 110,
+    "extraTabs": [
+      "PROBLEMS"
+    ],
+    "lines": [
+      "$ mvn spring-boot:run",
+      "@@> Tomcat started on port 8080 (http)",
+      "@@> 同一份 db/schema.cds 与 srv/book-order-service.cds 被 Maven 编译进 gen/"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Java 21 (openjdk@21)",
+    "Maven 3.9.16",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        620
+      ],
+      "text": "1. 同一份 .cds 模型"
+    },
+    {
+      "at": [
+        60,
+        656
+      ],
+      "text": "2. gen/ 生成类型安全访问器"
+    },
+    {
+      "at": [
+        60,
+        692
+      ],
+      "text": "3. 注解式 handler"
+    }
+  ]
+}

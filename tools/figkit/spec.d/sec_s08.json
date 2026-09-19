@@ -1,0 +1,147 @@
+{
+  "key": "sec_s08",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP Business Technology Platform",
+  "caption": "xsuaa 服务实例详情：xsappname 决定 scope 前缀，三个角色模板就是 CDS 里 to: 的三个名字",
+  "crumbs": [
+    "Global Account: trial-eu10-9f3a2b (trial)",
+    "Subaccount: trial",
+    "demo-node-uaa"
+  ],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {
+        "label": "Overview"
+      },
+      {
+        "label": "Instances and Subscriptions",
+        "active": true,
+        "sub": [
+          "Service Instances",
+          "Service Keys"
+        ]
+      },
+      {
+        "label": "Security",
+        "group": true
+      },
+      {
+        "label": "Role Collections"
+      },
+      {
+        "label": "Trust Configuration"
+      }
+    ]
+  },
+  "title": "demo-node-uaa",
+  "subtitle": "Service Instance · xsuaa · plan: application · created from mta.yaml (XS advanced)",
+  "tabs": [
+    "Overview",
+    "Service Keys",
+    "Parameters"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "kv",
+      "lw": 220,
+      "rows": [
+        [
+          "Service",
+          "xsuaa"
+        ],
+        [
+          "Plan",
+          "application"
+        ],
+        [
+          "xsappname",
+          "demo-node-trial-dev"
+        ],
+        [
+          "tenant-mode",
+          "dedicated"
+        ],
+        [
+          "Configuration",
+          "~instance update from xs-security.json"
+        ],
+        [
+          "Bound applications",
+          "demo-node-srv, demo-node-approuter"
+        ]
+      ]
+    },
+    {
+      "t": "h3",
+      "text": "角色模板与 scope（来自 xs-security.json）"
+    },
+    {
+      "t": "table",
+      "cols": [
+        "Role Template",
+        "Role Description",
+        "Scopes"
+      ],
+      "widths": [
+        1.2,
+        1.6,
+        1.7
+      ],
+      "rows": [
+        [
+          "OrderViewer",
+          "订单只读",
+          "demo-node-trial-dev.view"
+        ],
+        [
+          "OrderEditor",
+          "订单维护（新建与修改）",
+          "demo-node-trial-dev.view, .edit"
+        ],
+        [
+          "OrderAdmin",
+          "订单管理员：可提交订单",
+          "demo-node-trial-dev.view, .edit, .submit"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "JWT 里 scope 带 xsappname 前缀，CAP 比对时会先剥掉前缀再和 to: 比。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "应用标识后缀（!t<子账户 ID>）随子账户而异（~），以界面显示为准。"
+    }
+  ],
+  "status": "● demo-node-uaa · xsuaa/application · 2 bound apps · Subaccount: trial",
+  "callouts": [
+    {
+      "at": [
+        110,
+        700
+      ],
+      "text": "1. scope 前缀来源"
+    },
+    {
+      "at": [
+        110,
+        736
+      ],
+      "text": "2. 模板名对应 to:"
+    },
+    {
+      "at": [
+        110,
+        772
+      ],
+      "text": "3. 前缀自动剥掉"
+    }
+  ]
+}

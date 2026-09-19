@@ -1,0 +1,121 @@
+[
+ {
+  "no": "BTP-01",
+  "title": "注册并激活 SAP ID / SAP Universal ID",
+  "basis": "邮箱收到激活邮件并点击 Click to activate your account，页面提示激活成功",
+  "time": "15 分",
+  "rel": "btp.html#s2"
+ },
+ {
+  "no": "BTP-02",
+  "title": "申请 SAP BTP 试用并选定区域",
+  "basis": "Trial Home 出现 Enter Your Trial Account；自动建成 1 个子账户 + 1 个 org + space dev",
+  "time": "10 分",
+  "rel": "btp.html#s2"
+ },
+ {
+  "no": "BTP-03",
+  "title": "抄下三个关键标识：subdomain / 子账户 ID / 区域与 API 端点",
+  "basis": "btp get accounts/global-account 输出的 subdomain 与 cockpit 显示一致；已记录 API Endpoint 全串",
+  "time": "5 分",
+  "rel": "btp.html#s2-1"
+ },
+ {
+  "no": "BTP-04",
+  "title": "创建子账户（Display Name / Subdomain / Region）",
+  "basis": "Account Explorer 出现该子账户 tile，Region 正确，State = OK；btp list accounts/subaccount 能列出",
+  "time": "10 分",
+  "rel": "btp.html#s3-2"
+ },
+ {
+  "no": "BTP-05",
+  "title": "启用 Cloud Foundry（建 org 并选 free 计划）",
+  "basis": "子账户 Cloud Foundry 区块显示 Org Name 与 https://api.cf.<区域>.hana.ondemand.com",
+  "time": "5 分",
+  "rel": "btp.html#s3-3"
+ },
+ {
+  "no": "BTP-06",
+  "title": "创建 space（dev 已有，再建 test）",
+  "basis": "Cloud Foundry › Spaces 列表出现 dev 与 test；cf spaces 输出一致",
+  "time": "5 分",
+  "rel": "btp.html#s6-2"
+ },
+ {
+  "no": "BTP-07",
+  "title": "分配 entitlements 与配额（hana/hdi-shared、xsuaa application、destination lite）",
+  "basis": "子账户 Entitlements 表中每个计划的 Quota ≥ 1；Service Marketplace 里可搜到并可点 Create",
+  "time": "10 分",
+  "rel": "btp.html#s4-1"
+ },
+ {
+  "no": "BTP-08",
+  "title": "分配平台角色集合（Subaccount Administrator / Viewer）",
+  "basis": "Security › Users 里对应用户的 Role Collections 列出现已分配的集合；btp get security/user 同样可见",
+  "time": "5 分",
+  "rel": "btp.html#s5-2"
+ },
+ {
+  "no": "BTP-09",
+  "title": "分配 Cloud Foundry 角色（Org Manager / Space Developer）",
+  "basis": "Cloud Foundry › Org Members 与 Space Members 列表中出现自己与目标角色",
+  "time": "5 分",
+  "rel": "btp.html#s5-3"
+ },
+ {
+  "no": "BTP-10",
+  "title": "安装并登录 btp CLI",
+  "basis": "btp --version 有输出；btp target 打印 Global account: <subdomain>",
+  "time": "8 分",
+  "rel": "btp.html#s7-1"
+ },
+ {
+  "no": "BTP-11",
+  "title": "安装并登录 cf CLI 并确认目标",
+  "basis": "cf --version 为 8.x；cf target 显示 org: trial、space: dev；cf spaces 列出 dev",
+  "time": "7 分",
+  "rel": "btp.html#s7-2"
+ },
+ {
+  "no": "BTP-12",
+  "title": "用 cf marketplace -e 核对计划存在",
+  "basis": "cf marketplace -e hana 列出 hdi-shared / schema / securestore 且为 free",
+  "time": "3 分",
+  "rel": "btp.html#s7-2"
+ },
+ {
+  "no": "BTP-13",
+  "title": "创建 HDI 容器实例 demo-hana-db（hana / hdi-shared）",
+  "basis": "cf services 中 demo-hana-db 的 last operation 为 create succeeded",
+  "time": "10 分",
+  "rel": "btp.html#s8-2"
+ },
+ {
+  "no": "BTP-14",
+  "title": "创建 demo-xsuaa（xsuaa / application）与 demo-destination（destination / lite）",
+  "basis": "cf services 三个实例均为 create succeeded；cockpit 状态为 Created",
+  "time": "10 分",
+  "rel": "btp.html#s8-1"
+ },
+ {
+  "no": "BTP-15",
+  "title": "逐项打勾「环境就绪」12 项验收清单",
+  "basis": "清单 12 项全部打勾，无「打不上勾」的条目",
+  "time": "8 分",
+  "rel": "btp.html#s9"
+ },
+ {
+  "no": "BTP-16",
+  "title": "mini 验证：推送并访问 hello world 级应用，随后删除",
+  "basis": "cf apps 显示 demo-hello 为 started 且路由返回页面内容；cf delete 后从列表消失",
+  "time": "10 分",
+  "rel": "btp.html#s9-1"
+ },
+ {
+  "no": "BTP-17",
+  "title": "设置试用止损：续期提醒与本地备份",
+  "basis": "日历里有每 2–3 周登录提醒；代码与 db/data/*.csv 已同步到本地/远端仓库",
+  "time": "10 分",
+  "rel": "btp.html#s10"
+ }
+]

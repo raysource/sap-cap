@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学员版工作纸（可打印） · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP 培训的学员版工作纸：可打印、手写填写。含环境检查表（Node / cds-dk / SQLite / BTP 子账户与 region / org·space / 服务实例）、85 条实训任务的手顺记录表（按板块分组）、关键命令实录栏、五个实验记录（建库 / OData 验证 / 业务规则 / 草稿流程 / Fiori）、思考题与排错记录表，末尾为自评与讲师签字栏。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+<style>
+/* ===== 学员版工作纸专用：填写区与打印规则（不改动基础样式） ===== */
+.ws .wsfill { height: 46px; }
+.ws .wscheck { text-align: center; font-size: 16px; height: 46px; color: #0a6ed1; }
+.ws .wsb  { width: 7%; }
+.ws .wsn  { width: 8%; }
+.ws .wst  { width: 18%; }
+.ws .wsb2 { width: 22%; }
+.ws .wsr  { width: 16%; }
+.ws .wsd  { width: 6%; }
+.ws .wsi  { width: 23%; }
+a.wslnk { font-size: 12px; color: #6b7a8a; white-space: nowrap; }
+.ansbox {
+  border: 1px solid #cdd7e0; border-radius: 8px; background: #fff;
+  min-height: 100px; margin: 8px 0 18px; padding: 6px 10px;
+  background-image: repeating-linear-gradient(to bottom, transparent 0 23px, #e4eaf1 23px 24px);
+  background-position: 0 8px;
+}
+.ansbox.short { min-height: 76px; }
+.fillbox { border: 1px solid #cdd7e0; border-radius: 8px; background: #fff; min-height: 46px; margin: 8px 0; }
+.qid { font-family: var(--mono, monospace); font-size: 12.5px; color: #0a6ed1; margin-right: 6px; }
+.qnav { font-size: 13px; color: #6b7a8a; }
+.docmeta { font-size: 13px; color: #6b7a8a; }
+@media print {
+  @page { size: A4 portrait; margin: 13mm 11mm; }
+  body { background: #fff; }
+  .toc, .nows, nav.main, .breadcrumb { display: none !important; }
+  a { color: inherit; text-decoration: none; }
+  h2 { break-after: avoid; }
+  h3 { break-after: avoid; }
+  table.tbl { break-inside: auto; }
+  table.tbl tr, table.tbl th, table.tbl td { break-inside: avoid; }
+  /* 防止 7 列的任务表被 overflow 裁掉右侧两列：固定列宽 + 允许长标识符换行 */
+  .tblwrap { overflow: visible !important; }
+  table.ws { table-layout: fixed; font-size: 12px; }
+  table.ws th, table.ws td { padding: 5px 6px; word-break: break-word; overflow-wrap: anywhere; }
+  .ws .wsfill { height: 52px; }
+  .ws .wscheck { height: 52px; }
+  .ansbox { min-height: 112px; }
+  .box, .sectest, .panel { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a class="active" href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>学员版工作纸</span></p>
+<h1>学员版工作纸（可打印）：把每一步的实测结果写下来</h1>
+<p class="kicker">环境检查 · 85 条实训任务的手顺记录 · 关键命令实录 · 5 个实验 · 15 道思考题 · 排错记录 · 自评与讲师签字</p>
+
+<div class="toc">
+  <a href="#s0">0. 填写说明与学员信息</a><a href="#s1">1. 环境检查表</a><a href="#s2">2. 手顺记录表（按板块）</a>
+  <a href="#s3">3. 关键命令实录</a><a href="#s4">4. 实验记录（5 个）</a><a href="#s5">5. 思考题</a>
+  <a href="#s6">6. 排错记录表</a><a href="#s7">7. 结论与自评</a>
+</div>
+
+<div class="box info"><b class="t">这份工作纸怎么用</b>
+<ul>
+  <li>本页是<b>可打印的记入表</b>：所有空白都由学员<b>手写</b>。只打勾不给分——「我实际执行的结果」栏要抄下命令的<b>原始输出</b>（包括报错原文）。</li>
+  <li>建议路线：环境（① <a href="btp.html">BTP 注册</a> · ② <a href="bas.html">BAS</a> · ③ <a href="hana.html">HANA Cloud</a>）→ 模型（④ <a href="cds.html">CDS 建模</a>）→ 服务（⑤ <a href="node.html">Node 服务</a>）→ 测试（⑦ <a href="testing.html">测试体系</a>）→ 权限（⑧ <a href="security.html">认证与授权</a>）。</li>
+  <li>标 <span class="tag amber">参考</span> 的数值是本站实测值，用来对照，不是「必须一致」的答案；不一致说明你的环境不同，请记下你的值。</li>
+  <li>标 ~ 的项目表示<b>本站环境无法实测</b>（没有 BTP 试用账号，云端未开通）：命令与字段来自官方文档与课程页面，请在你自己的环境里核对后填写。</li>
+  <li>填不下就在背面继续写，并在表格里注明「见背面 P.__」。</li>
+</ul></div>
+
+<div class="box warn"><b class="t">打印设置（打印前看一眼）</b>
+A4 <b>纵向</b>、页边距用默认值、缩放 100%，并<b>勾选「打印背景图形 / Background graphics」</b>——否则表格边框、☐ 与填写区的横线会消失。
+本页已写好 <code>@media print</code>：打印时自动隐藏导航与目录、表格行不跨页断开、填写区加高到 52px。
+最省事的做法是「打印 → 另存为 PDF」，把 PDF 交回讲师。</div>
+
+<h2 id="s0">0. 填写说明与学员信息</h2>
+<p class="docmeta">本页共 7 节。建议按节推进：每做完一个板块，立刻填第 2 节对应表格；命令一跑完就填第 3 节（事后补记容易记错）。</p>
+
+<div class="tblwrap"><table class="tbl ws">
+<tbody>
+<tr><th style="width:18%">姓名</th><td style="width:32%"></td><th style="width:14%">日期</th><td style="width:36%"></td></tr>
+<tr><th>学习环境（勾一个）</th><td>☐ 本地（SQLite，无需 BTP 账号）　☐ BTP（Cloud Foundry，需要试用账号）</td><th>讲师</th><td></td></tr>
+<tr><th>机器 / 项目目录</th><td colspan="3"><code>project-code/demo-node/</code> 所在路径与机器名（本机：macOS，Node v22.23.2）：<div class="fillbox"></div></td></tr>
+<tr><th>本次目标（自己写）</th><td colspan="3"><div class="fillbox"></div></td></tr>
+</tbody></table></div>
+
+<h2 id="s1">1. 环境检查表</h2>
+<p>先把环境钉死再动手：<b>先验证环境，再相信结果</b>。每一项都给出了获取它的命令，请在最后一栏写下你机器上的实测值。
+除标注 ~ 的项目外，命令与「参考值」都来自本站演示项目的真实运行（<code>project-code/demo-node/</code>）。</p>
+
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsd">☐</th><th style="width:22%">检查项</th><th style="width:40%">怎么获取（命令）</th><th style="width:29%">我实测的值（手写）</th></tr></thead>
+<tbody>
+<tr>
+  <td class="wscheck">☐</td>
+  <td><b>Node 版本</b><br>要求 20 或 22 LTS</td>
+  <td><pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">node -v</code></pre></td>
+  <td class="wsfill">参考 <span class="tag">v22.23.2</span></td>
+</tr>
+<tr>
+  <td class="wscheck">☐</td>
+  <td><b>cds / cds-dk 版本</b><br>要求 9.x，两侧同大版本</td>
+  <td><pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node   # 项目里已装依赖
+npx cds --version</code></pre>输出会列出 <code>@sap/cds-dk</code> 与 <code>@sap/cds</code> 两行</td>
+  <td class="wsfill">参考 <span class="tag">cds-dk 9.9.6</span> <span class="tag">cds 9.9.3</span></td>
+</tr>
+<tr>
+  <td class="wscheck">☐</td>
+  <td><b>SQLite 版本</b><br>本地数据库</td>
+  <td><b>① 系统 CLI</b>（供人工查库）：<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">sqlite3 --version</code></pre><b>② 运行时真正用的那一个</b>（<code>@cap-js/sqlite</code> 走 better-sqlite3 内置库）：<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">node -e "const D=require('better-sqlite3');const d=new D(':memory:');console.log(d.prepare('select sqlite_version() v').get().v)"</code></pre>两个版本可能不同，<b>分别记下来</b></td>
+  <td class="wsfill">参考 ① <span class="tag">3.51.0</span>（系统 CLI）<br>② <span class="tag">3.53.2</span>（运行时）</td>
+</tr>
+<tr>
+  <td class="wscheck">☐</td>
+  <td><b>BTP 子账户与 region</b> ~<br>（无账号可跳过，写「无」）</td>
+  <td>cockpit 的 Account Explorer 里看子账户 tile 的 <b>Region</b> 与 <b>Subaccount ID</b>；命令行交叉验证：<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">btp list accounts/subaccount   # 看 Region / State 列
+btp target                     # Global account: &lt;你的 subdomain&gt;
+cf api                         # 当前 CF 端点</code></pre>端点形状：<code>https://api.cf.&lt;region&gt;.hana.ondemand.com</code></td>
+  <td class="wsfill">子账户 ID：<br>region：<br>API 端点：</td>
+</tr>
+<tr>
+  <td class="wscheck">☐</td>
+  <td><b>org / space</b> ~</td>
+  <td><pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf target      # org: … / space: …
+cf spaces      # 列出 space（课程约定建 dev 与 test）</code></pre>没选目标会报 <code>No org or space targeted</code>，用 <code>cf target -o &lt;org&gt; -s &lt;space&gt;</code> 补上</td>
+  <td class="wsfill">org：____　space：____<br>（课程约定 org trial / space dev）</td>
+</tr>
+<tr>
+  <td class="wscheck">☐</td>
+  <td><b>已创建的服务实例名</b> ~<br>（hana / xsuaa / destination）</td>
+  <td><pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf services                    # 名字 / 服务 / 计划 / last operation
+cf marketplace -e hana         # 确认 hdi-shared 等计划存在</code></pre>成败判据：<code>last operation</code> 为 <code>create succeeded</code></td>
+  <td class="wsfill">实例名 / 服务 / 计划：<br>① <br>② <br>③ </td>
+</tr>
+</tbody></table></div>
+
+<div class="box ok"><b class="t">环境就绪清单（全部可勾才算「能开始做实验」）</b>
+<ul class="check">
+  <li><code>node -v</code> 是 20/22 LTS，且 <code>npm install</code> 正常结束（本站参考：<code>added 328 packages</code>）</li>
+  <li><code>npx cds --version</code> 打印出 cds-dk 9.x 与 @sap/cds 9.x，两端大版本一致</li>
+  <li><code>npm run deploy</code> 末尾出现 <code>successfully deployed to db.sqlite</code>，且项目根目录有 <code>db.sqlite</code></li>
+  <li><code>npm start</code> 打出 <code>server listening on http://localhost:4004</code> 与 <code>serving BookOrderService</code></li>
+  <li>另一个终端：<code>curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4004/odata/v4/book-order/BookOrders</code> 返回 <code>401</code>（匿名被拦，说明认证在起作用）</li>
+</ul></div>
+
+<div class="box warn"><b class="t">常见「看起来像好了」的坑</b>
+<ul>
+  <li><code>cds compile</code> 打印了 <code>[ERROR]</code> 但退出码仍是 0 —— 别只看有没有输出，要看有没有 <code>[ERROR]</code>（第 4 节②会用到这一条）。</li>
+  <li><code>npm run deploy</code> 失败时 SQLite 文件可能已生成但<b>没有表</b>；用第 4 节①的命令核对表清单，不要凭文件名判断。</li>
+  <li>端口 4004 被上一次的服务占用时会起不来；先确认旧进程已结束。</li>
+</ul></div>
+
+<h2 id="s2">2. 手顺记录表（按板块分组，共 85 条任务）</h2>
+<p>下表由课程的任务清单（<code>work/tasks/*.json</code>）汇总而来，按 8 个板块分组。<b>「完成基准」是讲师判定的依据，不要改写成自己的话</b>；
+「我实际执行的结果」写你真实看到的东西；「遇到的问题」写现象 + 你当时的判断（第 6 节用来做汇总复盘）。</p>
+<div class="stepmeta"><span class="k">8 个板块</span><span class="k">85 条任务</span><span class="f">work/tasks/*.json</span><span class="c">建议课堂内完成 60% 以上</span></div>
+
+<h3 id="tr-concept">概念（8 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="8">概念<br><span class="tag gray">8 项</span></td><td><code>CON-01</code></td><td>不看资料画出 CAP 的三层架构图，并标注文件落点（理解型）</td><td>能在纸上或白板上画出「模型 / 服务 / UI + 横切的部署」四块，写出每层在示范项目里的文件名（db/schema.cds、srv/*.cds + .js、app/book-orders/annotations.cds + webapp/、mta.yaml），并说明依赖方向是单向的<br><span class="tag gray">15 分</span> <a class="wslnk" href="concept.html#s2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CON-02</code></td><td>复述一次请求的生命周期，并指出 401/403 产生在哪一步（理解型）</td><td>能按顺序说出：解析（OData → CQN）→ 认证 → 授权 → before → on（缺省实现 = 查询数据库）→ after → 响应，并指出 401 在认证、403 在授权；能对应到至少两个自己写过的 handler 钩子<br><span class="tag gray">15 分</span> <a class="wslnk" href="concept.html#s4">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CON-03</code></td><td>讲清「一份模型、三份产物」（理解型）</td><td>能用一句话说明 --to sql / --to edmx / --to csn 各自给谁用，并解释为什么运行时读 CSN 而不是 .cds 文本；能举出至少两个「编译器自动补上」的东西（表名前缀、managed 的四个审计列、Association 的 FK 列等）<br><span class="tag gray">15 分</span> <a class="wslnk" href="concept.html#s3-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CON-04</code></td><td>任选 5 个核心概念，给出定义 + 示范项目里的例子（理解型）</td><td>从 15 个概念（CDS / entity / projection / aspect / association / composition / annotation / handler / CQN / draft / HDI container / MTA / XSUAA / approuter / Fiori Elements）中挑 5 个，每个都能说出定义并指向项目里的具体文件或对象，没有概念错位<br><span class="tag gray">20 分</span> <a class="wslnk" href="concept.html#s5">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CON-05</code></td><td>对照 Node 与 Java 两种运行时，说出 5 个维度的差异（理解型）</td><td>至少覆盖 handler 写法、类型安全、构建工具、测试框架、启动命令中的 5 项，并能回答「换运行时时哪些东西不用改」（模型、API 契约、UI 注解、授权规则）<br><span class="tag gray">20 分</span> <a class="wslnk" href="concept.html#s7">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CON-06</code></td><td>把 CAP 与 RAP / 传统 ABAP 做三点对应（理解型）</td><td>能就模型语言、业务实现、授权三方面各说一条对应关系（CDS 与 UI 注解可迁移；行为实现类 + EML 对应 handler + CQN；DCL / 授权对象对应 @restrict + 角色集合），并说明部署位置的根本差异<br><span class="tag gray">20 分</span> <a class="wslnk" href="concept.html#s9">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CON-07</code></td><td>从 12 个常见误解里挑 3 个，逐一纠正（理解型）</td><td>能说明误解为什么会产生（归错层、把静态约束当权限、把本地当云端），并给出正确理解与验证方式；至少一个误解要能指向自己在课程里踩过的坑<br><span class="tag gray">15 分</span> <a class="wslnk" href="concept.html#s11">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CON-08</code></td><td>按自己的角色写 3 步学习路线，并说明每步的完成判据（理解型）</td><td>写出三步，每步都有可观察的判据（例如「cds watch 起得来」「curl 能触发一条业务规则得 4xx」「部署后路由上 $metadata 返回 200」），且路线与角色匹配<br><span class="tag gray">15 分</span> <a class="wslnk" href="concept.html#s12">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<h3 id="tr-btp">BTP（17 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="17">BTP<br><span class="tag gray">17 项</span></td><td><code>BTP-01</code></td><td>注册并激活 SAP ID / SAP Universal ID</td><td>邮箱收到激活邮件并点击 Click to activate your account，页面提示激活成功<br><span class="tag gray">15 分</span> <a class="wslnk" href="btp.html#s2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-02</code></td><td>申请 SAP BTP 试用并选定区域</td><td>Trial Home 出现 Enter Your Trial Account；自动建成 1 个子账户 + 1 个 org + space dev<br><span class="tag gray">10 分</span> <a class="wslnk" href="btp.html#s2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-03</code></td><td>抄下三个关键标识：subdomain / 子账户 ID / 区域与 API 端点</td><td>btp get accounts/global-account 输出的 subdomain 与 cockpit 显示一致；已记录 API Endpoint 全串<br><span class="tag gray">5 分</span> <a class="wslnk" href="btp.html#s2-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-04</code></td><td>创建子账户（Display Name / Subdomain / Region）</td><td>Account Explorer 出现该子账户 tile，Region 正确，State = OK；btp list accounts/subaccount 能列出<br><span class="tag gray">10 分</span> <a class="wslnk" href="btp.html#s3-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-05</code></td><td>启用 Cloud Foundry（建 org 并选 free 计划）</td><td>子账户 Cloud Foundry 区块显示 Org Name 与 https://api.cf.&lt;区域&gt;.hana.ondemand.com<br><span class="tag gray">5 分</span> <a class="wslnk" href="btp.html#s3-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-06</code></td><td>创建 space（dev 已有，再建 test）</td><td>Cloud Foundry › Spaces 列表出现 dev 与 test；cf spaces 输出一致<br><span class="tag gray">5 分</span> <a class="wslnk" href="btp.html#s6-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-07</code></td><td>分配 entitlements 与配额（hana/hdi-shared、xsuaa application、destination lite）</td><td>子账户 Entitlements 表中每个计划的 Quota ≥ 1；Service Marketplace 里可搜到并可点 Create<br><span class="tag gray">10 分</span> <a class="wslnk" href="btp.html#s4-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-08</code></td><td>分配平台角色集合（Subaccount Administrator / Viewer）</td><td>Security › Users 里对应用户的 Role Collections 列出现已分配的集合；btp get security/user 同样可见<br><span class="tag gray">5 分</span> <a class="wslnk" href="btp.html#s5-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-09</code></td><td>分配 Cloud Foundry 角色（Org Manager / Space Developer）</td><td>Cloud Foundry › Org Members 与 Space Members 列表中出现自己与目标角色<br><span class="tag gray">5 分</span> <a class="wslnk" href="btp.html#s5-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-10</code></td><td>安装并登录 btp CLI</td><td>btp --version 有输出；btp target 打印 Global account: &lt;subdomain&gt;<br><span class="tag gray">8 分</span> <a class="wslnk" href="btp.html#s7-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-11</code></td><td>安装并登录 cf CLI 并确认目标</td><td>cf --version 为 8.x；cf target 显示 org: trial、space: dev；cf spaces 列出 dev<br><span class="tag gray">7 分</span> <a class="wslnk" href="btp.html#s7-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-12</code></td><td>用 cf marketplace -e 核对计划存在</td><td>cf marketplace -e hana 列出 hdi-shared / schema / securestore 且为 free<br><span class="tag gray">3 分</span> <a class="wslnk" href="btp.html#s7-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-13</code></td><td>创建 HDI 容器实例 demo-hana-db（hana / hdi-shared）</td><td>cf services 中 demo-hana-db 的 last operation 为 create succeeded<br><span class="tag gray">10 分</span> <a class="wslnk" href="btp.html#s8-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-14</code></td><td>创建 demo-xsuaa（xsuaa / application）与 demo-destination（destination / lite）</td><td>cf services 三个实例均为 create succeeded；cockpit 状态为 Created<br><span class="tag gray">10 分</span> <a class="wslnk" href="btp.html#s8-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-15</code></td><td>逐项打勾「环境就绪」12 项验收清单</td><td>清单 12 项全部打勾，无「打不上勾」的条目<br><span class="tag gray">8 分</span> <a class="wslnk" href="btp.html#s9">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-16</code></td><td>mini 验证：推送并访问 hello world 级应用，随后删除</td><td>cf apps 显示 demo-hello 为 started 且路由返回页面内容；cf delete 后从列表消失<br><span class="tag gray">10 分</span> <a class="wslnk" href="btp.html#s9-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BTP-17</code></td><td>设置试用止损：续期提醒与本地备份</td><td>日历里有每 2–3 周登录提醒；代码与 db/data/*.csv 已同步到本地/远端仓库<br><span class="tag gray">10 分</span> <a class="wslnk" href="btp.html#s10">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<h3 id="tr-bas">BAS（13 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="13">BAS<br><span class="tag gray">13 项</span></td><td><code>BAS-01</code></td><td>确认 BAS 订阅与角色，并进入业务应用 Studio</td><td>Subscriptions 里能看到 SAP Business Application Studio（状态 Subscribed）；点 Go to Application 能打开 BAS Lobby<br><span class="tag gray">10 分</span> <a class="wslnk" href="bas.html#s2-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-02</code></td><td>创建 Full Stack Cloud Application dev space</td><td>Dev Space Manager 里出现该 dev space，Type = Full Stack Cloud Application，STATUS 从 STARTING 变为 RUNNING<br><span class="tag gray">15 分</span> <a class="wslnk" href="bas.html#s2-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-03</code></td><td>dev space 生命周期演练：Stop → Start → （在副本上）Delete</td><td>Stop 后 Start，项目文件与设置仍在；扩展编辑在 STOPPED 状态下才可保存<br><span class="tag gray">10 分</span> <a class="wslnk" href="bas.html#s2-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-04</code></td><td>跑起服务并做端口预览（两条路径都试）</td><td>Ports: Preview 列表里能看到 http://localhost:4004；浏览器打开 /odata/v4/book-order/$metadata 返回 XML<br><span class="tag gray">15 分</span> <a class="wslnk" href="bas.html#s3-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-05</code></td><td>用 cds init 创建 CAP 项目并核对目录与 package.json</td><td>项目里有 app/ db/ srv/ package.json；db/data 下 4 个 CSV 命名为「命名空间-实体.csv」；cds compile --to sql 有 CREATE TABLE 输出<br><span class="tag gray">15 分</span> <a class="wslnk" href="bas.html#s4-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-06</code></td><td>终端三连：cds watch / npm run deploy / cds env</td><td>deploy 输出 successfully deployed to db.sqlite；cds watch 日志出现 serving BookOrderService 与 server listening on http://localhost:4004；cds env get requires.db 显示 kind: sqlite<br><span class="tag gray">15 分</span> <a class="wslnk" href="bas.html#s5-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-07</code></td><td>在 dev space 里查看 SQLite 表名与运行日志</td><td>脚本输出里能看到 sap_training_bookorder_Books 与 sap_training_bookorder_BookOrderItems；终端日志里能看到 OData 请求行<br><span class="tag gray">10 分</span> <a class="wslnk" href="bas.html#s5-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-08</code></td><td>创建 launch.json 并用 attach 命中断点</td><td>终端出现 Debugger listening on ws://127.0.0.1:9229/…；触发 submitOrder 时停在断点行，VARIABLES 面板显示变量值<br><span class="tag gray">20 分</span> <a class="wslnk" href="bas.html#s5-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-09</code></td><td>制造并消除三类「红线」</td><td>分别复现：视图缺主键、关联自动重定向冲突、改列名未同步；每类都能用 cds compile 复现报错并修复到编译通过<br><span class="tag gray">20 分</span> <a class="wslnk" href="bas.html#s6-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-10</code></td><td>把项目推到 GitHub（HTTPS + PAT）</td><td>git status 为 clean；git log --oneline -1 有提交；浏览器打开仓库能看到 db/ srv/ package.json 且 node_modules 未被提交<br><span class="tag gray">15 分</span> <a class="wslnk" href="bas.html#s7-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-11</code></td><td>部署前准备：cds add hana mta、cds build、mbt -v</td><td>mta.yaml 里同时有 type: nodejs 与 type: hdb 模块及 hdi-container 资源；cds build --production 生成 gen/；mbt -v 与 cf -v 都有版本输出<br><span class="tag gray">20 分</span> <a class="wslnk" href="bas.html#s8-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-12</code></td><td>从 BAS 部署到 Cloud Foundry 并在 cockpit 验收</td><td>cf target 的 org/space 正确；mbt build 生成 MTAR；cf deploy 后应用 started、服务实例 create succeeded；&lt;route&gt;/odata/v4/book-order/BookOrders?$filter=status eq 'OPEN' 返回 2 条<br><span class="tag gray">30 分</span> <a class="wslnk" href="bas.html#s9-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>BAS-13</code></td><td>磁盘与配额自查 + 错误表演练</td><td>df -h 与 df -ih 的已用比例低于 80%；能从错误表里指出「npm ERR! No space left」与「端口打不开」的处置顺序<br><span class="tag gray">10 分</span> <a class="wslnk" href="bas.html#s11">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<h3 id="tr-hana">HANA（12 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="12">HANA<br><span class="tag gray">12 项</span></td><td><code>HANA-01</code></td><td>核对 HANA 相关 entitlements 并订阅 tools 计划</td><td>Entitlements 里能看到 SAP HANA Cloud 与 SAP HANA Schemas &amp; HDI Containers 的相关计划（含 hdi-shared）；Subscriptions 里有 SAP HANA Cloud (tools)，点开能进 SAP HANA Cloud Central<br><span class="tag gray">15 分</span> <a class="wslnk" href="hana.html#s3-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-02</code></td><td>在 cockpit 创建 SAP HANA Cloud 数据库实例</td><td>Cloud Central 里实例状态为 RUNNING；⋯ 菜单能打开 Database Explorer；已 Copy Instance ID 留档<br><span class="tag gray">25 分</span> <a class="wslnk" href="hana.html#s3-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-03</code></td><td>用 CLI 复核实例并演练启停</td><td>cf services 里实例 last operation = create succeeded；执行 cf update-service 的 serviceStopped false/true 后状态在 running 与 stopped 之间变化<br><span class="tag gray">15 分</span> <a class="wslnk" href="hana.html#s3-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-04</code></td><td>创建 hdi-shared 容器（并说明为什么不用 schema）</td><td>cf services 里 demo-hana-db（hana / hdi-shared）状态 create succeeded；能口头说明 hdi-shared / schema / tools 的差别<br><span class="tag gray">15 分</span> <a class="wslnk" href="hana.html#s4-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-05</code></td><td>用 cds bind 建立 hybrid 绑定并验证</td><td>.cdsrc-private.json 里没有任何密码；cds env get requires.db --profile hybrid 显示 kind: hana；cds watch --profile hybrid 下能查到云端数据<br><span class="tag gray">20 分</span> <a class="wslnk" href="hana.html#s5-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-06</code></td><td>核对 mta.yaml 的 HDI 资源定义</td><td>resources 里有 type: com.sap.xs.hdi-container、service: hana、service-plan: hdi-shared；服务模块与 hdb 模块引用同一资源名<br><span class="tag gray">10 分</span> <a class="wslnk" href="hana.html#s5-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-07</code></td><td>推断并实测「实体名 → 表名」映射</td><td>先按规则写出 SAP_TRAINING_BOOKORDER_BOOKORDERS 等 5 个对象名，再与 gen/db/src/gen/*.hdbtable 的 grep 结果逐一比对一致<br><span class="tag gray">15 分</span> <a class="wslnk" href="hana.html#s6-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-08</code></td><td>在 Database Explorer 里找到 CAP 建的表并查行数</td><td>M_TABLES 查询返回 4 张表，行数为 Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9<br><span class="tag gray">20 分</span> <a class="wslnk" href="hana.html#s7-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-09</code></td><td>跑通 join + 聚合 SQL，并与 OData 对账</td><td>SQL 返回 4 行（BO-1001 16000 / BO-1002 3600 / BO-1003 17400 / BO-1004 7600）；getOrderTotal('BO-1003') 也返回 17400<br><span class="tag gray">20 分</span> <a class="wslnk" href="hana.html#s7-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-10</code></td><td>三条建表/初始化数据路径各跑一遍并比对</td><td>cds deploy --to sqlite 输出 successfully deployed；cds build --for hana 生成 .hdbtable/.hdbtabledata；cds deploy --to hana 之后行数与 CSV 一致<br><span class="tag gray">25 分</span> <a class="wslnk" href="hana.html#s8-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-11</code></td><td>错误演练：表名大小写与实例被停止</td><td>故意用小写/下划线错误的表名复现「表不存在」，改回大写后查询成功；把实例停掉后复现连接失败，再用 cf update-service 恢复<br><span class="tag gray">20 分</span> <a class="wslnk" href="hana.html#s9">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>HANA-12</code></td><td>数据可重建性检查（收尾）</td><td>Git 仓库里同时有 db/schema.cds、db/data/*.csv、mta.yaml；.gitignore 含 .cdsrc-private.json 与 db.sqlite；在空目录克隆后能重建库<br><span class="tag gray">15 分</span> <a class="wslnk" href="hana.html#s10">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<h3 id="tr-cds">CDS（13 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="13">CDS<br><span class="tag gray">13 项</span></td><td><code>CDS-01</code></td><td>核对三类 .cds 文件的编译产物</td><td>cds compile db/schema.cds --to sql 输出 4 个 CREATE TABLE；加上服务定义后 CREATE VIEW 变 7 个；再加 annotations.cds 后 CREATE TABLE 数不变而 --to edmx 的 Annotations 段出现<br><span class="tag gray">10 分</span> <a class="wslnk" href="cds.html#s1-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-02</code></td><td>把同一份模型编译到两个方言并说明差异</td><td>--dialect hana 的输出里 createdAt 为 TIMESTAMP、orderDate 为 DATE，且 String 无长度时是 NVARCHAR(5000)（SQLite 为 TIMESTAMP_TEXT/DATE_TEXT/NVARCHAR(255)）<br><span class="tag gray">10 分</span> <a class="wslnk" href="cds.html#s2-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-03</code></td><td>用类型动物园模型输出 SQLite/HANA 双列对照结论</td><td>能指出 array of String(20) 的列是 NCLOB、Binary(16) 分别是 BINARY_BLOB(16) 与 VARBINARY(16)、DateTime 在 HANA 上是 SECONDDATE<br><span class="tag gray">15 分</span> <a class="wslnk" href="cds.html#s2-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-04</code></td><td>解释并复现 UUID 主键的自动填充</td><td>POST 一行 BookOrderItems（只给 order_ID/book_ID/quantity）返回体里带自动生成的 36 位 ID，且 BookOrders 主键列 DDL 为 NVARCHAR(36) NOT NULL<br><span class="tag gray">15 分</span> <a class="wslnk" href="cds.html#s3-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-05</code></td><td>查证 orderNo 的唯一性由哪一层保证</td><td>在 --to sql 输出里确认 orderNo 列没有 UNIQUE；重复提交同一订单号返回 409 且带「已存在」消息<br><span class="tag gray">15 分</span> <a class="wslnk" href="cds.html#s3-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-06</code></td><td>写出 managed / localized 展开后的物理对象</td><td>能列出 createdAt/createdBy/modifiedAt/modifiedBy 四列及其类型；编译 localized 模型后能指出 _texts 表与 localized_ 视图<br><span class="tag gray">15 分</span> <a class="wslnk" href="cds.html#s4-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-07</code></td><td>用 diff 证明 Association 与 Composition 的 DDL 相同</td><td>两份仅一个关键词不同的临时模型 --to sql 输出 diff 为空；同时能背出 Composition 的三项运行时行为<br><span class="tag gray">20 分</span> <a class="wslnk" href="cds.html#s5-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-08</code></td><td>复现 up__ID 并说明 CSV 表头规则</td><td>匿名内联 Composition 编译出子表含 up__ID NVARCHAR(36) NOT NULL；把 CSV 表头写成 order_ID 时 deploy 失败于 no column named order_ID<br><span class="tag gray">20 分</span> <a class="wslnk" href="cds.html#s5-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-09</code></td><td>部署示范项目并完成四项数据自检</td><td>sqlite_master 列出 7 表 7 视图；Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9 行；明细 join 订单 = 9；孤儿明细行 = 0<br><span class="tag gray">20 分</span> <a class="wslnk" href="cds.html#s9-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-10</code></td><td>故意制造并修好三条建模报错</td><td>分别复现 Mismatched ‹EOF›、can't auto-redirect、no column named orders_ID，并在修复后同一条命令通过<br><span class="tag gray">25 分</span> <a class="wslnk" href="cds.html#s10">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-11</code></td><td>完成练习 1：客户信用额度字段</td><td>pragma table_info 出现 creditLimit:DECIMAL(13, 2)，三行额度为 100000/50000/20000；表头故意写错时 deploy 失败于 no column named credit_limit<br><span class="tag gray">10 分</span> <a class="wslnk" href="cds.html#s11-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-12</code></td><td>完成练习 2：供应商实体与 Books 关联</td><td>Books 的 DDL 出现 supplier_ID INTEGER；$metadata 出现 NavigationProperty Name="supplier" 且含 ReferentialConstraint；孤儿行查询为 0<br><span class="tag gray">20 分</span> <a class="wslnk" href="cds.html#s11-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>CDS-13</code></td><td>完成练习 3：带主键视图与聚合取舍</td><td>BookStockView 在 --to sql 是 CREATE VIEW、在 --to edmx 是只读 EntitySet；暴露无主键聚合视图时得到 Expected entity to have a primary key；加 @cds.persistence.skip 后 --to sql 中该视图消失<br><span class="tag gray">30 分</span> <a class="wslnk" href="cds.html#s11-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<h3 id="tr-node">Node（6 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="6">Node<br><span class="tag gray">6 项</span></td><td><code>NODE-01</code></td><td>给订单头加一条 before-CREATE 校验（备注中不允许出现「测试」）</td><td>srv/book-order-service.js 的 before('CREATE', BookOrders) 钩子；@odata.draft.enabled 的实体要在 draftActivate 时才触发校验<br><span class="tag gray">15 分</span> <a class="wslnk" href="node.html#s12-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>NODE-02</code></td><td>加一个 after-READ 的计算字段 itemCount（并判断是否需要改模型）</td><td>after('READ', BookOrders) 的结果集形态（单行/数组）、用一次 groupBy 聚合避免 N+1、未在模型声明的字段会被 OData 序列化丢掉<br><span class="tag gray">25 分</span> <a class="wslnk" href="node.html#s12-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>NODE-03</code></td><td>把 on('submitOrder') 改成 after('submitOrder')，记录差异并给出结论</td><td>on 代替默认实现 vs after 在实现之后；自定义动作没有默认实现<br><span class="tag gray">20 分</span> <a class="wslnk" href="node.html#s12-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>NODE-04</code></td><td>用 cds watch + curl 证明「草稿激活才触发 before-CREATE」</td><td>草稿流程 URL（IsActiveEntity=false → draftActivate）、[odata]/[error] 日志行、栈里的文件名:行号<br><span class="tag gray">20 分</span> <a class="wslnk" href="node.html#s3-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>NODE-05</code></td><td>写出「查 status=OPEN 的订单、只取 ID/orderNo、按 orderNo 倒序、前 3 条」的 CQN 并用 cqn2sql 核对 SQL</td><td>SELECT.from(...).columns(...).where(...).orderBy(...).limit(...)；外键列命名；参数化（? 占位）<br><span class="tag gray">20 分</span> <a class="wslnk" href="node.html#s5">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>NODE-06</code></td><td>用 cds env 核对本机与 production profile 的 requires.db 差异</td><td>cds env get / cds env --profile production；profile 覆盖与 cds bind 的 hybrid 段<br><span class="tag gray">15 分</span> <a class="wslnk" href="node.html#s9">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<h3 id="tr-security">权限（10 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="10">权限<br><span class="tag gray">10 项</span></td><td><code>SEC-01</code></td><td>把四种 auth kind 的行为差异跑出来（mocked / dummy / basic / jwt）</td><td>mocked 下匿名 GET 返回 401（带 WWW-Authenticate: Basic realm="Users"）、-u alice:alice 返回 200；用 cds_requires_auth_kind=dummy 重启后同一个匿名请求返回 200——两次状态码都记录在案并解释原因<br><span class="tag gray">20 分</span> <a class="wslnk" href="security.html#s3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-02</code></td><td>用 cds.requires.auth.users 收紧本地认证</td><td>配置里出现 "*": false 与带 password 的用户；npx cds env get requires.auth 能看到合并后的用户；未配置的用户名返回 401、已知用户输错密码返回 401<br><span class="tag gray">15 分</span> <a class="wslnk" href="security.html#s4-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-03</code></td><td>本地复现 401 / 403 / 200 三态</td><td>同一条 GET：匿名 401、只有 view 角色的 alice 200、无角色的 bob 403（响应体形如 {"error":{"message":"Forbidden","code":"403"}}）；同一张订单的 submitOrder：alice 403、zoe 200 并返回业务消息<br><span class="tag gray">25 分</span> <a class="wslnk" href="security.html#s5">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-04</code></td><td>写出服务级 + 实体级 + 动作级的授权组合</td><td>服务上有 @(requires: 'authenticated-user')，实体上有 @restrict 的 grant/to 组合（含动作名授权），并且能说明「层级之间是逻辑与、同一实体内多条 privilege 是逻辑或」；cds compile --to edmx 无 error<br><span class="tag gray">20 分</span> <a class="wslnk" href="security.html#s7">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-05</code></td><td>用 cds compile srv --to xsuaa 生成并核对授权描述符</td><td>命令输出里出现与 CDS 的 to: 一一对应的 scopes；与项目里手工维护的 xs-security.json 逐字对照后能指出差异（生成的是 to: 名，手工版改成了 OrderViewer/OrderEditor/OrderAdmin）<br><span class="tag gray">15 分</span> <a class="wslnk" href="security.html#s9-3">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-06</code></td><td>在 mta.yaml 里接上 xs-security.json，并检查 approuter 的 token 转发</td><td>resources 里的 xsuaa 资源带 path: ./xs-security.json 与 service-plan: application；srv 与 approuter 都 requires 它；approuter 的 destination 上有 forwardAuthToken: true，xs-app.json 的路由上有 authenticationType: xsuaa<br><span class="tag gray">20 分</span> <a class="wslnk" href="security.html#s9-4">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-07</code></td><td>完成「只有订单管理员能提交订单」的完整链路（六步）</td><td>① 模型加 @restrict（编译通过）② 描述符里 scope 名与 to: 对齐 ③ mta.yaml 引用 ④ 本地 alice 403 / zoe 200 ⑤ 部署后 cockpit 角色集合里含 OrderAdmin 且用户已加入 ⑥ 云端 curl 得到 403 / 200 / 401 三态<br><span class="tag gray">60 分</span> <a class="wslnk" href="security.html#s10">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-08</code></td><td>用 service key 取 JWT 并解出 scope 列表</td><td>cf create-service-key 成功；cf service-key … / tail -n +2 / jq -r '.credentials.url' 拿到 token 端点；client_credentials 与 password 两条路各取一个 token，解 payload 后能说明两者 scope 差异（技术用户无业务 scope）<br><span class="tag gray">25 分</span> <a class="wslnk" href="security.html#s11-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-09</code></td><td>用错误表把一个真实 403 定位到具体一环</td><td>写出排查记录：状态码 → 解 JWT 看 scope → 与 to: 逐字比对 → 检查角色集合与用户分配 → 检查 token 是否重新签发；结论指向唯一一环，并说明改完后如何复验<br><span class="tag gray">20 分</span> <a class="wslnk" href="security.html#s12">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>SEC-10</code></td><td>逐条勾选安全基线清单并说明不达标的风险</td><td>清单中至少 6 条能在自己的项目里指出对应的配置位置（package.json 的 [production] 档、注解、角色集合、验收脚本），其余两条说明为什么暂时做不到<br><span class="tag gray">15 分</span> <a class="wslnk" href="security.html#s13">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<h3 id="tr-testing">测试（6 个任务）</h3>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsb">板块</th><th class="wsn">任务号</th><th class="wst">任务</th><th class="wsb2">完成基准</th><th class="wsr">我实际执行的结果</th><th class="wsd">☐ 已完成</th><th class="wsi">遇到的问题</th></tr></thead>
+<tbody>
+<tr><td rowspan="6">测试<br><span class="tag gray">6 项</span></td><td><code>TEST-01</code></td><td>把「模型无 ERROR + 实体集数量」写成可进 CI 的一条断言</td><td>cds compile --to edmx 的输出与退出码陷阱（有 [ERROR] 时 exit code 仍可能是 0）；grep -q 判定<br><span class="tag gray">15 分</span> <a class="wslnk" href="testing.html#s1-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>TEST-02</code></td><td>给现有 5 类 handler 各补一条负向用例（400/401/405/409/404）</td><td>cds.test 的 GET/POST、.catch(e =&gt; e) + err.response.status、业务消息断言<br><span class="tag gray">30 分</span> <a class="wslnk" href="testing.html#s2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>TEST-03</code></td><td>让 odata-verify.sh 幂等：连跑两次结果一致</td><td>脚本会写数据（新增明细/激活草稿/提交订单）；before() 里 data.reset() 或每轮 npm run deploy<br><span class="tag gray">20 分</span> <a class="wslnk" href="testing.html#s5-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>TEST-04</code></td><td>写 test/ci-verify.sh：起服务 → 轮询就绪 → 跑两层测试 → 收尾</td><td>不能固定 sleep；轮询 $metadata 返回 200；最后 kill 掉服务进程<br><span class="tag gray">25 分</span> <a class="wslnk" href="testing.html#s7-1">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>TEST-05</code></td><td>接入 GitHub Actions（模型检查 + 两层测试 + 失败时打印服务端日志）</td><td>actions/setup-node 的 cache: npm（不要缓存 node_modules）、Node 版本矩阵、fail-fast: false<br><span class="tag gray">25 分</span> <a class="wslnk" href="testing.html#s7-2">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+<tr><td><code>TEST-06</code></td><td>用 BASE= 变量把验收脚本指向已部署环境跑一遍</td><td>脚本支持 BASE 环境变量；云端与本地 sqlite 的方言/权限差异只有真跑才知道<br><span class="tag gray">20 分</span> <a class="wslnk" href="testing.html#s9">见页面</a></td><td class="wsfill"></td><td class="wscheck">☐</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+
+<div class="box info"><b class="t">进度小结（自己统计后填）</b>
+<table class="tbl ws"><tbody>
+<tr><th style="width:34%">已完成任务数 / 85</th><td></td><th style="width:34%">卡住的任务号（写下来交讲师）</th><td></td></tr>
+</tbody></table></div>
+
+<h2 id="s3">3. 关键命令实录栏</h2>
+<p>规则：<b>一条命令一行</b>。「我看到的实际输出」栏抄<b>关键行</b>即可（状态码、行数、消息原文），不要整段复制。
+第 1–14 行是本地开发与验证流程（本站实测）；第 15–18 行是构建与部署链路，标 ~ 的步骤<b>本站没有真实 BTP 账号、未实测</b>，请按你的环境填写（例如路由名、实例名会不一样）。</p>
+<p class="docmeta">下列命令的工作目录除特别注明外都是 <code>project-code/demo-node/</code>；服务跑在 <code>http://localhost:4004</code>，服务路径 <code>/odata/v4/book-order</code>。</p>
+
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsn">#</th><th style="width:34%">命令</th><th style="width:33%">期望结果（判据）</th><th style="width:27%">我看到的实际输出</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>node -v</code></td><td><code>v22.23.2</code>（20/22 LTS 均可，本站实测值）</td><td class="wsfill"></td></tr>
+<tr><td>2</td><td><code>npm install</code></td><td>正常结束并出现 <code>added 328 packages</code>；<code>better-sqlite3</code> 原生模块装得上（LTS 的关键理由）</td><td class="wsfill"></td></tr>
+<tr><td>3</td><td><code>npm run deploy</code></td><td>4 行 <code>&gt; init from db/data/…csv</code> + 末行 <code>&gt; successfully deployed to db.sqlite</code></td><td class="wsfill"></td></tr>
+<tr><td>4</td><td>用 <code>python3</code> 查 <code>sqlite_master</code>（完整命令见第 4 节①）</td><td>表 7 个 / 视图 7 个（含 2 张草稿支撑表与 1 张 <code>cds_outbox_Messages</code>）</td><td class="wsfill"></td></tr>
+<tr><td>5</td><td><code>npm start</code></td><td><code>server listening on http://localhost:4004</code>；<code>serving BookOrderService { at: ['/odata/v4/book-order'] }</code>；日志有 <code>using auth strategy { kind: 'mocked' }</code></td><td class="wsfill"></td></tr>
+<tr><td>6</td><td><code>curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4004/odata/v4/book-order/BookOrders</code></td><td><code>401</code>（匿名请求被拦：服务上有 <code>@(requires: 'authenticated-user')</code>）</td><td class="wsfill"></td></tr>
+<tr><td>7</td><td><code>curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/\$metadata" | head -3</code></td><td>HTTP 200 的 XML，含 <code>&lt;Schema Namespace="BookOrderService"&gt;</code>；<code>grep -c Annotation</code> 本站在 160 上下</td><td class="wsfill"></td></tr>
+<tr><td>8</td><td><code>curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/BookOrders?\$filter=status eq 'OPEN'"</code></td><td><code>value</code> 数组长度 = 2（种子数据里 OPEN 的订单）</td><td class="wsfill"></td></tr>
+<tr><td>9</td><td><code>curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/getOrderTotal(orderNo='BO-1003')"</code></td><td><code>{"value":17400}</code>（聚合走<b>无绑定函数</b>，不是实体）</td><td class="wsfill"></td></tr>
+<tr><td>10</td><td>同上但订单号改成不存在的 <code>BO-9999</code></td><td><code>404</code> + <code>订单号 BO-9999 不存在</code></td><td class="wsfill"></td></tr>
+<tr><td>11</td><td><code>curl -s -u alice:alice -X POST "http://localhost:4004/odata/v4/book-order/BookOrderItems" -H 'Content-Type: application/json' -d '{"order_ID":"&lt;BO-1002 的 ID&gt;","book_ID":1003,"quantity":0}'</code></td><td><code>400</code> + <code>数量必须大于 0</code>（负向用例必须有状态码<b>和</b>消息）</td><td class="wsfill"></td></tr>
+<tr><td>12</td><td><code>bash test/odata-verify.sh</code>（服务已在跑）</td><td>末行 <code>PASS 26 / FAIL 0</code>；脚本会写数据，重跑前先 <code>rm -f db.sqlite &amp;&amp; npm run deploy</code> 并重启服务</td><td class="wsfill"></td></tr>
+<tr><td>13</td><td><code>node test/dev-proxy.js</code>（另开终端）</td><td>打印 <code>http://localhost:4005 -&gt; http://localhost:4004 (as alice:alice)</code>，浏览器打开 Fiori 页面不再 401</td><td class="wsfill"></td></tr>
+<tr><td>14</td><td><code>npx cds compile db/schema.cds --to sql</code></td><td>4 个 <code>CREATE TABLE</code>（+ 视图定义），能逐列解释每个列来自哪一行 CDS</td><td class="wsfill"></td></tr>
+<tr><td>15</td><td><code>npx cds build --production</code> ~</td><td>生成 <code>gen/srv</code> 与 <code>gen/db</code>（部署链第一步的产物）</td><td class="wsfill"></td></tr>
+<tr><td>16</td><td><code>mbt build -t mta_archives</code> ~</td><td>生成 <code>mta_archives/demo-node_1.0.0.mtar</code></td><td class="wsfill"></td></tr>
+<tr><td>17</td><td><code>cf deploy mta_archives/demo-node_1.0.0.mtar -f</code> ~</td><td>应用 started、服务实例 <code>create succeeded</code>；<code>cf apps</code> 里能看到 srv 与 approuter</td><td class="wsfill"></td></tr>
+<tr><td>18</td><td><code>curl -s -o /dev/null -w '%{http_code}\n' https://&lt;你的路由&gt;/odata/v4/book-order/\$metadata</code> ~</td><td><code>200</code>（部署后验证：接口在公网路由上可用）</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<p class="docmeta">栏位不够就在背面继续写，格式保持：「命令 → 我看到的关键行 → 我的结论」。</p>
+
+<h2 id="s4">4. 实验记录（5 个实验）</h2>
+
+<h3 id="s4-1">4-1 实验①：建库 —— 记录表名与行数</h3>
+<ol class="steps">
+  <li><b>建库</b>：<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npm run deploy      # 期望：successfully deployed to db.sqlite</code></pre></li>
+  <li><b>列出对象与行数</b>（不要只看部署日志，要查库）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3
+c = sqlite3.connect('db.sqlite')
+for n, t in c.execute('select name, type from sqlite_master where type in (\"table\",\"view\") order by type, name'):
+    print(f'{t:5} {n}')
+print('--- rows ---')
+for (n,) in c.execute('select name from sqlite_master where type=\"table\"'):
+    print(n, c.execute(f'select count(*) from \"{n}\"').fetchone()[0])"</code></pre></li>
+</ol>
+<p><b>记录</b>：任务清单要求记录 <b>6 张表</b>（4 张业务表 + 2 张草稿支撑表）。本站实测 <code>sqlite_master</code> 里其实是 <b>7 张表</b>——
+多出来的那张是 CAP 自身机制建的 <code>cds_outbox_Messages</code>（与我们的实体无关，0 行）。请把两者都记下来，并解释差异。</p>
+
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th style="width:38%">表名（我查到的）</th><th style="width:12%">类型</th><th style="width:18%">我实测的行数</th><th style="width:32%">参考值（本站实测）</th></tr></thead>
+<tbody>
+<tr><td><code>sap_training_bookorder_Books</code></td><td>table</td><td class="wsfill"></td><td>5 行（种子 CSV）</td></tr>
+<tr><td><code>sap_training_bookorder_Customers</code></td><td>table</td><td class="wsfill"></td><td>3 行</td></tr>
+<tr><td><code>sap_training_bookorder_BookOrders</code></td><td>table</td><td class="wsfill"></td><td>4 行</td></tr>
+<tr><td><code>sap_training_bookorder_BookOrderItems</code></td><td>table</td><td class="wsfill"></td><td>9 行</td></tr>
+<tr><td><code>BookOrderService_BookOrders_drafts</code>（草稿支撑表）</td><td>table</td><td class="wsfill"></td><td>0 行（草稿用完即清）</td></tr>
+<tr><td><code>DRAFT_DraftAdministrativeData</code>（草稿管理表）</td><td>table</td><td class="wsfill"></td><td>0 行</td></tr>
+<tr><td><code>cds_outbox_Messages</code>（第 7 张：框架表）</td><td>table</td><td class="wsfill"></td><td>0 行</td></tr>
+<tr><td>视图：<code>sap_training_bookorder_OrderItemView</code> 与 6 个服务视图</td><td>view</td><td class="wsfill"></td><td>共 7 个视图，行数同明细（9）</td></tr>
+</tbody></table></div>
+<p><b>对账</b>（填你算出来的数）</p>
+<div class="tblwrap"><table class="tbl small ws"><tbody>
+<tr><th style="width:44%">4 张业务表行数合计</th><td></td><th style="width:34%">明细 join 订单后的行数（应 = 9）</th><td></td></tr>
+<tr><th>孤儿明细行（FK 指向不存在的书，应为 0）</th><td></td><th>表名前缀来自哪里（写一句）</th><td></td></tr>
+</tbody></table></div>
+<div class="ansbox short"></div>
+
+<h3 id="s4-2">4-2 实验②：OData 验证 —— 哪几条断言失败了</h3>
+<ol class="steps">
+  <li><b>前置</b>：<code>npm start</code> 已把服务跑在 4004（另一个终端）。<b>注意脚本会写数据</b>（新增明细、提交订单、自动编号），想反复跑就先重置：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">rm -f db.sqlite &amp;&amp; npm run deploy      # 重置种子数据
+# 重启服务后再跑脚本
+bash test/odata-verify.sh</code></pre></li>
+  <li><b>记录结果</b>：末行会打 <code>PASS n / FAIL n</code>；脚本共 <b>26 条断言</b>。逐条失败项抄在下面（<b>若全部通过就写 0</b>）。</li>
+</ol>
+<div class="tblwrap"><table class="tbl small ws"><tbody>
+<tr><th style="width:22%">断言总数</th><td style="width:11%">26</td><th style="width:22%">通过（PASS）</th><td style="width:11%"></td><th style="width:22%">失败（FAIL）</th><td></td></tr>
+</tbody></table></div>
+<p>失败明细（<b>没有失败就整栏写 0</b>，不要留空）：</p>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsn">#</th><th style="width:34%">失败的断言（抄脚本里的用例名）</th><th style="width:18%">期望 → 实际</th><th style="width:40%">我判断的原因</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>2</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>3</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>4</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<p class="docmeta">提示：最常见的「失败」来自<b>没重置数据</b>（断言 26 条里有 7 条会改数据）、<b>忘了重启服务</b>、以及<b>模型编译有 <code>[ERROR]</code> 但退出码为 0</b> 这三类。</p>
+
+<h3 id="s4-3">4-3 实验③：业务规则 —— 自己设计两个调用</h3>
+<p>设计两条自己构造的调用，把<b>状态码</b>与<b>消息原文</b>抄下来（消息原文是判断「规则真的生效」的唯一证据）。<code>order_ID</code> 请先用
+<code>curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/BookOrders?\$select=ID,orderNo"</code> 查到再填。</p>
+
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th style="width:16%">用例</th><th style="width:30%">我构造的调用（命令）</th><th style="width:12%">状态码</th><th style="width:42%">消息原文（逐字抄）</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>数量为 0</b><br><span class="tag">明细校验</span></td>
+  <td><pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -u alice:alice -X POST \
+  "http://localhost:4004/odata/v4/book-order/BookOrderItems" \
+  -H 'Content-Type: application/json' \
+  -d '{"order_ID":"&lt;BO-1002 的 ID&gt;","book_ID":1003,"quantity":0}'</code></pre></td>
+  <td class="wsfill"></td><td class="wsfill"></td>
+</tr>
+<tr>
+  <td><b>重复订单号</b><br><span class="tag">唯一性校验</span></td>
+  <td>BookOrders 开了草稿，订单号校验发生在<b>激活</b>那一步——所以先建草稿（带一个已存在的订单号，例如 <code>BO-1001</code>），再激活：<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># ① 建草稿，故意带重复订单号
+curl -s -u alice:alice -X POST "http://localhost:4004/odata/v4/book-order/BookOrders" \
+  -H 'Content-Type: application/json' -d '{"orderNo":"BO-1001","customer_ID":1000}'
+
+# ② 激活（ID 用上一步返回的 ID）
+curl -s -u alice:alice -X POST \
+  "http://localhost:4004/odata/v4/book-order/BookOrders(ID=&lt;上一步的 ID&gt;,IsActiveEntity=false)/BookOrderService.draftActivate" \
+  -H 'Content-Type: application/json' -d '{}'</code></pre></td>
+  <td class="wsfill"></td><td class="wsfill"></td>
+</tr>
+</tbody></table></div>
+<p><b>我设计的第三种调用</b>（自选：图书不存在 / 只读实体 POST / 顾客不存在 / 空订单提交，任选一个）：</p>
+<div class="fillbox"></div>
+<div class="tblwrap"><table class="tbl small ws"><tbody>
+<tr><th style="width:16%">状态码</th><td style="width:34%"></td><th style="width:16%">消息原文</th><td></td></tr>
+</tbody></table></div>
+<div class="ansbox short"></div>
+
+<h3 id="s4-4">4-4 实验④：草稿流程 —— POST → draftActivate 的两步请求与差异</h3>
+<ol class="steps">
+  <li><b>第一步：建草稿（POST）</b>——只给顾客，不给订单号：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -u alice:alice -X POST "http://localhost:4004/odata/v4/book-order/BookOrders" \
+  -H 'Content-Type: application/json' -d '{"customer_ID":1000}'</code></pre></li>
+  <li><b>第二步：激活（draftActivate）</b>——用上一步返回的 <code>ID</code>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -u alice:alice -X POST \
+  "http://localhost:4004/odata/v4/book-order/BookOrders(ID=&lt;上一步的 ID&gt;,IsActiveEntity=false)/BookOrderService.draftActivate" \
+  -H 'Content-Type: application/json' -d '{}'</code></pre></li>
+</ol>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th style="width:20%">观察点</th><th style="width:40%">第一步 POST 的返回（我抄的）</th><th style="width:40%">第二步 draftActivate 的返回（我抄的）</th></tr></thead>
+<tbody>
+<tr><td><b>HTTP 状态码</b></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td><b><code>orderNo</code></b></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td><b><code>IsActiveEntity</code></b></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td><b>数据库里的行</b><br>（草稿表 / 业务表）</td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td><b><code>before CREATE</code> 钩子</b><br>（在哪一步触发）</td><td class="wsfill"></td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<p><b>我的结论：两步之间的差异说明了什么？（3–5 行）</b></p>
+<div class="ansbox"></div>
+<p class="docmeta">参考：本站实测第一步返回 <code>"orderNo": null</code> 且 <code>"IsActiveEntity": false</code>；第二步返回 <b>HTTP 201</b>，
+<code>IsActiveEntity: true</code>，<code>orderNo</code> 被服务端生成（当时那次运行生成的是 <code>BO-1006</code>）；草稿态的行停在 <code>BookOrderService_BookOrders_drafts</code>，
+激活后才写进 <code>sap_training_bookorder_BookOrders</code>。</p>
+
+<h3 id="s4-5">4-5 实验⑤：Fiori —— 页面 URL、列名与「状态」列的颜色语义</h3>
+<ol class="steps">
+  <li><b>起服务 + 起代理</b>（两个终端）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm start              # 终端 1：http://localhost:4004
+node test/dev-proxy.js # 终端 2：http://localhost:4005 -&gt; 4004 (as alice:alice)</code></pre></li>
+  <li><b>打开页面</b>：<code>http://localhost:4005/book-orders/webapp/index.html</code>，逐列核对列名，并观察「状态」列的<b>颜色</b>。</li>
+</ol>
+<div class="tblwrap"><table class="tbl small ws"><tbody>
+<tr><th style="width:22%">我打开的页面 URL</th><td colspan="3"></td></tr>
+<tr><th>列名（照抄界面上的文字，从左到右）</th><td colspan="3"><div class="fillbox"></div></td></tr>
+<tr><th>明细表（Object Page）的列名</th><td colspan="3"><div class="fillbox"></div></td></tr>
+<tr><th>行内动作按钮的文字</th><td colspan="3"></td></tr>
+</tbody></table></div>
+<p><b>「状态」列的颜色语义</b>：颜色不是写在界面上的，而是由 <code>statusCriticality</code> 这个<b>派生字段</b>的值决定。
+请对照下表把你实际看到的颜色写下（不同版本主题下颜色名可能略有差别，写你看到的即算对）：</p>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th style="width:18%">状态值</th><th style="width:18%">criticality 值</th><th style="width:28%">语义（Fiori 的标准含义）</th><th style="width:36%">我在界面上看到的颜色 / 现象</th></tr></thead>
+<tbody>
+<tr><td><code>OPEN</code></td><td><code>2</code></td><td>Critical（需要关注）</td><td class="wsfill"></td></tr>
+<tr><td><code>SUBMITTED</code></td><td><code>3</code></td><td>Positive（正常/好）</td><td class="wsfill"></td></tr>
+<tr><td><code>CLOSED</code></td><td><code>0</code></td><td>Neutral（中性）</td><td class="wsfill"></td></tr>
+<tr><td><code>CANCELLED</code></td><td><code>1</code></td><td>Negative（负面）</td><td class="wsfill"></td></tr>
+</tbody></table></div>
+<p><b>我要验证的一件事</b>（例如：把某张订单提交后，颜色是否立刻变化；或客户端能不能改 <code>statusCriticality</code>）：</p>
+<div class="ansbox short"></div>
+<div class="box info"><b class="t">为什么本地要一个代理 ~</b>浏览器里的 Fiori 应用不会带 Basic 凭据，而本地没有 approuter / XSUAA 做登录跳转，于是页面 401、显示 No data。
+<code>test/dev-proxy.js</code> 给每个请求补上 <code>Authorization</code>，模拟「已登录用户」。<b>真实部署时由 approuter + XSUAA 负责认证，这个代理不要带到生产。</b></div>
+
+<h2 id="s5">5. 思考题（15 题，每题写 3–5 行）</h2>
+<p>要求：<b>先写结论，再写理由与证据</b>（证据写命令或输出）。答不出时回到对应板块页面，不要抄别人的答案。</p>
+
+<div class="panel">
+<p><span class="qid">Q1</span>为什么课程要求 Node 用 <b>20 / 22 LTS</b>，而不是「更新的」非 LTS 版本？如果换成非 LTS 会先在哪一步出问题？</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q2</span>示范项目为什么<b>不用 Composition</b>，而用「普通 FK 列 + 显式 <code>Association to many … on</code>」？用 Composition 时你会看到哪两个具体现象？</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q3</span>聚合（<code>group by</code> / <code>count</code> / <code>sum</code>）为什么<b>不能作为实体暴露</b>？CAP 报什么错？本项目的正确做法是什么？</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q4</span>本地用 <code>mocked</code> 认证有什么风险？它和 <code>dummy</code> / <code>basic</code> / <code>jwt</code> 的差别是什么？为什么「未知用户 → 401」这条断言在本地<b>不成立</b>？</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q5</span><b>draft 与直接写入</b>的区别：请从「数据库」「URL」「handler 触发时机」「授权」四处各写一条。</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q6</span><b>部署链路每一步的产物</b>是什么？写成「命令 → 产物 → 校验方法」的清单（本地 sqlite 与云端 HANA 各一条路）。</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q7</span>要把这个示范项目改成<b>你所在公司的业务</b>，你要改哪几个文件？每个文件改什么？哪些文件可以不动？</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q8</span>为什么两张服务实体都源自 <code>db.BookOrderItems</code> 时必须显式写 <code>@cds.redirection.target</code>？不写会报什么错？</p>
+<div class="ansbox short"></div>
+
+<p><span class="qid">Q9</span><code>totalAmount</code> 为什么在 <code>before UPDATE</code> 里被删掉，改由子表的 <code>after</code> 钩子汇总回写？这样做防的是什么？</p>
+<div class="ansbox short"></div>
+
+<p><span class="qid">Q10</span>订单号生成写在了 <code>before CREATE</code> 上，而 <code>BookOrders</code> 开了草稿——为什么 Fiori 的「新建」流程仍然能拿到订单号？</p>
+<div class="ansbox short"></div>
+
+<p><span class="qid">Q11</span><code>getOrderTotal</code>（返回单值）与 <code>getOrderSummary</code>（返回结构体数组）为什么都用<b>函数</b>而不是实体？两者在 OData 里的形态差别是什么？</p>
+<div class="ansbox short"></div>
+
+<p><span class="qid">Q12</span>Fiori 页面本地为什么要经过 <code>test/dev-proxy.js</code>？生产上由谁承担这件事？把这个代理带进生产会有什么后果？</p>
+<div class="ansbox short"></div>
+
+<p><span class="qid">Q13</span>同一份 <code>.cds</code> 模型换到 <b>Java 运行时</b>：哪些东西<b>不用改</b>、哪些<b>必须重写</b>？</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q14</span>本地用 SQLite、云端用 HANA Cloud：模型与业务代码要不要改？<b>哪些地方必须改</b>（构建 / 部署 / 权限 / 数据）？</p>
+<div class="ansbox"></div>
+
+<p><span class="qid">Q15</span>26 条断言里，哪些属于<b>技术断言</b>（元数据、认证），哪些属于<b>业务断言</b>（金额、编号、状态）？为什么业务断言更值得你自己写？</p>
+<div class="ansbox"></div>
+</div>
+
+<h2 id="s6">6. 排错记录表（至少记 5 条，建议把自己踩的坑全写上）</h2>
+<p>写法要求：<b>现象</b>抄报错原文（含文件名与行号）；<b>排查步骤</b>写你实际做过的动作（不是「查了一下」）；
+<b>最终原因</b>指向具体一环；<b>怎么验证修好了</b>必须是一条可复跑的命令与它的结果。</p>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th class="wsn">#</th><th style="width:26%">现象（报错原文）</th><th style="width:24%">我的排查步骤</th><th style="width:24%">最终原因</th><th style="width:24%">怎么验证修好了</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>2</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>3</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>4</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>5</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>6</td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+</tbody></table></div>
+
+<h2 id="s7">7. 课程结论与自评</h2>
+
+<h3 id="s7-1">7-1 理解程度自评</h3>
+<p>每个板块给自己打 1–5 分（<b>1 = 只能说个大概，5 = 能不看资料做出来并讲给别人听</b>），并在最后一栏写「差在哪」。</p>
+<div class="tblwrap"><table class="tbl small ws">
+<thead><tr><th style="width:22%">板块</th><th style="width:8%">自评 1–5</th><th style="width:46%">差在哪 / 我能做出的证据（命令或输出）</th><th style="width:24%">想补的话（页面 / 任务号）</th></tr></thead>
+<tbody>
+<tr><td>概念（CAP 是什么）</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>① BTP 注册与账号结构</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>② BAS 开发环境</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>③ HANA Cloud 与 HDI</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>④ CDS 建模</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>⑤ Node 服务实现</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>⑦ 测试体系</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>⑧ 认证与授权</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>⑨ Fiori UI</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+<tr><td>⑩ 构建与部署</td><td></td><td class="wsfill"></td><td class="wsfill"></td></tr>
+</tbody></table></div>
+
+<h3 id="s7-2">7-2 需要补的部分</h3>
+<p><b>我还没弄明白的三件事</b>（写具体问题，不要写「再学一遍」）：</p>
+<div class="ansbox"></div>
+<p><b>下次自己动手要做的第一件事</b>（可执行的一条命令或一个任务号）：</p>
+<div class="fillbox"></div>
+
+<h3 id="s7-3">7-3 课程结论</h3>
+<p><b>用 3–5 行写下结论</b>：这套项目里，我认为最能迁移到我自己工作上的是什么？我不敢直接照搬的是什么（含风险与前提）？</p>
+<div class="ansbox"></div>
+
+<h3 id="s7-4">7-4 交付物自检</h3>
+<ul class="check">
+  <li>第 1 节环境检查表 6 项全部填了实测值</li>
+  <li>第 2 节手顺记录表：至少完成三个板块，且「我实际执行的结果」栏都有内容</li>
+  <li>第 3 节关键命令实录 ≥ 12 行（含至少一条负向命令与其状态码）</li>
+  <li>第 4 节 5 个实验全部有记录（②若全通过写 0，③④⑤有状态码与原文）</li>
+  <li>第 5 节思考题 ≥ 10 题有 3 行以上答案</li>
+  <li>第 6 节排错记录 ≥ 5 条，且每条都有「怎么验证修好了」</li>
+  <li>第 7 节自评与结论已写，下方讲师签字栏留空交回</li>
+</ul>
+
+<h3 id="s7-5">7-5 讲师签字栏（学员不要填）</h3>
+<div class="tblwrap"><table class="tbl ws">
+<tbody>
+<tr><th style="width:16%">讲师</th><td style="width:34%"></td><th style="width:16%">签字（手写）</th><td style="width:34%"></td></tr>
+<tr><th>日期</th><td></td><th>结论</th><td>☐ 通过　☐ 需补做　☐ 不合格</td></tr>
+<tr><th>需补做的任务号</th><td colspan="3"></td></tr>
+<tr><th>评语</th><td colspan="3"><div class="fillbox"></div></td></tr>
+</tbody></table></div>
+
+<div class="sectest">
+  <b class="t">交回前自查（本节测试）</b>
+  <ol>
+    <li>第 4 节①里，第 7 张表 <code>cds_outbox_Messages</code> 是哪来的？为什么它不该算进「6 张表」。</li>
+    <li>第 4 节②如果全通过，你凭什么确信脚本真的跑了 26 条（而不是提前退出）？</li>
+    <li>第 4 节④的两步请求里，哪一步会触发 <code>before CREATE</code>？你的证据是什么？</li>
+    <li>第 5 节 Q3 与 Q11 的答案能互相解释吗？不能的话，说明哪一处还没真正弄懂。</li>
+    <li>把你的工作纸交给同学，他能否只靠「命令 + 我看到的输出」两栏复现你的结论？不能的话补哪一栏？</li>
+  </ol>
+</div>
+
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

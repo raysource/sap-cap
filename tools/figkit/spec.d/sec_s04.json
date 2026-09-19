@@ -1,0 +1,47 @@
+{
+  "key": "sec_s04",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap/project-code/demo-node — kind = dummy",
+  "label": "本地实机运行",
+  "src": "本地实测：cds_requires_auth_kind=dummy npx cds-serve + curl",
+  "caption": "同一个项目换成 kind = dummy：匿名请求直接 200 —— 因此用 dummy 测「匿名必须 401」必然测不出来",
+  "lh": 20,
+  "lines": [
+    "$ cds_requires_auth_kind=dummy npx cds-serve --port 4124",
+    "[cds] - using auth strategy { kind: 'dummy' }",
+    "[cds] - serving BookOrderService { at: '/odata/v4/book-order' }",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' localhost:4124/odata/v4/book-order/BookOrders",
+    "200",
+    "# 匿名请求也是 200：dummy 把每个请求都当成特权用户（cds.User.privileged）",
+    "$ curl -s -u anybody:whatever -o /dev/null -w '%{http_code}\\n' localhost:4124/odata/v4/book-order/BookOrders",
+    "200",
+    "# @requires / @restrict 全部被绕过 —— 这是「临时关掉权限」的策略，不是认证",
+    "",
+    "# 正确姿势：本地验证 401 用 mocked，验证业务逻辑用 dummy 只限临时排障"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        620
+      ],
+      "text": "1. 匿名 200 = 陷阱"
+    },
+    {
+      "at": [
+        60,
+        656
+      ],
+      "text": "2. dummy 是特权用户"
+    },
+    {
+      "at": [
+        60,
+        692
+      ],
+      "text": "3. 注解只会静默失效"
+    }
+  ]
+}

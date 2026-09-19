@@ -1,0 +1,218 @@
+[
+ {
+  "tag": "概念",
+  "q": "CAP 项目里三类 .cds 文件的分工，下面哪种说法正确？",
+  "opts": {
+   "A": "db/schema.cds 建表；srv/*.cds 建服务级视图与 $metadata；app/*/annotations.cds 只改元数据、不建表",
+   "B": "三类文件都会建表，只是命名空间不同",
+   "C": "只有 app/*/annotations.cds 会建表，其余只影响界面",
+   "D": "srv/*.cds 建表，db/schema.cds 只做校验"
+  },
+  "answer": "A",
+  "explain": "示范项目实测：只编译 db/schema.cds 得到 4 个 CREATE TABLE；加上服务定义后变成 7 个 CREATE VIEW 并有 6 个 CREATE TABLE（多出 draft 表）；再加 annotations.cds，--to sql 输出一字不变，只有 --to edmx 多出 66 条 Annotations。"
+ },
+ {
+  "tag": "概念",
+  "q": "cds compile 支持的 target 里，哪一个产出的是 HANA 列存表定义（部署产物）？",
+  "opts": {
+   "A": "--to sql",
+   "B": "--to hdbtable",
+   "C": "--to edmx",
+   "D": "--to csn"
+  },
+  "answer": "B",
+  "explain": "实测  npx cds compile db/schema.cds --to hdbtable 输出 ----- sap.training.bookorder.Books.hdbtable ----- 与 COLUMN TABLE … 语句；--to sql 是通用建表语句（默认 sqlite 方言，可用 --dialect hana|sqlite|h2|postgres），--to edmx 是 OData $metadata，--to csn 是规范化 JSON 模型。"
+ },
+ {
+  "tag": "概念",
+  "q": "String（不写长度）在 SQLite 与 HANA 上的物理列各是什么？",
+  "opts": {
+   "A": "两边都是 NVARCHAR(255)",
+   "B": "SQLite NVARCHAR(255)，HANA NVARCHAR(5000)",
+   "C": "SQLite NVARCHAR(5000)，HANA NVARCHAR(255)",
+   "D": "SQLite NCLOB，HANA NVARCHAR(5000)"
+  },
+  "answer": "B",
+  "explain": "同一份类型动物园模型实测：sDef 在 SQLite 上是 NVARCHAR(255)，在 --dialect hana 下是 NVARCHAR(5000)。所以跨库项目必须显式写长度。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于 key ID : UUID 与 entity X : cuid { }，正确的是？",
+  "opts": {
+   "A": "两者不同：cuid 会额外加 createdAt 等审计列",
+   "B": "两者等价；UUID 主键在 INSERT 时由框架自动填充",
+   "C": "cuid 会建一张 _texts 表",
+   "D": "cuid 生成整数序列主键"
+  },
+  "answer": "B",
+  "explain": "@sap/cds/common 的原文就是 aspect cuid { key ID : UUID; //> automatically filled in }；官方文档称作 Auto-filled primary keys。审计列来自 managed，不是 cuid。"
+ },
+ {
+  "tag": "概念",
+  "q": "managed 展开后会给实体增加哪些列（SQLite 实测）？",
+  "opts": {
+   "A": "validFrom / validTo",
+   "B": "createdAt / createdBy / modifiedAt / modifiedBy（TIMESTAMP_TEXT、NVARCHAR(255)×2、TIMESTAMP_TEXT）",
+   "C": "locale / ID / name",
+   "D": "只有 createdAt 与 modifiedAt"
+  },
+  "answer": "B",
+  "explain": "managed 的定义是 4 个元素（createdAt Timestamp、createdBy User、modifiedAt、modifiedBy，User = String(255)）；实测 DDL 里就是 createdAt TIMESTAMP_TEXT、createdBy NVARCHAR(255)、modifiedAt TIMESTAMP_TEXT、modifiedBy NVARCHAR(255)。validFrom/validTo 属于 temporal aspect。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "本站示范项目为什么在订单与明细之间用 Association 而不是 Composition？",
+  "opts": {
+   "A": "因为 Composition 会让父表多出 FK 列，CSV 播种会失败",
+   "B": "因为本站实测两种写法的 DDL 相同，而明细则需要被单独寻址（POST/PATCH/DELETE）且不需要级联删除与 Deep Insert 语义",
+   "C": "因为 Composition 不支持 UUID 主键",
+   "D": "因为 Composition 不能带 on 条件"
+  },
+  "answer": "B",
+  "explain": "实测 diff：Composition of many Items on items.order = $self 与 Association to many Items on items.order = $self 的 DDL 逐字相同，FK 都在子表 order_ID。Composition 的差异在语义（Deep Insert/Update、级联删除、服务自动暴露）。「父表加 FK 列」的说法本地无法复现。"
+ },
+ {
+  "tag": "概念",
+  "q": "匿名内联 Composition（Composition of many { key pos : Integer; … }）的子表 FK 列名是什么？",
+  "opts": {
+   "A": "order_ID 或 parent_ID，取决于实体名",
+   "B": "up__ID（回链关联 up_ + 目标主键 ID）",
+   "C": "没有 FK 列，靠视图 JOIN",
+   "D": "ID"
+  },
+  "answer": "B",
+  "explain": "实测输出：CREATE TABLE demo_t5_Orders_items ( up__ID NVARCHAR(36) NOT NULL, pos INTEGER NOT NULL, quantity INTEGER, PRIMARY KEY(up__ID, pos) )。官方文档也写明会在后台生成实体并用名为 up_ 的回链关联。"
+ },
+ {
+  "tag": "概念",
+  "q": "namespace sap.training.bookorder; 下的 BookOrderItems 与元素 order : Association to BookOrders; 生成的表名与列名分别是？",
+  "opts": {
+   "A": "BookOrderItems / orders_ID",
+   "B": "sap_training_bookorder_BookOrderItems / order_ID",
+   "C": "bookorder_BookOrderItems / orderId",
+   "D": "sap.training.bookorder.BookOrderItems / order_ID"
+  },
+  "answer": "B",
+  "explain": "命名空间里的点变成下划线作为表名前缀（slugification），关联的 FK 列名规则是 <关联名>_<目标主键>，所以 order → order_ID。若目标实体是复合主键，会为每个主键列生成一列（实测 parent_tenant、parent_no）。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "关于 orderNo 这种业务键，本站的做法是？",
+  "opts": {
+   "A": "把它当主键，省一个 ID 列",
+   "B": "主键仍用 UUID，orderNo 做业务键，唯一性由服务层 before CREATE 检查（DDL 里没有 UNIQUE）",
+   "C": "给 orderNo 加 UNIQUE 约束，服务层不用管",
+   "D": "把 orderNo 改成 UUID 类型"
+  },
+  "answer": "B",
+  "explain": "实测 npx cds compile … --to sql --dialect hana 中 orderNo NVARCHAR(16) NOT NULL 之后没有 UNIQUE；重复检查在 book-order-service.js 的 before('CREATE', BookOrders) 里，重复时 req.reject(409, …)。"
+ },
+ {
+  "tag": "概念",
+  "q": "一个 CDS 视图要能被当成 OData 实体暴露，最少需要什么？",
+  "opts": {
+   "A": "必须是 projection on，不能用 select from",
+   "B": "必须至少有一个 key 元素",
+   "C": "必须有 @readonly 注解",
+   "D": "必须有对应的数据库表"
+  },
+  "answer": "B",
+  "explain": "示范项目的 OrderItemView 保留了 key ID 所以能暴露；把无主键视图放进服务里编译时实测报 [ERROR] … Expected entity to have a primary key (in entity:“e.S.V”)。聚合结果没有主键，所以改用无绑定函数 getOrderTotal / getOrderSummary。"
+ },
+ {
+  "tag": "操作",
+  "q": "改完 db/schema.cds 后，确认「表结构真的变了」的正确动作是？",
+  "opts": {
+   "A": "只跑 npx cds compile db/schema.cds --to sql",
+   "B": "npx cds compile … --to sql 看 DDL，然后 npm run deploy（cds deploy --to sqlite:db.sqlite）落库，再看 sqlite_master",
+   "C": "重启浏览器",
+   "D": "删掉 node_modules 重新 npm install"
+  },
+  "answer": "B",
+  "explain": "cds compile 只打印不落库；要用 python3 查 sqlite_master / pragma table_info 才能确认物理表。cds watch 会顺带部署，适合开发时使用。"
+ },
+ {
+  "tag": "操作",
+  "q": "CSV 表头写成 ID,orders_ID,book_ID,quantity,amount 会得到什么结果？",
+  "opts": {
+   "A": "CAP 会自动纠正为 order_ID",
+   "B": "整批 deploy 失败并回滚，报 table sap_training_bookorder_BookOrderItems has no column named orders_ID",
+   "C": "该列被忽略，其余列照常插入",
+   "D": "部署成功但值是 NULL"
+  },
+  "answer": "B",
+  "explain": "实测报错：SqliteError: in cds.deploy(): table sap_training_bookorder_BookOrderItems has no column named orders_ID in: INSERT INTO …，随后打印 /> deployment to db.sqlite failed。"
+ },
+ {
+  "tag": "操作",
+  "q": "CSV 里同一主键出现两次，deploy 的结果是？",
+  "opts": {
+   "A": "后一行覆盖前一行",
+   "B": "失败：SqliteError: in cds.deploy(): UNIQUE constraint failed: sap_training_bookorder_BookOrderItems.ID",
+   "C": "跳过重复行继续部署",
+   "D": "成功，但主键列变成数组"
+  },
+  "answer": "B",
+  "explain": "实测输出即 UNIQUE constraint failed；整个部署过程失败（打印 /> deployment to db.sqlite failed）。"
+ },
+ {
+  "tag": "排错",
+  "q": "CSV 里某行 book_ID 指向不存在的图书（9999），会发生什么？",
+  "opts": {
+   "A": "deploy 报外键约束失败",
+   "B": "deploy 静默成功；该行的 join 结果为 0，$expand=book 拿到空值，需要自己查孤儿行",
+   "C": "CAP 自动插入一条图书主数据",
+   "D": "该行整个被跳过"
+  },
+  "answer": "B",
+  "explain": "实测：把 book_ID 改成 9999 后 deploy 仍打印 successfully deployed；用 left join … where b.ID is null 能查到 1 行孤儿，而正常 join 计数从 1 变 0。"
+ },
+ {
+  "tag": "排错",
+  "q": "编译报错 Mismatched ‹EOF›, expecting …，最可能的原因与对策是？",
+  "opts": {
+   "A": "缺一个右花括号，去实体定义末尾补齐",
+   "B": "文件编码不是 UTF-8，另存为 UTF-8",
+   "C": "少写了分号，CDS 不需要分号",
+   "D": "字段名用了保留字"
+  },
+  "answer": "A",
+  "explain": "实测复现：{ 未闭合时输出 [ERROR] eof.cds:4:1-1: Mismatched ‹EOF›, expecting ‹Identifier›, ‘}’, ‘@’, ‘key’, ‘virtual’；另一条 Mismatched ‘#’ 来自多写的 # 号。"
+ },
+ {
+  "tag": "排错",
+  "q": "服务里两张实体（BookOrderItems 与 OrderItemView）都源自同一张源实体，编译报 can't auto-redirect。对策是？",
+  "opts": {
+   "A": "把其中一张改个名字，避开同名",
+   "B": "给想作为导航目标的那张加 @cds.redirection.target",
+   "C": "删掉 to-many 关联",
+   "D": "把服务拆成两个 service"
+  },
+  "answer": "B",
+  "explain": "实测报错原文就写着修复办法：Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or “BookOrderService.OrderItemView” … can't auto-redirect “BookOrderService.BookOrders:items” otherwise。示范项目把该注解加在 BookOrderItems 上。"
+ },
+ {
+  "tag": "排错",
+  "q": "把 currency : String(3) 改成 currency : Currency（@sap/cds/common 的代码表类型）后，CSV 部署失败，报 has no column named currency。原因是？",
+  "opts": {
+   "A": "Currency 类型需要单独的 CSV 文件才能用",
+   "B": "Currency 是到 sap.common.Currencies 的关联，物理列名变成了 currency_code，CSV 表头必须同步改",
+   "C": "Currency 类型不支持 default 'JPY'",
+   "D": "SQLite 不支持 Currency 类型"
+  },
+  "answer": "B",
+  "explain": "实测 DDL：currency_code NVARCHAR(3) DEFAULT 'JPY'，并额外出现 sap_common_Currencies 与 sap_common_Currencies_texts 两张表。这是「类型影响物理列名」的典型例子。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "关于 @mandatory 与数据库的 not null，正确的是？",
+  "opts": {
+   "A": "@mandatory 会生成 NOT NULL 列约束",
+   "B": "@mandatory 只影响界面/OData 元数据（实测生成 Common.FieldControl = Mandatory），数据库列仍可为空",
+   "C": "@mandatory 只对 key 元素有效",
+   "D": "@mandatory 会把列变成主键"
+  },
+  "answer": "B",
+  "explain": "实测 --to edmx：a : String(10) @mandatory 生成 <Annotation Term=\"Common.FieldControl\" EnumMember=\"Common.FieldControlType/Mandatory\"/>，而 DDL 里该列没有任何 NOT NULL。要约束数据库请写 not null。"
+ }
+]

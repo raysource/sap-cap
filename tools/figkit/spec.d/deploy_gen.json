@@ -1,0 +1,66 @@
+{
+  "key": "deploy_gen",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — cds build --production（本地实测）",
+  "lh": 20,
+  "caption": "同一个项目、同一台机器：只加一行 profile 配置（db.kind=hana），构建任务就从 1 个变成 2 个 —— 少了 db/hana 这一步，部署上去表是空的",
+  "label": "本地实机运行",
+  "src": "本地实测：cds build --production（Node 22.23.2 / @sap/cds 9.9.3 / cds-dk 9.9.6）",
+  "lines": [
+    "$ npx cds build --production",
+    "building project with {",
+    "  versions: { cds: '9.9.3', compiler: '6.9.5', dk: '9.9.6' },",
+    "  target: 'gen',",
+    "  tasks: [",
+    "    { src: 'srv', for: 'nodejs', options: { model: ['db','srv','app'] } }",
+    "  ]",
+    "}",
+    "done > wrote output to:",
+    "   gen/srv/package.json",
+    "   gen/srv/srv/csn.json",
+    "",
+    "build completed in 49 ms",
+    "$ ls gen",
+    "srv                     # ← 只有 srv：没有 gen/db，HDI 部署器将无所事事",
+    "",
+    "$ # 把生产环境的数据库类型说清楚（cds add hana 之后仍要确认）",
+    "$ npx cds env get requires.db --profile production",
+    "{ kind: 'hana' }         # 没有就补：\"[production]\": { \"db\": { \"kind\": \"hana\" } }",
+    "$ npx cds build --production",
+    "building project with {",
+    "  versions: { cds: '9.9.3', compiler: '6.9.5', dk: '9.9.6' },",
+    "  target: 'gen',",
+    "  tasks: [",
+    "    { src: 'db', for: 'hana', options: { model: ['db','srv','app'] } },",
+    "    { src: 'srv', for: 'nodejs', options: { model: ['db','srv','app'] } }",
+    "  ]",
+    "}",
+    "done > wrote output to:",
+    "   gen/db/package.json",
+    "   gen/db/src/gen/.hdiconfig",
+    "   gen/db/src/gen/.hdinamespace",
+    "   gen/db/undeploy.json",
+    "   ...                    # 每张表/视图一个 .hdbtable / .hdbview 文件"
+  ],
+  "callouts": [
+    {
+      "on": "{ src: 'srv', for: 'nodejs', options: { model: ['db','srv','app'] } }",
+      "on_index": 1,
+      "text": "1. 只有 srv 任务"
+    },
+    {
+      "on": "srv                     # ← 只有 srv：没有 gen/db，HDI 部署器将无所事事",
+      "text": "2. gen 缺 db 就是坑"
+    },
+    {
+      "on": "{ src: 'db', for: 'hana', options: { model: ['db','srv','app'] } }",
+      "text": "3. 加 hana 任务"
+    },
+    {
+      "on": "gen/db/src/gen/.hdiconfig",
+      "text": "4. HDI 靠这些文件建表"
+    }
+  ]
+}

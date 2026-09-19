@@ -1,0 +1,206 @@
+[
+ {
+  "tag": "概念",
+  "q": "SAP BTP 试用账号的时长规则，下面哪一条是对的？",
+  "opts": {
+   "A": "永久有效，只是配额会随时间缩小",
+   "B": "总上限 90 天；连续 30 天不登录会被挂起，挂起时可 Extend Trial 恢复",
+   "C": "从注册起固定 30 天，到期即删除",
+   "D": "90 天不登录才挂起，30 天时自动删除"
+  },
+  "answer": "B",
+  "explain": "试用总时长上限 90 天，按区间自动续期；连续 30 天不登录会被挂起（挂起弹窗里有 Extend Trial）；满 90 天自动删除。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于「区域（Region）」，下面哪种说法正确？",
+  "opts": {
+   "A": "区域由 SAP 按你的 IP 自动分配，不能选择",
+   "B": "区域在全局账户上选定，所有子账户共用",
+   "C": "区域在子账户上选定，创建后在 Edit 里没有该项，想换区域只能新建子账户",
+   "D": "区域可以随时在子账户的 Edit 里更改"
+  },
+  "answer": "C",
+  "explain": "区域是子账户级属性，创建时选定；可编辑的字段只有 Display Name、Description、Parent、Used for production、Labels、Enable beta features，没有 Region。"
+ },
+ {
+  "tag": "概念",
+  "q": "Entitlement 与 Quota 的区别，哪一项描述准确？",
+  "opts": {
+   "A": "Entitlement 是能不能用（权利），Quota 是能用多少（数量）",
+   "B": "Entitlement 是数量，Quota 是权利",
+   "C": "两者是同一个概念的不同叫法",
+   "D": "Entitlement 只在企业账户里有，试用账号只有 Quota"
+  },
+  "answer": "A",
+  "explain": "Entitlement = 权利（有哪些服务与计划）；Quota = 数字上限（能用多少）。搞混会出现「搜不到服务」或「配额不足」两类不同现象。"
+ },
+ {
+  "tag": "操作",
+  "q": "CAP 项目要部署的 HDI 容器，正确的服务名与计划名是？",
+  "opts": {
+   "A": "cf create-service hana-cloud hdi-shared demo-hana-db",
+   "B": "cf create-service hana-cloud hana-free demo-hana-db",
+   "C": "cf create-service hana schema demo-hana-db",
+   "D": "cf create-service hana hdi-shared demo-hana-db"
+  },
+  "answer": "D",
+  "explain": "hdi-shared 属于服务 hana（显示名 SAP HANA Schemas & HDI Containers）。hana-cloud/hana-free 是数据库实例本体；schema 是裸 schema，没有 HDI 部署能力。"
+ },
+ {
+  "tag": "操作",
+  "q": "在 cockpit 里给子账户补服务计划配额，正确的手顺是？",
+  "opts": {
+   "A": "子账户 → Service Marketplace → 直接点 Create 即可，无需配额",
+   "B": "子账户 → Entitlements → Edit → Add Service Plans → 勾选计划 → 把数字配额加到上限 → Save",
+   "C": "子账户 → Cloud Foundry → Spaces → Space Quotas 里加服务计划",
+   "D": "全局账户 → Users → Add Service Plans → Save"
+  },
+  "answer": "B",
+  "explain": "Entitlements 页面（先 Edit 或 Configure Entitlements）→ Add Service Plans → 勾选 → 把配额加到上限 → Save；否则 Marketplace 里看不到计划或建实例失败。"
+ },
+ {
+  "tag": "概念",
+  "q": "子账户与 Cloud Foundry 的 org 是什么关系？",
+  "opts": {
+   "A": "子账户与 org 是 1:1，一个 org 下可以有多个 space",
+   "B": "org 只在企业账户里存在，试用账号没有 org",
+   "C": "一个子账户可以有多个 org，一个 org 可以有多个子账户",
+   "D": "org 是全局账户级的，与子账户无关"
+  },
+  "answer": "A",
+  "explain": "CF 环境下一个子账户恰好对应一个 org（1:1），org 下可有多个 space，应用与服务实例都建在 space 里。"
+ },
+ {
+  "tag": "操作",
+  "q": "cf CLI 的 -a 参数应该填什么？",
+  "opts": {
+   "A": "https://cli.btp.cloud.sap/",
+   "B": "https://cockpit.hanatrial.ondemand.com/trial/",
+   "C": "子账户区域对应的 API 端点，如 https://api.cf.ap21.hana.ondemand.com",
+   "D": "https://login.cf.ap21.hana.ondemand.com/passcode"
+  },
+  "answer": "C",
+  "explain": "-a 是 CF 的 API 端点（api.cf.<区域>.hana.ondemand.com），必须与子账户区域一致；cli.btp.cloud.sap 是 btp CLI 的服务器地址；passcode 那个是一次性验证码页面。"
+ },
+ {
+  "tag": "排错",
+  "q": "执行 cf create-service hana hdi-shared demo-hana-db 报 “Service plan hdi-shared not found”，最可能是？",
+  "opts": {
+   "A": "试用账号不允许创建 HDI 容器",
+   "B": "cf CLI 版本太低",
+   "C": "实例名 demo-hana-db 已被占用",
+   "D": "该子账户没有分到 hdi-shared 的配额，或端点连到了别的区域"
+  },
+  "answer": "D",
+  "explain": "先 cf marketplace -e hana 看计划是否存在，再用 cf api 核对端点；两条都正常时回全局账户检查 entitlement 分配。"
+ },
+ {
+  "tag": "排错",
+  "q": "cf push 之后一直提示 “No org or space targeted”，怎么办？",
+  "opts": {
+   "A": "用 cf target -o trial -s dev 指定目标 org 与 space",
+   "B": "先删除并重建子账户",
+   "C": "重新安装 cf CLI",
+   "D": "改用 btp CLI 部署应用"
+  },
+  "answer": "A",
+  "explain": "登录凭据与目标 org/space 是两件事：登录后用 cf target 选择目标（或 login 时带 -o/-s）。"
+ },
+ {
+  "tag": "排错",
+  "q": "试用账号里应用第二天变成 stopped、路由返回 404，原因是？",
+  "opts": {
+   "A": "配额超限后 SAP 自动冻结应用",
+   "B": "HANA 实例被删除导致应用崩溃",
+   "C": "试用环境会每天停止应用，属设计行为，需要手动 cf start 重启",
+   "D": "账号被删除了"
+  },
+  "answer": "C",
+  "explain": "SAP Help「Trial Accounts and Free Tier」写明：为清理起见应用每天会自动停止，需要时手动重启。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于角色与权限，哪一项正确？",
+  "opts": {
+   "A": "Subaccount Administrator 会自动获得所有 org 与 space 的角色",
+   "B": "Cloud Foundry 的 Org/Space 角色在 Cloud Foundry › Org Members / Space Members 里分配，不在 Security › Users",
+   "C": "子账户的 Role Collections 在全局账户里也能看到并复用",
+   "D": "试用的 Subaccount Administrator 可以分配给任意邮箱的任何人"
+  },
+  "answer": "B",
+  "explain": "角色集合是账号级的（全局账户与子账户不互通）；CF 的 org/space 角色在自己的页面分配；试用面向个人探索，不用于团队开发。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "给同事「能看子账户信息但不能改配置」的权限，最合适的是？",
+  "opts": {
+   "A": "Global Account Administrator",
+   "B": "Subaccount Administrator",
+   "C": "直接给他你的登录凭据",
+   "D": "Subaccount Viewer"
+  },
+  "answer": "D",
+  "explain": "最小权限原则：只读给 Subaccount Viewer（具备全局/子账户管理员权限才能改配置）。共享凭据既违规也不可追责。"
+ },
+ {
+  "tag": "操作",
+  "q": "btp CLI 在 macOS 上的官方安装方式与登录方式是？",
+  "opts": {
+   "A": "brew install --cask btp；btp login --sso",
+   "B": "brew install btp-cli；btp auth --password",
+   "C": "npm install -g btp；btp login -u 邮箱",
+   "D": "pip install btp-cli；btp signin --token"
+  },
+  "answer": "A",
+  "explain": "SAP Help 给出 Homebrew cask 安装方式；推荐 --sso 走浏览器认证（也可 --sso manual 手动打开链接），会话最长 12 小时。"
+ },
+ {
+  "tag": "排错",
+  "q": "btp CLI 命令突然报 token 失效/需要重新登录，最可能的原因与动作是？",
+  "opts": {
+   "A": "需要重装 btp CLI",
+   "B": "全局账户被删除；联系 SAP 支持",
+   "C": "btp CLI 会话最长 12 小时；btp logout 后重新 btp login --sso",
+   "D": "必须在 cockpit 里重置密码"
+  },
+  "answer": "C",
+  "explain": "会话上限 12 小时，超时后重新登录即可，不影响账号与实例。"
+ },
+ {
+  "tag": "排错",
+  "q": "建 HANA HDI 容器时长时间处于 create in progress 最后失败，最该先检查什么？",
+  "opts": {
+   "A": "cf CLI 是否最新",
+   "B": "SAP HANA Cloud 实例是否已创建并已映射（Instance Mapping）到你的 CF org/space",
+   "C": "子账户是否开启了 beta features",
+   "D": "是否开通了 Cloud Connector"
+  },
+  "answer": "B",
+  "explain": "HDI 容器要落在已映射的 HANA Cloud 数据库上：在 SAP HANA Cloud Central 里把实例映射到对应 CF org（可选 space）后再建容器。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "试用账号的资源纪律，下面哪一条最合理？",
+  "opts": {
+   "A": "把公司团队都拉进来一起用这个试用账号",
+   "B": "为了避免被停，每天手工重启所有应用",
+   "C": "反正不要钱，可以多建几个 hdi-shared 实例备用",
+   "D": "只建当前需要的实例，cf push 显式写 -m，演示后 cf delete 清理，并定期登录避免挂起"
+  },
+  "answer": "D",
+  "explain": "试用配额有限（4 GB 应用内存、10 路由、40 实例，且按计划限量），且条款规定仅用于个人探索、不得团队开发；及时清理与定期登录是正确姿势。"
+ },
+ {
+  "tag": "概念",
+  "q": "试用账号里，SAP HANA Cloud 相关计划的「两层结构」怎么理解？",
+  "opts": {
+   "A": "hana-cloud（如 hana-free）是数据库实例；hana（hdi-shared）是 CAP 投放 schema 的 HDI 容器",
+   "B": "两层其实是同一个服务的两个版本，选一个就行",
+   "C": "hana-free 已经包含 hdi-shared，不用再建容器",
+   "D": "hana 是数据库实例；hana-cloud 是容器"
+  },
+  "answer": "A",
+  "explain": "SAP HANA Cloud（hana-cloud）提供数据库实例本体（试用里经 SAP HANA Cloud Central 创建并映射到 CF）；SAP HANA Schemas & HDI Containers（hana）的 hdi-shared 计划才是 CAP 部署目标。"
+ }
+]

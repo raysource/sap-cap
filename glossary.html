@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>术语与对象速查 —— 中英对照 + 对象索引 · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP 全课程术语表：CAP 核心概念（CDS/CDL/CSN/CQL/CQN/entity/aspect/association/composition/draft/annotation…）、BTP 平台术语（Global Account/Subaccount/Entitlement/Role Collection/XSUAA/Destination/Cloud Connector/VCAP_SERVICES/MTA…）、Node 与 Java 运行时对照、面向 ABAP 背景的 SAP 生态对照、常用缩写速查、易混词对照与本节测试。每行给中文名、英文展开、一句话定义与示范项目里的真实例子，并带稳定锚点供其他页面链接。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a class="active" href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>术语与对象速查</span></p>
+<h1>术语与对象速查 —— 全课程的「中文 ⇔ 英文」对照表</h1>
+<p class="kicker">对象：CAP 核心概念 42 条 · BTP 平台术语 26 条 · Node 与 Java 运行时对照 16 条 · SAP 生态（ABAP 背景）对照 13 条 · 缩写速查 36 条 · 易混词 16 组。每一行都给「中文名 / 英文（含缩写展开）/ 一句话定义 / 在示范项目 <code>project-code/demo-node/</code> 里的真实例子」，并带稳定锚点（如 <code>glossary.html#t-assoc</code>）供其他页面直接链接。</p>
+
+<div class="toc">
+<a href="#s1">1. 使用说明与锚点索引</a>
+<a href="#s2">2. CAP 核心概念表</a>
+<a href="#s3">3. BTP 平台术语表</a>
+<a href="#s4">4. Node 与 Java 运行时对照</a>
+<a href="#s5">5. SAP 生态对照（ABAP 背景）</a>
+<a href="#s6">6. 常用缩写速查</a>
+<a href="#s7">7. 易混词对照</a>
+<a href="#s8">8. 本节测试</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>看到课程里任何一个缩写（<code>CSN</code> / <code>CQN</code> / <code>XSUAA</code> / <code>MTAR</code> …），30 秒内查清它的全称、中文名与在本课程中的具体对象；</li>
+  <li>把「概念」与「工具」分开：哪些是 CAP 语言层的词（CDS、aspect、projection），哪些是平台层的词（Entitlement、Service Binding）；</li>
+  <li>按 ABAP 背景的直觉找到对应物（RAP / BDL / DCL / AMDP / SE11 / 传输请求 ↔ CAP 的写法），不把两边混着说；</li>
+  <li>说清 16 组最容易说错的词（Association 与 Composition、mocked 与 dummy、Entitlement 与 Quota…），并知道选错的后果。</li>
+</ul></div>
+
+<h2 id="s1">1. 使用说明与锚点索引</h2>
+<p>本页是<b>字典</b>，不是教程：每一行都假设你已经在别的板块见过这个词，只是记不清了。三种查法：</p>
+<div class="grid cards">
+  <div class="card"><h3>按主题查</h3><p>知道「这是 CAP 的事」就去 <a href="#s2">第 2 节</a>；「这是 BTP 后台的事」去 <a href="#s3">第 3 节</a>；「Node 和 Java 到底差在哪」去 <a href="#s4">第 4 节</a>。</p>
+    <div class="tags"><span>概念</span><span>平台</span><span>运行时</span></div></div>
+  <div class="card"><h3>按缩写查</h3><p>只认识字母不认识意思（<code>EDMX</code>、<code>VCAP_SERVICES</code>、<code>MBT</code>）→ 直接翻 <a href="#s6">第 6 节</a> 的三列表：缩写 / 展开 / 中文。</p>
+    <div class="tags"><span>36 条</span><span>一条一行</span></div></div>
+  <div class="card"><h3>按「哪个才对」查</h3><p>两个词你都听过、但不确定用哪个：<a href="#s7">第 7 节</a> 每组都写「区别一句话 + 选错会怎样」，这是课程里踩过的坑。</p>
+    <div class="tags"><span>16 组</span><span>含后果</span></div></div>
+  <div class="card"><h3>从别的页面跳进来</h3><p>其他页面用固定锚点链接到本页某一行，例如 <code>glossary.html#t-assoc</code>。锚点名不随章节编号变化，可以长期引用。</p>
+    <div class="tags"><span>锚点稳定</span></div></div>
+</div>
+
+<h3 id="s1-1">1-1 锚点索引（其他页面可直接引用）</h3>
+<p>下表是本页对外承诺的锚点。命名规则：<code>t-</code> = CAP 术语，<code>b-</code> = BTP 术语，<code>j-</code> = Node 与 Java 对照，<code>e-</code> = SAP 生态对照，<code>mix-</code> = 易混词。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>锚点</th><th>含义</th><th>锚点</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td><code>#t-assoc</code></td><td>Association 关联</td><td><code>#t-comp</code></td><td>Composition 组合</td></tr>
+<tr><td><code>#t-entity</code></td><td>entity 实体</td><td><code>#t-aspect</code></td><td>aspect 切面（复用片段）</td></tr>
+<tr><td><code>#t-csn</code></td><td>CSN 模式表示</td><td><code>#t-cqn</code></td><td>CQN 查询表示</td></tr>
+<tr><td><code>#t-draft</code></td><td>draft 草稿</td><td><code>#t-boundaction</code></td><td>bound action 绑定动作</td></tr>
+<tr><td><code>#t-function</code></td><td>function 函数</td><td><code>#t-criticality</code></td><td>Criticality 严重度</td></tr>
+<tr><td><code>#b-xsuaa</code></td><td>XSUAA 授权与信任管理</td><td><code>#b-vcap</code></td><td>VCAP_SERVICES 环境变量</td></tr>
+<tr><td><code>#j-handler</code></td><td>handler 注册方式对照</td><td><code>#j-build</code></td><td>npm 与 Maven 对照</td></tr>
+<tr><td><code>#e-rap</code></td><td>RAP 与 CAP 的对应</td><td><code>#mix-draft</code></td><td>draft 与直接写入之别</td></tr>
+</tbody></table></div>
+
+<h3 id="s1-2">1-2 标注约定</h3>
+<div class="box warn"><b class="t">怎么读「~」</b>
+<ul>
+  <li>词条后带琥珀色「~」小标签（<span class="tag amber">~</span>）表示：<b>说法本身有版本差异、或本站无法用官方文档逐字确认</b>（例如某个 mta.yaml 字段的取值、某个缩写的旧称）。这类词条仍然给出了可自系统确认的方法，请在自己的环境里核对后再引用。</li>
+  <li>不带 <code>~</code> 的定义，均可在 <code>cap.cloud.sap</code>（CAP 官方文档）或 <code>help.sap.com</code>（SAP 产品文档）里找到；带具体对象名的例子来自本课程示范项目 <code>project-code/demo-node/</code>（源码与实测输出，可用 <a href="cds.html">④ CDS 建模</a>、<a href="node.html">⑤ Node 服务</a>、<a href="testing.html">⑦ 测试</a> 里的命令复现）。</li>
+  <li>术语的中文译法：<b>课程用词优先，其次官方中文文档</b>（例如 <code>bound action</code> 译「绑定动作」，<code>Entitlement</code> 译「权利」，实践中也常见「服务授权」的说法）。译名只是为了读起来顺，<b>代码与界面里永远用英文标识符</b>。</li>
+  <li>本页<b>不重复手顺与命令</b>：要看「怎么做」请回到对应板块（BTP 注册见 <a href="btp.html">①</a>，建模见 <a href="cds.html">④</a>，授权见 <a href="security.html">⑧</a>）。</li>
+</ul></div>
+
+<h2 id="s2">2. CAP 核心概念表</h2>
+<p>这一节是 CAP 自己的语言。第一列是中文名并带稳定锚点，最后一列一律给示范项目里的真实对象——<b>认对象比背定义有用</b>。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>中文名</th><th>英文（缩写展开）</th><th>一句话定义</th><th>示范项目里的例子</th></tr></thead>
+<tbody>
+<tr><td id="t-cds">核心数据服务</td><td>CDS — Core Data Services</td><td>用声明式语言把「数据模型 + 服务」写成文本的这一层技术统称；CAP 的建模与暴露都建立在它上面。</td><td><code>db/schema.cds</code>、<code>srv/book-order-service.cds</code>、<code>app/book-orders/annotations.cds</code> 三种文件都是 CDS</td></tr>
+<tr><td id="t-csd">「CSD」<span class="tag amber">~</span></td><td>CSD（不是 SAP 官方缩写）</td><td>网络上确有人把 CDS 写成 «CSD»，SAP 官方没有这个缩写；本课程不使用，看到一律按 CDS 理解。</td><td>—（本课程里出现的只有 CDS）</td></tr>
+<tr><td id="t-cdl">概念定义语言</td><td>CDL — Conceptual Definition Language</td><td>人写的 <code>.cds</code> 源文件语法：<code>namespace</code> / <code>entity</code> / <code>type</code> / <code>aspect</code> / <code>association</code> / <code>service</code> / <code>annotation</code>。</td><td><code>entity BookOrders : managed { key ID : UUID; orderNo : String(16) not null; … }</code></td></tr>
+<tr><td id="t-csn">模式表示</td><td>CSN — Schema Notation（旧称 Core Schema Notation，读作 “season”）</td><td>CDL 编译后的 JSON 中间模型，是所有下游产物（SQL / EDMX / OpenAPI）的共同输入。</td><td><code>npx cds compile db/schema.cds --to csn</code> 可直接看到 <code>BookOrders.elements</code> 被 aspect 摊平后的结果</td></tr>
+<tr><td id="t-cql">查询语言</td><td>CQL — Query Language（旧称 Core Query Language）</td><td>类 SQL 的查询语言：既可以写视图主体，也可以用 fluent API 在 JS / Java 里构造查询。</td><td>视图：<code>OrderItemView as select from BookOrderItems</code>；查询：<code>SELECT.one.from(BookOrders).where({ orderNo })</code></td></tr>
+<tr><td id="t-cqn">查询表示</td><td>CQN — Query Notation（旧称 Core Query Notation）</td><td>CQL 解析后的<b>纯对象</b>表示（canonical plain object），运行时真正执行的东西；可用查询构造器、解析或手写得到。</td><td>Node 里 <code>SELECT.one.from(BookOrders).where(...)</code> 产出的对象；Java 里 <code>Select.from("bookshop.BookOrders")</code> 同一回事</td></tr>
+<tr><td id="t-entity">实体</td><td>entity</td><td>有主键的表或视图定义；投影到服务上就成为一个 OData 实体集。</td><td><code>Books</code> / <code>Customers</code> / <code>BookOrders</code> / <code>BookOrderItems</code>（4 个实体 + 1 个视图实体）</td></tr>
+<tr><td id="t-key">主键</td><td>key</td><td>唯一标识一行的元素。视图<b>只有带主键</b>才能作为 OData 实体暴露。</td><td><code>key ID : UUID</code>（示范项目的手写主键）；<code>OrderItemView</code> 保留 <code>key ID</code> 才能暴露</td></tr>
+<tr><td id="t-type">类型</td><td>type</td><td>可复用的元素或结构定义，<b>不产生表</b>；常用于动作/函数的返回结构。</td><td><code>type OrderSummaryRow : { orderNo : String(16); customerName : String(80); … }</code></td></tr>
+<tr><td id="t-aspect">切面（复用片段）</td><td>aspect</td><td>可被实体 include 的字段集合；编译时<b>展开</b>进实体，所以一定会出现在 DDL 里（不是继承）。</td><td><code>entity BookOrders : managed</code> 展开出 <code>createdAt/createdBy/modifiedAt/modifiedBy</code></td></tr>
+<tr><td id="t-managed">托管字段</td><td>managed（<code>@sap/cds/common</code> 的 aspect）</td><td>自动补齐 4 个审计列（创建/修改的时间与用户），由框架在写入时填值。</td><td><code>entity BookOrderItems : managed</code>；SQLite 里对应 <code>createdAt</code> 等 4 列</td></tr>
+<tr><td id="t-cuid">规范通用 ID</td><td>cuid — canonical universal ID（<code>@sap/cds/common</code> 的 aspect）</td><td>只做一件事：给实体加 <code>key ID : UUID</code>（INSERT 时自动生成）。</td><td>示范项目<b>手写</b>等价形式 <code>key ID : UUID</code>（见 <a href="cds.html">④ CDS 建模</a> 的对照表）</td></tr>
+<tr><td id="t-localized">本地化关键字</td><td>localized（是关键字，不是注解）</td><td>写在元素类型前，表示「该字段按语言存多份」；会额外生成 <code>_texts</code> 表与 <code>localized_</code> 视图，读取要走视图。</td><td>示范项目<b>故意不用</b>：<code>Books.title</code> 用普通 <code>String(120)</code>（原因见 <a href="cds.html">④</a> 第 4 节）</td></tr>
+<tr><td id="t-namespace">命名空间</td><td>namespace</td><td>模型文件顶部的前缀，决定完整限定名，也决定物理表名的前缀。</td><td><code>namespace sap.training.bookorder;</code> → 物理表 <code>sap_training_bookorder_BookOrders</code></td></tr>
+<tr><td id="t-assoc">关联</td><td>Association</td><td>实体间的关系声明（含 to-one / to-many），查询时按需 join；<b>不强制</b>在父侧额外建列。</td><td><code>customer : Association to Customers</code>、<code>items : Association to many BookOrderItems on items.order = $self</code></td></tr>
+<tr><td id="t-comp">组合</td><td>Composition</td><td>「包含」关系：子对象生命周期依附父对象（父删子删），并在<b>父表</b>生成 FK 列；适合单据文档结构。</td><td>示范项目<b>刻意不用</b>：改用普通 FK 列 + 显式 <code>to-many</code> 关联，这样 CSV 播种与 <code>$expand</code> 都正常</td></tr>
+<tr><td id="t-projection">投影</td><td>projection（<code>as projection on</code>）</td><td>服务层对外暴露的视图（facade）：可以只挑部分元素、改别名、挂注解，是「API 面」的定义手段。</td><td><code>entity BookOrders as projection on db.BookOrders actions { action submitOrder() returns String; }</code></td></tr>
+<tr><td id="t-view">视图</td><td>view（<code>as select from</code>）</td><td>定义在 db 层的只读查询对象，本身不存数据；带主键的视图可以当实体暴露。</td><td><code>entity OrderItemView as select from BookOrderItems { key ID, order.orderNo as orderNo, … }</code></td></tr>
+<tr><td id="t-service">服务</td><td>service</td><td>服务定义：把实体与动作/函数组成一个 API，编译成 OData 端点与元数据。</td><td><code>service BookOrderService @(requires: 'authenticated-user')</code>，路径 <code>/odata/v4/book-order</code></td></tr>
+<tr><td id="t-handler">事件处理器</td><td>event handler</td><td>挂在某个事件上的函数/方法，用来扩展或覆盖框架的默认实现。</td><td>Node：<code>this.before('CREATE', BookOrders, async (req) =&gt; { … })</code>；Java：<code>@Before(event = "CREATE", entity = "BookOrders")</code></td></tr>
+<tr><td id="t-hooks">钩子三阶段</td><td>hooks — on / before / after</td><td><code>on</code> 取代默认实现，<code>before</code> 在 <code>on</code> 之前跑（校验），<code>after</code> 在 <code>on</code> 之后跑并拿到结果（回写、审计）。</td><td><code>before CREATE</code> 校验顾客；<code>on submitOrder</code> 状态迁移；<code>after CREATE BookOrderItems</code> 回写 <code>totalAmount</code></td></tr>
+<tr><td id="t-annotation">注解</td><td>annotation（<code>@</code> 前缀）</td><td>给模型或元素附加语义的声明，编译时进入元数据（EDMX），由框架或 UI 读取；<b>本身不写业务逻辑</b>。</td><td><code>@odata.draft.enabled</code>、<code>@readonly</code>、<code>@cds.redirection.target</code>、<code>UI.LineItem</code></td></tr>
+<tr><td id="t-persistence">持久化</td><td>persistence</td><td>把模型落到数据库的那一层：生成表 / 视图 / 种子数据。可以用注解让它「不落地」或「只在运行时算」。</td><td><code>npm run deploy</code>（<code>cds deploy --to sqlite:db.sqlite</code>）建出 6 张表；<code>@cds.persistence.skip</code> 可跳过</td></tr>
+<tr><td id="t-draft">草稿</td><td>draft — <code>@odata.draft.enabled</code></td><td>编辑期先写草稿表，激活（<code>draftActivate</code>）后才写 active 表；Fiori 的 Create/Edit 流程全部建立在它上面。</td><td><code>BookOrders</code> 的草稿表 <code>BookOrderService_BookOrders_drafts</code>（连同 <code>DRAFT_DraftAdministrativeData</code> 是本站实测的建表结果）</td></tr>
+<tr><td id="t-edmx">实体数据模型 XML</td><td>EDMX — Entity Data Model XML</td><td>OData 元数据文档的外层 XML 格式，里面包着 CSDL（Common Schema Definition Language）；<code>$metadata</code> 返回的就是它。</td><td><code>cds compile srv/book-order-service.cds --to edmx</code>；部署后 <code>curl …/$metadata</code> 返回 200</td></tr>
+<tr><td id="t-odata">开放数据协议 V4</td><td>OData — Open Data Protocol，v4</td><td>CAP 默认对外协议：REST 加一套标准查询选项与元数据描述，客户端可据此自动生成模型。</td><td>服务挂在 <code>/odata/v4/book-order</code>；<code>manifest.json</code> 里 <code>"odataVersion": "4.0"</code></td></tr>
+<tr><td id="t-metadata">元数据文档</td><td><code>$metadata</code></td><td>服务的自描述文档（EDMX），描述实体、动作、函数与全部注解；UI 与客户端据此工作。</td><td><code>curl -u alice:alice …/$metadata</code> 里含 <code>BookOrderService</code>；<code>grep -c Annotation</code> 实测 166 处</td></tr>
+<tr><td id="t-expand">展开</td><td><code>$expand</code></td><td>一次请求把关联实体一起读出来（deep read），避免 <code>N+1</code> 次请求。</td><td><code>GET /BookOrders?$expand=items&amp;$select=orderNo,status,totalAmount</code> 返回明细数组</td></tr>
+<tr><td id="t-queryopts">常用查询选项</td><td><code>$select</code> / <code>$filter</code> / <code>$orderby</code> / <code>$top</code> / <code>$skip</code> / <code>$count</code></td><td>OData 标准查询选项：挑字段、过滤、排序、分页、取总数；CAP 会翻译成对应 SQL。</td><td><code>?$filter=status eq 'OPEN'</code> 实测返回 2 张订单；<code>?$select=orderNo,status</code> 只返回两列</td></tr>
+<tr><td id="t-action">动作</td><td>action（有副作用，HTTP POST）</td><td>表达「做一件事」的操作；声明在服务或实体上，返回类型可选。写状态、发消息、触发流程都用它。</td><td><code>action submitOrder() returns String;</code> 声明在 <code>BookOrders</code> 的 <code>actions { … }</code> 里</td></tr>
+<tr><td id="t-boundaction">绑定动作</td><td>bound action</td><td>声明在<b>实体内部</b>的 action：URL 带实例键，天然绑定到「哪一张订单」，授权与语义都更精确。</td><td><code>submitOrder</code>；调用路径 <code>POST /odata/v4/book-order/BookOrders(&lt;ID&gt;)/BookOrderService.submitOrder</code></td></tr>
+<tr><td id="t-unboundaction">无绑定动作</td><td>unbound action</td><td>声明在<b>服务层</b>的 action：没有实例上下文，参数自带全部信息。</td><td>示范项目未使用（可写成 <code>action doIt(param : String) returns String;</code> 放在 service 里）</td></tr>
+<tr><td id="t-function">函数</td><td>function（无副作用，HTTP GET）</td><td>必须有返回值、不做状态变更；适合计算与聚合——<b>聚合结果没有主键，不能当实体暴露，就用函数</b>。</td><td><code>function getOrderTotal(orderNo : String) returns Decimal(13,2);</code>、<code>function getOrderSummary() returns array of OrderSummaryRow;</code></td></tr>
+<tr><td id="t-criticality">严重度</td><td>Criticality — <code>UI.Criticality</code> / CriticalityType</td><td>UI 语义着色：<code>0</code> Neutral（灰）／<code>1</code> Negative（红）／<code>2</code> Critical（黄）／<code>3</code> Positive（绿）；值由服务端提供，客户端只读。</td><td>派生字段 <code>statusCriticality</code> 由服务端维护，<code>UI.LineItem</code> 的 <code>Criticality: statusCriticality</code> 给状态列上色</td></tr>
+<tr><td id="t-redirect">重定向目标</td><td><code>@cds.redirection.target</code></td><td>当两张投影都源自同一个底层实体时，显式指定 <code>$expand</code> 该走哪一个。</td><td>加在 <code>entity BookOrderItems</code> 上，否则编译报 <code>can't auto-redirect BookOrders:items</code></td></tr>
+<tr><td id="t-readonly">只读</td><td><code>@readonly</code></td><td>写保护：任何用户都不能改。<b>它不区分用户</b>，所以不是授权。</td><td><code>@readonly entity OrderItemView as projection on db.OrderItemView</code>（实测对该实体 POST 返回 405）</td></tr>
+<tr><td id="t-requires">入口检查</td><td><code>@requires</code></td><td>「访问这个资源需要什么角色」的简写，属于服务级/静态访问控制。</td><td><code>service BookOrderService @(requires: 'authenticated-user')</code> → 匿名请求实测返回 <b>401</b></td></tr>
+<tr><td id="t-restrict">细粒度授权</td><td><code>@restrict</code>（grant / to / where）</td><td>通用授权写法：对哪些事件、给哪些角色、满足什么实例条件；<code>@requires: 'X'</code> 等价于一条 <code>grant: '*'</code> 的 privilege。</td><td><code>@restrict: [{ grant: ['READ','submit'], to: 'OrderAdmin' }]</code>（详见 <a href="security.html">⑧ 认证与授权</a>）</td></tr>
+<tr><td id="t-path">服务路径</td><td><code>@path</code></td><td>指定服务对外的 URL 路径；不写则按服务名与协议默认值派生。</td><td><code>@path: '/odata/v4/book-order'</code></td></tr>
+<tr><td id="t-seed">种子数据</td><td>seed data（<code>db/data/*.csv</code>）</td><td>部署时导入的初始数据；CSV 表头必须与<b>物理列名</b>一致（含 FK 列，如 <code>customer_ID</code>），否则整次 deploy 失败。</td><td><code>db/data/sap.training.bookorder-BookOrders.csv</code> 等 4 个文件，实测导入 Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9 行</td></tr>
+<tr><td id="t-reject">请求拒绝</td><td><code>req.reject(status, message)</code>（Node.js 事件上下文）</td><td>主动以指定 4xx 状态码结束请求并带业务消息——业务错误一律 4xx，别让它变成 500。</td><td><code>req.reject(409, '订单号 … 已存在')</code>、<code>req.reject(400, '数量必须大于 0')</code></td></tr>
+<tr><td id="t-tx">事务</td><td>transaction（Node：<code>cds.tx</code> / Java：Spring 事务 ~）</td><td>一次请求一个事务；handler 里的读写默认在同一事务内，回滚即整批撤销。</td><td>明细写入与父订单合计回写在同一次 POST 的事务里完成</td></tr>
+<tr><td id="t-cds-typer">类型生成器</td><td>cds-typer（<code>@cap-js/cds-typer</code>）</td><td>为 CDS 模型生成 TypeScript 类型声明，让 Node/TS 侧也能有代码补全与类型检查（可选工具）。</td><td>示范项目用纯 JavaScript，未引入（引入后 handler 里的实体名会变成有类型的 API）</td></tr>
+</tbody></table></div>
+
+<div class="box ok"><b class="t">一句话记住 CAP 的语言层次</b>
+<b>CDL</b>（人写的）→ <b>CSN</b>（编译后的模型）→ <b>CQL/CQN</b>（查询的语言与对象）→ <b>EDMX</b>（对外说的元数据）→ <b>OData V4</b>（客户端真正调的协议）。
+中间任何一环出问题，都在下一环表现：模型写错会在 CSN 里看出来，注解写错会在 EDMX 里消失，而客户端只会看到 400／404／500。</div>
+
+<h2 id="s3">3. BTP 平台术语表</h2>
+<p>这一节是账号与平台层：<b>谁付钱、谁有权、资源放在哪、应用怎么拿到凭据</b>。第一列同样带稳定锚点。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>中文名</th><th>英文（缩写展开）</th><th>一句话定义</th><th>在本课程里的具体位置</th></tr></thead>
+<tbody>
+<tr><td id="b-ga">全局账户</td><td>Global Account</td><td>你（或公司）与 SAP 之间<b>合同的落地对象</b>：用来管理子账户、成员、权利与配额；它与区域、运行环境无关。</td><td><a href="btp.html">① BTP 注册</a> 第一步注册出来的顶层账户，试用账号也是它</td></tr>
+<tr><td id="b-sub">子账户</td><td>Subaccount</td><td>真正<b>部署应用、使用服务、管理订阅</b>的单元；彼此独立（安全、成员、数据都隔离），并且绑定到某一个区域。</td><td>课程里建一个子账户 <code>cap-training</code> 用于本课程全部资源</td></tr>
+<tr><td id="b-dir">目录</td><td>Directory</td><td>全局账户与子账户之间的<b>层级容器</b>：把子账户分组，并可以按目录分配权利与配额（也可用于管理员的角色集合）。</td><td>单项目课程只用一层可选目录；企业里按团队/项目划分</td></tr>
+<tr><td id="b-region">区域</td><td>Region</td><td>应用、数据、服务所在的<b>物理位置</b>（数据中心）；子账户一旦选好区域，资源就落在那里，与你的所在地无关。</td><td>课程示例使用 <code>ap10</code>（<code>https://api.cf.ap10.hana.ondemand.com</code>，见示范项目 README 的 <code>cf login</code> 命令）</td></tr>
+<tr><td id="b-entitlement">权利</td><td>Entitlement</td><td>「你有权使用某个<b>服务计划</b>」这件事本身，由服务计划 + 配额构成；从全局账户分配到子账户后才能消费。</td><td><a href="btp.html">①</a> 里为本课程开通 <code>hana</code>、<code>xsuaa</code>、<code>destination</code> 等服务的使用权</td></tr>
+<tr><td id="b-quota">配额</td><td>Quota</td><td>权利上的<b>数量上限</b>（实例数、内存、调用量…）；它决定你能创建几个实例，不是能不能用。</td><td>试用账号的配额由 SAP 设定、会调整 <span class="tag amber">~</span>；超额会在创建实例时报错，通常只说计划不可用</td></tr>
+<tr><td id="b-rolecollection">角色集合</td><td>Role Collection</td><td>一组应用角色的<b>集合</b>，直接分配给用户；用户拿到的权限最终体现在 JWT 的 <code>scope</code> 里。</td><td>部署后把 <code>OrderAdmin</code> 角色加进一个角色集合并分配给测试用户，才能提交订单（<a href="security.html">⑧</a>）</td></tr>
+<tr><td id="b-role">角色（应用角色）</td><td>Role — 由 Role Template 实例化而来</td><td>角色模板在<b>具体应用实例</b>上实例化成的角色，内含若干 scope；它是「角色集合」的组成单位。</td><td><code>xs-security.json</code> 里定义模板 <code>OrderViewer</code> / <code>OrderEditor</code> / <code>OrderAdmin</code></td></tr>
+<tr><td id="b-scope">权限范围</td><td>Scope</td><td>最小的权限名字（如 <code>$XSAPPNAME.submit</code>）；写在 JWT 里，CAP 的 <code>@requires</code>/<code>@restrict</code> 就是按它判断。</td><td><code>xs-security.json</code> 的 3 个 scope：<code>view</code> / <code>edit</code> / <code>submit</code>（<b>放行提交订单靠它</b>）</td></tr>
+<tr><td id="b-trust">信任配置</td><td>Trust Configuration</td><td>子账户里「本子账户信任谁来登录」的配置页面：默认信任 SAP ID service，也可以建立对自定义 IdP 的信任。</td><td><a href="btp.html">①</a>「成员与权限」一节的手顺：先按默认 IdP 走通，再考虑换企业 IdP</td></tr>
+<tr><td id="b-idp">身份提供者</td><td>IdP — Identity Provider</td><td>负责<b>验证用户身份</b>的一方；SAP BTP 的默认 IdP 是 SAP ID service，企业环境通常是 SAP Cloud Identity Services（IAS）或公司的 AD/Entra ID。</td><td>本地开发不需要 IdP（用 <code>mocked</code> 假用户）；部署后才真正经过 IdP 登录（<a href="security.html">⑧</a>）</td></tr>
+<tr><td id="b-xsuaa">授权与信任管理服务</td><td>XSUAA — SAP Authorization and Trust Management service（技术名 <code>xsuaa</code>）</td><td>子账户里的 <b>OAuth 2.0 授权服务器</b>：向 IdP 认证用户、签发 JWT、把 <code>xs-security.json</code> 的 scope 映射进 token，并提供 approuter 要用的 client 凭据。</td><td><code>mta.yaml</code> 的资源 <code>demo-node-uaa</code>（<code>service: xsuaa</code>，<code>path: ./xs-security.json</code>）</td></tr>
+<tr><td id="b-destination">目标（目的地）</td><td>Destination — Destination service（技术名 <code>destination</code>）</td><td>保存「<b>怎么访问某个远程服务</b>」的配置（URL、认证方式、代理类型…），应用按名字取用，避免把地址写死在代码里。</td><td><code>mta.yaml</code> 里 approuter 的 <code>destinations</code> 组（把 <code>srv-api</code> 的地址注入 <code>xs-app.json</code> 的路由）</td></tr>
+<tr><td id="b-connectivity">连接性服务</td><td>Connectivity — Connectivity service（技术名 <code>connectivity</code>）</td><td>跨网络连接能力：云上应用经它（配合 Cloud Connector）访问本地系统，也用于云间连接与代理。</td><td>本课程示范项目是纯云上服务，未使用（接本地 S/4 时才需要）</td></tr>
+<tr><td id="b-cc">云连接器</td><td>Cloud Connector</td><td>装在<b>本地网络</b>里的代理：把本地系统「暴露」给指定子账户，并做资源级访问控制与审计。</td><td>本课程未实测（无本地系统）；概念与手顺位置见 <a href="btp.html">①</a></td></tr>
+<tr><td id="b-org">Cloud Foundry 组织</td><td>Cloud Foundry Org</td><td>在子账户里启用 Cloud Foundry 环境时自动创建的组织，与子账户是 <b>1:1</b> 关系（名字可以不同）。</td><td><code>cf target</code> 输出的 org（课程手顺里的完成判据）</td></tr>
+<tr><td id="b-space">Cloud Foundry 空间</td><td>Cloud Foundry Space</td><td>组织下更细的分区，<b>真正部署应用与创建实例的地方</b>；权限、实例、配额都按空间隔离。</td><td>课程里建 <code>dev</code> 空间；<code>mta.yaml</code> 的 <code>${org}-${space}</code> 参与 <code>xsappname</code> 生成</td></tr>
+<tr><td id="b-si">服务实例</td><td>Service Instance</td><td>「<b>一个具体的服务资源</b>」（一个 HANA 实例、一个 XSUAA 实例…），由服务 + 计划 + 参数创建而来。</td><td><code>demo-node-db</code>（<code>hana</code> / <code>hdi-shared</code>）、<code>demo-node-uaa</code>（<code>xsuaa</code> / <code>application</code>）</td></tr>
+<tr><td id="b-sb">服务绑定</td><td>Service Binding</td><td>把服务实例与<b>某个应用</b>连起来的动作；绑定才会把凭据注入应用（本地是 <code>cds bind</code>，云端由部署时自动建）。</td><td>本地：<code>cds bind -2 &lt;已部署的 hana 实例名&gt;</code>（把本地运行指向云端 HDI 容器）；云端：MTA 部署时按 <code>requires</code> 自动绑定</td></tr>
+<tr><td id="b-vcap">服务凭据环境变量</td><td>VCAP_SERVICES</td><td>Cloud Foundry 注入应用进程的 JSON 环境变量，内容就是所有绑定服务的<b>凭据与元数据</b>；CAP 启动时读它来接数据库、XSUAA 等。</td><td>部署后用 <code>cf env &lt;srv 应用名&gt;</code> 能看到；本地开发时由 <code>cds bind</code> 生成的私密配置（<code>.cdsrc-private.json</code>）替代</td></tr>
+<tr><td id="b-approuter">应用路由器</td><td>Approuter — SAP Application Router（<code>@sap/approuter</code>）</td><td>Node.js 写的统一入口：做<b>登录跳转与 JWT 校验</b>、按 <code>xs-app.json</code> 把请求转发给后端、也能托管静态内容。</td><td><code>demo-node-approuter</code> 模块 + <code>approuter/xs-app.json</code>（<code>authenticationType: xsuaa</code>）</td></tr>
+<tr><td id="b-html5repo">HTML5 应用仓库</td><td>HTML5 Application Repository（技术名 <code>html5-apps-repo</code>，计划 <code>app-host</code> / <code>app-runtime</code>）</td><td>存放并分发 HTML5（UI5 / Fiori）静态内容的服务；运行时通常由 approuter 去取用。</td><td>本课程把 Fiori 应用直接放在 <code>app/book-orders/webapp/</code>，未上仓库（上 Work Zone 时才需要）</td></tr>
+<tr><td id="b-mta">多目标应用</td><td>MTA — Multi-Target Application</td><td>一份<b>部署描述</b>（<code>mta.yaml</code>）：把多个模块（服务、approuter）与所需资源（HANA、XSUAA）声明在一起，按依赖顺序部署。</td><td><code>project-code/demo-node/mta.yaml</code>（2 个 module + 2 个 resource）</td></tr>
+<tr><td id="b-mtar">MTA 归档</td><td>MTAR — MTA Archive（<code>.mtar</code>）</td><td>构建生成的可部署产物：一个带部署描述与全部模块内容的压缩包，由 <code>cf deploy</code> 上传。</td><td><code>mbt build -t mta_archives</code> → <code>mta_archives/demo-node_1.0.0.mtar</code> → <code>cf deploy … -f</code>（全链路见 <a href="deploy.html">⑩ 构建与部署</a>）</td></tr>
+<tr><td id="b-bas">业务应用工作室</td><td>BAS — SAP Business Application Studio</td><td>云上 IDE（VS Code 血统），预装了 CAP / Fiori / Java 等场景所需工具，可终端操作、可调试、可直接部署。</td><td>课程板块 <a href="bas.html">② BAS 环境</a>：创建 Dev Space、跑 <code>cds init</code>、端口转发与调试</td></tr>
+<tr><td id="b-devspace">开发空间</td><td>Dev Space</td><td>BAS 里的开发环境实例，<b>像一台隔离的云虚拟机</b>：按类型预装工具与运行时，可设内存大小、可停止以省资源。</td><td><a href="bas.html">②</a> 的「创建 Dev Space 与内存配额」一节（内存给太小会装不上依赖）</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="t">三个最容易搞混的「谁负责什么」</b>
+<ul>
+  <li><b>谁校验密码</b>：IdP。<b>谁签发 token、把角色变成 scope</b>：XSUAA。<b>谁执行授权判断</b>：CAP 运行时（读 <code>@requires</code>/<code>@restrict</code>）。</li>
+  <li><b>谁能改 JWT 里的 scope</b>：只有 XSUAA（管理员在 cockpit 分配角色集合间接影响）。应用代码不能。</li>
+  <li><b>凭据从哪来</b>：本地 <code>cds bind</code>（写 <code>.cdsrc-private.json</code>），云端 <code>VCAP_SERVICES</code>。两边都不该把凭据写进 Git。</li>
+</ul></div>
+
+<h2 id="s4">4. Node 与 Java 运行时对照术语表</h2>
+<p>同一份 <code>.cds</code> 模型，两个运行时（Node 侧实做见 <a href="node.html">⑤ Node 服务</a>，Java 侧见 <a href="java.html">⑥ Java 服务</a>）。下表左边是对照项（带锚点），中间两列是两边各自的术语，最后一列是「真正的差别与坑」——这是换运行时最容易吃亏的地方。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>对照项</th><th>Node.js 侧</th><th>Java 侧</th><th>差别与注意点</th></tr></thead>
+<tbody>
+<tr><td id="j-module">实现单元</td><td>模块（<code>module.exports = class … extends cds.ApplicationService</code>）</td><td>Bean（Spring 容器里的组件，<code>@Component @ServiceName("BookOrderService")</code>）</td><td>Node 靠「文件位置 + 命名约定」自动装配（<code>srv/</code> 下的同名 <code>.js</code>）；Java 靠<b>依赖注入</b>，类名与文件名无关，<code>@ServiceName</code> 必须写对</td></tr>
+<tr><td id="j-build">依赖与构建工具</td><td>npm（<code>npm install</code> / <code>npm ci</code>，锁文件 <code>package-lock.json</code>）</td><td>Maven（<code>mvn package</code>，锁信息在 <code>pom.xml</code> 的依赖坐标里）</td><td>npm 可以「先装后锁」，Maven 的版本必须在 <code>pom.xml</code> 声明；CI 里 Node 用 <code>npm ci</code>，Java 用 <code>mvn -B package</code></td></tr>
+<tr><td id="j-manifest">工程描述文件</td><td><code>package.json</code></td><td><code>pom.xml</code></td><td>两者都既是元数据又是脚本入口：Node 的 <code>scripts</code> 对应 Java 的 <code>mvn &lt;plugin&gt;:&lt;goal&gt;</code></td></tr>
+<tr><td id="j-config">运行时配置</td><td><code>package.json</code> 的 <code>cds</code> 段（本项目配 <code>sqlite</code> 与 <code>mocked</code> 认证）</td><td><code>application.yaml</code>（在 <code>srv/src/main/resources/</code>）</td><td>同一份配置在两边是<b>两套格式</b>，Go 云端时还要配合绑定；换运行时配置不能照抄</td></tr>
+<tr><td id="j-handler">handler 注册方式</td><td>代码里调用：<code>this.before(...)</code> / <code>this.on(...)</code> / <code>this.after(...)</code></td><td>注解声明：<code>@Before(event=…, entity=…)</code> / <code>@On(…)</code> / <code>@After(…)</code> 加在方法上</td><td>语义一致但出错方式不同：Node 写错实体名是运行时无效果，Java 写错注解值可能直接起不来</td></tr>
+<tr><td id="j-serviceimpl">实现放在哪</td><td>与 <code>.cds</code> 同名的 <code>.js</code>（<code>srv/book-order-service.js</code> 配 <code>srv/book-order-service.cds</code>）</td><td>普通 Java 类实现 <code>EventHandler</code>，用 <code>@ServiceName</code> 指向服务</td><td>Node 的「同名文件」约定最省事，但改名会静默失联；Java 的类放哪都行，但必须被扫描到</td></tr>
+<tr><td id="j-types">类型系统</td><td>JavaScript 动态类型；需要类型可用 <code>cds-typer</code> 生成 <code>.ts</code> 声明 <span class="tag amber">~</span></td><td>Java 静态类型；<code>mvn compile</code> 后在 <code>srv/src/gen/java</code> 生成访问器接口与常量</td><td>Java 在编译期能查出「字段名写错」，Node 只会在运行时返回 <code>undefined</code>——这是两边最大的体验差</td></tr>
+<tr><td id="j-query">查询 API</td><td><code>cds.ql</code>：<code>SELECT.one.from(BookOrders).where({ orderNo })</code>、<code>UPDATE(...).set(...)</code></td><td><code>com.sap.cds.ql</code>：<code>Select.from("BookOrders")…</code>，再交给 <code>CqnService.run(query)</code></td><td>都是构造 CQN；Node 的 fluent API 更短，Java 的泛型更安全。聚合写法：Node 用 <code>.columns('sum(amount) as total')</code></td></tr>
+<tr><td id="j-context">事件上下文</td><td><code>req</code>（<code>cds.Request</code>）：<code>req.data</code>、<code>req.params</code>、<code>req.user</code>、<code>req.reject</code></td><td><code>EventContext</code>（如 <code>CdsCreateEventContext</code>）：<code>context.getCqn()</code>、<code>context.getTarget()</code></td><td>Node 的 <code>req</code> 是「一个对象什么都有」；Java 按事件类型分多个上下文类，取参数要选对类型</td></tr>
+<tr><td id="j-errors">业务错误返回</td><td><code>req.reject(409, '订单号 … 已存在')</code></td><td>抛 <code>ServiceException</code>／写入 messages 后返回 4xx <span class="tag amber">~</span></td><td>两边都要保证<b>状态码是 4xx</b>：未捕获异常在 Node 是 500，在 Java 也可能变成 500，测试里必须断言状态码</td></tr>
+<tr><td id="j-tx">事务</td><td><code>cds.tx</code> / <code>cds.context</code>；handler 内的读写默认同事务</td><td>与 Spring 事务集成（<code>@Transactional</code>）；SDK 管理请求级事务 <span class="tag amber">~</span></td><td>「明细写入 + 父表合计回写」必须在同一事务里，否则会出现「明细存了、合计没更新」的脏数据</td></tr>
+<tr><td id="j-db">本地数据库</td><td><code>@cap-js/sqlite</code>（本项目 <code>db.sqlite</code>，<code>cds deploy --to sqlite:db.sqlite</code>）</td><td>默认内存数据库 H2（可配持久化 / SQLite）<span class="tag amber">~</span></td><td>本地库只是开发便利：上线一律 HANA Cloud。<b>数据库方言差异会暴露写法问题</b>（如 <code>localized</code> 的会话语言）</td></tr>
+<tr><td id="j-run">启动与热重载</td><td><code>npm start</code>（<code>cds-serve</code>）、<code>cds watch</code>（改模型自动重启并重编译元数据）</td><td><code>mvn spring-boot:run</code>、<code>mvn cds:watch</code>（内含 CDS 构建）</td><td>Node 的 <code>cds watch</code> 是「零配置看效果」的首选；Java 侧 <code>mvn cds:auto-build</code> 用来在 IDE 外持续重建</td></tr>
+<tr><td id="j-test">测试框架</td><td>mocha + chai + <code>cds.test</code>（本项目 <code>test/odata.test.js</code>，<code>?cds.test</code> 起真服务）</td><td>JUnit 5 / Spring Boot Test：<code>@SpringBootTest</code> + <code>@AutoConfigureMockMvc</code> 打 HTTP 层</td><td>思路一样：<b>起真实运行时打接口</b>。Node 的 <code>cds.test</code> 没有 1:1 的 Java 对应物，Java 侧用 Spring 的测试设施 <span class="tag amber">~</span></td></tr>
+<tr><td id="j-artifact">构建与部署产物</td><td><code>cds build --production</code> → <code>gen/srv</code> + <code>gen/db</code>，用 <code>nodejs_buildpack</code></td><td>Maven 打包 → <code>srv/target/*.jar</code>，用 SAP Java buildpack <span class="tag amber">~</span></td><td>MTA 里的模块 <code>type</code> 不同（<code>nodejs</code> 与 <code>java</code>），构建命令也不同（<code>npm-ci</code> 与 Maven）；内存/磁盘配额要分别设</td></tr>
+<tr><td id="j-shared">共享的东西</td><td colspan="2" style="text-align:center">同一份 <code>db/</code> 与 <code>srv/*.cds</code>；同一份 <code>xs-security.json</code>；同一个 OData 契约</td><td>这正是 CAP 的核心卖点：<b>模型与运行时解耦</b>。所以「Node 写一遍、Java 写一遍」不是重复劳动，而是验证模型是否真的中立</td></tr>
+<tr><td id="j-ecosystem">生态与扩展</td><td>npm 生态（中间件、<code>@cap-js/*</code> 插件）</td><td>Maven + Spring 生态（DI、AOP、安全、可观测库）</td><td>Node 起步快、依赖杂；Java 工程规范强、样板多。<b>团队能力决定选哪个，不是性能</b></td></tr>
+</tbody></table></div>
+
+<h2 id="s5">5. SAP 生态对照表（面向 ABAP 背景）</h2>
+<p>如果你从 ABAP 世界来，最容易犯的错是「用 ABAP 的词解释 CAP 的对象」。下表给的是<b>对应关系（不是等价物）</b>：左边是你在 ABAP 里的熟面孔，右边是 CAP 里的对应写法，最后一列说明哪里<b>不能</b>照搬。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>概念</th><th>ABAP 侧</th><th>CAP 侧</th><th>不能照搬的地方</th></tr></thead>
+<tbody>
+<tr><td id="e-rap">编程模型</td><td>RAP — ABAP RESTful Application Programming Model</td><td>CAP — SAP Cloud Application Programming Model</td><td>RAP 运行在 ABAP 平台（S/4HANA 内外皆可），对象是 ABAP 对象；CAP 运行在 BTP（Node/Java），对象是文本文件。<b>两者解决的问题相似，但产物与生命周期完全不同</b></td></tr>
+<tr><td id="e-bdef">行为定义</td><td>BDEF — Behavior Definition（在 ADT 里创建）</td><td>服务定义里的 <code>actions { … }</code> + 事件处理器代码</td><td>CAP 没有单独的「行为定义对象」：动作/函数写在 CDS 里，逻辑写在 <code>.js</code>/<code>.java</code> 里，两者靠名字关联</td></tr>
+<tr><td id="e-bdl">行为定义语言</td><td>BDL — Behavior Definition Language（写 BDEF 的语法）</td><td>CDS 注解 + handler 注册（<code>this.before/on/after</code>）</td><td>BDL 里能声明 draft、determine、validation、CRUD 开关；CAP 里对应能力散落在「注解 + 代码」两侧，<b>没有统一的 BDL 文件</b></td></tr>
+<tr><td id="e-cdsabap">CDS（ABAP 侧）</td><td>ABAP CDS — 视图实体（DDL）/ 表函数 / 层次</td><td>CAP CDS — <code>db/schema.cds</code> + <code>srv/*.cds</code></td><td>同名不同物：ABAP CDS 是 DDIC 对象（DDL 源在 ABAP 系统里，靠传输带走）；CAP CDS 是项目文件（靠 Git 与 MTA 部署）</td></tr>
+<tr><td id="e-dcl">行级授权</td><td>DCL — Data Control Language（<code>DEFINE ROLE …</code>）</td><td><code>@restrict</code> 的 <code>grant</code> / <code>to</code> / <code>where</code> + <code>xs-security.json</code></td><td>DCL 的 PFCG 条件基于 ABAP 授权对象；CAP 的 <code>to:</code> 是 BTP 角色（最终落实为 JWT 的 scope），两边<b>授权凭据体系不同</b></td></tr>
+<tr><td id="e-amdp">数据库过程</td><td>AMDP — ABAP Managed Database Procedures（<code>METHOD … BY DATABASE PROCEDURE FOR HDB</code>）</td><td>HANA 原生对象（<code>hdbtable</code> / <code>hdbview</code> / SQLScript 文件）+ CDS 视图</td><td>CAP 侧把「推下数据库」交给 HDI 部署的对象与 CDS 编译产物；<b>不要把 AMDP 思路直接搬成 CDS 里的魔法</b>，先看能否用视图与 <code>$apply</code> 聚合解决</td></tr>
+<tr><td id="e-se11">数据字典</td><td>SE11 — ABAP Dictionary（表、视图、类型）</td><td><code>db/schema.cds</code> + <code>cds deploy</code>（HDI 部署器建表）</td><td>CAP 里没有 DDIC：表由模型编译出来，改模型 = 改表结构（<code>.hdbtable</code> 迁移），<b>审核方式从「激活」变成「看编译产物与迁移」</b></td></tr>
+<tr><td id="e-se80">开发工作台</td><td>SE80 — Object Navigator（经典对象树）</td><td>项目目录：<code>db/</code> <code>srv/</code> <code>app/</code> + VS Code / BAS 文件树</td><td>CAP 没有「对象列表」这一层：一个文件里可以有多个实体。<b>靠目录约定与 Git 组织，不靠对象仓库</b></td></tr>
+<tr><td id="e-activate">激活 / 编译</td><td>激活（Activate）DDIC 与 CDS 对象</td><td><code>cds compile</code> / <code>cds build</code>（编译期检查模型与注解）</td><td>CAP 的编译是<b>构建步骤</b>而非平台动作：编译失败不会「半激活」，但你要自己把编译放进 CI，否则错误留到部署才暴露</td></tr>
+<tr><td id="e-transport">传输与发布</td><td>CTS — Change and Transport System（传输请求 STMS）</td><td>MTA（<code>mta.yaml</code>）+ <code>mbt build</code> + <code>cf deploy</code></td><td>传输请求是「系统到系统」的对象搬运；MTA 是「构建产物到空间」的部署，<b>版本化与回滚方式都不同</b>（MTA 回滚用 <code>cf deploy</code> 指定旧包，见 <a href="deploy.html">⑩ 构建与部署</a>）</td></tr>
+<tr><td id="e-git">版本管理</td><td>abapGit / gCTS（Git 化的 ABAP 对象）</td><td>原生 Git 仓库 + CI/CD 流水线</td><td>CAP 里 Git 就是唯一真相源；ABAP 侧 Git 是「导入导出」的桥。<b>在 CAP 项目中不要用「共享开发机当真相源」的做法</b></td></tr>
+<tr><td id="e-numrange">编号生成</td><td>SNRO — 编号范围对象（Number Range）</td><td>服务端编号生成：<code>max(orderNo) + 1</code>（本项目 <code>nextOrderNo()</code>）</td><td>SNRO 有数据库级锁与缓冲；<code>max+1</code> 简单但不抗并发。<b>生产上要么用数据库序列/唯一约束 + 重试，要么靠编号服务</b>，别把教学写法当结论</td></tr>
+<tr><td id="e-auth">用户与权限分配</td><td>SU01 用户 + PFCG 角色 + 授权对象</td><td>IdP 用户 + Role Collection / Role / Scope（cockpit 里分配）</td><td>BTP 的权限是 <b>JWT 里的 scope</b>，不是运行时查表；所以「临时加个权限」要重新登录（拿新 token），不像 SU01 那样立刻生效</td></tr>
+</tbody></table></div>
+
+<h2 id="s6">6. 常用缩写速查</h2>
+<p>只想知道字母是什么意思时看这一节。三列：缩写 / 展开 / 中文。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>缩写</th><th>英文展开</th><th>中文</th></tr></thead>
+<tbody>
+<tr><td><code>CAP</code></td><td>SAP Cloud Application Programming Model</td><td>SAP 云应用编程模型（本课程的主角）</td></tr>
+<tr><td><code>CDS</code></td><td>Core Data Services</td><td>核心数据服务（CAP 的建模与暴露层）</td></tr>
+<tr><td><code>CDL</code></td><td>Conceptual Definition Language</td><td>概念定义语言（人写的 <code>.cds</code> 语法）</td></tr>
+<tr><td><code>CSN</code></td><td>(Core) Schema Notation，读作 season</td><td>模式表示（编译后的 JSON 模型）</td></tr>
+<tr><td><code>CQL</code></td><td>(Core) Query Language</td><td>查询语言（类 SQL 的 CDS 查询）</td></tr>
+<tr><td><code>CQN</code></td><td>(Core) Query Notation</td><td>查询表示（查询的对象形式）</td></tr>
+<tr><td><code>CSDL</code></td><td>Common Schema Definition Language</td><td>OData 元数据的 XML 描述语言</td></tr>
+<tr><td><code>EDMX</code></td><td>Entity Data Model XML</td><td>带 CSDL 的元数据文档格式（<code>$metadata</code> 的返回体）</td></tr>
+<tr><td><code>EDM</code></td><td>Entity Data Model</td><td>实体数据模型（OData 描述数据的概念模型）</td></tr>
+<tr><td><code>OData</code></td><td>Open Data Protocol</td><td>开放数据协议（CAP 默认对外协议，本项目用 V4）</td></tr>
+<tr><td><code>REST</code></td><td>Representational State Transfer</td><td>表述性状态转移（HTTP 上的资源式接口风格）</td></tr>
+<tr><td><code>CRUD</code></td><td>Create / Read / Update / Delete</td><td>增删改查（CAP 的通用事件名）</td></tr>
+<tr><td><code>JSON</code></td><td>JavaScript Object Notation</td><td>JSON 数据格式（CSN、响应体、配置都用它）</td></tr>
+<tr><td><code>CSV</code></td><td>Comma-Separated Values</td><td>逗号分隔值（CAP 的种子数据格式）</td></tr>
+<tr><td><code>UUID</code></td><td>Universally Unique Identifier</td><td>通用唯一标识符（本项目主键类型）</td></tr>
+<tr><td><code>FK</code></td><td>Foreign Key</td><td>外键（associations 编译出的物理列）</td></tr>
+<tr><td><code>DDL</code></td><td>Data Definition Language</td><td>数据定义语言（建表语句；<code>cds compile --to sql</code> 的产品）</td></tr>
+<tr><td><code>DML</code></td><td>Data Manipulation Language</td><td>数据操纵语言（增删改查语句）</td></tr>
+<tr><td><code>SQL</code></td><td>Structured Query Language</td><td>结构化查询语言（CAP 编译的目标之一）</td></tr>
+<tr><td><code>JWT</code></td><td>JSON Web Token</td><td>JSON 网络令牌（XSUAA 签发、带 scope 的身份凭据）</td></tr>
+<tr><td><code>BTP</code></td><td>SAP Business Technology Platform</td><td>SAP 业务技术平台（本课程的环境）</td></tr>
+<tr><td><code>CF</code></td><td>Cloud Foundry</td><td>BTP 的 Cloud Foundry 运行环境（部署目标）</td></tr>
+<tr><td><code>CLI</code></td><td>Command-Line Interface</td><td>命令行界面（<code>cds</code> / <code>cf</code> / <code>btp</code> / <code>mbt</code>）</td></tr>
+<tr><td><code>BAS</code></td><td>SAP Business Application Studio</td><td>业务应用工作室（云上 IDE）</td></tr>
+<tr><td><code>HDI</code></td><td>HANA Deployment Infrastructure</td><td>HANA 部署基础设施（容器式管理数据库对象）</td></tr>
+<tr><td><code>HDB</code></td><td>SAP HANA Database</td><td>HANA 数据库（<code>.hdbtable</code>/<code>.hdbview</code> 是它的设计文件后缀）</td></tr>
+<tr><td><code>MTA</code></td><td>Multi-Target Application</td><td>多目标应用（<code>mta.yaml</code> 描述的应用包）</td></tr>
+<tr><td><code>MTAR</code></td><td>MTA Archive</td><td>MTA 归档（<code>.mtar</code> 可部署产物）</td></tr>
+<tr><td><code>MBT</code></td><td>Cloud MTA Build Tool</td><td>云 MTA 构建工具（<code>mbt build</code>）</td></tr>
+<tr><td><code>XSUAA</code></td><td>SAP Authorization and Trust Management service</td><td>授权与信任管理服务（签发 JWT、管理 scope）</td></tr>
+<tr><td><code>IAS</code></td><td>SAP Cloud Identity Services — Identity Authentication</td><td>身份认证服务（可作 BTP 的 IdP）</td></tr>
+<tr><td><code>IdP</code></td><td>Identity Provider</td><td>身份提供者（谁来验证用户）</td></tr>
+<tr><td><code>SSO</code></td><td>Single Sign-On</td><td>单点登录</td></tr>
+<tr><td><code>SAML</code></td><td>Security Assertion Markup Language</td><td>安全断言标记语言（一种 SSO 协议）</td></tr>
+<tr><td><code>UI5</code></td><td>SAPUI5</td><td>SAP 前端框架（Fiori 应用的运行库）</td></tr>
+<tr><td><code>RAP</code></td><td>ABAP RESTful Application Programming Model</td><td>ABAP 侧的 RESTful 应用编程模型（与 CAP 对应的另一条路）</td></tr>
+<tr><td><code>BDL</code></td><td>Behavior Definition Language</td><td>行为定义语言（RAP 里写行为定义的语法）</td></tr>
+<tr><td><code>BDEF</code></td><td>Behavior Definition</td><td>行为定义（RAP 的 ABAP 对象）</td></tr>
+<tr><td><code>DCL</code></td><td>Data Control Language</td><td>数据控制语言（ABAP CDS 的行级授权，<code>DEFINE ROLE</code>）；也指 SQL 的权限语句</td></tr>
+<tr><td><code>AMDP</code></td><td>ABAP Managed Database Procedures</td><td>ABAP 托管数据库过程</td></tr>
+<tr><td><code>DDIC</code></td><td>ABAP Data Dictionary</td><td>ABAP 数据字典（SE11）</td></tr>
+<tr><td><code>CTS</code></td><td>Change and Transport System</td><td>变更与传输系统（ABAP 的传输请求机制）</td></tr>
+</tbody></table></div>
+
+<h2 id="s7">7. 易混词对照</h2>
+<p>每组给「<b>区别一句话</b>」与「<b>选错会怎样</b>」。这些后果都是课程里真实遇到过的，不是假设。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>对照</th><th>区别一句话</th><th>选错会怎样</th></tr></thead>
+<tbody>
+<tr><td id="mix-assoc"><b>Association</b> vs <b>Composition</b></td><td>关联只是「有关系」（查询时 join）；组合是「包含」（父侧生成 FK 列、父删子删、子表依附父表的文档结构）。</td><td>用 Composition 播种 CSV 时，父侧 FK 列不会被 CSV 填充 → <code>$expand=items</code> 返回空数组（本项目实测因此改用普通 FK + 显式 to-many 关联）。</td></tr>
+<tr><td id="mix-actionfn"><b>Action</b> vs <b>Function</b></td><td>Action 有副作用（POST，可无返回值）；Function 无副作用（GET）且<b>必须有返回值</b>。</td><td>用 Function 做状态迁移：语义上客户端可以缓存/重试 GET，Fiori 的行内按钮也不会正确触发；反过来用 Action 做「只读的聚合计算」会平白多出写权限风险。</td></tr>
+<tr><td id="mix-draft"><b>draft 草稿</b> vs <b>直接写 active</b></td><td>draft 先写草稿表、点保存才 <code>draftActivate</code> 落库；直接写入立刻生效。</td><td>给需要「先编后提交」的 UI 用直接写入：用户改一半就被别人看到，且没有并发保护；反过来给简单维护类实体开 draft：凭空多出草稿表与「重复激活 409」的坑。</td></tr>
+<tr><td id="mix-readonly"><b>@readonly</b> vs <b>@restrict</b></td><td><code>@readonly</code> 是「谁都别想写」（等价 <code>grant: 'READ'</code>，<code>to: 'any'</code>）；<code>@restrict</code> 是「谁能写/能读哪些行」。</td><td>用 <code>@readonly</code> 当权限：任何登录用户照样能读全部数据（只读不等于受限）；只加 <code>@restrict</code> 想实现只读：忘了 <code>grant: 'READ'</code> 会导致连读都被拒（403）。</td></tr>
+<tr><td id="mix-mock"><b>mocked</b> vs <b>dummy</b> 认证</td><td><code>mocked</code> 按配置的假用户校验 Basic 并给出角色；<code>dummy</code> 直接放行特权用户（什么都为真）。</td><td>用 <code>dummy</code> 测「匿名必须 401」：永远是 200，认证类断言全部失效（本课程明确要求认证测试保持 <code>mocked</code>）。</td></tr>
+<tr><td id="mix-bound"><b>bound action</b> vs <b>unbound action</b></td><td>bound 写在实体里、URL 带实例键（对「哪一张订单」操作）；unbound 写在服务层、不依赖实例。</td><td>把「单张订单的状态迁移」写成 unbound：调用方必须自己传 ID，越权风险上升，Fiori 也无法把它作为行内/页面动作绑定到当前上下文。</td></tr>
+<tr><td id="mix-aspect-entity"><b>aspect</b> vs <b>entity</b></td><td>aspect 是被 include 的字段集合（编译时展开，不建自己的表）；entity 会建表。</td><td>以为 aspect 是「父类」去找它的表：找不到；反过来把 <code>managed</code> 当成「只加元数据不进数据库」：DDL 里其实多了 4 列，插入数据时才会发现列不匹配。</td></tr>
+<tr><td id="mix-cuid-managed"><b>cuid</b> vs <b>managed</b></td><td><code>cuid</code> 只给一个 <code>key ID : UUID</code>；<code>managed</code> 给 4 个审计列，<b>不含主键</b>（所以常写成 <code>: cuid, managed</code>）。</td><td>只 include <code>managed</code> 就以为有主键：实体没有主键，OData 暴露时直接报错；以为 <code>cuid</code> 会送审计列：查不到 <code>createdAt</code>。</td></tr>
+<tr><td id="mix-proj-view"><b>projection</b> vs <b>view</b></td><td><code>as projection on</code> 面向服务暴露（可挑元素、挂 UI 注解）；<code>as select from</code> 是 db 层的查询对象。</td><td>两张投影源自同一底层实体时忘了 <code>@cds.redirection.target</code>：编译报 <code>can't auto-redirect BookOrders:items</code>（本项目真实报错）。</td></tr>
+<tr><td id="mix-csn-cqn"><b>CSN</b> vs <b>CQN</b></td><td>CSN 是<b>模型</b>（JSON，描述有哪些实体与元素）；CQN 是<b>查询</b>（对象，描述要取什么）。</td><td>排错时找错文件：改模型却盯着 CQN 日志看，或反过来用 CSN 去推断某次请求查了什么字段，结论必然是错的。</td></tr>
+<tr><td id="mix-expand-select"><b>$expand</b> vs <b>$select</b></td><td><code>$select</code> 挑<b>字段</b>；<code>$expand</code> 读<b>关联集合</b>（一次请求把子表带出来）。</td><td>把子表当字段：<code>?$select=items</code> 取不到数组（400 或空）；该展开的没展开：前端出现「明细为空」，而后端其实有数据（或每行再发一次请求）。</td></tr>
+<tr><td id="mix-edmx-csn"><b>EDMX</b> vs <b>CSN</b></td><td>EDMX 是对外元数据（含注解，客户端据此生成模型）；CSN 是内部模型（含类型与持久化细节）。</td><td>用 CSN 当「接口文档」给前端：前端看不到 OData 的动作/函数与 UI 注解；用 EDMX 判断物理列：拿不到表名与列类型。</td></tr>
+<tr><td id="mix-si-sb"><b>Service Instance</b> vs <b>Service Binding</b></td><td>实例是「资源本身」（一个 HANA / 一个 XSUAA）；绑定是「把凭据交给某个应用」。</td><td>只创建实例不绑定：应用进程里没有对应的 <code>VCAP_SERVICES</code> 条目，启动时报「找不到数据库/认证凭据」；本地开发忘了 <code>cds bind</code> 也一样。</td></tr>
+<tr><td id="mix-ent-quota"><b>Entitlement</b> vs <b>Quota</b></td><td>权利是「有没有权用这个服务计划」；配额是「最多能用多少」（实例数、内存、调用量）。</td><td>以为「子账户里能看到这个服务」就等于能用：创建实例时才因权利未分配或缺配额而失败——报错信息往往只说 plan 不可用，容易误判成区域/拼写问题。</td></tr>
+<tr><td id="mix-namespace-path"><b>namespace</b> vs <b>@path</b></td><td>namespace 管<b>模型命名与物理表名</b>；<code>@path</code> 管<b>服务 URL</b>。</td><td>想改 URL 却动了 namespace：表名全变，需要重新部署/迁移数据；反过来想改表名却改 <code>@path</code>：数据库毫无变化。</td></tr>
+<tr><td id="mix-local-cf"><code>cds deploy</code>（本地）vs <code>cf deploy</code>（云端）</td><td>前者把模型落到本地 SQLite（或经绑定落到 HANA）；后者把 <code>.mtar</code> 部署到 CF 空间并创建/更新服务实例与绑定。</td><td>本地改完模型直接 <code>cf deploy</code>：忘了 <code>cds build</code> 时部署包里的模型是旧的；只跑 <code>cds deploy</code> 又以为「云上更新了」——云端 HDI 容器的表结构根本没动。</td></tr>
+</tbody></table></div>
+
+<h2 id="s8">8. 本节测试</h2>
+<p>六道题，覆盖本页三块内容。前两题考缩写，后四题给场景选术语；答完可以回到对应表格核对。</p>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>写出下列缩写的英文全称，并各说一句它在 CAP 里的作用：<code>CSN</code>、<code>CQN</code>、<code>EDMX</code>、<code>VCAP_SERVICES</code>。</li>
+    <li>把中文名译回英文术语：切面（可被实体 include 的字段集合）、绑定动作、权利、服务绑定、目标（目的地）。</li>
+    <li>场景：你要给界面返回「每张订单的明细行数」这类<b>聚合结果</b>，结果集没有主键。应该用 entity、projection 还是 function 暴露？为什么？</li>
+    <li>场景：Fiori 应用里用户点了「编辑订单」，改了数据但<b>还没保存</b>。这份数据此刻在哪张表里、由哪个注解开启、保存时触发什么？</li>
+    <li>场景：子账户管理员说「我们已经买了 HANA Cloud，为什么你建实例还报错？」请用两个术语把原因说清楚（提示：一个讲「有没有权」，一个讲「能用多少」）。</li>
+    <li>场景：同事说「把匿名访问的 401 断言跑一下」，但他的 <code>package.json</code> 里认证 <code>kind</code> 是 <code>dummy</code>。请指出问题并给出正确做法（要说出具体配置项与期望的 HTTP 状态码）。</li>
+  </ol>
+  <p class="go">做完这六题，本课程的术语体系就算闭环了：<b>语言层的词（CDS/CQL/CQN/CSN/EDMX）</b>、<b>平台层的词（Entitlement/Scope/VCAP_SERVICES/MTA）</b>、<b>两个运行时的词（模块与 Bean、mocked 与 dummy）</b>各一格。答案由课程讲师版给出；遇到不确定的定义，回到本页第 2–6 节的对应行核对。</p>
+</div>
+
+<div class="box info"><b class="t">从哪里继续</b>
+<ul>
+  <li>术语看懂了、想看概念全景 → <a href="concept.html">概念：CAP 是什么</a>；</li>
+  <li>要动手做（注册 BTP、建模、写服务、测试、配权限、看界面）→ <a href="btp.html">① BTP 注册</a> → <a href="bas.html">② BAS</a> → <a href="hana.html">③ HANA</a> → <a href="cds.html">④ CDS 建模</a> → <a href="node.html">⑤ Node 服务</a> → <a href="testing.html">⑦ 测试</a> → <a href="security.html">⑧ 权限</a> → <a href="fiori.html">⑨ Fiori UI</a>；</li>
+  <li>只想确认「这个词我理解得对不对」→ 回到本页第 7 节，按「选错会怎样」自检。</li>
+</ul></div>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

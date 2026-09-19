@@ -1,0 +1,46 @@
+{
+ "key": "btp_s14",
+ "kind": "terminal",
+ "w": 1440,
+ "h": 900,
+ "title": "jason@MacBook-Pro: ~/projects/demo-node",
+ "caption": "5 分钟验收：cf apps 有 started 的应用、cf services 三个实例都是 create succeeded",
+ "alt": "macOS 终端窗口，显示 cf apps 与 cf services 的验收输出，应用 started、三个服务实例 create succeeded",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 命令依据 cf CLI v8 参考手册；输出为示意，逐字以本机为准",
+ "lines": [
+  "$ cf apps",
+  "Getting apps in org trial / space dev as jason@example.com...",
+  "name         requested state   processes   routes",
+  "demo-node    started           web:1/1     demo-node.cfapps.ap21.hana.ondemand.com",
+  "demo-hello   started           web:1/1     demo-hello.cfapps.ap21.hana.ondemand.com",
+  "$ cf services",
+  "Getting service instances in org trial / space dev as jason@example.com...",
+  "name              offering      plan          bound apps   last operation",
+  "demo-hana-db      hana          hdi-shared                 create succeeded",
+  "demo-xsuaa        xsuaa         application   demo-node    create succeeded",
+  "demo-destination  destination   lite                       create succeeded",
+  "$ cf app demo-node",
+  "Showing health and status for app demo-node in org trial / space dev as jason@example.com...",
+  "state:   started",
+  "routes:  demo-node.cfapps.ap21.hana.ondemand.com"
+ ],
+ "callouts": [
+  {
+   "on": "web:1/1",
+   "text": "1. 进程实例数=1，算起来了"
+  },
+  {
+   "on": "create succeeded",
+   "text": "2. 三个实例都要 succeeded"
+  },
+  {
+   "on": "state:   started",
+   "text": "3. 应用健康状态"
+  },
+  {
+   "on": "demo-node.cfapps.ap21.hana.ondemand.com",
+   "text": "4. 路由决定访问地址"
+  }
+ ]
+}

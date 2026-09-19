@@ -1,0 +1,130 @@
+{
+  "key": "hana_s06",
+  "kind": "hana",
+  "w": 1440,
+  "h": 900,
+  "caption": "SQL Console 里直接查 CAP 建的表：订单主表与明细表 join + 聚合，结果与 OData 端点的数字对得上",
+  "alt": "SQL Console 里直接查 CAP 建的表：订单主表与明细表 join + 聚合，结果与 OData 端点的数字对得上",
+  "label": "本地实机运行",
+  "src": "本站自绘（figkit 高保真画面）· SQL 语法与结果集按本教材项目的真实数据（db/data/*.csv）推导；执行入口出自 SAP Tutorial「Query the Database Using SQL Statements」",
+  "product": "SAP HANA Cloud",
+  "user": "JASON",
+  "navW": 280,
+  "nav": {
+    "title": "DATABASE EXPLORER",
+    "items": [
+      {
+        "label": "demo-hana-db (HDI container)",
+        "active": true,
+        "sub": [
+          "SQL Console",
+          "Catalog"
+        ]
+      },
+      {
+        "label": "BOOKORDER (schema)"
+      },
+      {
+        "label": "Tables",
+        "group": true
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKORDERS"
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKORDERITEMS"
+      }
+    ]
+  },
+  "title": "SQL Console — BOOKORDER",
+  "tabs": [
+    "SQL Console 1",
+    "SAP_TRAINING_BOOKORDER_BOOKORDERS (Table)"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "code",
+      "lang": "sql",
+      "fs": 12,
+      "lh": 19,
+      "numbers": true,
+      "title": "SQL",
+      "lines": [
+        "SET SCHEMA BOOKORDER;",
+        "",
+        "SELECT O.ORDERNO, C.NAME, COUNT(I.ID) AS LINES, SUM(I.AMOUNT) AS TOTAL",
+        "  FROM SAP_TRAINING_BOOKORDER_BOOKORDERS      AS O",
+        "  JOIN SAP_TRAINING_BOOKORDER_BOOKORDERITEMS  AS I ON I.ORDER_ID = O.ID",
+        "  JOIN SAP_TRAINING_BOOKORDER_CUSTOMERS       AS C ON C.ID = O.CUSTOMER_ID",
+        " GROUP BY O.ORDERNO, C.NAME",
+        " ORDER BY O.ORDERNO;"
+      ]
+    },
+    {
+      "t": "table",
+      "cols": [
+        "ORDERNO",
+        "NAME",
+        "LINES",
+        "TOTAL"
+      ],
+      "widths": [
+        1.2,
+        1.6,
+        0.8,
+        1.0
+      ],
+      "rows": [
+        [
+          "BO-1001",
+          "北京华信书业",
+          "3",
+          "16000.00"
+        ],
+        [
+          "BO-1002",
+          "北京华信书业",
+          "1",
+          "3600.00"
+        ],
+        [
+          "BO-1003",
+          "上海博文出版中心",
+          "3",
+          "17400.00"
+        ],
+        [
+          "BO-1004",
+          "广州南方图书",
+          "2",
+          "7600.00"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "ok",
+      "text": "对账：BO-1001 = 8400 + 2800 + 4800 = 16000，与 OData 的 getOrderTotal(BO-1001) 一致。"
+    }
+  ],
+  "status": "Connected · demo-hana-db (HDI container) · 0.09 s · 4 rows returned",
+  "callouts": [
+    {
+      "on": "SET SCHEMA BOOKORDER;",
+      "text": "1. 先 SET SCHEMA 再查询"
+    },
+    {
+      "on": "  JOIN SAP_TRAINING_BOOKORDER_BOOKORDERITEMS  AS I ON I.ORDER_ID = O.ID",
+      "text": "2. 外键列名 = 导航属性名 + _ID"
+    },
+    {
+      "on": "BO-1003",
+      "text": "3. 与 OData 结果逐行对账"
+    },
+    {
+      "on": "0.09 s · 4 rows returned",
+      "text": "4. 行数与耗时是最快的验收判据"
+    }
+  ]
+}

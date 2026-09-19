@@ -1,0 +1,122 @@
+{
+  "key": "con_s06",
+  "kind": "fiori",
+  "w": 1440,
+  "h": 900,
+  "mode": "app",
+  "product": "SAP Fiori",
+  "user": "JASON",
+  "caption": "UI 层：Fiori Elements 的列表页完全由 app/book-orders/annotations.cds 里的 UI.* 注解决定，没有手写前端代码",
+  "title": "图书受注管理",
+  "subtitle": "List Report",
+  "crumbs": "Home › 图书受注管理 › 受注一覧",
+  "toolbar": {
+    "items": [
+      {
+        "label": "创建",
+        "primary": true
+      },
+      {
+        "label": "删除"
+      },
+      {
+        "label": "submitOrder"
+      }
+    ],
+    "search": "搜索"
+  },
+  "filter": [
+    [
+      "订单号",
+      "BO-"
+    ],
+    [
+      "状态",
+      ""
+    ]
+  ],
+  "blocks": [
+    {
+      "t": "table",
+      "cols": [
+        "订单号",
+        "客户",
+        "订单日",
+        "状态",
+        "数量",
+        "合计 (JPY)"
+      ],
+      "widths": [
+        1.1,
+        1.6,
+        1.0,
+        0.9,
+        0.7,
+        1.0
+      ],
+      "rows": [
+        [
+          "BO-1001",
+          "1000 山田書店",
+          "2026-09-01",
+          "OPEN",
+          "3",
+          "16,000"
+        ],
+        [
+          "BO-1002",
+          "2000 東京書籍",
+          "2026-09-03",
+          "OPEN",
+          "2",
+          "8,400"
+        ],
+        [
+          "BO-1003",
+          "3000 大阪書房",
+          "2026-09-05",
+          "SUBMITTED",
+          "4",
+          "17,400"
+        ],
+        [
+          "BO-1004",
+          "1000 山田書店",
+          "2026-09-08",
+          "OPEN",
+          "1",
+          "2,800"
+        ]
+      ],
+      "selected": 2
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "UI.LineItem → 列；UI.SelectionFields → 筛选；UI.HeaderInfo → 标题；submitOrder 来自 @odata.draft.enabled + bound action。"
+    }
+  ],
+  "callouts": [
+    {
+      "at": [
+        110,
+        620
+      ],
+      "text": "1. 列来自 UI.LineItem"
+    },
+    {
+      "at": [
+        110,
+        656
+      ],
+      "text": "2. 按钮来自 bound action"
+    },
+    {
+      "at": [
+        110,
+        692
+      ],
+      "text": "3. 合计＝明细汇总回写"
+    }
+  ]
+}

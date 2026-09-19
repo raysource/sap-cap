@@ -1,0 +1,8 @@
+[
+  {"no": "FIORI-01", "title": "给订单列表加状态着色（virtual statusCriticality + Criticality 注解）", "basis": "服务投影里的 virtual 元素（不落库）、after('READ') 里按行赋值、UI.DataField 的 Criticality 路径指向它；对照 UI.CriticalityType 的 0/1/2/3 取值", "time": "25 分", "rel": "fiori.html#s13-1"},
+  {"no": "FIORI-02", "title": "把「客户」加进筛选条并让筛选顺序变成 [status, customer, orderDate]", "basis": "UI.SelectionFields 的数组顺序即筛选条顺序；customer 是关联，写 customer 与 customer_ID 的输入形态不同", "time": "15 分", "rel": "fiori.html#s13-2"},
+  {"no": "FIORI-03", "title": "把订单明细做成 Object Page 的独立分节并解释 Target 为何用关联路径", "basis": "UI.Facets 里 UI.ReferenceFacet 的 Target 可以是本实体注解，也可以是 items/@UI.LineItem 这样的关联路径注解", "time": "20 分", "rel": "fiori.html#s13-3"},
+  {"no": "FIORI-04", "title": "手写一份最小可用 manifest.json 并让应用在 /book-orders/webapp/index.html 打开", "basis": "sap.app.dataSources 指向 /odata/v4/book-order/、libs 里加 sap.fe.templates、routing.routes/targets 两条 pattern、sap.app.id 与 index.html 的资源根/组件名一致", "time": "30 分", "rel": "fiori.html#s4"},
+  {"no": "FIORI-05", "title": "用 curl 复现 Create → 编辑 → Save → 取消 四条请求并记录状态码", "basis": "草稿编排：POST 建草稿（IsActiveEntity=false）→ PATCH 改草稿 → POST draftActivate（201）→ DELETE 丢弃（204）；业务校验（400/409）只在激活时触发", "time": "25 分", "rel": "fiori.html#s9"},
+  {"no": "FIORI-06", "title": "制造一次白屏并用三步定位法给出「是哪一层」的结论", "basis": "① 静态资源状态码 ② console 第一条报错 ③ $metadata 里 grep UI.LineItem 的数量；分别对应静态资源层/UI5 层/注解层", "time": "20 分", "rel": "fiori.html#s8"}
+]

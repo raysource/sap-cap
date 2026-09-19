@@ -1,0 +1,128 @@
+{
+  "key": "sec_s09",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP Business Technology Platform",
+  "caption": "角色集合「订单管理员」详情：一个角色集合可以有多个应用的角色，用户加进来后才拿得到 scope",
+  "crumbs": [
+    "Subaccount: trial",
+    "Security",
+    "Role Collections",
+    "订单管理员"
+  ],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {
+        "label": "Overview"
+      },
+      {
+        "label": "Instances and Subscriptions"
+      },
+      {
+        "label": "Security",
+        "group": true
+      },
+      {
+        "label": "Role Collections",
+        "active": true,
+        "sub": [
+          "Edit",
+          "Users"
+        ]
+      },
+      {
+        "label": "Users"
+      },
+      {
+        "label": "Trust Configuration"
+      }
+    ]
+  },
+  "title": "订单管理员",
+  "subtitle": "Role Collection · 1 role · 3 users",
+  "tabs": [
+    "Roles",
+    "Users"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "toolbar",
+      "items": [
+        {
+          "label": "Edit"
+        },
+        {
+          "label": "Add Role",
+          "primary": true
+        }
+      ],
+      "search": "Search role"
+    },
+    {
+      "t": "table",
+      "cols": [
+        "Application Identifier",
+        "Role Template",
+        "Role Name",
+        "Description"
+      ],
+      "widths": [
+        1.5,
+        1.2,
+        1.8,
+        1.2
+      ],
+      "rows": [
+        [
+          "demo-node-trial-dev!t1234",
+          "OrderAdmin",
+          "OrderAdmin (demo-node trial-dev)",
+          "订单管理员：可提交订单"
+        ],
+        [
+          "demo-node-trial-dev!t1234",
+          "OrderViewer",
+          "OrderViewer (demo-node trial-dev)",
+          "订单只读"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "两个角色 = view 与 submit 两个 scope 一起进 JWT：能看、能提交，但仍不能改（缺 edit）。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "标签名与 !t 后缀随版本/子账户可能不同（~）；判定标准只有一个：JWT 的 scope。"
+    }
+  ],
+  "status": "● 订单管理员 · 2 roles · 3 users · Subaccount: trial",
+  "callouts": [
+    {
+      "at": [
+        110,
+        560
+      ],
+      "text": "1. 模板名 = to: 名"
+    },
+    {
+      "at": [
+        110,
+        596
+      ],
+      "text": "2. 应用标识定位 scope"
+    },
+    {
+      "at": [
+        110,
+        632
+      ],
+      "text": "3. 少一个角色 = 403"
+    }
+  ]
+}

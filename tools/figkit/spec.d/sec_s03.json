@@ -1,0 +1,59 @@
+{
+  "key": "sec_s03",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap/project-code/demo-node — kind = mocked",
+  "label": "本地实机运行",
+  "src": "本地实测：npx cds-serve + curl（@sap/cds 9.9.3, Node v22.23.2）",
+  "caption": "本地 mocked 实测：匿名 401、alice 200、未配置的用户 zoe 也 200 —— mocked 的密码与用户名都不校验",
+  "lh": 20,
+  "lines": [
+    "$ npx cds-serve --port 4123            # package.json: cds.requires.auth.kind = mocked",
+    "[cds] - serving BookOrderService { at: '/odata/v4/book-order' }",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' localhost:4123/odata/v4/book-order/BookOrders",
+    "401",
+    "$ curl -s -u alice:alice -o /dev/null -w '%{http_code}\\n' \"localhost:4123/odata/v4/book-order/BookOrders?\\$top=1\"",
+    "200",
+    "$ curl -s -u zoe:pw      -o /dev/null -w '%{http_code}\\n' \"localhost:4123/odata/v4/book-order/BookOrders?\\$top=1\"",
+    "200",
+    "# zoe 并没有配置在 cds.requires.auth.users 里 —— mocked 仍然放行",
+    "$ curl -s -u alice:wrong -o /dev/null -w '%{http_code}\\n' localhost:4123/odata/v4/book-order/BookOrders",
+    "200",
+    "# 默认 mock 用户（alice/bob/...）没有配密码，所以密码也不校验",
+    "$ curl -s localhost:4123/odata/v4/book-order/BookOrders | head -c 60",
+    "{\"@odata.context\":\"$metadata#BookOrders\",\"value\":[{\"createdAt\":\"2026-",
+    "",
+    "# 结论：mocked 只验证「请求带没带 Basic 头」，不验证「这个人是谁」"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        660
+      ],
+      "text": "1. 匿名请求 → 401"
+    },
+    {
+      "at": [
+        60,
+        696
+      ],
+      "text": "2. alice → 200"
+    },
+    {
+      "at": [
+        60,
+        732
+      ],
+      "text": "3. 未配置用户也放行"
+    },
+    {
+      "at": [
+        60,
+        768
+      ],
+      "text": "4. 密码同样不校验"
+    }
+  ]
+}

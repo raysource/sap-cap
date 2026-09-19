@@ -1,0 +1,10 @@
+
+> demo-node@1.0.0 deploy
+> cds deploy --to sqlite:db.sqlite
+
+  > init from db/data/sap.training.bookorder-Customers.csv 
+  > init from db/data/sap.training.bookorder-Books.csv 
+  > init from db/data/sap.training.bookorder-BookOrders.csv 
+  > init from db/data/sap.training.bookorder-BookOrderItems.csv 
+/> successfully deployed to db.sqlite 
+

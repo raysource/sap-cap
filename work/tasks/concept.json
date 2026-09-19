@@ -1,0 +1,58 @@
+[
+ {
+  "no": "CON-01",
+  "title": "不看资料画出 CAP 的三层架构图，并标注文件落点（理解型）",
+  "basis": "能在纸上或白板上画出「模型 / 服务 / UI + 横切的部署」四块，写出每层在示范项目里的文件名（db/schema.cds、srv/*.cds + .js、app/book-orders/annotations.cds + webapp/、mta.yaml），并说明依赖方向是单向的",
+  "time": "15 分",
+  "rel": "concept.html#s2"
+ },
+ {
+  "no": "CON-02",
+  "title": "复述一次请求的生命周期，并指出 401/403 产生在哪一步（理解型）",
+  "basis": "能按顺序说出：解析（OData → CQN）→ 认证 → 授权 → before → on（缺省实现 = 查询数据库）→ after → 响应，并指出 401 在认证、403 在授权；能对应到至少两个自己写过的 handler 钩子",
+  "time": "15 分",
+  "rel": "concept.html#s4"
+ },
+ {
+  "no": "CON-03",
+  "title": "讲清「一份模型、三份产物」（理解型）",
+  "basis": "能用一句话说明 --to sql / --to edmx / --to csn 各自给谁用，并解释为什么运行时读 CSN 而不是 .cds 文本；能举出至少两个「编译器自动补上」的东西（表名前缀、managed 的四个审计列、Association 的 FK 列等）",
+  "time": "15 分",
+  "rel": "concept.html#s3-1"
+ },
+ {
+  "no": "CON-04",
+  "title": "任选 5 个核心概念，给出定义 + 示范项目里的例子（理解型）",
+  "basis": "从 15 个概念（CDS / entity / projection / aspect / association / composition / annotation / handler / CQN / draft / HDI container / MTA / XSUAA / approuter / Fiori Elements）中挑 5 个，每个都能说出定义并指向项目里的具体文件或对象，没有概念错位",
+  "time": "20 分",
+  "rel": "concept.html#s5"
+ },
+ {
+  "no": "CON-05",
+  "title": "对照 Node 与 Java 两种运行时，说出 5 个维度的差异（理解型）",
+  "basis": "至少覆盖 handler 写法、类型安全、构建工具、测试框架、启动命令中的 5 项，并能回答「换运行时时哪些东西不用改」（模型、API 契约、UI 注解、授权规则）",
+  "time": "20 分",
+  "rel": "concept.html#s7"
+ },
+ {
+  "no": "CON-06",
+  "title": "把 CAP 与 RAP / 传统 ABAP 做三点对应（理解型）",
+  "basis": "能就模型语言、业务实现、授权三方面各说一条对应关系（CDS 与 UI 注解可迁移；行为实现类 + EML 对应 handler + CQN；DCL / 授权对象对应 @restrict + 角色集合），并说明部署位置的根本差异",
+  "time": "20 分",
+  "rel": "concept.html#s9"
+ },
+ {
+  "no": "CON-07",
+  "title": "从 12 个常见误解里挑 3 个，逐一纠正（理解型）",
+  "basis": "能说明误解为什么会产生（归错层、把静态约束当权限、把本地当云端），并给出正确理解与验证方式；至少一个误解要能指向自己在课程里踩过的坑",
+  "time": "15 分",
+  "rel": "concept.html#s11"
+ },
+ {
+  "no": "CON-08",
+  "title": "按自己的角色写 3 步学习路线，并说明每步的完成判据（理解型）",
+  "basis": "写出三步，每步都有可观察的判据（例如「cds watch 起得来」「curl 能触发一条业务规则得 4xx」「部署后路由上 $metadata 返回 200」），且路线与角色匹配",
+  "time": "15 分",
+  "rel": "concept.html#s12"
+ }
+]

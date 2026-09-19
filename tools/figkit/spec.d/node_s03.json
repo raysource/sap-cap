@@ -1,0 +1,83 @@
+{
+  "key": "node_s03",
+  "kind": "bas",
+  "w": 1440, "h": 900,
+  "window": "book-order-service.js - demo-node - SAP Business Application Studio",
+  "menus": ["File", "Edit", "Selection", "View", "Go", "Run", "Terminal", "Help"],
+  "sideTitle": "OUTLINE",
+  "sideW": 240,
+  "side": [
+    {"label": "BOOKORDERSERVICE (JS)", "open": true, "items": [
+      {"d": 0, "k": "file", "label": "init()"},
+      {"d": 1, "k": "file", "label": "before CREATE BookOrders"},
+      {"d": 1, "k": "file", "label": "before UPDATE BookOrders"},
+      {"d": 1, "k": "file", "label": "before CREATE,UPDATE Items"},
+      {"d": 1, "k": "file", "label": "after CREATE/UPDATE/DELETE"},
+      {"d": 1, "k": "file", "label": "on submitOrder"},
+      {"d": 1, "k": "file", "label": "on getOrderTotal"},
+      {"d": 1, "k": "file", "label": "on getOrderSummary"}
+    ]}
+  ],
+  "tabs": ["book-order-service.js", "book-order-service.cds"],
+  "activeTab": 0,
+  "breadcrumb": "demo-node  ›  srv  ›  book-order-service.js",
+  "editor": {
+    "lang": "js",
+    "fs": 12.5,
+    "lh": 17.5,
+    "hl": [8, 9, 14, 15, 19, 20, 21],
+    "lines": [
+      "module.exports = class BookOrderService extends cds.ApplicationService {",
+      "  async init() {",
+      "    const { Books, Customers, BookOrders, BookOrderItems } = this.entities;",
+      "",
+      "    /* ① 订单头：自动编号 + 校验",
+      "     * 注意：BookOrders 开启了 @odata.draft.enabled，所以本钩子在「激活草稿」",
+      "     *       （即真正写入 active 表）时触发，Fiori 的 Create 流程同样会走到这里。 */",
+      "    this.before('CREATE', BookOrders, async (req) => {",
+      "      const data = req.data;",
+      "      if (!data.orderNo) {",
+      "        data.orderNo = await nextOrderNo();",
+      "      } else {",
+      "        const dup = await SELECT.one.from(BookOrders).where({ orderNo: data.orderNo });",
+      "        if (dup) req.reject(409, `订单号 ${data.orderNo} 已存在，请更换`);",
+      "      }",
+      "      if (!data.orderDate) data.orderDate = new Date().toISOString().slice(0, 10);",
+      "      if (data.customer_ID != null) {",
+      "        const cust = await SELECT.one.from(Customers).where({ ID: data.customer_ID });",
+      "        if (!cust) req.reject(400, `顾客 ${data.customer_ID} 不存在，请先维护主数据`);",
+      "      }",
+      "    });",
+      "",
+      "    return super.init();",
+      "  }",
+      "};"
+    ]
+  },
+  "panel": {"title": "TERMINAL", "h": 300, "extraTabs": ["PROBLEMS", "OUTPUT"], "lines": [
+    "$ curl -s -u alice:alice -X POST \"$SVC/BookOrderItems\" -d '{\"quantity\":0}'",
+    "[odata] - POST /odata/v4/book-order/BookOrderItems ",
+    "[bookorder] - 未预期错误 undefined: 数量必须大于 0",
+    "[error] - 400 - Error: 数量必须大于 0",
+    "    at BookOrderService.<anonymous> (…/srv/book-order-service.js:52:15)",
+    "[odata] - POST /odata/v4/book-order/BookOrders ",
+    "[odata] - POST …/BookOrders(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate ",
+    "[bookorder] - 未预期错误 undefined: 订单号 BO-1001 已存在，请更换",
+    "[error] - 409 - Error: 订单号 BO-1001 已存在，请更换",
+    "    at BookOrderService.<anonymous> (…/srv/book-order-service.js:30:22)",
+    "[odata] - GET /odata/v4/book-order/getOrderTotal(orderNo='BO-1003') ",
+    "[odata] - GET /odata/v4/book-order/BookOrders { '$filter': \"status eq 'OPEN'\" } "
+  ]},
+  "activity": [{"glyph": "⧉", "active": true}, {"glyph": "⌕"}, {"glyph": "⑂"}, {"glyph": "▷"}, {"glyph": "⌬"}, {"glyph": "⛭"}],
+  "status": ["⑂ main", "0 ▲ 0 ●", "Node 22.23.2", "CAP 9.9.3", "UTF-8"],
+  "caption": "before-CREATE 钩子的代码与它在终端里的「证据」：每一条 [odata] 请求行后面，紧跟 handler 抛出的业务错误",
+  "label": "本地实机运行",
+  "src": "本地实测：cds watch 终端输出（栈内绝对路径已用 … 省略）",
+  "callouts": [
+    {"on": "    this.before('CREATE', BookOrders, async (req) => {", "text": "1. before：改数据/拒绝，不改结果集"},
+    {"on": "        if (dup) req.reject(409, `订单号 ${data.orderNo} 已存在，请更换`);", "text": "2. req.reject(409) → HTTP 409"},
+    {"on": "        if (!cust) req.reject(400, `顾客 ${data.customer_ID} 不存在，请先维护主数据`);", "text": "3. 业务校验必须在服务层做"},
+    {"on": "[odata] - POST …/BookOrders(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate ", "text": "4. 草稿激活也走 CREATE 钩子"},
+    {"on": "[error] - 409 - Error: 订单号 BO-1001 已存在，请更换", "text": "5. 一眼定位是哪个钩子拒绝的"}
+  ]
+}

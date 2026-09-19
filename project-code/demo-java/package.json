@@ -1,0 +1,7 @@
+{
+  "name": "demo-java-cds",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@sap/cds-dk": "^9.9.2"
+  }
+}

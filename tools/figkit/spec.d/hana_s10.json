@@ -1,0 +1,128 @@
+{
+  "key": "hana_s10",
+  "kind": "dialog",
+  "w": 1440,
+  "h": 900,
+  "caption": "创建 SAP HANA Cloud 实例的向导：Type / 实例名与密码 / 大小与可用性 / Connections（IP 允许列表）/ 高级设置",
+  "alt": "创建 SAP HANA Cloud 实例的向导：Type / 实例名与密码 / 大小与可用性 / Connections（IP 允许列表）/ 高级设置",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 步骤名出自 SAP Tutorial「Provision an Instance of SAP HANA Cloud, SAP HANA Database」；IP 白名单标签随版本可能不同 ~",
+  "dw": 980,
+  "dh": 600,
+  "title": "Create SAP HANA Database Instance",
+  "subtitle": "免费层 / 试用：固定 16 GB 内存 · 1 vCPU · 80 GB 存储（不可改）",
+  "steps": {
+    "items": [
+      "Instance Name and Password",
+      "Size and Availability",
+      "Connections",
+      "Advanced Settings"
+    ],
+    "active": 2
+  },
+  "under": {
+    "kind": "hana",
+    "product": "SAP HANA Cloud",
+    "user": "JASON",
+    "navW": 250,
+    "nav": {
+      "title": "SAP HANA CLOUD CENTRAL",
+      "items": [
+        {
+          "label": "Instances",
+          "active": true
+        }
+      ]
+    },
+    "title": "Instances",
+    "blocks": [
+      {
+        "t": "table",
+        "cols": [
+          "DATABASE",
+          "STATUS"
+        ],
+        "widths": [
+          2,
+          1
+        ],
+        "rows": [
+          [
+            "demo-hana",
+            "RUNNING"
+          ]
+        ]
+      }
+    ]
+  },
+  "blocks": [
+    {
+      "t": "form",
+      "cols": 1,
+      "fields": [
+        [
+          "Type",
+          "SAP HANA Database",
+          "另一种是 SAP HANA Cloud, data lake"
+        ],
+        [
+          "Instance Name",
+          "demo-hana",
+          "实例名会出现在 Cloud Central"
+        ],
+        [
+          "Administrator",
+          "DBADMIN",
+          "密码在此步设置"
+        ],
+        [
+          "Connections",
+          "~ Allow all IP addresses / Deny all IP addresses (except SAP platforms)",
+          "只要能从 BAS / 本地直连，就选允许；默认常是「拒绝」"
+        ],
+        [
+          "Advanced Settings",
+          "~ 备份、数据湖、证书等",
+          "试用/免费层多数只读"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "CAP 部署到 CF 时不需要把开发机 IP 加进白名单：应用与 HDI 容器都在 BTP 内部通信。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "用 Database Explorer / DBeaver 直连时才会碰到 IP 白名单；改完要等实例生效（可能数分钟）。"
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Cancel"
+    },
+    {
+      "label": "Next Step",
+      "primary": true
+    }
+  ],
+  "callouts": [
+    {
+      "on": "SAP HANA Database",
+      "text": "1. 这里决定是数据库实例"
+    },
+    {
+      "on": "demo-hana",
+      "text": "2. 实例名（不是 schema）"
+    },
+    {
+      "on": "~ Allow all IP addresses / Deny all IP addresses (except SAP platforms)",
+      "text": "3. 直连被拒多半是这里"
+    },
+    {
+      "on": "~ 备份、数据湖、证书等",
+      "text": "4. 高级设置随版本变化 ~"
+    }
+  ]
+}

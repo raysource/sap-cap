@@ -1,0 +1,77 @@
+{
+  "key": "fiori_triangle",
+  "kind": "fiori",
+  "w": 1440,
+  "h": 900,
+  "mode": "app",
+  "product": "SAP Fiori",
+  "user": "JASON",
+  "title": "图书受注管理",
+  "subtitle": "List Report",
+  "crumbs": "Home  ›  图书受注管理  ›  订单列表",
+  "caption": "Fiori Elements 的三份输入：CAP 服务提供实体与动作、annotations.cds 决定列与按钮、manifest.json 决定用哪个模板和路由 —— 少一份页面就不成形",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）",
+  "blocks": [
+    {
+      "t": "h3",
+      "text": "三份文件各管一件事（缺一份的表现不同）"
+    },
+    {
+      "t": "table",
+      "fs": 13,
+      "cols": [
+        "文件",
+        "决定什么",
+        "只改这里会看到什么"
+      ],
+      "widths": [
+        1.5,
+        2.0,
+        2.3
+      ],
+      "rows": [
+        [
+          "srv/book-order-service.cds",
+          "实体集、动作、草稿开关、URL 前缀",
+          "找不到实体集 / $metadata 里没有这个 EntitySet"
+        ],
+        [
+          "app/book-orders/annotations.cds",
+          "表格列、筛选字段、页头、按钮",
+          "页面能开但是空表（No data）或没有任何列"
+        ],
+        [
+          "app/book-orders/webapp/manifest.json",
+          "用哪个模板、连哪个服务、路由",
+          "整页白屏，控制台第一条是模板加载失败"
+        ]
+      ]
+    },
+    {
+      "t": "p",
+      "text": "manifest.json 的 dataSources.uri 指向 /odata/v4/book-order/，注解文件里的 UI.* 会被编译进这个服务的 $metadata —— 这就是三者的接缝。",
+      "size": 13,
+      "fill": "#6a6d70"
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "排查顺序建议倒过来：先看 manifest.json（能不能起）→ 再看服务（连不连得上）→ 最后看注解（长什么样）。"
+    }
+  ],
+  "callouts": [
+    {
+      "on": "app/book-orders/annotations.cds",
+      "text": "1. 注解=列与筛选"
+    },
+    {
+      "on": "UI.*",
+      "text": "2. 注解要进 $metadata"
+    },
+    {
+      "on": "/odata/v4/book-order/",
+      "text": "3. uri 指向 CAP 服务"
+    }
+  ]
+}

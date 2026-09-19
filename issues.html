@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>故障排除手册 · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP 跨板块排错手册：按环境/工具链、CDS 建模、服务与处理器、认证与权限、Fiori、部署六层，逐条给出「现象（错误信息原文）→ 触发条件 → 根因 → 修复手顺 → 如何验证」，每行都带可执行的检查命令；含 18 条详细手顺、万能排错流程与层定位表。错误原文取自本地实测证据与官方文档/知识库。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a class="active" href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>故障排除手册</span></p>
+<h1>故障排除手册：先定层，再照现象修</h1>
+<p class="kicker">覆盖对象：<code>node</code>/<code>npm</code>/<code>cds</code> 工具链 · <code>db/schema.cds</code> 与 <code>db/data/*.csv</code> · <code>srv/*.js</code> 事件处理器 · <code>@requires</code>/<code>@restrict</code> 与 XSUAA · <code>app/book-orders/webapp</code> 与 <code>annotations.cds</code> · <code>mta.yaml</code> 与 <code>cf</code>。每行都是 <b>现象（错误信息原文）→ 触发条件 → 根因 → 修复手顺 → 如何验证</b>，验证列一律给可执行的命令或明确的观察位置。原文来自本站本地实测（<code>work/evidence/*.txt</code>）、示范项目 <code>project-code/demo-node</code>、以及 SAP 官方文档/知识库；<b>未在本机复核的条目一律标 <span class="tag">~</span></b>。</p>
+
+<div class="toc">
+  <a href="#s0">0. 怎么用这页</a>
+  <a href="#s1">1. 环境与工具链（10 行）</a>
+  <a href="#s2">2. CDS 建模（10 行）</a>
+  <a href="#s3">3. 服务与处理器（10 行）</a>
+  <a href="#s4">4. 认证与权限（8 行）</a>
+  <a href="#s5">5. Fiori（9 行）</a>
+  <a href="#s6">6. 部署（9 行）</a>
+  <a href="#s7">7. 万能排错流程</a>
+  <a href="#s8">8. 本节测试</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>看到一条报错，先判断它属于哪一层（编译期 / 部署期 / 运行时 / 浏览器 / 云端），再动手；</li>
+  <li>认出 6 类高频「沉默故障」：deploy 打印成功但数据没了、<code>$expand</code> 空数组、handler 不触发、<code>UPDATE</code> 0 行不报错、页面全白、部署成功但表为空 —— 它们都<b>不抛错</b>，只能靠主动验证抓出来；</li>
+  <li>用本页每行的「如何验证」把修复闭环：改完必须有一条命令/一个界面位置证明它修好了；</li>
+  <li>把新踩到的坑按同一格式补进来（第 8 节给了模板字段）。</li>
+</ul></div>
+
+<div class="box warn"><b class="t">两条阅读前提</b>
+<ol>
+  <li><b>版本会改文案</b>：报错文本随 <code>@sap/cds</code> / <code>@sap/cds-compiler</code> / UI5 / <code>cf</code> CLI 版本变化。本页标注的版本线：<code>@sap/cds 9.9.3</code>、<code>@sap/cds-dk 9.9.6</code>、<code>@sap/cds-compiler 6.9.5</code>、Node <code>v22.23.2</code>、SQLite <code>3.53.2</code>。文案对不上时按「关键词」搜，不要按整句搜。</li>
+  <li><b>云端部分要自己核对</b>：本站没有开 BTP 试用账号，第 6 节的命令与报错来自官方文档、SAP 知识库与社区（标 <span class="tag">~</span> 的即属此类），请在自己的子账户里核对后再教学。</li>
+</ol></div>
+
+<h2 id="s0">0. 怎么用这页：一个请求的五层漏斗</h2>
+<p>排错慢，几乎都是因为<b>跳层</b>——页面白屏就去改注解，其实是 401；<code>$expand</code> 空了就去改服务，其实是 CSV 表头写错。所以先用这张漏斗把问题关进一层，再翻对应章节的表。</p>
+<div class="file-tree">① 工具链：node / npm / cds CLI 能不能跑 ──▶ 第 1 节
+② 模型编译：npx cds compile 有没有 [ERROR] ──▶ 第 2 节
+③ 部署/播种：npm run deploy 有没有真的落库 ──▶ 第 2 节（CSV 行）
+④ 服务运行时：请求到没到 CAP、handler 跑没跑 ──▶ 第 3 节
+⑤ 认证授权：401 还是 403、scope 对不对 ──▶ 第 4 节
+⑥ 浏览器：元数据到了没有、容器高度对不对 ──▶ 第 5 节
+⑦ 云端：构建产物、绑定、路由、配额 ──▶ 第 6 节</div>
+<div class="box ok"><b class="t">一句话判据</b>
+报错里有<b>文件:行:列</b> → 编译期（第 2 节）；打印了 <code>&gt; init from …</code> 之后失败 → 播种期（第 2 节）；有 <b>HTTP 状态码</b> → 运行时/认证（第 3、4 节）；控制台/白屏 → 浏览器（第 5 节）；<code>cf</code> 输出 → 云端（第 6 节）。</div>
+
+<h2 id="s1">1. 环境与工具链</h2>
+<p>这一层的特征是：<b>还没轮到你的代码</b>。命令跑不起来、模块装不上、端口被占、浏览器连不到服务 —— 全都先在这里解决，否则后面每一层都会跟着报错。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象（错误信息原文 / 观察）</th><th>触发条件</th><th>根因</th><th>修复手顺</th><th>如何验证</th></tr></thead>
+<tbody>
+<tr>
+<td><code>Error: The module '…/better_sqlite3.node' was compiled against a different Node.js version using NODE_MODULE_VERSION 127. This version of Node.js requires NODE_MODULE_VERSION 115. Please try re-compiling or re-installing the module (for instance, using `npm rebuild` or `npm install`).</code></td>
+<td>换过 Node 大版本（或用 <code>npx node@22</code> 跑）之后继续用旧的 <code>node_modules</code>；或项目从另一台机器拷贝过来</td>
+<td><code>better-sqlite3</code> 是原生模块（.node 二进制），编译目标绑定 Node 的 ABI（<code>NODE_MODULE_VERSION</code>），两个数字不一致就拒绝加载</td>
+<td>锁定 LTS Node（20/22）后重装：<code>export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"</code> → <code>rm -rf node_modules package-lock.json</code> → <code>npm install</code>（想省事也可先试 <code>npm rebuild better-sqlite3</code>）</td>
+<td><code>node -v</code> 显示 20/22 LTS；<code>node -p "process.versions.modules"</code> 打印 ABI 号；<code>node -e "require('better-sqlite3')" &amp;&amp; echo bindings OK</code>；<code>npm run deploy</code> 打印 <code>/&gt; successfully deployed to db.sqlite</code></td>
+</tr>
+<tr>
+<td><code>Error: Could not locate the bindings file. Tried: → …/node_modules/better-sqlite3/build/Release/better_sqlite3.node …</code>（首次出现在 <code>cds deploy</code> 或 <code>npm start</code>）</td>
+<td>包装上了但安装脚本没执行：<code>ignore-scripts=true</code>、企业 npm 策略、或 npm 新版默认拦截依赖安装脚本</td>
+<td>该包靠 <code>install</code> / <code>prebuild-install</code> 脚本下载或编译原生二进制；脚本被跳过 → JS 在、二进制不在</td>
+<td>在 <code>package.json</code> 里显式放行（示范项目 <code>project-code/demo-node/package.json</code> 就是这么写的）：<code>"allowScripts": { "better-sqlite3": true }</code>，然后 <code>npm ci</code>；若仍被拦，用 <code>npm install-scripts --help</code> 确认本机 npm 的 allowlist 命令名（npm 11.16+ 引入 <code>allowScripts</code> 字段）</td>
+<td><code>npm config get ignore-scripts</code> 为 <code>false</code>；<code>node -e "require('better-sqlite3')" &amp;&amp; echo bindings OK</code> 通过；<code>npm run deploy</code> 能建出 <code>db.sqlite</code></td>
+</tr>
+<tr>
+<td><code>This application uses '@sap/cds' version 8.2, which is not compatible with the installed '@sap/cds-dk' version 9. You can either: - update '@sap/cds' to the latest version (recommended) - downgrade '@sap/cds-dk' to version 8</code></td>
+<td>机器上装过全局 <code>cds</code>；或从旧项目复制了 <code>package.json</code> 造成运行时与 CLI 不同大版本</td>
+<td><code>@sap/cds</code>（运行时，提供 <code>cds-serve</code>）与 <code>@sap/cds-dk</code>（CLI，提供 <code>cds</code>）是两个包，大版本必须同线</td>
+<td>项目内把两者锁到同一大版本（示范项目：<code>"@sap/cds": "^9"</code>＋<code>devDependencies</code> 里的 <code>"@sap/cds-dk": "^9"</code>），并统一用 <code>npx cds …</code> 而不是全局 <code>cds</code>（SAP KB 3660083 给的就是这个结论）</td>
+<td><code>npx cds --version</code>（也会列 cds-dk）里所有包大版本一致（示范项目实测 <code>@sap/cds 9.9.3</code> / <code>cds-dk 9.9.6</code>）；<code>npm ls @sap/cds @sap/cds-dk</code> 无 <code>invalid</code></td>
+</tr>
+<tr>
+<td><code>[cds] - ❗️Uncaught Error: listen EADDRINUSE: address already in use :::4004</code>，栈里有 <code>at cds_server (…/node_modules/@sap/cds/server.js:66:27)</code>（SAP 知识库 3683176 记录同一条）</td>
+<td>上一个 <code>cds watch</code> / <code>npm start</code> 没退出就再起一个；或用 <code>cds watch</code> 的同时又 <code>npm start</code></td>
+<td>4004 是 CAP 默认端口，同一端口只能有一个监听者</td>
+<td>找出占用者并结束：<code>lsof -nP -iTCP:4004 -sTCP:LISTEN</code> → <code>kill &lt;PID&gt;</code>；或 <code>pkill -f cds-serve</code>。想并行跑就用 <code>cds watch --port 4123</code>。<b>注意示范项目的 Fiori 代理占了 4005</b>，别把 4005 当备用端口</td>
+<td><code>pgrep -fl cds-serve</code> 无输出；启动日志出现 <code>[cds] - server listening on { url: 'http://localhost:4123' }</code>（换端口时）</td>
+</tr>
+<tr>
+<td><code>cds: command not found</code></td>
+<td>在 BAS 或本机终端直接敲 <code>cds …</code>，但只装了运行时 <code>@sap/cds</code></td>
+<td>CLI 不在运行时包里，只有 <code>@sap/cds-dk</code> 才提供 <code>cds</code>（并非所有 BAS dev space 都预装）</td>
+<td>优先用项目本地调用：<code>npx cds deploy --to sqlite:db.sqlite</code>；确实要全局就 <code>npm i -g @sap/cds-dk</code>，且与项目大版本一致</td>
+<td><code>npx cds --version</code> 有输出；<code>npx cds watch -?</code> 能打印用法（选项含 <code>--port</code>、<code>--ext</code>、<code>--livereload</code>）</td>
+</tr>
+<tr>
+<td><code>npm WARN EBADENGINE Unsupported engine { package: '…', required: { node: '&gt;=20' }, current: { node: 'v25.…' } }</code>；随后原生模块编译/下载失败 <span class="tag">~</span></td>
+<td>用非 LTS 的奇数/最新版本 Node 跑本项目</td>
+<td><code>package.json</code> 的 <code>engines</code> 只承诺 LTS；<code>better-sqlite3</code> 该 ABI 可能没有预编译包，退回本地编译并失败</td>
+<td>切 LTS：<code>export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"</code>，然后 <code>npm install</code></td>
+<td><code>node -v</code> 是 <code>v20.x</code> / <code>v22.x</code>；<code>npm install</code> 结尾没有 EBADENGINE，且 <code>added … packages</code>（示范项目实测 328 packages）</td>
+</tr>
+<tr>
+<td>浏览器打不开本地应用：<code>ERR_CONNECTION_REFUSED</code>，或一直转圈没有任何响应</td>
+<td>服务跑在 BAS 容器里，却在<b>本机</b>浏览器访问 <code>http://localhost:4004</code></td>
+<td>浏览器在本机、服务在远程容器，两边不是同一个 <code>localhost</code>；BAS 需要显式「端口转发/Expose」</td>
+<td>BAS：打开 <b>Ports</b> 视图，把 4004 暴露出去，用转发后的 URL（形如 <code>https://&lt;space&gt;-4004.cfapps.&lt;region&gt;.hana.ondemand.com</code>）访问；本机开发则确认服务已启动</td>
+<td>在 BAS 终端里 <code>curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4004/odata/v4/book-order/$metadata</code> 返回 <code>200</code>；浏览器 DevTools → Network 里该请求有响应头</td>
+</tr>
+<tr>
+<td><code>npm ERR! code EACCES</code> + <code>EACCES: permission denied, mkdir '…/node_modules/…'</code></td>
+<td>以前用 <code>sudo</code> 跑过 <code>npm</code>，或往系统目录 <code>npm i -g</code></td>
+<td>目录归属变成 root，当前用户没有写权限</td>
+<td>不要用 <code>sudo</code> 修：<code>sudo chown -R $(whoami) ~/.npm</code>，把归属改回自己；依赖一律装在项目内（示范项目所有依赖都在 <code>project-code/demo-node/node_modules</code>）</td>
+<td><code>ls -ld node_modules</code> 的 owner 是你自己；重跑 <code>npm install</code> 不再出现 EACCES</td>
+</tr>
+<tr>
+<td><code>Error: Cannot find module '@sap/cds'</code>（附 <code>code: 'MODULE_NOT_FOUND'</code>）</td>
+<td>克隆仓库后直接 <code>npm start</code>；或在仓库根目录而不是 <code>project-code/demo-node/</code> 下执行</td>
+<td>依赖只装在项目目录，Node 从当前目录向上找 <code>node_modules</code>，在错误目录里找不到</td>
+<td><code>cd project-code/demo-node &amp;&amp; npm ci</code>；确认 <code>ls node_modules/@sap/cds/package.json</code> 存在后再启动</td>
+<td><code>npm ls --depth=0</code> 输出里没有 <code>missing</code>；<code>npm start</code> 打印 <code>[cds] - server listening on { url: 'http://localhost:4004' }</code></td>
+</tr>
+<tr>
+<td><code>[cds] - ❗️Uncaught Error: listen EADDRINUSE: address already in use :::4005</code>（端口换成 4005 之后）</td>
+<td>为了躲 4004 就随便换了个端口，结果撞上示范项目的 <code>test/dev-proxy.js</code>（默认监听 4005）</td>
+<td>4005 被本地 Fiori 代理占用；占用者不会自动让位</td>
+<td><code>lsof -nP -iTCP:4005 -sTCP:LISTEN</code> 查出是 <code>node …/test/dev-proxy.js</code> 就换代理端口：<code>PORT=4006 node test/dev-proxy.js</code>，或给服务换到 4123</td>
+<td><code>pgrep -fl dev-proxy</code> 与 <code>pgrep -fl cds-serve</code> 看到的端口不重叠；两个服务都打印出各自的 listening 行</td>
+</tr>
+</tbody></table></div>
+
+<h3 id="s1-1">1-1 手顺：把 Node 与原生模块（better-sqlite3）对齐</h3>
+<div class="stepmeta"><span class="k">node / npm</span><span class="f">package.json · node_modules/better-sqlite3</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+<li><b>先固定 Node</b>：不要用系统里的默认 Node，直接取一个 LTS 22 的路径进 PATH（示范项目 README 的实测写法）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+node -v                            # → v22.23.2（实测）
+node -p "process.versions.modules"  # → 打印 ABI 号（127 即 Node 22 line）</code></pre>
+</li>
+<li><b>看 ABI 是否与已有二进制一致</b>：这条命令只要不抛错，就说明原生模块能加载：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">node -e "require('better-sqlite3')" &amp;&amp; echo bindings OK</code></pre>
+失败（<code>NODE_MODULE_VERSION …</code> 或 <code>Could not locate the bindings file</code>）就进入下一步；成功则跳到第 4 步。
+</li>
+<li><b>清干净重装</b>：ABI 不匹配时删掉 <code>node_modules</code> 比反复 rebuild 更省事（<code>npm rebuild</code> 只在 ABI 号一致、只是二进制丢了时有用）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">rm -rf node_modules package-lock.json
+npm install                        # → added 328 packages（示范项目实测）
+node -e "require('better-sqlite3')" &amp;&amp; echo bindings OK</code></pre>
+</li>
+<li><b>验证</b>：跑一次真实建库与查询，证明二进制真的能用（不是只 import 得动）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm run deploy                     # → /> successfully deployed to db.sqlite
+python3 -c "
+import sqlite3; c = sqlite3.connect('db.sqlite')
+print([r[0] for r in c.execute('select name from sqlite_master where type=\'table\'')])"</code></pre>
+期望看到 <code>sap_training_bookorder_Books</code>、<code>sap_training_bookorder_Customers</code>、<code>sap_training_bookorder_BookOrders</code>、<code>sap_training_bookorder_BookOrderItems</code> 等表（实测共 7 张，含 draft 表与 outbox 表）。
+</li>
+</ol>
+<div class="box warn"><b class="t">常见错误</b>用 <code>sudo npm install</code> 绕过权限问题会把 <code>node_modules</code> 变成 root 所有，下一次安装报 EACCES；<code>pip/nvm</code> 混装多个 Node 时，<b>一定要用 <code>node -v</code> 确认当前终端里的那一个</b>，而不是以为「装过就有了」。</div>
+
+<h3 id="s1-2">1-2 手顺：端口被占（4004/4005）时的标准处理</h3>
+<div class="stepmeta"><span class="k">lsof / pkill / cds watch --port</span><span class="f">srv 启动参数 · test/dev-proxy.js</span><span class="c">耗时 5 分</span></div>
+<ol class="steps">
+<li><b>先看是谁占着</b>（本机实测输出：<code>node 74574 jason 12u IPv6 … TCP *:4004 (LISTEN)</code>）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">lsof -nP -iTCP:4004 -sTCP:LISTEN
+pgrep -fl cds-serve</code></pre>
+</li>
+<li><b>结束它</b>：确认是自己上一次留下的进程再动手；不要 <code>kill -9</code>，先 <code>kill</code>（默认 TERM）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">kill &lt;PID&gt;          # 或用进程名
+pkill -f cds-serve
+sleep 1 &amp;&amp; pgrep -fl cds-serve   # 应无输出</code></pre>
+</li>
+<li><b>要并行就换端口，并把下游一起改</b>：服务端口只在一个地方定（<code>--port</code> 或 <code>PORT</code>），但<b>代理、测试脚本、Fiori 的 dataSource 都要跟着改</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cds watch --port 4123                     # 服务换端口
+PORT=4124 TARGET=http://localhost:4123 node test/dev-proxy.js   # 代理跟着换</code></pre>
+</li>
+<li><b>验证</b>：服务与代理各打印自己的 listening 行，且能取到元数据：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice http://localhost:4123/odata/v4/book-order/$metadata   # → 200</code></pre>
+</li>
+</ol>
+<div class="box danger"><b class="t">最容易踩的自坑</b>测试脚本里写死了 <code>BASE=http://localhost:4004</code>，你换了端口，脚本却不报连接错误、只报「断言失败」—— 因为它把所有请求都打到了<b>另一个</b>还在跑的老服务上。<b>换端口时必须一起换脚本里的 BASE</b>。</div>
+
+<h3 id="s1-3">1-3 手顺：确认 npm 没有跳过安装脚本</h3>
+<div class="stepmeta"><span class="k">npm config / allowScripts</span><span class="f">package.json · npm 配置</span><span class="c">耗时 5 分</span></div>
+<ol class="steps">
+<li><b>看全局开关</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm config get ignore-scripts      # true = 所有依赖的安装脚本都不执行
+npm --version                      # 11.16+ 才有 allowScripts 机制</code></pre>
+</li>
+<li><b>在项目里显式放行原生模块</b>（示范项目已经写好了这一行，可作为模板）：
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "devDependencies": { "@cap-js/sqlite": "^2" },
+  "allowScripts": { "better-sqlite3": true }
+}</code></pre>
+</li>
+<li><b>重装并读结尾的汇总行</b>：npm 会把你没放行的包列出来（官方文档原文：install 命令会静默跳过没写进 <code>allowScripts</code> 的依赖脚本，并在结尾列出被跳过的包）。逐条复核，只放行你信任的：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm ci
+npm install-scripts --help         # 确认本机 npm 提供的 allowlist 命令名（不同版本写法不同）</code></pre>
+</li>
+<li><b>验证</b>：被跳过的原生模块不会再出现在汇总里，且真能加载（见 1-1 第 4 步的建库验证）。</li>
+</ol>
+
+<h2 id="s2">2. CDS 建模</h2>
+<p>这一层的错误最好排：<b>多数会明确告诉你 <code>文件:行:列</code></b>。真正难的两类是「沉默故障」——<code>deploy</code> 打印成功但数据没进去 / <code>$expand</code> 返回空数组。它们没有报错，只能靠<b>主动验证</b>（查库行数、算 join 计数）才能发现。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象（错误信息原文 / 观察）</th><th>触发条件</th><th>根因</th><th>修复手顺</th><th>如何验证</th></tr></thead>
+<tbody>
+<tr>
+<td><code>[ERROR] …:7:10: Mismatched ‘#’, expecting ‹Identifier›, ‘}’, ‘@’, ‘key’, ‘virtual’</code></td>
+<td>实体/元素里多写或错放了 <code>#</code>；把 <code>enum</code> 才用的枚举值写法用在了普通元素上</td>
+<td>CDS 里 <code>#</code> 只在枚举值与注解上下文有意义，普通标识符位置不合法，解析器停在该位置</td>
+<td>按报错的 <code>行:列</code> 定位并删掉多余字符；行注释必须用 <code>//</code>，不要用 <code>#</code> 或 <code>--</code></td>
+<td><code>npx cds compile db/schema.cds --to sql</code> 不再打印 <code>[ERROR]</code>；<code>cds watch</code> 能启动（编译失败会以 <code>ERR_CDS_COMPILATION_FAILURE</code> 退出）</td>
+</tr>
+<tr>
+<td><code>Mismatched ‹EOF›, expecting …</code></td>
+<td>括号/大括号不配对（最常见：实体末尾少一个 <code>}</code>）</td>
+<td>解析器读到文件末尾还在等闭合符号，所以位置报在文件末尾而不是出错行</td>
+<td>在编辑器里逐个折叠顶层 <code>entity</code> / <code>service</code> 确认闭合；把文件尾部报错当作「少了一个闭合符」而不是「末尾有问题」</td>
+<td>同上：<code>npx cds compile … --to sql</code> 无 <code>[ERROR]</code>，且打印的 <code>CREATE TABLE</code> 数量与实体数量一致（示范项目 <code>db/schema.cds</code> 是 4 张表）</td>
+</tr>
+<tr>
+<td><code>SqliteError: in cds.deploy(): table sap_training_bookorder_BookOrderItems has no column named orders_ID in:</code> + <code>INSERT INTO …</code> 后面跟着 <code>/&gt; deployment to db.sqlite failed</code></td>
+<td>CSV 表头写的是 CDS 元素名（或拼错），例如把 <code>order_ID</code> 写成 <code>orders_ID</code>、把 <code>currency_code</code> 写成 <code>currency</code></td>
+<td>种子数据的表头必须等于<b>物理列名</b>，不是 CDS 里的元素名；关联生成的 FK 列名是 <code>&lt;元素名&gt;_&lt;目标主键&gt;</code></td>
+<td>先用编译产物查出真列名，再改 CSV 表头：<code>npx cds compile db/schema.cds --to sql | grep -A12 'CREATE TABLE sap_training_bookorder_BookOrderItems'</code>；然后 <code>npm run deploy</code></td>
+<td>同一条命令改回 <code>order_ID</code> 后 deploy 成功；再查行数：<code>python3</code> 连 <code>db.sqlite</code> 统计明细行（期望 <code>BookOrderItems 9 rows</code>）</td>
+</tr>
+<tr>
+<td><code>Expected entity to have a primary key (in entity:"e.S.V")</code></td>
+<td>把聚合视图（<code>group by</code> 或没保留主键的 select）暴露成 OData 实体</td>
+<td>聚合结果没有唯一键，<code>cds2edm</code> 无法生成 <code>EntityType/Key</code></td>
+<td>二选一：① 视图保留 <code>key ID</code>（示范项目的 <code>OrderItemView</code> 就是带主键的展开视图，可以暴露）；② 聚合结果改用服务层函数返回（示范项目的 <code>getOrderTotal</code> / <code>getOrderSummary</code>）</td>
+<td><code>npx cds compile srv/book-order-service.cds --to edmx</code> 无 <code>[ERROR]</code>；<code>curl …/$metadata</code> 里能看到 <code>&lt;Function Name="getOrderSummary"&gt;</code> 且没有多余实体集（实体集数量 5）</td>
+</tr>
+<tr>
+<td><code>Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or “BookOrderService.OrderItemView” to select the entity as redirection target for “sap.training.bookorder.BookOrderItems” in this service; can't auto-redirect “BookOrderService.BookOrders:items” otherwise</code></td>
+<td>同一个源实体（<code>db.BookOrderItems</code>）在一个服务里被投影两次（明细实体 + 展开视图），而父实体的 <code>items</code> 是导航属性</td>
+<td>CAP 不知道 <code>$expand=items</code> 该跳到哪个候选实体，需要人指定唯一目标</td>
+<td>在你想作为导航目标的那张投影上写一行注解（示范项目给的是明细实体）：<code>@cds.redirection.target</code> <code>entity BookOrderItems as projection on db.BookOrderItems;</code></td>
+<td>重新编译后 <code>$metadata</code> 里出现 <code>&lt;NavigationPropertyBinding Path="items" Target="BookOrderItems"/&gt;</code>；<code>curl "…/BookOrders?$expand=items"</code> 返回数组而不是报错</td>
+</tr>
+<tr>
+<td><code>Unmanaged associations can't be used in expressions in queries (in entity:"ue.V"/column:"n")</code></td>
+<td>对未托管关联做聚合/运算，例如 <code>select … count(b) as n</code>、<code>where b is not null</code>、<code>group by b</code></td>
+<td>手写 <code>on</code> 条件的关联（unmanaged）在 SQL 侧只是一组 FK 列，不能被当作值使用</td>
+<td>改成对 FK 列操作：<code>count(b_ID)</code>、<code>b.ID is not null</code>、<code>group by b_ID</code>；或先把它展开成正规视图再聚合</td>
+<td><code>npx cds compile db/schema.cds --to sql</code> 通过，且生成的 DDL 里能看到你对 FK 列的引用（<code>book_ID</code>）</td>
+</tr>
+<tr>
+<td><code>Expected composition with target cardinality ‘of many’ to have an ON-condition</code></td>
+<td>写 <code>Composition of many …</code> 时没写 <code>on</code> 条件</td>
+<td>托管组合必须能推导出回链，缺 <code>on</code> 条件时编译期直接拒绝</td>
+<td>补上回链 <code>on items.order = $self;</code>；教学项目更推荐<b>直接用显式 Association</b>（示范项目就是这么选型的，理由见下一行）</td>
+<td>编译无 <code>[ERROR]</code>；若改用 Association，<code>--to sql</code> 里子表出现普通列 <code>order_ID</code>，而不是组合自动生成的 <code>up__ID</code></td>
+</tr>
+<tr>
+<td>观察（<b>不报错</b>）：<code>npm run deploy</code> 打印 <code>/&gt; successfully deployed to db.sqlite</code>，但改过列名之后老数据全没了（<code>select count(*)</code> 从 1 变成 0）</td>
+<td>改了 <code>db/schema.cds</code> 的列名/删了列，然后重新 <code>cds deploy</code></td>
+<td>schema drift：SQLite 侧表结构按新模型重建，旧列里那批数据没有迁移来源（CSV 里也没有）。<b>本站实测：把 <code>note</code> 改名成 <code>remark</code> 后 deploy 成功，行数据为 0</b></td>
+<td>本地教学：接受重建，重新灌 CSV（<code>rm -f db.sqlite &amp;&amp; npm run deploy</code>）；<b>生产（HANA）</b><span class="tag">~</span>不要用「删表重建」当迁移手段，走正式迁移流程并以官方 Databases 指南为准</td>
+<td>改动前后各跑一次：<code>python3 -c "import sqlite3; c=sqlite3.connect('db.sqlite'); print([r[1] for r in c.execute('pragma table_info(sap_training_bookorder_BookOrders)')])"</code> 对照列名；<code>select count(*)</code> 对照行数（期望 4 行）</td>
+</tr>
+<tr>
+<td>观察：CSV 表头写 <code>currency</code> 报 <code>has no column named currency</code>；把码表外的值写进去则在 SQLite 上「成功但关联为空」，在 HANA 上是外键约束失败 <span class="tag">~</span></td>
+<td>用了 <code>@sap/cds/common</code> 的 <code>Currency</code> 类型（它本质是到 <code>sap.common.Currencies</code> 的关联）</td>
+<td>物理列名变成 <code>currency_code</code>，且多出码表实体与 <code>_texts</code> 表；值必须存在于码表</td>
+<td>要么表头改 <code>currency_code</code> 并保证值是码表内的 ISO 码，要么按教学取舍直接用 <code>String(3)</code>（示范项目就是 <code>currency : String(3) default 'JPY'</code>，避免引入码表维护）</td>
+<td><code>npx cds compile db/schema.cds --to sql | grep -i -c currencies</code>：用 <code>Currency</code> 时能看到 <code>sap_common_Currencies</code> 表，用 <code>String(3)</code> 时为 0；改类型后务必重跑 deploy 确认表头匹配</td>
+</tr>
+<tr>
+<td>观察（<b>不报错</b>）：<code>curl "…/BookOrders?$expand=items"</code> 返回 <code>"items":[]</code>，而子表里明明有 9 行</td>
+<td>用 <code>Composition of many</code>（托管组合）做父子，子表数据用 CSV 播种</td>
+<td>托管组合会把外键放在<b>父表</b>（或依赖组合回链列），CSV 播种时那一侧是空的 → 导航取不到子行</td>
+<td>改型：子表用普通 FK 列 + 父侧显式 <code>Association to many … on items.order = $self</code>（示范项目的做法），CSV 里直接写 <code>order_ID</code>；确实要用组合就把 FK 列（如 <code>up__ID</code>）在 CSV 里填对</td>
+<td>两条命令对照：<code>curl -s -u alice:alice "…/BookOrders?$expand=items&amp;$filter=orderNo eq 'BO-1001'"</code> 的 items 长度应为 3；再用 SQL 查 join 计数 <code>select count(*) … where i.order_ID = o.ID</code>（期望 3）——两者一致才叫修好</td>
+</tr>
+</tbody></table></div>
+
+<h3 id="s2-1">2-1 手顺：<code>can't auto-redirect</code>（本页最常被问的一条）</h3>
+<div class="stepmeta"><span class="k">cds compile --to edmx</span><span class="f">srv/book-order-service.cds</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+<li><b>先复现</b>：把服务里两张同源投影中的一个删掉注解（或新加一个视图投影），编译就会报错。实测原文里<b>已经写好了修复办法</b>——它点名了两个候选实体与注解名：
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ npx cds compile srv/book-order-service.cds --to edmx
+[ERROR] .tmpcheck/base.cds:7:10: Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or “BookOrderService.OrderItemView” to select the entity as redirection target for “sap.training.bookorder.BookOrderItems” in this service; can't auto-redirect “BookOrderService.BookOrders:items” otherwise</code></pre>
+</li>
+<li><b>加一行注解</b>（选「你希望 <code>$expand=items</code> 跳到哪一个」）：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">/* 两张实体都源自 db.BookOrderItems → 必须显式指定重定向目标 */
+@cds.redirection.target
+entity BookOrderItems as projection on db.BookOrderItems;</code></pre>
+</li>
+<li><b>验证元数据里的绑定</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile srv/book-order-service.cds --to edmx | grep -A3 'EntitySet Name="BookOrders"'
+# 期望看到：&lt;NavigationPropertyBinding Path="items" Target="BookOrderItems"/&gt;</code></pre>
+</li>
+<li><b>验证运行时</b>：重启服务后 <code>curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/BookOrders?$expand=items&amp;$select=orderNo"</code>，返回体里每个订单都带 <code>items</code> 数组（<code>BO-1001</code> 为 3 行）。</li>
+</ol>
+<div class="box warn"><b class="t">别加错对象</b>如果你把注解加在<b>视图</b>上，<code>$expand=items</code> 就会跳到视图（只读、字段不同），明细无法编辑。<b>能写的那个实体才该是重定向目标</b>。</div>
+
+<h3 id="s2-2">2-2 手顺：CSV 表头写错导致整个 deploy 回滚</h3>
+<div class="stepmeta"><span class="k">cds deploy / cds compile --to sql</span><span class="f">db/data/*.csv</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+<li><b>认清行为</b>：只要有一个 CSV 的表头对不上物理列名，<code>cds deploy</code> 会<b>整批失败</b>（不是跳过那一张表）：
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">SqliteError: in cds.deploy(): table sap_training_bookorder_BookOrderItems has no column named orders_ID in:
+INSERT INTO … (ID,order_ID,book_ID,…) …
+/&gt; deployment to db.sqlite failed</code></pre>
+</li>
+<li><b>用编译产物当「列名词典」</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds --to sql | grep -A10 'CREATE TABLE sap_training_bookorder_BookOrderItems'</code></pre>
+期望类似：<code>ID NVARCHAR(36) NOT NULL</code>、<code>order_ID NVARCHAR(36)</code>、<code>book_ID INTEGER</code>、<code>quantity INTEGER DEFAULT 1</code>、<code>amount DECIMAL(13, 2)</code>。
+</li>
+<li><b>改 CSV 表头</b>（示范项目的正确写法）：
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">── db/data/sap.training.bookorder-BookOrderItems.csv
+ID,order_ID,book_ID,quantity,amount
+5b2f9d10-0001-4000-8000-000000000001,4a1f8c03-0001-4000-8000-000000000001,1001,2,8400</code></pre>
+</li>
+<li><b>验证</b>：重新部署并同时核对「表 + 行数 + 对账」三件事：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm run deploy
+python3 -c "
+import sqlite3; c = sqlite3.connect('db.sqlite')
+for t in ('Books','Customers','BookOrders','BookOrderItems'):
+    print(t, c.execute(f'select count(*) from sap_training_bookorder_{t}').fetchone()[0])"</code></pre>
+期望 <code>Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9</code>（示范项目实测行数）。
+</li>
+</ol>
+<div class="box danger"><b class="t">比报错更危险的两种「成功」</b>
+① 少写一列：deploy <b>成功</b>，该列取 CDS 的 <code>default</code>（没 default 就是 NULL）；② FK 指向不存在的行（如 <code>book_ID=9999</code>）：SQLite <b>不校验外键</b>，deploy 成功、join 结果为 0。两种都要用「孤儿行查询」兜底：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3; c = sqlite3.connect('db.sqlite')
+q = 'select count(*) from sap_training_bookorder_BookOrderItems i left join sap_training_bookorder_Books b on i.book_ID = b.ID where b.ID is null'
+print('孤儿明细行 =', c.execute(q).fetchone()[0])"   # 期望 0</code></pre>
+</div>
+
+<h3 id="s2-3">2-3 手顺：schema drift —— 部署成功但数据/列不对了</h3>
+<div class="stepmeta"><span class="k">cds deploy / pragma table_info</span><span class="f">db/schema.cds · db.sqlite</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+<li><b>改模型前先记录基线</b>（列名 + 行数），否则事后无法判断「少的是数据还是列」：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3; c = sqlite3.connect('db.sqlite')
+print('列:', [r[1] for r in c.execute('pragma table_info(sap_training_bookorder_BookOrders)')])
+print('行数:', c.execute('select count(*) from sap_training_bookorder_BookOrders').fetchone()[0])"</code></pre>
+</li>
+<li><b>改模型 → 重新部署 → 再记录一次</b>。本站实测的两个事实：<b>加列会保留数据</b>（<code>ALTER</code>）；<b>改列名会让表重建、旧行消失</b>，而 deploy 依然打印 <code>/&gt; successfully deployed to db.sqlite</code>。</li>
+<li><b>判断标准</b>：列名单边变化 + 行数归零 = 结构重建（schema drift），不是「数据被服务删了」。本地教学环境的正确动作是<b>重新播种</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">rm -f db.sqlite &amp;&amp; npm run deploy
+bash test/odata-verify.sh          # 期望 PASS 26 / FAIL 0</code></pre>
+</li>
+<li><b>验证</b>：验收脚本全绿，且 <code>pragma table_info</code> 的列名与 <code>--to sql</code> 的输出逐字一致。生产环境的迁移策略属于部署话题（见第 6 节与 ⑩ 部署页），<b>不要用 rm 数据库当迁移手段</b>。</li>
+</ol>
+
+<h2 id="s3">3. 服务与处理器</h2>
+<p>这一层的坑有一个共同特征：<b>请求成功了，但结果不对</b>。CAP 的处理器体系（before / on / after + 草稿）里，「没触发」和「触发了但看错了对象」占了绝大多数问题。下面第一行就是本层最该记住的判据。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象（错误信息原文 / 观察）</th><th>触发条件</th><th>根因</th><th>修复手顺</th><th>如何验证</th></tr></thead>
+<tbody>
+<tr>
+<td>观察（<b>不报错</b>）：接口 200、数据正常，但业务规则没生效（没有编号、没有派生金额、终端没有你的日志）。启动日志里 <code>[cds] - serving BookOrderService { at: [ '/odata/v4/book-order' ], decl: 'srv/book-order-service.cds:4' }</code> —— <b>少了 <code>impl:</code> 那一行</b></td>
+<td>实现文件名与服务文件名不一致（例如服务是 <code>srv/s.cds</code>、实现却是 <code>srv/wrong-name.js</code>）；或类没有 <code>extends cds.ApplicationService</code>；或事件名/实体名写错</td>
+<td>CAP 按「同名 .js 就是实现文件」的约定装配；对不上时它<b>照常启动、照常服务</b>，只是用通用 CRUD 处理请求（所以不报错）</td>
+<td>把实现文件改成与服务<code>.cds</code>同名同目录（示范项目：<code>srv/book-order-service.cds</code> ↔ <code>srv/book-order-service.js</code>）；文件顶部 <code>module.exports = class X extends cds.ApplicationService</code>，<code>init()</code> 末尾 <code>return super.init()</code></td>
+<td>重启后看启动日志的 <code>serving …</code> 块：<b>有 <code>impl: 'srv/book-order-service.js'</code> 才算装配成功</b>（本站实测：把文件名改成 <code>wrong-name.js</code> 后该行消失）</td>
+</tr>
+<tr>
+<td>HTTP 500，响应体 <code>{"error":{"message":"EXP_BOOM","code":"","@Common.numericSeverity":4}}</code>，客户端只看到「内部错误」</td>
+<td>处理器里 <code>throw new Error('…')</code>、或库调用失败没有捕获（例如 <code>SELECT</code> 抛错后没有 <code>req.reject</code>）</td>
+<td>CAP 把未捕获异常当作服务端故障，统一映射为 <b>500</b>；它<b>不是</b>业务校验语义。实测：<code>before CREATE</code> 里 <code>throw new Error('EXP_BOOM')</code> → 500 且 <code>code</code> 为空串</td>
+<td>业务错误一律用 <code>req.reject(400|404|409, '中文消息')</code>；<code>try/catch</code> 里捕获后转换（示范项目的做法：<code>catch (e) { if (e.code===400||e.code===409) throw e; req.reject(500, …) }</code>）；全局兜底 <code>this.on('error', (err, req) =&gt; …)</code></td>
+<td>负向用例必须返回 4xx 且带消息：<code>curl -s -o /dev/null -w '%{http_code}\n' -X POST …</code>；验收脚本里的 3 条负向断言 <code>POST 数量 0 → 400</code>、<code>图书不存在 → 400</code>、<code>只读实体 POST → 405</code> 全绿</td>
+</tr>
+<tr>
+<td><code>{"error":{"message":"Value XXXXXXXX…（40 个字符） is not a valid String(16)","code":"ASSERT_DATA_TYPE","target":"orderNo","@Common.numericSeverity":4}}</code>，HTTP 400</td>
+<td><b>客户端</b>（curl / Postman / Fiori）提交了超过 <code>String(16)</code> 的值</td>
+<td>CAP 在进入你的处理器<b>之前</b>就按模型校验入参类型与长度，不合规直接 400</td>
+<td>不用改服务：这是期望行为。要么放宽模型（<code>orderNo : String(32)</code>），要么在前端限制输入长度；用户看到的应是这条 400 消息，而不是 500</td>
+<td>同一条 curl 再跑一次，确认 <code>code=ASSERT_DATA_TYPE</code>、<code>target</code> 指向出错的元素名；并在 Fiori 里故意粘一个超长值看消息条</td>
+</tr>
+<tr>
+<td>观察：同样的超长值，如果是在<b>处理器内部</b>产生（例如 <code>req.data.orderNo = 'X'.repeat(40)</code>），请求却返回 <b>201 成功</b>，库里真存了 40 个字符</td>
+<td>值不是客户端给的，而是 <code>before</code>/<code>on</code> 处理器算出来的（编号、拼接、派生字段）</td>
+<td>入参校验只作用于客户端负载；处理器写进 <code>req.data</code> 的值<b>不会再被长度校验拦一次</b>（实测：SQLite 侧照收）</td>
+<td>服务端生成的值要自己约束：算完断言一次（<code>if (value.length &gt; 16) req.reject(500, '生成值超长')</code>），或让模型与生成规则一致（示范项目的编号规则 <code>BO-1xxx</code> 天然只有 7 个字符）</td>
+<td>故意让处理器生成超长值 → 看响应码（会 201）；再查库确认长度：<code>select orderNo, length(orderNo) from …</code>。<b>能复现就说明你理解了这条规则</b></td>
+</tr>
+<tr>
+<td>观察（<b>不报错</b>）：<code>UPDATE(Entity, key)</code> 执行完没抛错，但该改的行没改；<code>SELECT</code> 一查 0 行受影响</td>
+<td>第二个参数给的是<b>不存在的键值</b>、漏传（<code>undefined</code>）、或用了不是主键的对象</td>
+<td>第二个参数被当作行定位条件：给对主键就命中 1 行；给不存在的值就是 <code>WHERE</code> 命中 0 行 —— <b>0 行不是错误，不会抛异常</b></td>
+<td>稳妥写法是<b>链式 where + 检查受影响行数</b>：<code>const n = await UPDATE(BookOrders).set({…}).where({ ID });</code>；需要「改不到就报错」时自己断言：
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">const n = await UPDATE(BookOrders).set({ status: 'SUBMITTED' }).where({ ID })
+if (n !== 1) req.reject(409, `更新行数异常：${n}`)</code></pre>
+</td>
+<td>本站实测四种写法：<code>{ID: 真值}</code> → 受影响 <b>1</b>；裸主键值 → <b>1</b>；不存在的 ID → <b>0</b>（无异常）；<code>undefined</code> → <b>0</b>（无异常）。用返回的行数断言即可发现</td>
+</tr>
+<tr>
+<td>观察：<code>after DELETE</code> 里想拿被删行的内容做汇总，发现拿不到 —— 实测 <code>rows = 1</code>（是<b>被删行数</b>，不是行）、<code>req.data = {"ID":"70c936a3-…"}</code>（只有键）、<code>req.params = [{"ID":"70c936a3-…"}]</code></td>
+<td>在 <code>after DELETE</code> 里读 <code>req.data.order_ID</code> 之类的字段（删完就没有了）</td>
+<td>Deletion 事件传递的是「删了几行」与键；被删行的字段值在删除后已不存在</td>
+<td>把需要的字段在<b>删除前</b>取出来（<code>before('DELETE')</code> 里 <code>SELECT</code> 一次），再在 after 里用；示范项目的写法是把父键从 <code>req.params</code> 兜底取出：<code>req.data?.order_ID ?? req.params?.[req.params.length-1]?.order_ID</code></td>
+<td>在处理器里 <code>console.log(JSON.stringify({rows, data: req.data, params: req.params}))</code>，重跑一次删除并读终端；确认你的汇总逻辑不再依赖被删行内容</td>
+</tr>
+<tr>
+<td>观察：开启 <code>@odata.draft.enabled</code> 后，<code>before CREATE</code> 的自动编号在「新建」时没发生（草稿行的 <code>orderNo</code> 是 <code>null</code>），却在<b>保存（激活）</b>时才发生</td>
+<td>实体带草稿；客户端走 Fiori 的 Create 流程或直接 <code>POST</code> 建草稿</td>
+<td>草稿是「影子行」：建草稿只写 draft 表，「真正写 active 表」发生在 <code>draftActivate</code>，因此实体级 <code>before CREATE</code> 在激活时触发</td>
+<td>把「必须写进 active 表才成立」的逻辑留在 <code>before CREATE</code>（示范项目就在那里编号/查重）；草稿期特有的校验放到 <code>NEW</code> / <code>PATCH</code> 或 draft 实体事件上</td>
+<td>两步对照实测：<code>POST /BookOrders</code> 返回 <code>"orderNo":null,"IsActiveEntity":false</code>；<code>POST …/draftActivate</code> 返回 201 且 <code>"orderNo":"BO-1006"</code>（自动编号发生在激活）</td>
+</tr>
+<tr>
+<td><code>405 Method Not Allowed</code>：对 <code>@readonly</code> 实体发 <code>POST</code> / <code>PATCH</code> / <code>DELETE</code></td>
+<td>实体标了 <code>@readonly</code>（示范项目的 <code>OrderItemView</code>），客户端却试图写</td>
+<td>只读实体在元数据里带了 <code>Capabilities.InsertRestrictions/Updatable/Deletable=false</code>，运行时直接拒绝</td>
+<td>这是期望行为，不要「修」：要么改去写可写实体（<code>BookOrderItems</code>），要么去掉 <code>@readonly</code>（只读视图通常没有写回路径）</td>
+<td><code>curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice -X POST "…/OrderItemView" -d '{}'</code> → <code>405</code>；<code>$metadata</code> 里能搜到该实体的 <code>Capabilities</code> 注解</td>
+</tr>
+<tr>
+<td><code>405 Method Not Allowed</code>：用 <code>POST</code> 调函数、用 <code>GET</code> 调动作；<code>404</code> + <code>{"error":{"message":"Not Found","code":"404","@Common.numericSeverity":4}}</code>：键不存在时删除/读取</td>
+<td>把 OData 的 function（只读、必须 GET）与 action（有副作用、必须 POST）用法搞混；键写错</td>
+<td>OData V4 对 function/action 的 HTTP 方法有硬约束；找不到键就是 404，不是 400</td>
+<td>函数：<code>GET "…/getOrderTotal(orderNo='BO-1003')"</code>；动作：<code>POST "…/BookOrders(ID=…,IsActiveEntity=true)/submitOrder"</code>。404 时先用 <code>$filter</code> 找到真实键再操作</td>
+<td>实测四条：函数 GET → 200 且 <code>{"value":17400}</code>；函数 POST → <code>405</code>；动作 GET → <code>405</code>；删除不存在的 ID → <code>404 Not Found</code></td>
+</tr>
+<tr>
+<td>观察：处理器里的 <code>console.log</code> / 断点完全没反应，终端里连请求行都没有；期望看到的是 <code>[odata] - GET /odata/v4/book-order/BookOrders { '$select': 'orderNo,status,totalAmount' }</code></td>
+<td>请求根本没到 CAP（approuter/代理/端口/URL 错），或服务是另一个进程在跑（上一个没杀掉）</td>
+<td><code>[odata] - …</code> 是 CAP 收到请求时打的日志；没有这行就说明请求停在了更前面一层</td>
+<td>先确认打的是哪个端口、哪个进程：<code>pgrep -fl cds-serve</code>、<code>lsof -nP -iTCP:4004 -sTCP:LISTEN</code>；再用 <code>curl -v</code> 看真实响应头（有没有被代理改写、有没有 302 登录跳转）</td>
+<td>终端出现 <code>[odata] - &lt;METHOD&gt; &lt;path&gt; { … }</code> 行 = 请求到了服务；随后才是你的处理器日志。两行都在，问题才在处理器内部</td>
+</tr>
+</tbody></table></div>
+
+<h3 id="s3-1">3-1 手顺：把「未捕获异常」改成 4xx（500 收敛）</h3>
+<div class="stepmeta"><span class="k">req.reject / try-catch / on('error')</span><span class="f">srv/book-order-service.js</span><span class="c">耗时 20 分</span></div>
+<ol class="steps">
+<li><b>先看现在的表现</b>：故意在 <code>before CREATE</code> 里 <code>throw new Error('EXP_BOOM')</code>，用 curl 打一次，记下状态码与响应体（本站实测 <b>500</b> + <code>{"error":{"message":"EXP_BOOM","code":"","@Common.numericSeverity":4}}</code>）。<b>开发 profile 下消息会显示，生产上通常只剩通用文案</b> —— 这正是「用户看不到原因」的根源。</li>
+<li><b>业务失败改成 <code>req.reject</code></b>，并把「原因」写成分级正确的状态码：
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">if (!data.orderNo) data.orderNo = await nextOrderNo()      // 正常路径：补默认值
+else {
+  const dup = await SELECT.one.from(BookOrders).where({ orderNo: data.orderNo })
+  if (dup) req.reject(409, `订单号 ${data.orderNo} 已存在，请更换`)   // 冲突 → 409
+}
+if (data.customer_ID != null) {
+  const cust = await SELECT.one.from(Customers).where({ ID: data.customer_ID })
+  if (!cust) req.reject(400, `顾客 ${data.customer_ID} 不存在，请先维护主数据`)  // 入参不合法 → 400
+}</code></pre>
+</li>
+<li><b>给意外错误兜底</b>，让它们既有日志又不会漏掉响应：
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.on('error', (err, req) =&gt; {
+  if (!err.status) cds.log('bookorder').error(`未预期错误 ${req?.event}: ${err.message}`)
+})</code></pre>
+</li>
+<li><b>验证</b>：三条负向断言必须拿到 4xx，且响应体里有你写的消息：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order
+curl -s -u alice:alice -X POST "$SVC/BookOrders" -H 'content-type: application/json' \
+  -d '{"orderNo":"BO-1001","customer_ID":1000}'      # → 409 + 订单号 … 已存在，请更换
+curl -s -u alice:alice -X POST "$SVC/BookOrders" -H 'content-type: application/json' \
+  -d '{"customer_ID":9999}'                          # → 400 + 顾客 … 不存在</code></pre>
+再把验收脚本跑一遍：<code>bash test/odata-verify.sh</code> → <b>PASS 26 / FAIL 0</b>。
+</li>
+</ol>
+<div class="box info"><b class="t">状态码选法（本课程统一约定）</b>400 入参/业务前提不满足 · 401 未认证 · 403 已认证但无权限 · 404 对象不存在 · 405 方法不被允许 · 409 冲突（重复提交、状态冲突）。<b>把 409 写成 400 不算错，但会让前端与运维的定位变慢</b>。</div>
+
+<h3 id="s3-2">3-2 手顺：UPDATE 到底改了哪一行（0 行不报错的坑）</h3>
+<div class="stepmeta"><span class="k">UPDATE().set().where() / 返回行数</span><span class="f">srv/*.js 的所有写操作</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+<li><b>理解返回值的含义</b>：<code>UPDATE(...).set(...)</code> 返回的是<b>受影响行数</b>（本站实测 1 / 0），不是行数据。<code>INSERT</code> 返回的也不是行：实测为 <code>{"results":[{"changes":1,"lastInsertRowid":1}]}</code> —— <b>没有自动生成的 ID</b>，所以「插完再用返回值里的 ID 去更新」必然更新 0 行。</li>
+<li><b>统一用「键对象 + where + 断言」三件套</b>：
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">// ① 用 UUID 主键定位（Fiori 传的就是 ID）
+const n = await UPDATE(BookOrders).set({ status: 'SUBMITTED', statusCriticality: 3 }).where({ ID })
+if (n !== 1) req.reject(409, `订单状态更新失败：受影响 ${n} 行`)
+
+// ② 需要那行数据就先 SELECT 出来，别指望 INSERT/UPDATE 的返回值
+const order = await SELECT.one.from(BookOrders).where({ orderNo })</code></pre>
+</li>
+<li><b>验证</b>：读回同一行确认字段真的变了（不要只看状态码）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/BookOrders?$filter=orderNo eq 'BO-1001'&amp;$select=orderNo,status"</code></pre>
+期望 <code>"status":"SUBMITTED"</code>；换成不存在的订单号再跑一次，服务端应回 409 而不是静默成功。
+</li>
+</ol>
+
+<h3 id="s3-3">3-3 手顺：草稿流程下的 before-CREATE 时序（含汇总回写）</h3>
+<div class="stepmeta"><span class="k">draftActivate / after DELETE</span><span class="f">srv/book-order-service.js · app/book-orders</span><span class="c">耗时 25 分</span></div>
+<ol class="steps">
+<li><b>复现时序</b>：建草稿 → 查草稿 → 激活，三步各记一次返回值（站点示范项目的实测序列）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order
+# ① 建草稿：orderNo 为 null，服务端还没编号
+curl -s -u alice:alice -X POST "$SVC/BookOrders" -H 'content-type: application/json' \
+  -d '{"customer_ID":1000}' | head -c 200
+# ② 激活：这一步才真正写 active 表，before CREATE 在这里跑
+ID=$(curl -s -u alice:alice "$SVC/BookOrders?\$filter=IsActiveEntity eq false&\$select=ID" | python3 -c "import sys,json;print(json.load(sys.stdin)['value'][0]['ID'])")
+curl -s -u alice:alice -X POST "$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/BookOrderService.draftActivate" \
+  -H 'content-type: application/json' -d '{}' | head -c 200</code></pre>
+期望：① <code>"orderNo":null,"IsActiveEntity":false</code>；② HTTP 201 且 <code>"orderNo":"BO-1006"</code> 这类自动编号（实测编号由 <code>max(orderNo)+1</code> 生成）。
+</li>
+<li><b>把「草稿期看得见、激活才生效」的逻辑分开写</b>：激活才做的（编号、查重、状态初始化、父表汇总）放实体级 <code>before CREATE</code>；草稿期要即时反馈的（字段是否允许为空、值帮助）放注解/前端。</li>
+<li><b>删除路径单独测一遍</b>：删一条明细后父订单合计必须被重算（示范项目的 <code>after DELETE</code> 用 <code>req.params</code> 兜底取父键）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">bash test/odata-verify.sh    # 写/负向/草稿/动作 27 个断言里，写与草稿两类必须全绿（PASS 26 / FAIL 0）</code></pre>
+</li>
+<li><b>验证</b>：库里查草稿表与 active 表同时存在且未互相污染：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">python3 -c "
+import sqlite3; c = sqlite3.connect('db.sqlite')
+for t in ('sap_training_bookorder_BookOrders','BookOrderService_BookOrders_drafts'):
+    print(t, c.execute(f'select count(*) from {t}').fetchone()[0])"</code></pre>
+激活成功的草稿不应长期留在 drafts 表（临时草稿会显示在那里，属正常）。
+</li>
+</ol>
+
+<h2 id="s4">4. 认证与权限</h2>
+<p>先把判据背下来：<b>401 = 不知道你是谁（凭据缺失/无效）；403 = 知道你是谁，但你没权限</b>。本地开发最容易犯的错，是把 <code>dummy</code> 当 <code>mocked</code> 用 —— 那样「匿名必须 401」这条断言永远不可能通过。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象（错误信息原文 / 观察）</th><th>触发条件</th><th>根因</th><th>修复手顺</th><th>如何验证</th></tr></thead>
+<tbody>
+<tr>
+<td>HTTP <code>401</code>，响应头 <code>WWW-Authenticate: Basic realm="Users"</code>，响应体 <code>Unauthorized</code></td>
+<td>不带凭据访问受保护资源；用户名/密码错；用户不在 <code>auth.users</code> 且配了 <code>'*': false</code></td>
+<td>认证层没有建立「当前用户」，请求在进入业务前就被拒</td>
+<td>本地：带上 <code>-u alice:alice</code>（示范项目配置的用户）；云端：让 approuter 做登录跳转（<code>authenticationType: xsuaa</code>），不要手工传 Basic</td>
+<td><code>curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice "…/$metadata"</code> → 200；去掉 <code>-u</code> → 401（实测两条：401 / 200）</td>
+</tr>
+<tr>
+<td>HTTP <code>403</code>，响应体 <code>{"error":{"message":"Forbidden","code":"403","@Common.numericSeverity":4}}</code>；服务端日志 <code>[error] - 403 - Error: Forbidden</code> + <code>at BookOrderService.enforce_auth (…/generic/auth/restrict.js:229:5)</code></td>
+<td>凭据有效，但角色/权限不满足 <code>@requires</code> / <code>@restrict</code> 的 <code>to</code>（例如未提交者的角色去调 <code>submitOrder</code>）</td>
+<td>CAP 的通用授权框架在业务前判定并拒绝；<b>它不是 500</b>，说明模型里写了授权规则</td>
+<td>给该用户/角色集合补上对应权限（本地：<code>auth.users.alice.roles</code>；云端：cockpit 里把角色模板加进角色集合并重新登录取 JWT），或用 <code>@restrict</code> 的 <code>where</code> 重写规则</td>
+<td>实测对照：<code>bob</code>（无角色）→ 403；<code>zoe</code>（含 <code>BookOrder.Submit</code>）→ 200 且返回「订单 BO-1001 已提交…」</td>
+</tr>
+<tr>
+<td>观察：<code>mocked</code> 下用一个<b>配置里根本没有</b>的用户名（如 <code>zoe:pw</code>）请求，返回 <b>200</b></td>
+<td>本地默认 <code>requires.auth.kind = "mocked"</code></td>
+<td><code>mocked</code> 是「开发期模拟」：认 HTTP Basic 头但<b>不校验密码</b>，未配置的用户名也放行（默认按匿名/权限为空处理）；只有配了 <code>'*': false</code> 才会拒</td>
+<td>不要把「未知用户 → 401」写进本地断言（示范项目的验收脚本就是按 200 断言的）；要测 401 必须显式配 <code>"*": false</code> 或走 <code>mocked</code> 的密码规则</td>
+<td>实测四态：匿名 401 / <code>alice:alice</code> 200 / <code>alice:wrongpassword</code> 200 / <code>zoe:pw</code> 200。<b>看到这里就该明白本地不等于生产</b></td>
+</tr>
+<tr>
+<td>观察：把 <code>kind</code> 换成 <code>dummy</code> 后，<b>所有</b> 401/403 都变成 200（连匿名请求也是 200）</td>
+<td>为了「先看看页面」临时改成 <code>dummy</code></td>
+<td><code>dummy</code> 不验证任何凭据，每个请求都被当作特权用户（全部角色视为真）</td>
+<td>只在需要临时关掉授权做排障时用，并<b>立刻改回 <code>mocked</code></b>；<code>dummy</code> 下不能做任何认证结论</td>
+<td><code>cds env get requires.auth</code> 看当前生效的 <code>kind</code> 与 users 列表（实测打印出 <code>kind: "mocked"</code> 与 alice/bob/carol/dave 的 roles）；改回后匿名再测必须 401</td>
+</tr>
+<tr>
+<td>观察：本地匿名能读、部署到云端匿名变 <b>401</b>；或本地 403 的用例在云端变成 401</td>
+<td>本地用 mocked、云端用 XSUAA（approuter 前置登录）</td>
+<td>云端多了登录跳转与 token 换取环节，「没带凭据」在本地=匿名、在云端=没登录；两边行为按设计不同</td>
+<td>把「本地基线」和「云端基线」分开记录；云端匿名请求应先被 approuter 拦（302 到登录页），而不是直接 401。想统一用 JWT 测就手工取 token 加 <code>Authorization: Bearer</code></td>
+<td>云端：<code>curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' https://&lt;approuter-route&gt;/odata/v4/book-order/BookOrders</code>；本地同一条命令对照</td>
+</tr>
+<tr>
+<td>观察：JWT 里明明有 <code>scope</code>，服务端仍回 403；XSUAA 侧还可能看到 <code>"error":"insufficient_scope","error_description":"Insufficient scope for this resource"</code> <span class="tag">~</span></td>
+<td><code>xs-security.json</code> 里的 scope 名与 CDS 注解里引用的名字<b>不一致</b>（差前缀 <code>$XSAPPNAME.</code>、差大小写、差层级）</td>
+<td>CAP 按 JWT 的 <code>scope</code> 数组做字符串匹配；名字不一致就是「有 token、没权限」→ 403</td>
+<td>用编译器生成/核对名字，不要手抄：<code>npx cds compile srv --to xsuaa</code>（实测输出 <code>"name": "$XSAPPNAME.BookOrder.View"</code> 等三个 scope 与对应 role-template）；把生成的 scopes 放进 <code>xs-security.json</code>，在 cockpit 建角色集合并给用户分配，<b>重新登录拿新 JWT</b></td>
+<td>取一个真实 JWT 解出 <code>scope</code> 与目标服务要求的名字逐字对照：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">echo "$JWT" | cut -d. -f2 | python3 -c "
+import sys,base64,json
+s=sys.stdin.read().strip(); s+='='*(-len(s)%4)
+print(json.loads(base64.urlsafe_b64decode(s))['scope'])"</code></pre>
+再打一次接口：403 → 换了角色重新登录后 200，才算修好。</td>
+</tr>
+<tr>
+<td>观察：本地把 <code>@requires</code> 写在实体/动作上，但整个服务仍然匿名可读（预期被拦却没拦）<span class="tag">~</span></td>
+<td>注解对象写错层级：服务级 <code>@(requires: …)</code> 与元素级 <code>@requires</code> 作用范围不同；或 <code>@restrict</code> 的 <code>to</code> 引用了不存在的权限名</td>
+<td>授权注解按「最内层生效」叠加；写错位置等于没写</td>
+<td>把服务默认保护写在 service 上（示范项目：<code>service BookOrderService @(requires: 'authenticated-user') { … }</code>），把例外逐条写在实体/动作上（如 <code>@readonly</code> 视图仍受服务级约束）</td>
+<td>编译后到 <code>$metadata</code> 里确认注解落点；再用三条 curl（匿名 / 无角色 / 有角色）验证 401 / 403 / 200 三态齐全</td>
+</tr>
+<tr>
+<td>观察：<code>req.user.id</code> 在日志里是 <code>anonymous</code>，而你以为已经登录</td>
+<td>请求经代理/approuter 转发时凭据没带上（<code>forwardAuthToken</code> 没配，或本地代理没注入 Authorization）</td>
+<td>后端看到的是转发的请求；凭据在链路上丢了</td>
+<td>MTA 里给 approuter 的 destination 配 <code>forwardAuthToken: true</code>（示范项目 <code>mta.yaml</code> 就是这么写的）；本地用 <code>node test/dev-proxy.js</code> 注入 Basic</td>
+<td>查数据行的 <code>createdBy</code>/<code>modifiedBy</code>：实测播种行是 <code>anonymous</code>，而经代理更新后是 <code>alice</code> —— <b>字段值就是「凭据有没有到」的证据</b></td>
+</tr>
+</tbody></table></div>
+
+<h3 id="s4-1">4-1 手顺：在本地把 401 / 403 / 200 三态跑齐</h3>
+<div class="stepmeta"><span class="k">cds.requires.auth / curl</span><span class="f">package.json · srv/*.cds</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+<li><b>确认当前认证策略</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds env get requires.auth        # → { "kind": "mocked", "users": { "alice": { "roles": [ "admin" ] }, … } }
+pgrep -fl cds-serve                  # 确认改配置后重起过服务</code></pre>
+</li>
+<li><b>三态一次性打出</b>（把 <code>SVC</code> 换成你的服务 URL）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order
+curl -s -o /dev/null -w '匿名        %{http_code}\n'          "$SVC/BookOrders"        # → 401
+curl -s -o /dev/null -w '有角色      %{http_code}\n' -u alice:alice "$SVC/BookOrders" # → 200
+curl -s -o /dev/null -w '无角色      %{http_code}\n' -u bob:bob     "$SVC/BookOrders" # → 403（配了 @restrict 时）
+curl -s                 -w '\n'      -u bob:bob     "$SVC/BookOrders" | head -c 120   # → {"error":{"message":"Forbidden","code":"403",…}}</code></pre>
+</li>
+<li><b>把结果写进验收脚本的期望值</b>（示范项目的 4 条认证断言就是按实测写的：<code>$metadata</code> 200 / 匿名 401 / bob 200 / 任意用户 200）。</li>
+<li><b>验证</b>：<code>bash test/odata-verify.sh</code> 的第 1 组 4 条断言全绿；服务端日志里能看到 403 的堆栈（<code>enforce_auth</code>），说明是授权层拒的、不是业务代码手动拒的。</li>
+</ol>
+<div class="box danger"><b class="t">千万不要把 <code>dummy</code> 的结果截图当验收证据</b><code>dummy</code> 下三态全是 200。验收截图里请把 <code>cds env get requires.auth</code> 的输出一起截进去。</div>
+
+<h3 id="s4-2">4-2 手顺：云端 403 的四步对照（scope 名不一致）</h3>
+<div class="stepmeta"><span class="k">cds compile --to xsuaa / cockpit 角色集合</span><span class="f">xs-security.json · mta.yaml · JWT</span><span class="c">耗时 30 分（需真实账号）</span></div>
+<ol class="steps">
+<li><b>生成权威名字清单</b>（名字来自编译器，不是你手写的）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile srv --to xsuaa      # → scopes: $XSAPPNAME.BookOrder.View / .Edit / .Submit + 对应 role-templates</code></pre>
+</li>
+<li><b>让 <code>xs-security.json</code> 与之一致</b>：<code>npx cds add xsuaa --for production</code>（实测生成物与上一步一致）；<code>mta.yaml</code> 的 xsuaa 资源用 <code>service-plan: application</code> 并指向该文件。</li>
+<li><b>部署后在 cockpit 建角色集合</b>：Subaccount → Security → Role Collections → 新建 → 加入 <code>BookOrder.Submit</code> 等 role-template → 分配给用户；<b>用户必须重新登录</b>才拿到带新 scope 的 JWT。</li>
+<li><b>验证（四步都做）</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf env demo-node-srv | head -40                        # ① 确认 xsuaa 绑定与 xsappname
+echo "$JWT" | cut -d. -f2 | python3 -c "import sys,base64,json;s=sys.stdin.read().strip();s+='='*(-len(s)%4);print(json.loads(base64.urlsafe_b64decode(s))['scope'])"   # ② JWT 里的 scope
+curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $JWT" "https://&lt;approuter-route&gt;/odata/v4/book-order/BookOrders"   # ③ 读 → 200
+curl -s -X POST -H "Authorization: Bearer $JWT" -H 'content-type: application/json' "https://&lt;approuter-route&gt;/odata/v4/book-order/BookOrders(ID=…,IsActiveEntity=true)/submitOrder" -d '{}'   # ④ 动作 → 有权限 200、无权限 403</code></pre>
+</li>
+</ol>
+
+<h2 id="s5">5. Fiori</h2>
+<p>页面问题的顺序永远是：<b>① 容器有没有高度 → ② 库与模板加载成功了吗 → ③ 元数据/数据请求回了什么状态码</b>。跳过前两步去改注解，是最常见的浪费时间方式。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象（错误信息原文 / 观察）</th><th>触发条件</th><th>根因</th><th>修复手顺</th><th>如何验证</th></tr></thead>
+<tbody>
+<tr>
+<td>页面全白：浏览器状态栏/标签正常、HTML 也加载了，但内容区一片空白；控制台<b>没有</b>明显报错</td>
+<td>自写的 <code>index.html</code> 里 <code>html</code>/<code>body</code>/<code>#container</code> 有一个高度算成了 <b>0px</b>；或用 <code>&lt;div data-sap-ui-component&gt;</code> 由 ComponentSupport 自动挂载（它创建的容器不带 <code>height="100%"</code>）</td>
+<td>Fiori Elements 的根容器高度按百分比继承，链路上任何一环是 0 就整块渲染成 0 高</td>
+<td>给三层都定高度（示范项目 <code>app/book-orders/webapp/index.html</code> 的做法），并显式创建容器：
+<pre class="hl"><div class="code-head"><span class="lang">xml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-xml">&lt;style&gt;html, body { height: 100%; margin: 0; }  #container { height: 100%; }&lt;/style&gt;
+&lt;div id="container"&gt;&lt;/div&gt;
+&lt;script&gt;
+  sap.ui.getCore().attachInit(function () {
+    new sap.ui.core.ComponentContainer({ name: "sap.training.bookorder.manage", height: "100%", async: true })
+      .placeAt("container");
+  });
+&lt;/script&gt;</code></pre>
+</td>
+<td>F12 → Elements 选中 <code>#container</code> → Computed 里 <code>height</code> 必须是具体像素值；或在 Console 里 <code>document.getElementById('container').offsetHeight</code> —— <b>返回 0 就是这条</b></td>
+</tr>
+<tr>
+<td><code>GET https://sdk.openui5.org/resources/sap/fe/core/AppComponent.js</code> → <b>404</b>（控制台里表现为模板/组件加载失败、白屏）</td>
+<td>把 bootstrap 的 <code>src</code> 指向了 OpenUI5 的 CDN（<code>sdk.openui5.org</code>）</td>
+<td><code>sap.fe.*</code>（Fiori Elements）属于 <b>SAPUI5</b>，不在 OpenUI5 发布物里；OpenUI5 只有 <code>sap.m</code> 这些基础库</td>
+<td>改用 SAPUI5 CDN（教学）或本地托管：<code>src="https://ui5.sap.com/1.136.0/resources/sap-ui-core.js"</code>；生产走 BTP 的 HTML5 Application Repository / approuter；离线教学把 UI5 下载到本地由服务提供</td>
+<td>两条 curl 立刻能分辨（本站现场实测）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -o /dev/null -w 'openui5 sap.fe: %{http_code}\n' https://sdk.openui5.org/resources/sap/fe/core/AppComponent.js   # → 404
+curl -s -o /dev/null -w 'openui5 sap.m : %{http_code}\n' https://sdk.openui5.org/resources/sap/m/library.js                  # → 200
+curl -s -o /dev/null -w 'sapui5  sap.fe: %{http_code}\n' https://ui5.sap.com/1.136.0/resources/sap/fe/core/AppComponent.js    # → 200</code></pre>
+</td>
+</tr>
+<tr>
+<td>列表页显示 <code>No data</code>（表格空、没有报错弹窗）</td>
+<td>① OData 请求回了 401（浏览器不带凭据，本地没有 approuter 登录跳转）；② 数据确实 0 行；③ 草稿过滤条件导致查询的是 <code>IsActiveEntity=false</code> 的行</td>
+<td>三种原因表现相同：<b>界面只看状态码，不看原因</b>；必须去 Network 里看真实响应</td>
+<td>① 本地用 <code>node test/dev-proxy.js</code> 起 4005 代理并打开 <code>http://localhost:4005/book-orders/webapp/index.html</code>；② 用 curl 直接确认数据；③ 用 <code>?$filter=IsActiveEntity eq true</code> 或清掉未激活草稿再试</td>
+<td>F12 → Network → 找那条 <code>/odata/v4/book-order/BookOrders</code>：状态码 401 就是认证问题，200 且 <code>"value":[]</code> 就是数据/过滤问题。<code>curl -s -u alice:alice "…/BookOrders?$top=1"</code> 有行 = 服务没问题</td>
+</tr>
+<tr>
+<td>观察：改了 <code>annotations.cds</code>（列、标签、分节），页面完全没变化</td>
+<td>注解文件不在编译范围内（位置/命名不对）、服务没重启、或注解路径写错（如把 <code>items/@UI.LineItem</code> 写成 <code>BookOrderItems/@UI.LineItem</code>）</td>
+<td>Fiori 只认 <code>$metadata</code> 里的注解；注解没进元数据，页面自然不变</td>
+<td>把注解放在被 <code>cds</code> 扫描到的目录（示范项目：<code>app/book-orders/annotations.cds</code>），改完重新 <code>cds watch</code>（模型改动会重编译），并核对注解目标的实体名</td>
+<td><code>cds watch</code> 打印 <code>[cds] - loaded model from 4 file(s):</code> 时必须包含 <code>app/book-orders/annotations.cds</code>；再数注解条数：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/\$metadata" | grep -c Annotation   # 示范项目实测 166</code></pre>
+数字变化 = 注解进元数据了（浏览器再硬刷新）。</td>
+</tr>
+<tr>
+<td>观察：列表里看不到「提交订单」按钮（即使定义了动作）</td>
+<td><code>UI.LineItem</code> 里缺 <code>UI.DataFieldForAction</code> 记录、或少了 <code>Determining</code>/<code>Inline</code> 这些字段、或动作根本没在服务里定义、或实体的 <code>Capabilities</code> 禁止了它</td>
+<td>按钮 = 「服务里有 Action」＋「注解里有引用它的 DataFieldForAction」，缺一不可；带草稿的实体还要 <code>Determining</code> 才知道何时该出</td>
+<td>按示范项目的写法补齐三段：服务里 <code>actions { action submitOrder() returns String; }</code>；注解里
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">UI.DataFieldForAction : {
+  $Type : 'UI.DataFieldForAction',
+  Label : '提交订单',
+  Action : 'BookOrderService.BookOrders/submitOrder',
+  Inline : true,
+  Determining : true
+}</code></pre>
+</td>
+<td>元数据里同时能看到 <code>&lt;Action Name="submitOrder" IsBound="true"&gt;</code> 与 <code>UI.DataFieldForAction</code> 的 Label（<code>grep -c 'submitOrder' $metadata</code>）；界面上按钮出现，点它能在 Network 里看到 <code>POST …/submitOrder</code></td>
+</tr>
+<tr>
+<td>观察：点「保存」报 <b>HTTP 400（或 409）</b>，界面只显示一条消息</td>
+<td>草稿保存 = <code>POST …/draftActivate</code>，服务端的业务校验在这里触发</td>
+<td><b>这不是 Fiori 的错，也不是配置的错</b>：400/409 是你的业务规则按设计拒绝了这次保存</td>
+<td>读响应体里的消息（就是服务里 <code>req.reject</code> 写的那句），改数据再存；要排「为什么这条被拒」就回第 3 节看对应规则</td>
+<td>F12 → Network → 那条 <code>draftActivate</code> → Response：实测会是 <code>{"error":{"message":"订单号 BO-1001 已存在，请更换","code":"409",…}}</code> 或 <code>顾客 9999 不存在，请先维护主数据</code> 这类 400。终端同时会出现 <code>[odata] - POST …/BookOrderService.draftActivate</code></td>
+</tr>
+<tr>
+<td>观察：白屏 + 控制台报 UI5 版本/模板加载相关错误；Fiori tools 部署时提示 <code>Target system's SAPUI5 version is lower than the local minUI5Version</code> <span class="tag">~</span></td>
+<td><code>manifest.json</code> 的 <code>sap.ui5.dependencies.minUI5Version</code> 高于运行时实际加载的 UI5 版本</td>
+<td>Fiori Elements 模板（<code>sap.fe.templates</code>）按最低版本要求加载，版本不够就加载不到模板组件</td>
+<td>把 bootstrap 的版本与 <code>minUI5Version</code> 对齐（示范项目两边都是 <code>1.136.0</code>）；或把 <code>minUI5Version</code> 调到运行时版本以下</td>
+<td>浏览器 Console 第一条应是模板/组件加载失败；核对三个数字：bootstrap URL 里的版本、<code>manifest.json</code> 的 <code>minUI5Version</code>、<code>sap.ui.version</code>（Console 里打印）。三者一致才继续排别的</td>
+</tr>
+<tr>
+<td>观察：页面标题显示「<b>标准</b>」或 <code>Standard</code>，而不是应用的 Title</td>
+<td><code>manifest.json</code> 的 target 设了 <code>"variantManagement": "Control"</code>（或 <code>Page</code>）</td>
+<td>开启变式管理后，标题区显示的是<b>当前选中的变式名</b>；默认变式就是 SAP 交付的「标准（Standard）」变式（不可修改、不可删除）</td>
+<td>要显示应用名就把该 target 的 <code>variantManagement</code> 改成 <code>None</code>（或按 SAP 文档的另一取值，行为是「不显示变式管理、显示应用名」）；要保留变式就给用户说清「标准」是默认变式，保存个性化后会变成新变式名</td>
+<td>改 <code>manifest.json</code> → 硬刷新 → 标题区变化；或在页面上打开变式下拉，能看到「标准」与你自己保存的变式并列</td>
+</tr>
+<tr>
+<td>观察：控制台 <code>Failed to load metadata</code>（或是模板加载失败），页面白屏</td>
+<td><code>manifest.json</code> 的 <code>dataSources.mainService.uri</code> 与服务真实路径不一致（漏了服务定义里的 <code>@path</code> 前缀、少了结尾斜杠）</td>
+<td>UI5 的 OData V4 模型在启动时先取 <code>$metadata</code>，失败就没有任何实体可渲染</td>
+<td>把 uri 写成服务的真实路径（示范项目：<code>/odata/v4/book-order/</code>，来自 <code>@path: '/odata/v4/book-order'</code>）</td>
+<td>浏览器直接打开 <code>https://&lt;host&gt;/odata/v4/book-order/$metadata</code> 必须返回 XML；用 curl 对照 <code>curl -s -u alice:alice "http://localhost:4004/odata/v4/book-order/\$metadata" | head -c 120</code></td>
+</tr>
+</tbody></table></div>
+
+<h3 id="s5-1">5-1 手顺：空白页三步定位法（10 分钟关掉问题）</h3>
+<div class="stepmeta"><span class="k">DevTools Console / Network / Elements</span><span class="f">app/book-orders/webapp/index.html · manifest.json</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+<li><b>第一步：容器高度</b>。Console 里执行 <code>document.getElementById('container').offsetHeight</code> → 若为 <code>0</code>，问题就在 HTML/CSS（本页第 5 节第一行），不要再往下查。修法见示范项目 <code>index.html</code> 的 <code>&lt;style&gt;</code> 与 <code>ComponentContainer({ height: "100%" })</code>。</li>
+<li><b>第二步：库与模板</b>。Console 顶部第一条错误是什么？<code>404 …/sap/fe/…</code> → 用了 OpenUI5 CDN（换成 <code>https://ui5.sap.com/1.136.0/resources/sap-ui-core.js</code>）；<code>Failed to load metadata</code> → 看 Network 里 <code>$metadata</code> 的状态码与 URL。</li>
+<li><b>第三步：请求</b>。Network 过滤 <code>odata</code>：
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">GET /odata/v4/book-order/$metadata     200 → 元数据 OK
+GET /odata/v4/book-order/BookOrders?…  401 → 认证问题（本地用 dev-proxy；云端看 approuter 登录）
+                                       403 → 权限问题（回第 4 节）
+                                       200 但 "value":[] → 数据/过滤问题（回第 2、3 节）</code></pre>
+</li>
+<li><b>验证</b>：页面能列出 <code>BO-1001…</code>，点进 Object Page 能看到明细表；Console 里没有红色错误。<b>再用一条 curl 复核同一 URL</b>，界面与命令的结果必须一致 —— 不一致说明你看到的是缓存（<code>Cmd+Shift+R</code> 硬刷新）。</li>
+</ol>
+<div class="box warn"><b class="t">缓存是这一层的隐形敌人</b>改完 <code>annotations.cds</code> / <code>manifest.json</code> 后先硬刷新；仍不变就到 Network 面板勾 <b>Disable cache</b>。「注解不生效」里有相当一部分其实是浏览器把旧 <code>$metadata</code> 缓存住了。</div>
+
+<h3 id="s5-2">5-2 手顺：给 Fiori 本地预览补上认证（dev-proxy）</h3>
+<div class="stepmeta"><span class="k">node test/dev-proxy.js</span><span class="f">test/dev-proxy.js · app/book-orders/webapp</span><span class="c">耗时 5 分</span></div>
+<ol class="steps">
+<li><b>为什么需要它</b>：CAP 服务上写了 <code>@(requires: 'authenticated-user')</code>，而浏览器里的 Fiori 应用不会带 Basic 凭据（本地没有 approuter/XSUAA 做登录跳转），于是页面 401 → 显示 <code>No data</code>。这个 20 行代理给每个请求补上 <code>Authorization: Basic …</code>。</li>
+<li><b>起代理</b>（服务必须已在 4004 跑）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+node test/dev-proxy.js        # → dev-proxy: http://localhost:4005  ->  http://localhost:4004   (as alice:alice)
+                              #   open: http://localhost:4005/book-orders/webapp/index.html</code></pre>
+</li>
+<li><b>打开转发的地址</b>（不是 4004）：<code>http://localhost:4005/book-orders/webapp/index.html</code>。</li>
+<li><b>验证</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4005/book-orders/webapp/index.html          # → 200
+curl -s -o /dev/null -w '%{http_code}\n' "http://localhost:4005/odata/v4/book-order/\$metadata"          # → 200（代理已注入凭据）</code></pre>
+</li>
+</ol>
+<div class="box danger"><b class="t">不要把它带到生产</b>这个代理是教学脚手架：真实部署由 <b>approuter + XSUAA</b> 负责认证（<code>xs-app.json</code> 的 <code>authenticationType: xsuaa</code>）。把 Basic 凭据写进代理并上线，等于把用户名口令公开。</div>
+
+<h2 id="s6">6. 部署</h2>
+<p>部署问题的分界线是：<b>失败发生在「构建」还是「运行」</b>。构建失败看 <code>mbt build</code> 的输出与 <code>mta.yaml</code>；运行失败看 <code>cf apps</code> / <code>cf logs &lt;app&gt; --recent</code>。<b>本节标注 <span class="tag">~</span> 的条目本站未在真实账号上复核</b>，报错原文来自 SAP 知识库/官方文档/社区。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象（错误信息原文 / 观察）</th><th>触发条件</th><th>根因</th><th>修复手顺</th><th>如何验证</th></tr></thead>
+<tbody>
+<tr>
+<td><code>Error: Invalid MTA archive [XXXX_0.0.1.mtar]. MTA deployment descriptor (META-INF/mtad.yaml) could not be parsed. … Technical details: MTA schema version with major version [3] and minor version [2] is not supported. Supported MTA schema versions are the followi…</code>（另一种 Technical details 是 <code>Unsupported module type "javascript.nodejs" for platform type "…"</code>）<span class="tag">~</span></td>
+<td>用新版工具构建的 <code>.mtar</code> 部署到只支持旧 <code>_schema-version</code> 的环境；或 <code>mta.yaml</code> 的模块类型与目标平台不匹配</td>
+<td>MTA 描述符的 <code>_schema-version</code> 与平台支持范围不一致（构建端与部署端版本错配）</td>
+<td>把 <code>_schema-version</code> 降到目标平台支持的版本（或升级目标环境）；核对每个 module 的 <code>type</code>（CAP 的 Node 模块通常是 <code>nodejs</code>）；用同一个 <code>mbt</code> 版本重新构建</td>
+<td>本地先验证描述符：<code>mbt build -t mta_archives</code> 无错误；再解包看描述符 <code>unzip -p mta_archives/demo-node_1.0.0.mtar META-INF/mtad.yaml | head -5</code> 确认 <code>_schema-version</code>，最后 <code>cf deploy … -f</code></td>
+</tr>
+<tr>
+<td><code>App demo-node-srv not found</code>（部分 CLI/文档版本写成 <code>No such app</code>）<span class="tag">~</span></td>
+<td>部署还没完成就用 <code>cf logs</code>/<code>cf env</code>/<code>cf scale</code> 操作应用；或应用名与 <code>mta.yaml</code> 的模块名不一致</td>
+<td>CF 是按<b>应用名</b>找资源的；名字对不上（或还没创建）就找不到</td>
+<td>先用 <code>cf apps</code> 拿到真实名字，再操作；MTA 部署会按「模块名」创建应用（示范项目：<code>demo-node-srv</code> / <code>demo-node-approuter</code>），<b>不要凭印象拼名字</b></td>
+<td><code>cf apps</code> 输出里两行都是 <code>started</code>；随后 <code>cf logs demo-node-srv --recent</code> 能取到日志</td>
+</tr>
+<tr>
+<td>观察：<code>cf deploy</code> 在 <code>demo-node-db-deployer</code> 模块失败——HDI 容器建表阶段报服务实例/容器不可用或「已被绑定」<span class="tag">~</span></td>
+<td><code>mta.yaml</code> 里的 hana 资源名指向了一个已被别的应用绑定/手工创建的实例；或该实例不是 <code>hdi-shared</code>，或没映射到当前 CF org</td>
+<td>HDI 部署（hdi-deployer）需要「属于本空间、可写、且能被多个应用共享绑定」的容器；裸 <code>schema</code> 计划或别的租户的容器都不行</td>
+<td><code>cf services</code> 看清实例的 service/plan；<code>cf service demo-node-db</code> 看 <b>Bound apps</b> 与状态；要复用一个容器就把它写进 mta 的 <code>existing-service</code>/资源名，否则换名字新建：<code>cf create-service hana hdi-shared demo-node-db</code></td>
+<td><code>cf service demo-node-db</code> 显示的 plan 是 <code>hdi-shared</code>、Bound apps 含你的 srv 与 db-deployer；<code>cf logs demo-node-db-deployer --recent</code> 末尾无 error</td>
+</tr>
+<tr>
+<td><code>You have exceeded your organization's memory limit</code>（或 <code>organization's memory limit exceeded: staging requires … memory</code> / <code>insufficient resources</code>）</td>
+<td>同时跑着其它应用/服务；<code>mta.yaml</code> 的 <code>memory</code> 加起来超过 org 配额（试用账号配额很小）</td>
+<td>CF 按 <b>org 配额</b>统计所有实例的内存，不是按单个应用</td>
+<td>先看余量再降配：<code>cf org &lt;org&gt;</code> 看 mem used/total；把 mta 里的 <code>memory</code> 调小（示范项目 <code>demo-node-srv: 256M</code>、<code>demo-node-approuter: 128M</code>），或停掉不用的应用 <code>cf stop &lt;app&gt;</code></td>
+<td><code>cf org &lt;org&gt;</code> 的 used 加回你要部署的内存仍小于 total；<code>cf apps</code> 里两行 <code>started</code></td>
+</tr>
+<tr>
+<td>浏览器打开路由返回 <code>404 Not Found</code>（社区常见原文：<code>index.html not found</code>）</td>
+<td><code>welcomeFile</code>/<code>routes</code> 指向的资源不在应用里，或 HTML5 应用没部署进 HTML5 Application Repository / 不在 approuter 的静态目录；路由大小写/前缀不一致</td>
+<td>approuter 按 <code>xs-app.json</code> 找静态资源；找不到就 404（后端 CAP 服务正常也白搭）</td>
+<td>对照 <code>xs-app.json</code> 逐项核：<code>welcomeFile</code>、<code>routes.source/target</code>、destination 名与 <code>mta.yaml</code> 的 <code>srv-api</code> 是否一致；确认 UI 产物真的在 approuter 能看到的目录里</td>
+<td><code>cf logs demo-node-approuter --recent</code> 能看到那条 404 与它请求的路径；<code>curl -s -o /dev/null -w '%{http_code}\n' https://&lt;route&gt;/book-orders/webapp/index.html</code> → 200</td>
+</tr>
+<tr>
+<td>观察：<code>cf deploy</code> 成功、应用 <code>started</code>，但接口返回空数组 / 表里 0 行</td>
+<td>种子数据没跟着构建产物走；或 srv 与 deployer 连的不是同一个 HANA 实例/schema；或界面上查的是草稿行</td>
+<td>「部署成功」只代表模块起来了，<b>不代表有数据</b>：CSV → <code>.hdbtabledata</code> → HDI 部署这条链任何一环断了都会「成功但空」</td>
+<td>① 构建后确认 CSV 在产物里：<code>npx cds build --production &amp;&amp; ls gen/db/data</code>；② 看 deployer 日志里有没有 init/表格数据行；③ 核对绑定是否同一个实例：<code>cf env demo-node-srv</code> 的 VCAP_SERVICES 与 deployer 的 hana 绑定比对</td>
+<td>接口与库两侧都对一次：<code>curl -s -u alice:alice "https://&lt;route&gt;/odata/v4/book-order/BookOrders?\$top=1"</code>；HANA 侧在 Database Explorer 里 <code>SELECT COUNT(*) FROM sap_training_bookorder_Books</code>（期望 5）。两边一致才叫通</td>
+</tr>
+<tr>
+<td><code>cf login</code> 报 <code>Credentials were rejected, please try again.</code>（响应可能是 HTTP 401 + <code>error_description="Bad credentials"</code>）<span class="tag">~</span></td>
+<td>API endpoint 与子账户所在<b>区域</b>不一致（例如子账户在 ap10 却登 <code>api.cf.eu10…</code>）；或子账户被暂停/试用到期；或用了 SSO 该走 <code>--sso</code></td>
+<td>CF 的 UAA 按区域隔离；凭据在另一个区域的组织里不存在，于是表现为「拒凭据」</td>
+<td>到 cockpit 的 Subaccount → Cloud Foundry Environment 里<b>照抄 API Endpoint</b>，或 <code>btp --help</code> 取 region 对应端点：<code>cf login -a https://api.cf.&lt;region&gt;.hana.ondemand.com --sso</code></td>
+<td><code>cf target</code> 打印的 api endpoint 与 cockpit 显示的有逐字比对；<code>cf orgs</code> 能看到你的 org（看不到就是登错区域）</td>
+</tr>
+<tr>
+<td>观察：昨天还能访问的路由今天返回 502/404，<code>cf apps</code> 里应用状态是 <code>stopped</code> <span class="tag">~</span></td>
+<td>BTP 试用账号到期/被暂停，平台把应用停了</td>
+<td>试用有期限，到期后资源被停用（数据保留期另算）</td>
+<td>用 cockpit 检查子账户状态与剩余时间；继续做课程就续订/新建试用账号后重新部署；教学环境建议把「云端验收」安排在同一天内完成</td>
+<td>cockpit Subaccount 概览里的状态与到期时间；<code>cf apps</code> 状态；<code>cf start demo-node-srv</code> 后路由恢复 200 才算可用</td>
+</tr>
+<tr>
+<td><code>Service plan hdi-shared not found</code>（或 <code>cf create-service hana hdi-shared …</code> 报计划不存在）<span class="tag">~</span>（见 <a href="btp.html">① BTP 页</a> 的同类记录）</td>
+<td>该 plan 没分配给这个子账户（Entitlement 缺失），或端点在别的区域，或服务名写错（<code>hana-cloud</code> ≠ <code>hana</code>）</td>
+<td><code>hdi-shared</code> 属于服务 <code>hana</code>（显示名 SAP HANA Schemas &amp; HDI Containers），不是 <code>hana-cloud</code></td>
+<td>先在 Entitlements 里给子账户分配配额，再用正确组合创建：<code>cf create-service hana hdi-shared demo-node-db</code>；区域限制（如 HDI 容器只在部分区域提供）要先确认</td>
+<td><code>cf marketplace -e hana</code> 能看到 <code>hdi-shared</code>；<code>cf services</code> 里该实例状态为 <code>create succeeded</code></td>
+</tr>
+</tbody></table></div>
+
+<h3 id="s6-1">6-1 手顺：部署前后各跑一遍的验收清单</h3>
+<div class="stepmeta"><span class="k">cds build / mbt / cf deploy / cf logs</span><span class="f">mta.yaml · xs-security.json · gen/</span><span class="c">耗时 40 分（需真实账号）</span></div>
+<ol class="steps">
+<li><b>构建前自检（本地）</b>：模型、测试、验收脚本三关都过，再谈部署：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds compile db/schema.cds srv/book-order-service.cds --to edmx | grep -c ERROR   # → 0
+npm test                                                                             # → 16 passing
+bash test/odata-verify.sh                                                            # → PASS 26 / FAIL 0
+npx cds build --production &amp;&amp; ls gen/srv gen/db</code></pre>
+期望 <code>gen/srv</code>（服务 + node_modules）与 <code>gen/db</code>（DDL/HDI 产物，含 <code>data/</code>）都存在。
+</li>
+<li><b>打包与部署</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm i -g mbt &amp;&amp; mbt build -t mta_archives
+cf login -a https://api.cf.ap10.hana.ondemand.com --sso      # 区域按你的子账户改
+cf deploy mta_archives/demo-node_1.0.0.mtar -f
+cf apps                                                       # demo-node-srv / demo-node-approuter 都要 started</code></pre>
+</li>
+<li><b>部署后四查</b>（缺一条都别宣布成功）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf logs demo-node-srv --recent | tail -30          # ① 启动日志：serving BookOrderService + listening
+cf logs demo-node-db-deployer --recent | tail -30   # ② 建表/灌数据日志无 error
+cf env demo-node-srv | grep -A6 '"hana"'            # ③ 绑定到了期望的 HDI 实例
+curl -s -o /dev/null -w '%{http_code}\n' https://&lt;route&gt;/odata/v4/book-order/$metadata   # ④ 走到 302 登录或 200（XML）</code></pre>
+</li>
+<li><b>验证（业务级）</b>：用真实 JWT 跑与本地同一组断言（匿名 401 / 有权限 200 / 无权限 403 / 提交动作 200）；数据侧在 Database Explorer 里对行数。<b>本地 26 条断言全绿 + 云端这四条成立</b>，才算「部署成功」。</li>
+</ol>
+
+<h2 id="s7">7. 万能排错流程（5 步，任何报错都照这个走）</h2>
+<p>前面六节是「答案表」，本节是「检索与记录方法」。顺序不能换：跳过第 1 步直接猜原因，是最慢的路。</p>
+<ol class="steps">
+<li><b>看现象：把原文一字不差抄下来。</b>不转述、不概括。记录四样东西：原始报错文本、发生时的命令、<code>文件:行:列</code>（若有）、HTTP 状态码与响应体（若有）。<br><b>为什么必要</b>：整句搜索几乎搜不到（消息里混了你的项目名/路径），关键词搜索才准；而且「原文」本身就是分层的线索。</li>
+<li><b>定位层：用第 0 节的漏斗把问题关进一层。</b>判据：有 <b>行:列</b> → 编译期（第 2 节）；<code>&gt; init from …</code> 之后失败 → 播种期（第 2 节）；有 <b>HTTP 状态码</b> → 运行时（第 3、4 节）；白屏/控制台 → 浏览器（第 5 节）；<code>cf</code> 输出 → 云端（第 6 节）。<br><b>为什么必要</b>：改错层的代价是「改完发现没变」，然后再改一层，最后不知道是哪次改动生效了。</li>
+<li><b>最小复现：把项目缩到能重跑的最小范围。</b>用 curl 直接打服务（绕开 Fiori）；用单张表/单个 CSV 复现 deploy 问题；用一个 handler 复现事件问题。<br><b>为什么必要</b>：能重复出现的 bug 才可修；<b>不能复现的「修好了」是运气</b>。</li>
+<li><b>看日志与网络（同时看两侧）</b>：服务端看 <code>cds watch</code> 终端（<code>[odata] - …</code> 与 <code>[error] - …</code>）或 <code>cf logs &lt;app&gt; --recent</code>；客户端看 DevTools → Network（状态码、响应体、请求 URL）与 Console。</li>
+<li><b>记录到本页：按同一格式补一行。</b>字段固定为：<b>现象（原文）| 触发条件 | 根因 | 修复手顺 | 如何验证</b>。写「如何验证」时必须给可执行命令或明确的界面位置 —— 否则这条记录下次还是帮不上忙。
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">现象（原文）：SqliteError: in cds.deploy(): table X has no column named orders_ID …
+触发条件：改过 schema.cds 的关联名之后没同步 CSV 表头
+根因：CSV 表头必须等于物理列名
+修复手顺：npx cds compile db/schema.cds --to sql | grep -A10 'CREATE TABLE …' → 按输出改表头
+如何验证：npm run deploy 成功 + 明细行数 = 9（python3 查 db.sqlite）</code></pre>
+</li>
+</ol>
+<h3 id="s7-1">7-1 层定位表（现象特征 → 层 → 第一件事）</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象特征</th><th>层</th><th>第一件事（命令 / 观察位置）</th></tr></thead>
+<tbody>
+<tr><td>命令找不到、模块装不上、端口被占</td><td>① 环境与工具链</td><td><code>node -v</code> · <code>npx cds --version</code> · <code>lsof -nP -iTCP:4004 -sTCP:LISTEN</code></td></tr>
+<tr><td><code>[ERROR]</code> 且带 <code>文件:行:列</code></td><td>② CDS 建模</td><td><code>npx cds compile &lt;文件&gt; --to sql</code>（先证明是模型问题，不是数据问题）</td></tr>
+<tr><td>deploy 打印了 <code>&gt; init from …</code> 之后才失败</td><td>② CDS 建模（数据）</td><td>核对 CSV 表头 = 物理列名（<code>--to sql</code> 的输出）</td></tr>
+<tr><td>deploy「成功」但数据不对 / <code>$expand</code> 空</td><td>② CDS 建模（沉默故障）</td><td>查库行数与 join 计数：<code>python3</code> 直连 <code>db.sqlite</code>，别只看 deploy 的成功字样</td></tr>
+<tr><td>请求 2xx 但业务规则没生效</td><td>③ 服务与处理器</td><td>看启动日志 <code>serving …</code> 块有没有 <code>impl:</code> 行</td></tr>
+<tr><td>4xx 状态码</td><td>③④ 服务 / 认证</td><td>读响应体的 <code>error.message</code> 与 <code>error.code</code>；401/403 归认证层</td></tr>
+<tr><td>5xx 状态码</td><td>③ 服务与处理器</td><td>看服务端堆栈（<code>[error] - …</code>）；未捕获异常一律 500，改成 <code>req.reject</code></td></tr>
+<tr><td>页面白 / No data / 注解不生效</td><td>⑤ Fiori</td><td><code>document.getElementById('container').offsetHeight</code> → Console 第一条错误 → Network 里 <code>$metadata</code> 的状态码</td></tr>
+<tr><td>本地好、云端坏（或 <code>cf</code> 命令报错）</td><td>⑥ 部署</td><td><code>cf apps</code> · <code>cf logs &lt;app&gt; --recent</code> · <code>cf env &lt;app&gt;</code>（绑定与终结点）</td></tr>
+</tbody></table></div>
+<div class="box ok"><b class="t">验收：这 5 步真的成了你的习惯</b>
+挑一个本页的条目，用「最小复现」故意制造它、按流程修好、并写出自己的记录行 —— 能独立走完一次，以后遇到新报错就只是重复这个循环。</div>
+
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>报错里出现 <code>文件:行:列</code>、出现 <code>&gt; init from …</code> 之后的失败、出现 HTTP 状态码，分别该翻本页哪一节？为什么不能跳层？</li>
+    <li><code>npm run deploy</code> 打印了 <code>/&gt; successfully deployed to db.sqlite</code>，但 <code>$expand=items</code> 返回空数组、或改列名后老数据变成 0 行。请说出这两条各属于哪一类根因，以及你要跑哪两条命令才能确认。</li>
+    <li>接口返回 200，可是业务规则（自动编号 / 派生金额）没生效。你第一个要看的地方是什么？看到什么就说明实现文件没被装配？</li>
+    <li>用 <code>UPDATE(BookOrders, { orderNo: 'BO-1001' })</code> 与 <code>UPDATE(BookOrders).where({ orderNo: 'BO-1001' })</code> 有什么差别？为什么「0 行受影响」不会抛异常，应该怎么写才安全？</li>
+    <li>把 <code>requires.auth.kind</code> 从 <code>mocked</code> 换成 <code>dummy</code> 后，「匿名必须 401」这条断言为什么必然失败？另外，<code>mocked</code> 下为什么用一个不存在的用户名也能拿到 200？</li>
+    <li>Fiori 页面全白，请按顺序说出你的三步检查（每步给出具体的观察位置或命令），并说明「<code>sap.fe.*</code> 不在 OpenUI5 CDN 上」这条怎么用一条 <code>curl</code> 在 10 秒内验证。</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-issues">自测 · 排错</a>；参考答案与采分点见 <a href="instructor.html">讲师版</a>；记录行模板可直接抄第 7 节第 5 步的代码块。</p>
+</div>
+
+<h2 id="next">8. 各板块入口（按层直达）</h2>
+<p>本页只回答「报错了怎么办」。每一层的<b>正着做</b>的方法在各板块页里，遇到「没报错但我不知道下一步做什么」时请回对应页面。</p>
+<div class="grid cards">
+  <div class="card"><h3><a href="concept.html">概念：CAP 是什么</a></h3><p>三层架构与请求生命周期 —— 用来判断「一个现象该归在哪一层」。</p></div>
+  <div class="card"><h3><a href="btp.html">① BTP 注册与环境</a></h3><p>子账户、Entitlements、org/space、三个关键服务实例；<code>Service plan … not found</code> 一类问题的正解。</p></div>
+  <div class="card"><h3><a href="bas.html">② BAS 开发环境</a></h3><p>Dev Space、终端、<b>端口转发</b>、从 BAS 部署 —— 第 1 节里「浏览器看不到本地应用」的完整设定。</p></div>
+  <div class="card"><h3><a href="hana.html">③ HANA Cloud 与 HDI 容器</a></h3><p>hdi-shared / schema 的取舍、绑定与 Database Explorer 验证 —— 第 6 节「表为空 / 容器被绑定」的正解。</p></div>
+  <div class="card"><h3><a href="cds.html">④ CDS 建模</a></h3><p>类型与物理列、关联与组合的真实差异、CSV 规则的完整版与 16 行建模排错手册。</p></div>
+  <div class="card"><h3><a href="node.html">⑤ Node.js 服务实现</a></h3><p>before/on/after、CQN、事务与 <code>req.reject</code>、草稿流程 —— 第 3 节的正面教材。</p></div>
+  <div class="card"><h3><a href="testing.html">⑦ 测试体系</a></h3><p>四层测试与 26 条断言脚本 —— 本页每一条「如何验证」都可以沉淀成一条断言。</p></div>
+  <div class="card"><h3><a href="security.html">⑧ 认证与授权</a></h3><p>mocked/dummy/basic/jwt 的实测差异、<code>@restrict</code>、xs-security.json 与角色集合链路。</p></div>
+  <div class="card"><h3><a href="fiori.html">⑨ Fiori UI</a></h3><p>注解与 manifest 逐字段、空白页三步定位法的展开版、草稿请求序列。</p></div>
+</div>
+<div class="box info"><b class="t">还差两个页面？</b>
+Java 运行时（⑥）与构建部署（⑩）的页面与本页同期编写：部署链路的<b>正向手顺</b>（<code>cds build</code> 产物差异、<code>mta.yaml</code> 逐段、<code>cf deploy</code>、更新与回滚）在 ⑩；Java 侧的事件处理器写法与对照表在 ⑥。本页第 6 节只保留「出错时怎么办」的角度，避免与它们重复。</div>
+
+<div class="box warn"><b class="t">本页的诚实说明</b>
+<ul>
+<li><b>已在本机复核</b>：错误原文与验证结果来自本机真实执行 —— <code>work/evidence/*.txt</code>、示范项目 <code>project-code/demo-node</code>（<code>@sap/cds 9.9.3</code> / Node <code>v22.23.2</code> / SQLite <code>3.53.2</code>），以及为写本页额外做的行为实验（<code>throw Error</code> → 500 的响应体、超长值的 <code>ASSERT_DATA_TYPE</code> 400、<code>UPDATE</code> 四种键写法的影响行数、<code>after DELETE</code> 收到的参数、草稿激活时序、改列名后 deploy「成功」但数据为 0、OpenUI5 与 SAPUI5 的 CDN 404/200 对照）。</li>
+<li><b>标 <span class="tag">~</span> 的条目</b>来自 SAP 官方文档 / 知识库 / 社区（<code>Invalid MTA archive …</code>、内存配额、approuter 404、XSUAA <code>insufficient_scope</code>、UI5 最低版本提示、试用停用等），<b>未在本机或真实 BTP 账号上复核</b>；文案随版本与区域变化，教学前请在自己的环境里核对。</li>
+<li><b>不要照抄状态码</b>：401/403/404/405/409 的划分是本课程的统一约定，你的团队可以有自己的约定，但要一致。</li>
+</ul></div>
+
+<p class="kicker">下一页建议：把本页第 3 节的「如何验证」逐条改写成 <a href="testing.html">⑦ 测试页</a> 里的断言；再回 <a href="cds.html">④ 建模页</a> 第 10 节对照 16 行建模排错手册，两边条目应当互补而不重复。</p>
+
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

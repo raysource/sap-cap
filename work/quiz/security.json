@@ -1,0 +1,218 @@
+[
+ {
+  "tag": "概念",
+  "q": "CAP 里 401 与 403 的分工，下面哪种说法正确？",
+  "opts": {
+   "A": "401 由 CAP 的通用授权框架返回，403 由认证中间件返回",
+   "B": "401 由认证层返回（凭据不存在/不成立），403 由 CAP 的授权框架返回（身份有效但角色或条件不足）",
+   "C": "两者都由 OData 适配器按实体是否存在返回",
+   "D": "401 表示服务不存在，403 表示数据库连接失败"
+  },
+  "answer": "B",
+  "explain": "本页实测：匿名 GET 返回纯文本 Unauthorized（401，认证层）；带 -u bob:bob（认证成立但无角色）返回 {\"error\":{\"message\":\"Forbidden\",\"code\":\"403\"}}（授权框架）。两者的响应形状也不同：401 是裸文本，403 是 OData 错误对象。"
+ },
+ {
+  "tag": "操作",
+  "q": "要在本地验证「匿名请求必须返回 401」，cds.requires.auth.kind 应该设成什么？",
+  "opts": {
+   "A": "mocked（匿名请求交给 @requires 拦；dummy 会把匿名也当特权用户放行）",
+   "B": "dummy（它最严格，最适合测认证）",
+   "C": "basic（只有 basic 会拦匿名请求）",
+   "D": "jwt（本地没有 XSUAA 也能校验 token）"
+  },
+  "answer": "A",
+  "explain": "本机实测：kind=dummy 时匿名 GET 返回 200（dummy 把每个请求都设成 cds.User.privileged）；kind=mocked 时匿名返回 401，并带回 WWW-Authenticate: Basic realm=\"Users\"。所以测 401 必须用 mocked，不能用 dummy。"
+ },
+ {
+  "tag": "排错",
+  "q": "本地用 mocked，但 -u 任意用户名（例如 zoe:pw）都能 200，最可能的原因是什么？",
+  "opts": {
+   "A": "@requires 注解写错了",
+   "B": "服务没有挂载到 /odata/v4 路径上",
+   "C": "内置 mock 用户配置里有 \"*\": true，未配置的用户名也允许登录（且默认用户没配 password，密码也不校验）",
+   "D": "mocked 会自动向 XSUAA 校验用户，能通过说明用户真实存在"
+  },
+  "answer": "C",
+  "explain": "@sap/cds 默认的 users 配置包含 alice/bob/… 与 \"*\": true。本站 OData 验收脚本里「未知用户 → 401」这一条 FAIL（实际 200）就是被它命中；要收紧必须显式写 \"*\": false 并给用户配 password。"
+ },
+ {
+  "tag": "操作",
+  "q": "要让本地 mocked 只接受你自己配置的用户名与密码，配置里必须写什么？",
+  "opts": {
+   "A": "在 cds.requires.auth.users 里显式加 \"*\": false，并给每个用户配 password（否则密码不校验）",
+   "B": "在服务上写 @requires: 'authenticated-user'，mocked 就会开始校验密码",
+   "C": "把 db 换成 HANA，认证会随之变严格",
+   "D": "把 kind 改成 basic 就够了，不用改 users"
+  },
+  "answer": "A",
+  "explain": "自定义 users 是与内置默认值合并的，不覆盖 \"*\" 就仍然通吃所有用户名；而 verify() 只在用户配了 password 时才比对密码。两条都做，本地认证才有意义。"
+ },
+ {
+  "tag": "概念",
+  "q": "CDS 里 @restrict 的 to: 'submit'，与 xs-security.json 里的 $XSAPPNAME.submit，是什么关系？",
+  "opts": {
+   "A": "两者完全无关，一个是业务角色一个是权限点",
+   "B": "to: 必须写完整的 scope 名（含 xsappname 前缀），否则云端 403",
+   "C": "to: 写 scope 名去掉 xsappname 前缀的部分（CAP 会把 JWT scope 的前缀剥掉再比对）",
+   "D": "to: 只能写 role-template 的名字（例如 OrderAdmin）"
+  },
+  "answer": "C",
+  "explain": "@sap/cds 9.x 的 jwt-auth.js 里角色来自 scope.replace(xsappname + '.', '')，所以 JWT 里的 demo-node-trial-dev.submit 对应的 CAP 角色就是 submit。role-template 名（OrderAdmin）只是打包单位，不是 CAP 角色。"
+ },
+ {
+  "tag": "排错",
+  "q": "用户在 cockpit 上被分到订单管理员角色集合，JWT 的 scope 里也有 demo-node-trial-dev.submit，但调用 submitOrder 仍然 403。最先该怀疑什么？",
+  "opts": {
+   "A": "OData 版本不兼容，需要升级到 V2",
+   "B": "应该把 @requires 换成 @readonly",
+   "C": "数据库连接数不够",
+   "D": "注解里的 to: 写成了 role-template 名（如 OrderAdmin）而不是 CAP 角色名（submit）"
+  },
+  "answer": "D",
+  "explain": "「三个名字」混淆是这一类 403 的头号原因：scope 名（$XSAPPNAME.submit）、CAP 角色名（submit）、role-template 名（OrderAdmin）。CAP 只按 JWT 的 scope 去前缀后比对。"
+ },
+ {
+  "tag": "操作",
+  "q": "从 CDS 模型生成 XSUAA 授权描述符，应该用哪条命令（或哪组命令）？",
+  "opts": {
+   "A": "cds compile srv --to xsuaa（或 cds add xsuaa --for production 落成 xs-security.json）",
+   "B": "cds build --for xsuaa",
+   "C": "cf create-service xsuaa application demo-uaa -c srv",
+   "D": "mbt build -t xsuaa"
+  },
+  "answer": "A",
+  "explain": "本机实测：cds compile srv --to xsuaa 输出 scopes/attributes/role-templates；cds add xsuaa --for production 会写出 xs-security.json 并给 package.json 加 [production] 档（auth.kind=xsuaa）。只写 authenticated-user 时输出是三个空数组。"
+ },
+ {
+  "tag": "概念",
+  "q": "示范项目只用 @requires: 'authenticated-user'，为什么 cds compile srv --to xsuaa 的输出是空的？",
+  "opts": {
+   "A": "因为模型里有语法错误，编译器静默跳过了",
+   "B": "因为 authenticated-user 是伪角色，由运行时自动附加，不需要 scope 与 role-template",
+   "C": "因为必须先跑 cds add xsuaa 才能生成",
+   "D": "因为 --to xsuaa 只支持 Java 项目"
+  },
+  "answer": "B",
+  "explain": "伪角色（authenticated-user / any / system-user / internal-user）反映技术认证层级，不由管理员分配，所以不会生成 XSUAA 的 scope；只有业务角色（写在 to: 上的名字）才会生成 scope 与 role-template。"
+ },
+ {
+  "tag": "操作",
+  "q": "mta.yaml 里把 XSUAA 描述符接进来的正确写法是？",
+  "opts": {
+   "A": "在 package.json 的 cds.requires 里写 xsuaa: ./xs-security.json",
+   "B": "把 xs-security.json 重命名成 xs-app.json",
+   "C": "modules 里加 config: xs-security.json",
+   "D": "resources 里建 org.cloudfoundry.managed-service 资源，parameters 写 service: xsuaa、service-plan: application、path: ./xs-security.json"
+  },
+  "answer": "D",
+  "explain": "示范项目的 mta.yaml 就是这个形态（资源名 demo-node-uaa，path: ./xs-security.json，service-plan: application，config 里固定 xsappname 与 tenant-mode）。MTA 的 config 与文件内容合并，冲突时以 MTA 配置优先。"
+ },
+ {
+  "tag": "概念",
+  "q": "@requires: 'Viewer' 等价于下面哪一条 @restrict？",
+  "opts": {
+   "A": "@restrict: [{ grant: 'READ', to: 'Viewer' }]",
+   "B": "@restrict: [{ grant: '*', to: 'Viewer' }]",
+   "C": "@restrict: [{ grant: 'Viewer' }]",
+   "D": "@restrict: [{ to: 'Viewer', where: (CreatedBy = $user) }]"
+  },
+  "answer": "B",
+  "explain": "CAP 文档明确列了这两个简写：@requires: 'Viewer' ≡ @restrict: [{ grant: '*', to: 'Viewer' }]；@readonly ≡ @restrict: [{ grant: 'READ' }]（默认 to: 'any'）。"
+ },
+ {
+  "tag": "概念",
+  "q": "实体上的 @restrict 里写了 where: (CreatedBy = $user)，对一个 READ 请求意味着什么？",
+  "opts": {
+   "A": "where 只对 Java 运行时有效，Node 会忽略",
+   "B": "会把 CreatedBy 列从返回结果里去掉",
+   "C": "请求会被拒绝，因为条件永远不成立",
+   "D": "条件作为结果过滤：用户只能读到满足条件的实例（写操作时它才表现为拒绝条件）"
+  },
+  "answer": "D",
+  "explain": "文档：where 条件对 READ 是结果过滤（过滤 CQN 查询），对 UPDATE / DELETE 是拒绝条件；Java 还会校验 CREATE / UPDATE 的输入数据（不满足返回 400）。Node 对 CREATE 只支持不含模型引用的简单表达式。"
+ },
+ {
+  "tag": "排错",
+  "q": "同一个实体写了两段 annotate … with @(restrict: […])，编译只有一行 WARNING，运行时表现是？",
+  "opts": {
+   "A": "两段 privilege 合并，取并集",
+   "B": "两段 privilege 合并，取交集",
+   "C": "后者整体覆盖前者（Duplicate assignment … using last），前面的权限静默消失",
+   "D": "编译直接失败，不会产出 xsuaa 描述符"
+  },
+  "answer": "C",
+  "explain": "本机实测：编译 stderr 打印 Duplicate assignment with \"@restrict\", using last，且 --to xsuaa 的输出里只剩后一段的角色 scope（前面的 BookOrder.View / BookOrder.Submit 全部消失）。对策是把 @restrict 合并到一处。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "关于生产环境的认证配置，哪一条是正确做法？",
+  "opts": {
+   "A": "为了排障方便，生产也保留 kind: dummy，需要权限时再改回来",
+   "B": "用 package.json 的 [production] 档显式把 auth.kind 设为 xsuaa（或 jwt），并确保没有 mocked/dummy 进入生产",
+   "C": "生产用 mocked 更快，因为不需要连 XSUAA",
+   "D": "生产把 restrict_all_services 设为 false，让服务默认开放更灵活"
+  },
+  "answer": "B",
+  "explain": "mocked 不校验身份、dummy 放行一切，两者都不适合生产。CAP 文档也强调 mocked authentication is not suitable for production；正确做法是用 profile 固定生产认证策略。"
+ },
+ {
+  "tag": "排错",
+  "q": "用户刚被加进角色集合，登录后仍拿不到新权限（403）。最可能的原因是？",
+  "opts": {
+   "A": "角色的 definition 写错了",
+   "B": "浏览器缓存了 css",
+   "C": "他手上是旧 JWT（token 还没刷新），旧 token 里没有新 scope",
+   "D": "需要重启应用才能读到角色集合"
+  },
+  "answer": "C",
+  "explain": "scope 是签发时刻写进 JWT 的。加了角色集合后要让用户重新登录或等 token 刷新（token 有效期由 oauth2-configuration.token-validity 决定），排查时用重新取到的 token 复现。"
+ },
+ {
+  "tag": "排错",
+  "q": "通过 approuter 的 URL 请求后端 401，但直连 srv 应用（带同样的 token）是 200。最该检查什么？",
+  "opts": {
+   "A": "数据库实例是否绑到 approuter 上",
+   "B": "xs-app.json 的路由是否声明 authenticationType: xsuaa，以及 mta.yaml 里 destination 是否开了 forwardAuthToken",
+   "C": "srv 的 memory 配额",
+   "D": "approuter 的 Node 版本"
+  },
+  "answer": "B",
+  "explain": "approuter 只有在对后端 destination 转发 token 时，后端才看得到 Authorization 头。示范项目两处都配了：xs-app.json 的路由 authenticationType: xsuaa，以及 mta.yaml destination 的 forwardAuthToken: true。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "用 client_credentials 取到的技术用户 token，能不能用来验证「订单管理员能提交订单」？",
+  "opts": {
+   "A": "能，但必须先用 cf logs 打开 debug",
+   "B": "不能，因为 client_credentials 只能访问 $metadata",
+   "C": "能，只要 clientsecret 正确就拥有所有 scope",
+   "D": "不能，技术用户 token 会被映射成 system-user，不带业务角色，业务接口会返回 403"
+  },
+  "answer": "D",
+  "explain": "@sap/cds 的 jwt-auth.js：grant_type 为 client_credentials 时用户 id 变成 system，并附加 system-user 角色（自带的客户端再加 internal-user），业务角色一概没有。验证业务授权必须用业务用户 token（password 或 UI 登录）。"
+ },
+ {
+  "tag": "概念",
+  "q": "关于 @readonly 与授权的关系，下面哪种说法正确？",
+  "opts": {
+   "A": "@readonly 会让实体不出现在 $metadata 里",
+   "B": "@readonly 是前端注解，服务端不会执行",
+   "C": "@readonly 等价于「只有管理员能读」",
+   "D": "@readonly 是对所有用户的接口约束（等价于只授予 READ），不区分用户；按角色控制要写 @restrict / @requires"
+  },
+  "answer": "D",
+  "explain": "CAP 把 @readonly / @insertonly / @Capabilities 归为静态访问控制，由运行时强制执行但与用户无关。示范项目的 OrderItemView 用 @readonly 表示「这个只读视图不允许写」，不代表限制谁能看。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "要让「匿名必须 401、越权必须 403、授权必须 200」这三条长期有效，最应该做的是？",
+  "opts": {
+   "A": "把这些断言写进验收脚本并纳入 CI，同时在生产 profile 固定认证策略",
+   "B": "只在本地手工点一遍界面确认",
+   "C": "把 @requires 删掉，让服务默认开放再由前端隐藏按钮",
+   "D": "每天重启一次应用"
+  },
+  "answer": "A",
+  "explain": "CAP 不会自动替你定义授权，模型改动很容易让权限悄悄放开；把三态断言固化到脚本与 CI（示范项目的 odata-verify.sh 就是这个思路），再配合生产 profile 的 auth 设置，才是可持续的做法。"
+ }
+]

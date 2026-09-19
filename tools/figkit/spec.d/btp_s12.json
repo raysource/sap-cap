@@ -1,0 +1,156 @@
+{
+ "key": "btp_s12",
+ "kind": "cockpit",
+ "w": 1440,
+ "h": 900,
+ "product": "SAP Business Technology Platform",
+ "caption": "Service Marketplace：先看计划名与说明，再决定用哪个计划建实例",
+ "alt": "BTP cockpit 的 Service Marketplace 页面，列出 hana-cloud、hana、xsuaa、destination 等服务的可用计划",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 计划名依据 SAP Help（HANA Cloud / Connectivity）与 SAP 教程",
+ "crumbs": [
+  "Global Account: trial-9f3a2b (trial)",
+  "Subaccount: trial",
+  "Services / Service Marketplace"
+ ],
+ "nav": {
+  "title": "Subaccount: trial",
+  "items": [
+   {
+    "label": "Overview"
+   },
+   {
+    "label": "Services",
+    "sub": [
+     "Service Marketplace",
+     "Instances and Subscriptions"
+    ],
+    "active": true
+   },
+   {
+    "label": "Cloud Foundry",
+    "sub": [
+     "Org Members",
+     "Spaces",
+     "Space Quotas"
+    ]
+   },
+   {
+    "label": "Connectivity",
+    "sub": [
+     "Destinations",
+     "Cloud Connectors"
+    ]
+   },
+   {
+    "label": "Security",
+    "sub": [
+     "Role Collections",
+     "Users",
+     "Trust Configuration"
+    ]
+   },
+   {
+    "label": "Entitlements"
+   }
+  ]
+ },
+ "title": "Service Marketplace",
+ "subtitle": "只有 Entitlements 里拿到配额的计划才会在这里可选",
+ "blocks": [
+  {
+   "t": "toolbar",
+   "items": [
+    {
+     "label": "Create",
+     "primary": true
+    }
+   ],
+   "search": "搜索服务（hana / xsuaa / destination）"
+  },
+  {
+   "t": "table",
+   "cols": [
+    "Service",
+    "Plan",
+    "Cost",
+    "说明"
+   ],
+   "widths": [
+    2.2,
+    0.95,
+    0.5,
+    1.4
+   ],
+   "rh": 30,
+   "rows": [
+    [
+     "SAP HANA Cloud (hana-cloud)",
+     "hana-free",
+     "free",
+     "免费层数据库实例（试用 1 个）"
+    ],
+    [
+     "SAP HANA Schemas & HDI Containers (hana)",
+     "hdi-shared",
+     "free",
+     "CAP 部署目标（HDI 容器）"
+    ],
+    [
+     "SAP HANA Schemas & HDI Containers (hana)",
+     "schema",
+     "free",
+     "裸 schema，无 HDI 部署"
+    ],
+    [
+     "Authorization and Trust Management Service (xsuaa)",
+     "application",
+     "free",
+     "认证与角色"
+    ],
+    [
+     "Destination (destination)",
+     "lite",
+     "free",
+     "目标系统连接配置"
+    ],
+    [
+     "Application Logs (application-logs)",
+     "lite",
+     "free",
+     "应用日志检索"
+    ],
+    [
+     "Connectivity (connectivity)",
+     "lite",
+     "free",
+     "Cloud Connector 通道"
+    ]
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "info",
+   "text": "cf create-service 的第一个参数就是这里的服务名（括号内的技术名）。"
+  }
+ ],
+ "status": "Service Marketplace · 7 offerings shown · Region ap21",
+ "callouts": [
+  {
+   "on": "hdi-shared",
+   "text": "1. CAP 用 hdi-shared"
+  },
+  {
+   "on": "hana-free",
+   "text": "2. 数据库实例走免费层计划"
+  },
+  {
+   "on": "Service Marketplace",
+   "text": "3. 可建实例的服务都在这里"
+  },
+  {
+   "on": "lite",
+   "text": "4. lite = 免费层标准计划"
+  }
+ ]
+}

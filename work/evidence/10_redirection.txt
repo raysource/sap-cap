@@ -1,0 +1,8 @@
+$ npx cds compile srv/book-order-service.cds --to edmx     # 缺 @cds.redirection.target 的等价模型
+[ERROR] .tmpcheck/base.cds:7:10: Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or “BookOrderService.OrderItemView” to select the entity as redirection target for “sap.training.bookorder.BookOrderItems” in this service; can't auto-redirect “BookOrderService.BookOrders:items” otherwise (in entity:“BookOrderService.BookOrderItems”)
+[ERROR] .tmpcheck/base.cds:9:10: Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or “BookOrderService.OrderItemView” to select the entity as redirection target for “sap.training.bookorder.BookOrderItems” in this service; can't auto-redirect “BookOrderService.BookOrders:items” otherwise (in entity:“BookOrderService.OrderItemView”)
+
+$ npx cds compile .tmpcheck/anno.cds --to edmx              # 加一行 @cds.redirection.target 之后
+        <EntitySet Name="BookOrders" EntityType="BookOrderService.BookOrders">
+          <NavigationPropertyBinding Path="items" Target="BookOrderItems"/>
+          <NavigationPropertyBinding Path="SiblingEntity" Target="BookOrders"/>

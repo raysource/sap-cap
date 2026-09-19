@@ -1,0 +1,99 @@
+{
+ "key": "btp_s01",
+ "kind": "cockpit",
+ "w": 1440,
+ "h": 900,
+ "product": "SAP Business Technology Platform",
+ "caption": "Account Explorer：Global Account › Subaccount › Org › Space 的真实层级（试用账号只有 1 个子账户）",
+ "alt": "BTP cockpit 的 Account Explorer 页面，树形展示全局账户、子账户、Cloud Foundry Org 与 Space 的层级关系",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 层级与字段依据 SAP Help「Account Model」「Working with Global Accounts…」",
+ "crumbs": [
+  "Global Account: trial-9f3a2b (trial)"
+ ],
+ "nav": {
+  "title": "Global account: trial-9f3a2b",
+  "items": [
+   {
+    "label": "Account Explorer",
+    "active": true
+   },
+   {
+    "label": "Entitlements"
+   },
+   {
+    "label": "Users"
+   },
+   {
+    "label": "Security"
+   }
+  ]
+ },
+ "title": "Account Explorer",
+ "subtitle": "层级 = Global Account › Subaccount › Org › Space；注册试用时自动建好前 4 层",
+ "tabs": [
+  "Subaccounts",
+  "Directories",
+  "Hierarchy"
+ ],
+ "activeTab": 0,
+ "blocks": [
+  {
+   "t": "tree",
+   "items": [
+    {
+     "d": 0,
+     "label": "trial-9f3a2b (Global Account)",
+     "k": "folder",
+     "open": true
+    },
+    {
+     "d": 1,
+     "label": "trial · Subaccount · ap21 · Cloud Foundry",
+     "k": "folder",
+     "open": true
+    },
+    {
+     "d": 2,
+     "label": "Org: trial",
+     "k": "folder"
+    },
+    {
+     "d": 3,
+     "label": "Space: dev",
+     "k": "folder",
+     "tag": "2 apps"
+    },
+    {
+     "d": 3,
+     "label": "Space: test",
+     "k": "folder"
+    }
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "info",
+   "text": "试用注册自动创建 1 个子账户 + 1 个 Cloud Foundry org + space dev；要第 2 个子账户需自己创建（Create › Subaccount）。"
+  }
+ ],
+ "status": "Global account: trial-9f3a2b · 1 subaccount · Region ap21 (Singapore)",
+ "callouts": [
+  {
+   "on": "trial-9f3a2b (Global Account)",
+   "text": "1. 合同与配额的作用域"
+  },
+  {
+   "on": "Subaccount · ap21",
+   "text": "2. 区域与运行时落在子账户"
+  },
+  {
+   "on": "Space: dev",
+   "text": "3. 应用部署在 space 里"
+  },
+  {
+   "on": "Account Explorer",
+   "text": "4. 改层级都从这里进"
+  }
+ ]
+}

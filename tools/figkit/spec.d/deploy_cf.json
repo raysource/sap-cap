@@ -1,0 +1,61 @@
+{
+  "key": "deploy_cf",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — cf login / cf deploy",
+  "lh": 20,
+  "caption": "从登录到部署完成：--sso 打开浏览器单点登录、cf target 确认 org/space、cf deploy 上传 .mtar 并建应用与服务实例；最后一行给出取日志的命令",
+  "label": "高保真重绘",
+  "src": "本站重绘：CF CLI v8 + multiapps 插件的真实输出形态（未在本机实跑 cf）",
+  "lines": [
+    "$ cf login -a https://api.cf.ap10.hana.ondemand.com --sso",
+    "API endpoint: https://api.cf.ap10.hana.ondemand.com",
+    "",
+    "Temporary Authentication Code (copy one of these codes):",
+    "  xkcd-1a2b",
+    "@Opening browser for one-time login... done",
+    "Authenticating...",
+    "OK",
+    "",
+    "$ cf target",
+    "api endpoint:   https://api.cf.ap10.hana.ondemand.com",
+    "user:           jason@example.com",
+    "org:            trial",
+    "space:          dev",
+    "",
+    "$ cf deploy mta_archives/demo-node_1.0.0.mtar -f",
+    "Deploying multi-target app archive mta_archives/demo-node_1.0.0.mtar in org trial / space dev as jason@…",
+    "Uploading 1 files...",
+    "OK",
+    "Operation ID: 8f2c41d9-6b7e-11f0-9a3c-0242ac110002",
+    "",
+    "Deploying applications...",
+    "  demo-node-srv           web:1/1  started   (192 MB / 256 MB)",
+    "  demo-node               web:1/1  started   (64 MB / 128 MB)",
+    "Deploying services...",
+    "  demo-node-db (hana-cloud, hdi-shared)   -> created",
+    "  demo-node-auth (xsuaa, application)     -> created",
+    "",
+    "Process finished.",
+    "Use \"cf dmol -i 8f2c41d9\" to download the logs of the process."
+  ],
+  "callouts": [
+    {
+      "on": "-a https://api.cf.ap10.hana.ondemand.com --sso",
+      "text": "1. 端点要匹配 region"
+    },
+    {
+      "on": "space:          dev",
+      "text": "2. 部署目标=当前 space"
+    },
+    {
+      "on": "Process finished.",
+      "text": "3. 这行才代表成功"
+    },
+    {
+      "on": "cf dmol -i 8f2c41d9",
+      "text": "4. 失败用它取日志"
+    }
+  ]
+}

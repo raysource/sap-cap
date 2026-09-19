@@ -1,0 +1,128 @@
+{
+  "key": "bas_s01",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "caption": "Dev Space Manager：dev space 列表、状态（RUNNING / STOPPED / STARTING）、Type 与磁盘占用；Create Dev Space 从这里开始",
+  "alt": "Dev Space Manager：dev space 列表、状态（RUNNING / STOPPED / STARTING）、Type 与磁盘占用；Create Dev Space 从这里开始",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 字段与限制出自 SAP Help「Working in the Dev Space Manager」「Trial Plan Restrictions」",
+  "product": "SAP Business Application Studio",
+  "crumbs": [
+    "Subaccount: trial",
+    "Services",
+    "Instances and Subscriptions",
+    "Business Application Studio"
+  ],
+  "nav": {
+    "title": "SAP BUSINESS APPLICATION STUDIO",
+    "items": [
+      {
+        "label": "Lobby"
+      },
+      {
+        "label": "Dev Space Manager",
+        "active": true
+      },
+      {
+        "label": "Service Center"
+      },
+      {
+        "label": "Guide Center"
+      },
+      {
+        "label": "Extensions"
+      }
+    ]
+  },
+  "title": "Dev Space Manager",
+  "subtitle": "一个 dev space = 一台隔离的云端开发机；试用/免费计划：最多 2 个、同时 1 个 RUNNING、每个 4 GB 磁盘",
+  "tabs": [
+    "Dev Spaces"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "toolbar",
+      "items": [
+        {
+          "label": "Create Dev Space",
+          "primary": true
+        },
+        {
+          "label": "~ 更多操作"
+        }
+      ],
+      "search": "搜索 dev space"
+    },
+    {
+      "t": "table",
+      "cols": [
+        "DEV SPACE",
+        "TYPE (KIND)",
+        "STATUS",
+        "DISK",
+        "ACTIONS"
+      ],
+      "widths": [
+        1.3,
+        1.9,
+        0.9,
+        0.9,
+        1.6
+      ],
+      "rows": [
+        [
+          "bookorder",
+          "Full Stack Cloud Application",
+          "RUNNING",
+          "1.2 GB / 4 GB",
+          "✎ Edit   ■ Stop"
+        ],
+        [
+          "hana-native",
+          "SAP HANA Native Application",
+          "STOPPED",
+          "0.4 GB / 4 GB",
+          "✎ Edit   ▶ Start"
+        ],
+        [
+          "fiori-ui",
+          "SAP Fiori",
+          "STARTING",
+          "—",
+          "（通常几分钟内完成）"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "Delete 不可恢复；官方建议先把项目同步到 Git 再删除 dev space。"
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "Stop → Start 保留文件与设置；扩展的安装与更新只有在 Stop → Start 之后才生效。"
+    }
+  ],
+  "status": "● 2 / 2 dev spaces · ● 1 RUNNING · Region: ap10 (Singapore) · 试用：60 分钟无操作会超时",
+  "callouts": [
+    {
+      "on": "Create Dev Space",
+      "text": "1. 从零新建 dev space"
+    },
+    {
+      "on": "Full Stack Cloud Application",
+      "text": "2. CAP 项目选这个 kind"
+    },
+    {
+      "on": "RUNNING",
+      "text": "3. 只有 RUNNING 能打开"
+    },
+    {
+      "on": "Delete 不可恢复；官方建议先把项目同步到 Git 再删除 dev space。",
+      "text": "4. 删前先备份到 Git"
+    }
+  ]
+}

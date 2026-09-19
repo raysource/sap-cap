@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课程总览 · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP（Cloud Application Programming Model）全流程培训课程：从 BTP 试用账号注册、BAS 开发环境、HANA Cloud、CDS 建模、Node.js 与 Java 服务实现、测试体系、权限、Fiori UI 到构建部署，并交付一个可运行、已实测的端到端示范项目（含源码与 OData 验收脚本）。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a class="active" href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="kicker">从 BTP 注册到测试部署 · Node.js 与 Java 双运行时</span>
+    <h1>SAP CAP 培训课程：把一套模型变成可运行的云服务</h1>
+    <p class="lead">11 个板块、<b>从总体到细节</b>的手顺（每步都有命令、期望输出与验证方法），每节都带测试；
+      课程最后交付一个<b>在本机真实跑起来、并被 26 条 OData 断言验证过</b>的示范项目——含 CDS 模型、
+      Node.js 与 Java 两套运行时实现、Fiori Elements 界面、MTA 部署描述与集成测试脚本。</p>
+    <p class="lead" style="font-size:15px">课程里的 BTP Cockpit / BAS / HANA / Fiori 画面是本站用 SVG
+      <b>重绘的高保真画面（不是实机截图）</b>；所有终端输出、表格数据、测试结果是本地实际运行的结果，
+      每处都标出产生它的命令。</p>
+  </div>
+</div>
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>课程总览</span></p>
+
+<div class="toc">
+  <a href="#map">课程地图</a><a href="#route">学习路线</a><a href="#who">受众与前置</a>
+  <a href="#env">环境清单</a><a href="#demo">示范项目</a><a href="#evidence">实测证据</a>
+  <a href="#how">学习方式</a><a href="#assets">交付物</a><a href="#disclaimer">关于画面</a>
+</div>
+
+<h2 id="map">1. 课程地图：11 个板块</h2>
+<p>课程按「<b>先把环境搭起来 → 再建模 → 再写服务 → 再测试 → 再配界面 → 最后部署</b>」的真实项目顺序编排。
+每个板块都是独立的页面，可以按顺序学，也可以按需跳转；<b>每个板块末尾都有本节测试</b>，全部题目汇总在
+<a href="quiz.html">自测页</a>（按章节分组，合格线 75%）。</p>
+
+<div class="grid cards">
+  <div class="card">
+    <h3><a href="concept.html">概念：CAP 是什么</a></h3>
+    <p>三层架构（模型 / 服务 / UI）、请求生命周期、Node 与 Java 两种运行时的分工、15 个核心概念、
+      12 个常见误解。读完能自己画出这个框架的坐标图。</p>
+    <div class="tags"><span>总体</span><span>概念图</span><span>12 误解</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="btp.html">① 从 BTP 注册到环境就绪</a></h3>
+    <p>试用账号注册、Global Account / Directory / Subaccount 结构、Entitlements 与配额、角色集合、
+      Cloud Foundry 组织与空间、CLI 登录、三个关键服务实例（hana-cloud / xsuaa / destination）。</p>
+    <div class="tags"><span>全套手顺</span><span>cockpit + CLI 双路</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="bas.html">② BAS 开发环境</a></h3>
+    <p>Dev Space 创建与内存配额、界面导览、<code>cds init</code> 建项目、终端与端口转发、调试、
+      Git 接入、从 BAS 直接部署。附与本地开发的取舍对照表。</p>
+    <div class="tags"><span>BAS</span><span>终端</span><span>调试</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="hana.html">③ SAP HANA Cloud 与 HDI 容器</a></h3>
+    <p>为什么需要 HANA、hdi-shared / schema / tools 三种 plan 的取舍、与 CAP 项目绑定（<code>cds bind</code>）、
+      用 Database Explorer 验证 CAP 生成的表与真实 SQL。</p>
+    <div class="tags"><span>HANA</span><span>HDI</span><span>SQL 验证</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="cds.html">④ CDS 建模（从模型到数据库）</a></h3>
+    <p>类型全表、主键与 aspect、Association 与 Composition 的真实差异（含本站为什么不用 Composition）、
+      视图与主键、注解、CSV 种子数据的陷阱、12 条建模排错手册。</p>
+    <div class="tags"><span>细节</span><span>编译产物对照</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="node.html">⑤ Node.js 服务实现</a></h3>
+    <p>服务定义逐段讲、before/on/after 事件体系、CQN 查询、事务与 <code>req.reject</code>、
+      草稿（draft）流程、5 类实现位置（编号生成、派生金额、汇总回写、状态迁移动作、聚合函数）。</p>
+    <div class="tags"><span>运行时 A</span><span>完整源码</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="java.html">⑥ Java 服务实现</a></h3>
+    <p>同一套 <code>.cds</code> 模型换 Java 运行时：Maven 工程结构、<code>cds-maven-plugin</code>、
+      事件处理器的注解写法、类型化 API、与 Node 版的逐项对照。</p>
+    <div class="tags"><span>运行时 B</span><span>Spring</span><span>对照表</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="testing.html">⑦ 测试体系</a></h3>
+    <p>四层测试（模型编译检查 → 单元测试 → OData 集成测试 → UI 测试）、<code>cds.test</code> 写法、
+      26 条断言的验收脚本逐条讲解、测试数据幂等性与 CI 接入。</p>
+    <div class="tags"><span>每节有测试</span><span>26 条断言</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="security.html">⑧ 认证与授权</a></h3>
+    <p>mocked / dummy / basic / jwt 四种本地身份模拟的真实差异、<code>@requires</code> 与 <code>@restrict</code>、
+      xs-security.json、角色集合与 JWT，以及「只有管理员能提交订单」的完整落地链路。</p>
+    <div class="tags"><span>XSUAA</span><span>401/403</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="fiori.html">⑨ Fiori UI</a></h3>
+    <p>Fiori Elements 与注解、manifest.json 逐字段解释、List Report + Object Page 的草稿交互、
+      本地运行与空白页三步定位、部署后的访问路径。</p>
+    <div class="tags"><span>UI5</span><span>annotations</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="deploy.html">⑩ 构建与部署</a></h3>
+    <p>cds build → mbt build → .mtar → cf deploy 全链路、mta.yaml 逐段详解、部署后验证清单、
+      更新与回滚、GitHub Actions 流水线。</p>
+    <div class="tags"><span>MTA</span><span>cf</span><span>CI/CD</span></div>
+  </div>
+  <div class="card">
+    <h3><a href="project.html">示范项目（端到端）</a></h3>
+    <p>把 ①–⑩ 串成一条线：同一个「图书受注管理」场景，从需求到模型、服务、测试、Fiori、部署，
+      给出全部源码与<b>本机实测输出</b>。</p>
+    <div class="tags"><span>可运行</span><span>含 Fiori</span><span>实测</span></div>
+  </div>
+</div>
+
+<div class="box info"><b class="t">配套页面（不在主线上，但会用得到）</b>
+<ul>
+  <li><a href="code.html">源码</a>：示范项目全部源文件全文（可直接复制）</li>
+  <li><a href="cli.html">速查</a>：cds / cf / btp / mvn / curl 命令与注解速查表</li>
+  <li><a href="issues.html">排错</a>：错误信息 → 原因 → 对策（跨板块汇总）</li>
+  <li><a href="tasks.html">任务索引</a>：全部实训任务一览（可筛选，含完成基准与预计时间）</li>
+  <li><a href="instructor.html">讲师版</a> / <a href="worksheet.html">学员版</a> / <a href="quiz.html">自测</a> / <a href="glossary.html">术语表</a></li>
+</ul></div>
+
+<h2 id="route">2. 学习路线：7 个阶段、约 20 小时</h2>
+<p>下表是推荐顺序。<b>时间按「自己动手做完每步」估算</b>，只看不做的复习模式约为 1/3。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>阶段</th><th>内容</th><th>对应页面</th><th>预计</th><th>完成判据（可观察）</th></tr></thead>
+<tbody>
+<tr><td>0. 准备</td><td>注册 BTP 试用、创建子账户与空间、装 cf/btp CLI</td><td><a href="btp.html">① BTP 注册</a></td><td>90 分</td><td><code>cf target</code> 输出正确的 org / space</td></tr>
+<tr><td>1. 环境</td><td>Dev Space、项目脚手架、HANA 实例</td><td><a href="bas.html">② BAS</a> · <a href="hana.html">③ HANA</a></td><td>120 分</td><td><code>cds watch</code> 起得来，实例状态为 Created</td></tr>
+<tr><td>2. 建模</td><td>领域模型、关联、视图、种子数据</td><td><a href="cds.html">④ CDS 建模</a></td><td>150 分</td><td><code>cds deploy</code> 后 sqlite 里有表且有数据</td></tr>
+<tr><td>3. 服务</td><td>服务定义、事件处理器、业务规则</td><td><a href="node.html">⑤ Node 服务</a></td><td>240 分</td><td><code>curl</code> 能查到数据、能触发规则</td></tr>
+<tr><td>3'. 服务（Java）</td><td>同一模型的 Java 实现</td><td><a href="java.html">⑥ Java 服务</a></td><td>180 分</td><td><code>mvn spring-boot:run</code> 后 OData 返回同样数据</td></tr>
+<tr><td>4. 测试</td><td>单元测试 + OData 集成测试</td><td><a href="testing.html">⑦ 测试</a></td><td>120 分</td><td>验收脚本全绿</td></tr>
+<tr><td>5. 权限</td><td>认证、角色集合、授权注解</td><td><a href="security.html">⑧ 权限</a></td><td>90 分</td><td>匿名 401、授权用户 200、越权 403</td></tr>
+<tr><td>6. 界面</td><td>Fiori Elements 注解与本地运行</td><td><a href="fiori.html">⑨ Fiori</a></td><td>150 分</td><td>浏览器里能列出订单并进入明细页</td></tr>
+<tr><td>7. 部署</td><td>MTA 构建、cf deploy、部署后验证</td><td><a href="deploy.html">⑩ 部署</a></td><td>120 分</td><td>路由上 <code>curl $metadata</code> 返回 200</td></tr>
+</tbody></table></div>
+
+<div class="box ok"><b class="t">一句话路线</b>环境 → 模型 → 服务 → 测试 → 界面 → 部署。
+没有环境就没有模型，没有模型就没有服务，没有测试就不敢部署。<b>顺序本身就是本课程要教的东西。</b></div>
+
+<h2 id="who">3. 受众与前置条件</h2>
+<div class="cols2">
+<div>
+<h3>适合谁</h3>
+<ul>
+  <li><b>后端/全栈工程师</b>：要在 BTP 上做业务服务，但被 cockpit 的手顺和 CDS 的语法卡住</li>
+  <li><b>ABAP 开发者</b>：想理解同一份业务模型在云原生栈上怎么写（<a href="concept.html">概念</a>里有一节专讲 RAP 与 CAP 的关系）</li>
+  <li><b>前端工程师</b>：要接 CAP 服务做 Fiori，需要知道 draft、注解与 $metadata 的关系</li>
+  <li><b>讲师/内训师</b>：需要现成的手顺、验收清单、讲师版与学员版</li>
+</ul>
+</div>
+<div>
+<h3>前置要求</h3>
+<ul>
+  <li>能读写 JSON / 命令行（会 <code>cd</code>、<code>npm</code> 即可）</li>
+  <li>理解 HTTP 与 REST（知道 GET/POST、状态码）</li>
+  <li>不需要 SAP 基础、不需要 ABAP 基础、不需要 Java 基础（Java 章节自带环境准备）</li>
+  <li>一个能收邮件的地址（注册 BTP 试用用）</li>
+</ul>
+</div>
+</div>
+
+<h2 id="env">4. 环境清单</h2>
+<p>左边是课程要求，右边是<b>本次生成课程时使用的真实版本</b>——照着装同名同大版本的即可。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>组件</th><th>要求</th><th>本站实测版本</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>Node.js</td><td>20 LTS 或 22 LTS</td><td><code>v22.23.2</code></td><td>CAP 9 的推荐 LTS。<b>不要用最新的奇数/非 LTS 版本</b>：<code>better-sqlite3</code> 的原生模块可能没有对应预编译包（本站必须用 Node 22 才能装上）</td></tr>
+<tr><td>@sap/cds / cds-dk</td><td>9.x（两侧同大版本）</td><td><code>@sap/cds 9.9.3</code>、<code>@sap/cds-dk 9.x</code></td><td>cds-dk 10 要求 cds ≥ 9；两边大版本一致才不会出现 CLI 与运行时不匹配</td></tr>
+<tr><td>数据库（本地）</td><td>@cap-js/sqlite + better-sqlite3</td><td><code>@cap-js/sqlite 2.x</code>、SQLite <code>3.53.2</code></td><td>零配置，教学首选；云端换成 HANA Cloud（见 <a href="hana.html">③</a>）</td></tr>
+<tr><td>SAP HANA Cloud</td><td>试用账号 1 个 hdi-shared 实例</td><td>未在本机开通（<b>课程按手顺教学并使用 SQLite 实测</b>）</td><td>没有 BTP 账号时全套课程仍可完成，只有 <a href="hana.html">③</a> <a href="deploy.html">⑩</a> 的云端部分需要账号</td></tr>
+<tr><td>Java（可选）</td><td>JDK 17 或 21 + Maven 3.9+</td><td>本机已安装 <code>openjdk@21</code> + <code>maven</code></td><td>只做 <a href="java.html">⑥</a> 需要；Node 与 Java 共享同一份 <code>.cds</code> 模型</td></tr>
+<tr><td>浏览器</td><td>Chrome / Edge 最新版</td><td><code>Google Chrome</code></td><td>BAS、cockpit、Fiori 预览都用它；调试 $metadata 请求必备</td></tr>
+<tr><td>CLI 工具</td><td><code>cf</code>（Cloud Foundry CLI）、<code>btp</code> CLI、<code>mbt</code>（MTA Build Tool）</td><td>安装手顺见 <a href="btp.html">①</a> / <a href="deploy.html">⑩</a></td><td>只有部署阶段需要；本地开发不需要</td></tr>
+</tbody></table></div>
+
+<h2 id="demo">5. 课程交付的示范项目：图书受注管理</h2>
+<p>课程不是「讲完就算」——最后有一个<b>完整、可运行</b>的示范项目，同一个业务场景在三处出现：
+CDS 模型（共享）、Node.js 实现、Java 实现。项目源码随课程交付，位于
+<code>project-code/demo-node/</code> 与 <code>project-code/demo-java/</code>。</p>
+
+<div class="cols2">
+<div>
+<h3>业务场景</h3>
+<ul>
+  <li><b>Books</b> 图书主数据（5 种，价格 2800–5200 JPY）</li>
+  <li><b>Customers</b> 顾客（3 家：北京 / 上海 / 广州）</li>
+  <li><b>BookOrders</b> 订单头（订单号 BO-1001…、状态 OPEN/SUBMITTED/CLOSED、合计）</li>
+  <li><b>BookOrderItems</b> 订单明细（金额 = 单价 × 数量，由服务端计算）</li>
+  <li><b>OrderItemView</b> 带主键的展开视图（可直接暴露为只读实体）</li>
+</ul>
+</div>
+<div>
+<h3>覆盖的技术点</h3>
+<ul>
+  <li>服务端编号生成 + 唯一性校验（409）</li>
+  <li>派生字段计算（before CREATE/UPDATE）</li>
+  <li>父表汇总回写（after CREATE/UPDATE/DELETE）</li>
+  <li>绑定动作（bound action）状态迁移 + 业务校验（400/404/409）</li>
+  <li>无绑定函数返回聚合结果（聚合视图没有主键，不能暴露为实体）</li>
+  <li>草稿（<code>@odata.draft.enabled</code>）与 Fiori 编辑流程</li>
+</ul>
+</div>
+</div>
+
+<h3>五个层次的产物</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>层</th><th>文件（示范项目内）</th><th>怎么验证</th></tr></thead>
+<tbody>
+<tr><td>模型</td><td><code>db/schema.cds</code>、<code>db/data/*.csv</code></td><td><code>npm run deploy</code> → 查 sqlite 表与行数</td></tr>
+<tr><td>服务</td><td><code>srv/book-order-service.cds</code></td><td><code>curl $metadata</code> 返回 200 且含 BookOrderService</td></tr>
+<tr><td>实现</td><td><code>srv/book-order-service.js</code></td><td>业务规则的正例/负例各测一次（见验收脚本）</td></tr>
+<tr><td>测试</td><td><code>test/odata-verify.sh</code>（26 条断言）</td><td><code>bash test/odata-verify.sh</code></td></tr>
+<tr><td>界面</td><td><code>app/book-orders/</code>（Fiori Elements + annotations.cds）</td><td><code>cds watch</code> 后浏览器打开应用</td></tr>
+<tr><td>部署</td><td><code>mta.yaml</code>、<code>xs-security.json</code></td><td><code>mbt build</code> → <code>cf deploy</code> → 路由 curl</td></tr>
+</tbody></table></div>
+
+<h2 id="evidence">6. 实测证据（本站不是「写好了没跑过」）</h2>
+<p>下列数字全部来自本机实际运行，可在 <a href="project.html">示范项目页</a> 与 <a href="code.html">源码页</a> 中核对。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>环节</th><th>命令</th><th>实测结果</th></tr></thead>
+<tbody>
+<tr><td>安装</td><td><code>npm install</code>（Node 22）</td><td>328 packages，better-sqlite3 原生模块可用（<code>SQLite 3.53.2</code>）</td></tr>
+<tr><td>建库</td><td><code>npm run deploy</code></td><td>6 张表；Books 5 行、Customers 3 行、BookOrders 4 行、BookOrderItems 9 行</td></tr>
+<tr><td>启动</td><td><code>npm start</code></td><td><code>server listening on http://localhost:4004</code>，服务挂载在 <code>/odata/v4/book-order</code></td></tr>
+<tr><td>验收</td><td><code>bash test/odata-verify.sh</code></td><td><b>26 条断言全部通过</b>（含匿名 401、草稿激活 409/400、状态迁移 409）</td></tr>
+<tr><td>Fiori</td><td><code>cds watch</code> + 浏览器</td><td>List Report / Object Page 正常列出订单与明细（见 <a href="fiori.html">⑨</a>）</td></tr>
+<tr><td>Java</td><td><code>mvn spring-boot:run</code></td><td>同一模型在 Java 运行时上返回同样的数据（见 <a href="java.html">⑥</a>）</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="t">诚实说明</b>
+BTP / BAS / HANA Cloud 的<b>云端部分未在本机开通</b>（需要真实的 S/4 或 BTP 试用账号与公司邮箱策略）。
+这些页面的画面是本站按官方界面重绘的<b>高保真画面</b>，手顺与命令来自官方文档并逐条标注了「自系统确认方法」；
+而本地可执行的部分（CDS 编译、服务运行、OData 验证、Fiori 预览、Java 运行时）都是<b>真跑出来的结果</b>。</div>
+
+<h2 id="how">7. 学习方式：每一节都有测试</h2>
+<div class="grid cards">
+  <div class="card"><h3>手顺 + 期望输出</h3><p>每个操作步骤都写明命令、期望输出与<b>失败时的现象</b>；步骤后紧跟 <b>验证</b> 一行，避免「做完了但不知道对不对」。</p></div>
+  <div class="card"><h3>本节测试</h3><p>每个板块末尾有 6–8 道即时检查题，全部题目汇总到 <a href="quiz.html">自测</a>（按章节分组、自动判分、合格 75%）。</p></div>
+  <div class="card"><h3>验收清单（☐）</h3><p>操作类板块给出可勾选的完成基准；讲师可以直接当成实验报告的检查项。</p></div>
+  <div class="card"><h3>讲师版 / 学员版</h3><p><a href="instructor.html">讲师版</a>含采分点、必问问题与参考答案；<a href="worksheet.html">学员版</a>是可打印的记入表。</p></div>
+</div>
+
+<h2 id="assets">8. 交付物一览</h2>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>交付物</th><th>形式</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>课程站点</td><td>静态 HTML（本目录）</td><td>离线可打开，无外部依赖；21 个页面</td></tr>
+<tr><td>高保真画面</td><td><code>assets/fig/*.svg</code></td><td>BTP / BAS / HANA / Fiori / CF CLI 画面，本站自绘（可 1:1 换成实机截图）</td></tr>
+<tr><td>示范项目源码</td><td><code>project-code/</code></td><td>Node.js 版 + Java 版 + Fiori 应用 + 验收脚本 + README</td></tr>
+<tr><td>手顺书 / 学习 WBS</td><td><code>CAP培训_手顺书_学习WBS.xlsx</code></td><td>任务 × 步骤 × 完成基准 × 预计时间，可当课堂进度表</td></tr>
+<tr><td>自测题</td><td><a href="quiz.html">quiz.html</a></td><td>按 11 个板块分组，自动判分</td></tr>
+</tbody></table></div>
+
+<h2 id="disclaimer">9. 关于画面与数据的说明</h2>
+<div class="box warn"><b class="t">三点必须讲清楚</b>
+<ul>
+  <li><b>画面</b>：BTP Cockpit / BAS / HANA / Fiori 的界面是本站用 SVG <b>重绘</b>的（图注标「高保真重绘」），
+    用于在没有 SAP 账号的情况下把界面结构讲清楚。<b>它们不是实机截图</b>，标签文字可能随版本/区域变化。</li>
+  <li><b>终端输出</b>：标注「本地实机运行」的内容是真实命令的输出（命令写在图注里），可以自己复现。</li>
+  <li><b>标准值</b>：服务 plan 名、配额、角色集合名、API 端点等随版本与区域不同，
+    每处都给了「自系统确认方法」，请在自己的环境里核对后再教学。</li>
+</ul></div>
+
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>CAP 课程里「模型 / 服务 / UI」三层分别对应示范项目的哪些文件？</li>
+    <li>为什么课程要求 Node 用 20/22 LTS 而不是最新版？</li>
+    <li>示范项目的哪个需求<b>不能</b>直接用 OData 实体暴露，必须用函数实现？为什么？</li>
+    <li>如果只做 Node 版，不做 Java 版，会漏掉哪一类工程知识点（举两个）？</li>
+    <li>验收脚本 <code>odata-verify.sh</code> 与单元测试的区别是什么？各自该在什么时候跑？</li>
+    <li>页面里标「高保真重绘」的画面与标「本地实机运行」的图，使用上有什么不同？</li>
+  </ol>
+  <p class="go">参考答案见 <a href="instructor.html">讲师版</a>；在线自测见 <a href="quiz.html">自测页</a>。</p>
+</div>
+
+<h2>10. 下一步</h2>
+<div class="flow">
+  <span class="node">先读 <a href="concept.html">概念</a></span><span class="arrow">→</span>
+  <span class="node">再照 <a href="btp.html">① BTP 注册</a> 把环境搭起来</span><span class="arrow">→</span>
+  <span class="node">然后按 <a href="cds.html">④ 建模</a> → <a href="node.html">⑤ 服务</a> → <a href="testing.html">⑦ 测试</a> 走一遍</span><span class="arrow">→</span>
+  <span class="node">最后 <a href="project.html">示范项目</a> 完整验收</span>
+</div>
+<p>没有 BTP 账号也可以开始：<a href="cds.html">④</a>–<a href="testing.html">⑦</a> 的全部内容在本机（SQLite）就能完成，
+<a href="project.html">示范项目</a> 就是按这个前提设计的。</p>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

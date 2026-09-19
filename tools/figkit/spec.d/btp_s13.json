@@ -1,0 +1,130 @@
+{
+ "key": "btp_s13",
+ "kind": "cockpit",
+ "w": 1440,
+ "h": 900,
+ "product": "SAP Business Technology Platform",
+ "caption": "Instances and Subscriptions：3 个实例都到 Created 才算环境就绪",
+ "alt": "BTP cockpit 的 Instances and Subscriptions 页面，列出 demo-hana-db、demo-xsuaa、demo-destination 三个实例",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 实例命名与本站示范项目一致；配额数字依据 SAP Help「Trial Accounts and Free Tier」",
+ "crumbs": [
+  "Global Account: trial-9f3a2b (trial)",
+  "Subaccount: trial",
+  "Services / Instances and Subscriptions"
+ ],
+ "nav": {
+  "title": "Subaccount: trial",
+  "items": [
+   {
+    "label": "Overview"
+   },
+   {
+    "label": "Services",
+    "sub": [
+     "Service Marketplace",
+     "Instances and Subscriptions"
+    ],
+    "active": true
+   },
+   {
+    "label": "Cloud Foundry",
+    "sub": [
+     "Org Members",
+     "Spaces",
+     "Space Quotas"
+    ]
+   },
+   {
+    "label": "Connectivity",
+    "sub": [
+     "Destinations",
+     "Cloud Connectors"
+    ]
+   },
+   {
+    "label": "Security",
+    "sub": [
+     "Role Collections",
+     "Users",
+     "Trust Configuration"
+    ]
+   },
+   {
+    "label": "Entitlements"
+   }
+  ]
+ },
+ "title": "Instances and Subscriptions",
+ "subtitle": "空间：dev · 试用账号共 40 个服务实例配额",
+ "blocks": [
+  {
+   "t": "toolbar",
+   "items": [
+    {
+     "label": "Create",
+     "primary": true
+    }
+   ]
+  },
+  {
+   "t": "table",
+   "cols": [
+    "Name",
+    "Service",
+    "Plan",
+    "Status"
+   ],
+   "widths": [
+    1.3,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rows": [
+    [
+     "demo-hana-db",
+     "hana",
+     "hdi-shared",
+     "Created"
+    ],
+    [
+     "demo-xsuaa",
+     "xsuaa",
+     "application",
+     "Created"
+    ],
+    [
+     "demo-destination",
+     "destination",
+     "lite",
+     "Created"
+    ]
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "warn",
+   "text": "HANA Cloud 免费层实例每天夜间停止，30 天不重启会被删除；应用也会每天被停。"
+  }
+ ],
+ "status": "● 3 instances · Quota: 40 service instances · Space: dev",
+ "callouts": [
+  {
+   "on": "demo-hana-db",
+   "text": "1. 名字会写进 CAP 配置"
+  },
+  {
+   "on": "Created",
+   "text": "2. 等到 Created 才算完"
+  },
+  {
+   "on": "Create",
+   "text": "3. 与 cf create-service 等价"
+  },
+  {
+   "on": "40 个服务实例配额",
+   "text": "4. 试用配额有上限"
+  }
+ ]
+}

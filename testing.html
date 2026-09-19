@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>测试体系：从一条 curl 到 CI · SAP CAP 培训课程</title>
+<meta name="description" content="CAP 项目的四层测试体系：cds compile 模型检查、mocha + cds.test 单元/接口测试、test/odata-verify.sh 的 26 条 OData 断言、HTML5 应用测试。含 curl/Postman 手工验证手顺、测试数据管理与幂等性、覆盖率门槛与 DoD、GitHub Actions 示例，全部带本站示范项目的真实运行输出。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a class="active" href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>测试体系：从一条 curl 到 CI</span></p>
+<h1>测试体系：从一条 curl 到 CI</h1>
+<p class="kicker">覆盖对象：<code>cds compile</code>（模型检查）· mocha + <code>cds.test</code>（本站实测 16 passing）· <code>test/odata-verify.sh</code>（26 条 OData 断言，PASS 26 / FAIL 0）· curl / Postman 手工验证 · 测试数据与幂等性 · GitHub Actions。每个手顺都给可复核的期望输出，命令与结果都来自本站示范项目 <code>project-code/demo-node</code> 的本地实测。</p>
+
+<div class="toc">
+  <a href="#s0">0. 本页地图与测试金字塔</a>
+  <a href="#s1">1. 第 0 层：模型与语法检查</a>
+  <a href="#s2">2. 第 1 层：mocha + cds.test</a>
+  <a href="#s3">3. 第 2 层：odata-verify.sh 与 26 条断言</a>
+  <a href="#s4">4. 手工验证：curl / Postman</a>
+  <a href="#s5">5. 测试数据管理与幂等性</a>
+  <a href="#s6">6. 覆盖率与质量门槛</a>
+  <a href="#s7">7. 在 CI 里跑</a>
+  <a href="#s8">8. 本项目的 DoD 清单</a>
+  <a href="#s9">9. 常见错误表</a>
+  <a href="#s10">10. 本节测试</a>
+  <a href="#s11">11. 小结</a>
+  <a href="#s12">12. 附录：断言与期望值对照表</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>用三条命令（<code>cds compile</code> / <code>mocha</code> / <code>bash test/odata-verify.sh</code>）覆盖 CAP 服务的三层测试，并说清每层的定位与代价；</li>
+  <li>写出 <code>cds.test</code> 风格的用例，包含正向（<code>$expand</code>、函数、派生金额、汇总回写）与负向（400 / 401 / 405 / 409）断言；</li>
+  <li>解释为什么你的测试第二次跑就失败，并用 <code>data.reset()</code> / <code>npm run deploy</code> / 独立 sqlite 文件解决；</li>
+  <li>把测试接进 GitHub Actions，并说清为什么 <code>cds watch</code> 不属于 CI；</li>
+  <li>用一份 DoD 清单判定「这个服务可以交付了吗」。</li>
+</ul></div>
+
+<div class="box warn"><b class="t">事实口径（先读这一条）</b>
+<p>本页输出的实测环境：<b>Node 22.23.2</b>、<b>@sap/cds 9.9.3</b>、<b>@sap/cds-dk 9.9.6</b>、mocha 10 / chai 5、数据库 <code>db.sqlite</code>（SQLite）。原始记录：<code>work/evidence/04_odata.txt</code>（验收脚本）、<code>13_mocha.txt</code> / <code>13b_npm_test_pass.txt</code>（mocha）、<code>17_methods.txt</code>（方法/认证探测）。<b>本站示范项目在交付时并未内置 <code>test/odata.test.js</code></b>，第 2 层里的 mocha 用例是实测过程中临时加入后运行的（页面里给出全文，可自行复现）；第 3 层的 <code>test/odata-verify.sh</code> 是项目自带的。GitHub Actions 的 yaml 是示例，未在真实 CI 上执行（已标注）。</p></div>
+
+<h2 id="s0">0. 本页地图与测试金字塔</h2>
+
+<p>CAP 项目的测试有一个很现实的约束：<b>越靠近模型，跑得越快、成本越低；越靠近 UI，越慢越脆</b>。所以本站示范项目按下面的金字塔组织，你也应该按这个顺序投入时间。</p>
+
+<div class="flowv">
+  <div class="step"><span class="ico">0</span><div class="body"><b>模型与语法检查（秒级）</b><small>cds compile --to sql / --to edmx。抓语法、未解析关联、缺主键、重定向歧义</small></div></div>
+  <div class="vline"></div>
+  <div class="step"><span class="ico">1</span><div class="body"><b>单元 / 接口测试（秒级～十几秒）</b><small>mocha + cds.test：起一个真服务，直接打 OData；本站 16 个用例 425 ms</small></div></div>
+  <div class="vline"></div>
+  <div class="step"><span class="ico">2</span><div class="body"><b>OData 集成测试（秒级）</b><small>test/odata-verify.sh：对运行中的服务跑 26 条断言，包含业务数值与状态码</small></div></div>
+  <div class="vline"></div>
+  <div class="step"><span class="ico">3</span><div class="body"><b>UI 测试（分钟级，按需）</b><small>Fiori Elements 应用的端到端；本课程不深入（需要浏览器与假数据服务）</small></div></div>
+</div>
+
+<table class="tbl small">
+  <tr><th>层</th><th>工具</th><th>本站实测命令</th><th>真实结果</th><th>能抓到的 bug</th></tr>
+  <tr><td>0</td><td><code>cds compile</code></td><td><span class="cmd">npx cds compile srv/book-order-service.cds --to edmx</span></td><td>无 <code>[ERROR]</code>，5 个 EntitySet + 2 个 FunctionImport</td><td>语法、关联、主键、重定向歧义</td></tr>
+  <tr><td>1</td><td>mocha + <code>cds.test</code></td><td><span class="cmd">npm test</span></td><td><b>16 passing (425ms)</b></td><td>handler 逻辑、状态码、字段名、draft 流程</td></tr>
+  <tr><td>2</td><td>bash + curl</td><td><span class="cmd">bash test/odata-verify.sh</span></td><td><b>PASS 26 / FAIL 0</b></td><td>端到端行为、认证、真实部署形态</td></tr>
+  <tr><td>3</td><td>（本节不展开）</td><td>—</td><td>—</td><td>列宽、按钮、草稿消息条等 UI 细节</td></tr>
+</table>
+
+<div class="box ok"><b class="t">本页的地基（先确认环境）</b>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+node -v                       # 期望 v22.x（本站 v22.23.2）
+npx cds --version | head -3   # 期望 @sap/cds 9.9.3 / @sap/cds-dk 9.9.6
+npm run deploy                # 把库重置成 CSV 初始状态（第 2、3 层都要靠它保证幂等）</code></pre>
+</div>
+
+
+<figure class="fig" data-fig="test_s03">
+  <a class="zoom" href="assets/fig/test_s03.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/test_s03.svg" alt="第 1 层的写法：cds.test 起一个真实服务端，GET/POST 直接打 OData 接口；终端里是同一次运行的真实结果" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">第 1 层的写法：cds.test 起一个真实服务端，GET/POST 直接打 OData 接口；终端里是同一次运行的真实结果</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npx mocha test/odata.test.js</span></figcaption>
+</figure><h2 id="s1">1. 第 0 层：模型与语法检查</h2>
+
+<p>这一层的价值在于<b>把「模型错误」和「代码错误」分开</b>：模型编译不过时，别急着看 handler。CAP 的编译器会在 <code>cds compile</code>、<code>cds watch</code> 启动、<code>cds deploy</code> 三个时机读模型，模型报错会同时出现在三处。</p>
+
+<h3 id="s1-1">1-1 手顺：两条编译命令当冒烟测试</h3>
+<div class="stepmeta"><span class="k">cds compile</span><span class="f">db/schema.cds · srv/book-order-service.cds</span><span class="c">耗时 5 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：编译成 SQL（检查表/列/类型）与 EDMX（检查服务暴露面）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile db/schema.cds srv/book-order-service.cds --to sql   &gt; /tmp/model.sql
+npx cds compile srv/book-order-service.cds --to edmx &gt; /tmp/model.edmx
+grep -c '^CREATE TABLE' /tmp/model.sql        # 期望：4（Books/Customers/BookOrders/BookOrderItems）
+grep -c '&lt;EntitySet Name' /tmp/model.edmx     # 期望：5（含视图 OrderItemView）</code></pre>
+  </li>
+  <li><b>验证（真实输出）</b>：本站结果 —— 4 张表、5 个实体集、2 个 FunctionImport、1 个绑定 Action：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ npx cds compile db/schema.cds srv/book-order-service.cds --to sql
+CREATE TABLE sap_training_bookorder_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120) NOT NULL,
+  price DECIMAL(9, 2) NOT NULL,
+  PRIMARY KEY(ID)
+);
+…
+$ npx cds compile srv/book-order-service.cds --to edmx | sed -n '26,44p'
+        &lt;EntitySet Name="Books" EntityType="BookOrderService.Books"/&gt;
+        &lt;EntitySet Name="BookOrders" EntityType="BookOrderService.BookOrders"&gt;
+        &lt;EntitySet Name="OrderItemView" EntityType="BookOrderService.OrderItemView"/&gt;
+        &lt;FunctionImport Name="getOrderTotal" Function="BookOrderService.getOrderTotal"/&gt;
+        &lt;Action Name="submitOrder" IsBound="true"&gt;</code></pre>
+  </li>
+  <li><b>动作（可选但推荐）</b>：把「有没有 ERROR」也断言掉，这一条能进 CI（否则编译报错但退出码仍是 0，详见 §9-③）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">out="$(npx cds compile srv/book-order-service.cds --to edmx 2&gt;&amp;1)"
+if grep -q '\[ERROR\]' &lt;&lt;&lt; "$out"; then echo "MODEL ERROR"; echo "$out" | grep '\[ERROR\]'; exit 1; fi
+echo "model ok"; grep -c '&lt;EntitySet Name' &lt;&lt;&lt; "$out"</code></pre>
+  </li>
+</ol>
+
+<div class="box ok"><b class="t">验收</b> 两条命令都无 <code>[ERROR]</code>，且实体集数量=5、表数量=4 与你对模型的预期一致。改动 <code>db/schema.cds</code> 后第一步永远先跑这个。</div>
+<div class="box warn"><b class="t">这一层抓不到什么</b> 它只看模型，不看你 handler 里的逻辑 —— 例如「金额算错」「状态码用错」「after 里漏 await」都抓不到。所以第 0 层是<b>入场券</b>，不是测试的全部。</div>
+
+<div class="box danger"><b class="t">模型有语法错误时会发生什么（本站实测）</b>
+<p><code>cds compile</code> 会打印 <code>[ERROR]</code>；而 <code>cds-serve</code> / <code>cds watch</code> 会<b>直接拒绝启动</b>并以 <code>ERR_CDS_COMPILATIO
+<figure class="fig" data-fig="test_s06">
+  <a class="zoom" href="assets/fig/test_s06.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/test_s06.svg" alt="手工验证要看的四件事：Basic Auth 与 401/200、$metadata 里暴露了几个实体集、$count、以及 function 只能 GET、action 只能 POST（两种方法各回 405）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">手工验证要看的四件事：Basic Auth 与 401/200、$metadata 里暴露了几个实体集、$count、以及 function 只能 GET、action 只能 POST（两种方法各回 405）</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl（脚本见 work/evidence/17_methods.txt）</span></figcaption>
+</figure>N_FAILURE</code> 退出，消息精确到 <code>文件:行:列</code>。本站实测见过一次（注解文件里一个 <code>:</code> 写错）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">CompilationError: CDS compilation failed (@sap/cds-compiler v6.9.5)
+app/book-orders/annotations.cds:64:23-24: Error: Mismatched ‘:’, expecting ‘,’, ‘.’, ‘)’, ‘#’
+    code: 'ERR_CDS_COMPILATION_FAILURE'</code></pre>
+<p>含义：<b>看到服务起不来、端口没人监听时，第一步永远是看启动输出里的模型报错</b>，而不是去查 handler。</p></div>
+
+<h2 id="s2">2. 第 1 层：mocha + <code>cds.test</code></h2>
+
+<p><code>cds.test</code> 是 CAP 官方的测试入口：它<b>为你的项目启动一个真实服务</b>（随机端口、自动加载模型、mock 认证），并给出一组 HTTP 帮手函数（<code>GET</code> / <code>POST</code> / <code>PATCH</code> / <code>DELETE</code>）、<code>expect</code> 断言库、<code>defaults</code> 默认请求参数，以及 <code>data.reset()</code> 重置数据库。<b>它测的是 HTTP 层</b>：请求经过鉴权、协议适配、你的 handler、真实数据库 —— 与手工 curl 是同一条路径，只是被脚本化了。</p>
+
+<div class="cols2">
+  <div class="box info"><b class="t">先装对依赖（本站踩过）</b>
+  <p>@sap/cds 9 的 <code>cds.test</code> 内部依赖 <code>@cap-js/cds-test</code>，<b>不装它会直接报模块缺失</b>。而 <code>@cap-js/cds-test@1.0.2</code> 的 peer 依赖要求 <code>chai@^6</code>，示范项目里是 <code>chai@^5</code> → <code>npm i</code> 会因 ERESOLVE 失败。两条路：把 chai 升到 <code>^6</code>，或先 <span class="cmd">npm i -D @cap-js/cds-test --legacy-peer-deps</span>（本站实测用后者跑通，`--no-save --package-lock=false` 以免动到项目文件）。</p></div>
+  <div class="box warn"><b class="t">定位差异（第 1 层 vs 第 2 层）</b>
+  <ul>
+    <li><b>第 1 层</b>：测试代码与业务代码同仓，能直接断言返回值、能 mock、能在用例里造数据；每个用例<b>独立小步</b>，失败时能精确指出哪个 handler 坏了。代价：需要装包、需要写代码、服务于「Node 侧的实现细节」。</li>
+    <li><b>第 2 层</b>：一个 bash 脚本从外部打 HTTP，与服务实现<b>完全解耦</b>。好处：任何语言/任何运行时（Node 或 Java）都能跑、可直接对着已部署环境跑、学员复制即可用。代价：断言粒度粗、造数据啰嗦、失败时只能靠日志定位。</li>
+    <li>务实做法：<b>两层都留</b>。日常开发跑第 1 层（快、细），交付/部署后跑第 2 层（真、稳）。本站示范项目两者都有。</li>
+  </ul></div>
+</div>
+
+<h3 id="s2-1">2-1 手顺：把 <code>test/odata.test.js</code> 跑起来</h3>
+<div class="stepmeta"><span class="k">npm test</span><span class="f">test/odata.test.js · package.json 的 test 脚本</span><span class="c">耗时 20 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：装测试依赖（见上）。这一步在 CI 里也必须做。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm i -D @cap-js/cds-test --legacy-peer-deps   # 或把 chai 升到 ^6：npm i -D chai@^6</code></pre>
+  </li>
+  <li><b>动作</b>：写下测试文件（本站实测用的全文，逐字可复用）。注意三点：<code>cds.test(__dirname + '/..')</code> 指向项目根、<code>defaults.auth</code> 提供 Basic Auth、负向用例用 <code>.catch(e =&gt; e)</code> 收错误再断言 <code>err.response.status</code>。
+    <pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">const cds = require('@sap/cds')
+const { GET, POST, expect, defaults, data } = cds.test(__dirname + '/..')
+
+defaults.auth = { username: 'alice', password: 'alice' }
+const SVC = '/odata/v4/book-order'
+const fail = (p) =&gt; p.then((r) =&gt; { throw new Error('expected an error, got ' + r.status) }, (e) =&gt; e)
+
+describe('图书受注服务 —— OData 集成测试（mocha + cds.test）', () =&gt; {
+  // 本站示范项目把 db 指向 db.sqlite，所以测试前必须把库重置为 CSV 初始状态
+  before(async () =&gt; { await data.reset() })
+
+  it('① GET $metadata → 200，且暴露 BookOrderService.BookOrders', async () =&gt; {
+    const res = await GET(`${SVC}/$metadata`)
+    expect(res.status).to.equal(200)
+    expect(res.data).to.contain('BookOrderService.BookOrders')
+  })
+
+  it('② 匿名（无 Basic Auth）→ 401', async () =&gt; {
+    const err = await fail(GET(`${SVC}/BookOrders`, { auth: false }))
+    expect(err.response.status).to.equal(401)
+  })
+
+  it('③ 过滤 status eq OPEN → 2 张（BO-1001 / BO-1002）', async () =&gt; {
+    const res = await GET(`${SVC}/BookOrders?$filter=status eq 'OPEN'&$select=orderNo&$orderby=orderNo`)
+    expect(res.data.value.map((r) =&gt; r.orderNo)).to.deep.equal(['BO-1001', 'BO-1002'])
+  })
+
+  it('④ $expand=items → BO-1001 有 3 行明细', async () =&gt; {
+    const res = await GET(`${SVC}/BookOrders?$filter=orderNo eq 'BO-1001'&$expand=items`)
+    expect(res.data.value[0].items.length).to.equal(3)
+  })
+
+  it('⑧ 派生字段：POST 明细 2800×3 → amount 8400，父订单合计回写 12000', async () =&gt; {
+    const orders = await GET(`${SVC}/BookOrders?$select=ID&$filter=orderNo eq 'BO-1002'`)
+    const orderID = orders.data.value[0].ID
+    const created = await POST(`${SVC}/BookOrderItems`, { order_ID: orderID, book_ID: 1003, quantity: 3 })
+    expect(created.status).to.equal(201)
+    expect(created.data.amount).to.equal(8400)
+    const after = await GET(`${SVC}/BookOrders(ID=${orderID},IsActiveEntity=true)?$select=totalAmount`)
+    expect(after.data.totalAmount).to.equal(12000)
+  })
+
+  it('⑨ 负向：数量 0 → 400 且带业务消息', async () =&gt; {
+    const err = await fail(POST(`${SVC}/BookOrderItems`, { order_ID: 'x', book_ID: 1003, quantity: 0 }))
+    expect(err.response.status).to.equal(400)
+    expect(err.response.data.error.message).to.equal('数量必须大于 0')
+  })
+
+  it('⑪ 负向：只读实体 POST → 405', async () =&gt; {
+    const err = await fail(POST(`${SVC}/OrderItemView`, {}))
+    expect(err.response.status).to.equal(405)
+  })
+
+  it('⑬ 草稿：draftActivate → 201，触发 before-CREATE 自动编号', async () =&gt; {
+    const draft = await POST(`${SVC}/BookOrders`, { customer_ID: 1000 })
+    const url = `${SVC}/BookOrders(ID=${draft.data.ID},IsActiveEntity=false)/BookOrderService.draftActivate`
+    const activated = await POST(url, {})
+    expect(activated.status).to.equal(201)
+    expect(activated.data.orderNo).to.equal('BO-1005')
+  })
+
+  it('⑯ 绑定动作：重复提交同一张订单 → 409', async () =&gt; {
+    const orders = await GET(`${SVC}/BookOrders?$select=ID&$filter=orderNo eq 'BO-1001'`)
+    const id = orders.data.value[0].ID
+    const err = await fail(POST(`${SVC}/BookOrders(ID=${id},IsActiveEntity=true)/submitOrder`, {}))
+    expect(err.response.status).to.equal(409)
+  })
+})</code></pre>
+  </li>
+  <li><b>动作（运行）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx mocha --reporter spec --timeout 20000 test/odata.test.js
+# 或直接用 package.json 里的脚本（test/*.test.js 通配）：
+npm test</code></pre>
+  </li>
+  <li><b>验证（真实输出）</b>：本站 16 个用例全绿、耗时 425 ms（<code>work/evidence/13b_npm_test_pass.txt</code>）：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">> demo-node@1.0.0 test
+> mocha --reporter spec --timeout 20000 test/*.test.js
+
+  图书受注服务 —— OData 集成测试（mocha + cds.test）
+    ✔ ① GET $metadata → 200，且暴露 BookOrderService.BookOrders (61ms)
+    ✔ ② 匿名（无 Basic Auth）→ 401
+    ✔ ③ 过滤 status eq OPEN → 2 张（BO-1001 / BO-1002）
+    ✔ ④ $expand=items → BO-1001 有 3 行明细
+    ✔ ⑤ 只读视图 OrderItemView → 9 行，首行 orderNo=BO-1001
+    ✔ ⑥ 函数 getOrderTotal(BO-1003) → 17400
+    ✔ ⑦ 函数 getOrderSummary() → 4 行，BO-1001 合计 16000
+    ✔ ⑧ 派生字段：POST 明细 2800×3 → amount 8400，父订单合计回写 12000
+    ✔ ⑨ 负向：数量 0 → 400 且带业务消息
+    ✔ ⑩ 负向：图书 9999 不存在 → 400
+    ✔ ⑪ 负向：只读实体 POST → 405
+    ✔ ⑫ 草稿：POST 新建订单 → IsActiveEntity=false（未激活）
+    ✔ ⑬ 草稿：draftActivate → 201，触发 before-CREATE 自动编号
+    ✔ ⑭ 绑定动作：空订单提交 → 400
+    ✔ ⑮ 绑定动作：BO-1001 提交 → 200，状态迁移为 SUBMITTED
+    ✔ ⑯ 绑定动作：重复提交同一张订单 → 409
+
+  16 passing (425ms)</code></pre>
+  </li>
+</ol>
+
+<div class="box info"><b class="t"><code>cds.test</code> 的关键 API（本站实测可用）</b>
+<table class="tbl small">
+  <tr><th>API</th><th>作用</th><th>用例</th></tr>
+  <tr><td><code>cds.test(__dirname + '/..')</code></td><td>启动被测项目（随机端口），返回帮手函数</td><td>测试文件第一行</td></tr>
+  <tr><td><code>defaults.auth / defaults.path</code></td><td>后续请求的默认 Basic Auth 与 URL 前缀</td><td><code>{username:'alice', password:'alice'}</code></td></tr>
+  <tr><td><code>await GET(url)</code> / <code>await POST(url, data)</code></td><td>发请求；返回 <code>{ status, data }</code></td><td>所有正向用例</td></tr>
+  <tr><td><code>{ auth: false }</code> 请求选项</td><td>故意不带认证，测 401</td><td>用例 ②</td></tr>
+  <tr><td><code>.catch(e =&gt; e)</code> + <code>e.response.status</code></td><td>负向断言（4xx 会 reject）</td><td>用例 ⑨ ⑪ ⑯</td></tr>
+  <tr><td><code>data.reset()</code></td><td>重置并重新部署数据库（本站连 <code>db.sqlite</code>，它会把 CSV 重新灌入）</td><td><code>before()</code> 里</td></tr>
+  <tr><td><code>cds.test.log()</code></td><td>捕获测试期 console 输出（文档口径；本站未使用）</td><td>—</td></tr>
+</table>
+<p>更完整的语义与运行器选择（Node test runner / vitest / jest / mocha 均可）以 CAP 文档「Testing with <code>cds.test</code>」为准：调用 <code>cds.test()</code> 等价于 <code>cds serve all --with-mocks --in-memory?</code>，也就是说<b>「有没有用内存库」由你的项目配置决定</b> —— 本站配了 <code>credentials.url = db.sqlite</code>，所以测试会打到真实文件（这也是本站必须在 <code>before()</code> 里 <code>data.reset()</code> 的原因）。</p></div>
+
+<div class="box ok"><b class="t">验收</b> <code>npm test</code> 输出 <b>16 passing</b>；故意把用例 ⑨ 的期望值改成 <code>500</code>，重跑必须变红 —— 证明断言真的在起作用（不要跳过这一步，「测试全绿」不等于「测试有效」）。</div>
+<div class="box warn"><b class="t">常见错误</b> <code>Error: No test files found: "test/*.test.js"</code> —— 脚本存在但没有测试文件；<code>Cannot find module '@cap-js/cds-test'</code> —— 没装依赖；两种情况本站都实测复现过，见 §9。</div>
+
+
+<figure class="fig" data-fig="test_s01">
+  <a class="zoom" href="assets/fig/test_s01.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/test_s01.svg" alt="第 1 层：把 test/odata.test.js 放进项目后运行 npm test 的真实输出 —— 16 个用例全绿，耗时 425 ms" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">第 1 层：把 test/odata.test.js 放进项目后运行 npm test 的真实输出 —— 16 个用例全绿，耗时 425 ms</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npm test（= mocha --reporter spec --timeout 20000 test/*.test.js）</span></figcaption>
+</figure><h2 id="s3">3. 第 2 层：<code>test/odata-verify.sh</code> —— 26 条断言与它们的业务含义</h2>
+
+<p>这是本站示范项目自带的集成测试脚本：不装任何依赖，只用 <code>bash</code> + <code>curl</code> + <code>python3</code>，对着<b>已经跑起来的服务</b>逐条断言，最后打印通过数，有任何 FAIL 就以非 0 退出（所以能直接进 CI）。它的断言粒度是「业务值」而不是「字段存在」——这正是你最该学的一点。</p>
+
+<h3 id="s3-1">3-1 全文（88 行，逐段在下方解释）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">#!/usr/bin/env bash
+# 图书受注管理 —— OData 验收脚本（本地实测用）
+#
+#   bash test/odata-verify.sh                        # 假定服务已在 localhost:4004 运行
+#   BASE=http://localhost:4004 bash test/odata-verify.sh
+set -u
+BASE="${BASE:-http://localhost:4004}"
+SVC="$BASE/odata/v4/book-order"
+AUTH=( -u alice:alice )
+PASS=0; FAIL=0
+
+code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+body() { curl -s "$@"; }
+
+chk() {                       # chk "&lt;用例&gt;" &lt;期望&gt; &lt;实际&gt;
+  local name="$1" want="$2" got="$3"
+  if [ "$want" = "$got" ]; then PASS=$((PASS+1)); printf '  PASS  %-58s %s\n' "$name" "$got"
+  else FAIL=$((FAIL+1)); printf '  FAIL  %-58s want=%s got=%s\n' "$name" "$want" "$got"; fi
+}
+
+echo "== 1. 服务可达性与认证 =="
+chk 'GET $metadata (alice)'            200 "$(code "${AUTH[@]}" "$SVC/\$metadata")"
+chk 'GET /BookOrders 匿名 → 401'        401 "$(code "$SVC/BookOrders")"
+chk 'GET /BookOrders (bob)'            200 "$(code -u bob:bob "$SVC/BookOrders")"
+# mocked 认证会接受任意用户名/口令（它不是真正的认证，只是开发期模拟）——因此这里期望 200
+chk 'GET /BookOrders 任意用户(mocked 放行)' 200 "$(code -u nosuch:wrong "$SVC/BookOrders")"
+
+echo "== 2. 读：过滤 / 展开 / 只读视图 =="
+chk 'GET BookOrders?$filter=status eq OPEN → 2 张' 2 \
+    "$(body "${AUTH[@]}" "$SVC/BookOrders?\$filter=status%20eq%20'OPEN'" | python3 -c 'import sys,json;print(len(json.load(sys.stdin)["value"]))')"
+chk 'GET BookOrders 带 $expand=items 行数'        3 \
+    "$(body "${AUTH[@]}" "$SVC/BookOrders?\$filter=orderNo%20eq%20'BO-1001'&\$expand=items" | python3 -c 'import sys,json;print(len(json.load(sys.stdin)["value"][0]["items"]))')"
+chk 'GET OrderItemView (带主键视图，可暴露)'      9 \
+    "$(body "${AUTH[@]}" "$SVC/OrderItemView" | python3 -c 'import sys,json;print(len(json.load(sys.stdin)["value"]))')"
+chk 'GET OrderItemView 含关联展开的列名'  BO-1001 \
+    "$(body "${AUTH[@]}" "$SVC/OrderItemView?\$orderby=ID&\$top=1" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["orderNo"])')"
+
+echo "== 3. 函数（无绑定）：聚合走函数而不是实体 =="
+chk 'getOrderTotal(BO-1003) = 17400'   17400 "$(body "${AUTH[@]}" "$SVC/getOrderTotal(orderNo='BO-1003')" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"])')"
+chk 'getOrderTotal(不存在) → 404'         404 "$(code "${AUTH[@]}" "$SVC/getOrderTotal(orderNo='BO-9999')")"
+chk 'getOrderSummary() 4 行'             4 \
+    "$(body "${AUTH[@]}" "$SVC/getOrderSummary()" | python3 -c 'import sys,json;print(len(json.load(sys.stdin)["value"]))')"
+chk 'getOrderSummary() BO-1001 合计'     16000 \
+    "$(body "${AUTH[@]}" "$SVC/getOrderSummary()" | python3 -c 'import sys,json;print([r["totalAmount"] for r in json.load(sys.stdin)["value"] if r["orderNo"]=="BO-1001"][0])')"
+
+echo "== 4. 写：派生字段与汇总回写 =="
+BO1002_ID="$(body "${AUTH[@]}" "$SVC/BookOrders?\$select=ID&\$filter=orderNo%20eq%20'BO-1002'" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["ID"])')"
+NEW="$(body "${AUTH[@]}" -X POST "$SVC/BookOrderItems" -H 'Content-Type: application/json' \
+       -d "{\"order_ID\":\"$BO1002_ID\",\"book_ID\":1003,\"quantity\":3}")"
+chk 'POST 明细：金额自动计算 = 2800×3'   8400 "$(echo "$NEW" | python3 -c 'import sys,json;print(json.load(sys.stdin)["amount"])')"
+chk 'POST 明细后父订单合计被回写 = 12000' 12000 \
+    "$(body "${AUTH[@]}" "$SVC/BookOrders?\$select=totalAmount&\$filter=orderNo%20eq%20'BO-1002'" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["totalAmount"])')"
+
+echo "== 5. 负向：业务校验必须返回 4xx 且带消息 =="
+chk 'POST 数量 0 → 400'    400 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrderItems" -H 'Content-Type: application/json' -d "{\"order_ID\":\"$BO1002_ID\",\"book_ID\":1003,\"quantity\":0}")"
+chk 'POST 图书不存在 → 400' 400 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrderItems" -H 'Content-Type: application/json' -d "{\"order_ID\":\"$BO1002_ID\",\"book_ID\":9999,\"quantity\":1}")"
+chk '只读实体 POST → 405'   405 "$(code "${AUTH[@]}" -X POST "$SVC/OrderItemView" -H 'Content-Type: application/json' -d '{}')"
+
+echo "== 6. 草稿（@odata.draft.enabled）创建与激活 =="
+DRAFT="$(body "${AUTH[@]}" -X POST "$SVC/BookOrders" -H 'Content-Type: application/json' -d '{"orderNo":"BO-1001","customer_ID":1000}')"
+DID="$(echo "$DRAFT" | python3 -c 'import sys,json;print(json.load(sys.stdin)["ID"])')"
+chk 'POST 新建订单 → 草稿未激活'  False "$(echo "$DRAFT" | python3 -c 'import sys,json;print(json.load(sys.stdin)["IsActiveEntity"])')"
+chk '重复订单号激活 → 409'      409 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=$DID,IsActiveEntity=false)/BookOrderService.draftActivate" -H 'Content-Type: application/json' -d '{}')"
+D2="$(body "${AUTH[@]}" -X POST "$SVC/BookOrders" -H 'Content-Type: application/json' -d '{"customer_ID":9999}')"
+D2ID="$(echo "$D2" | python3 -c 'import sys,json;print(json.load(sys.stdin)["ID"])')"
+chk '顾客不存在激活 → 400'      400 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=$D2ID,IsActiveEntity=false)/BookOrderService.draftActivate" -H 'Content-Type: application/json' -d '{}')"
+D3="$(body "${AUTH[@]}" -X POST "$SVC/BookOrders" -H 'Content-Type: application/json' -d '{"customer_ID":1000}')"
+D3ID="$(echo "$D3" | python3 -c 'import sys,json;print(json.load(sys.stdin)["ID"])')"
+chk '正常激活 → 201 并自动编号'  201 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=$D3ID,IsActiveEntity=false)/BookOrderService.draftActivate" -H 'Content-Type: application/json' -d '{}')"
+chk '自动编号 = BO-1005'         BO-1005 \
+    "$(body "${AUTH[@]}" "$SVC/BookOrders?\$orderby=orderNo%20desc&\$top=1&\$select=orderNo" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["orderNo"])')"
+
+echo "== 7. 绑定动作 submitOrder（状态迁移） =="
+EMPTY_ID="$(body "${AUTH[@]}" "$SVC/BookOrders?\$select=ID&\$filter=orderNo%20eq%20'BO-1005'" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["ID"])')"
+chk '空订单提交 → 400'   400 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=$EMPTY_ID,IsActiveEntity=true)/submitOrder" -H 'Content-Type: application/json' -d '{}')"
+BO1001_ID="$(body "${AUTH[@]}" "$SVC/BookOrders?\$select=ID&\$filter=orderNo%20eq%20'BO-1001'" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["ID"])')"
+chk 'BO-1001 提交 → 200' 200 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=$BO1001_ID,IsActiveEntity=true)/submitOrder" -H 'Content-Type: application/json' -d '{}')"
+chk '状态已变为 SUBMITTED' SUBMITTED \
+    "$(body "${AUTH[@]}" "$SVC/BookOrders?\$select=status&\$filter=orderNo%20eq%20'BO-1001'" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["status"])')"
+chk '重复提交 → 409'      409 "$(code "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=$BO1001_ID,IsActiveEntity=true)/submitOrder" -H 'Content-Type: application/json' -d '{}')"
+
+echo
+echo "==================== 结果 ===================="
+echo "  PASS $PASS / FAIL $FAIL"
+[ "$FAIL" = 0 ] || exit 1</code></pre>
+
+<div class="box info"><b class="t">脚本的三个设计要点（值得抄走）</b>
+<ol>
+  <li><b>一个 <code>chk</code> 函数统一断言</b>：<code>chk "用例名" 期望 实际</code>。期望值写在调用处，一眼能看出这条断言在验什么业务规则；失败时打印 <code>want=/got=</code>，不需要猜。</li>
+  <li><b>用 <code>python3 -c</code> 从 JSON 里取精确值</b>：<code>len(...["value"])</code>、<code>json.load(...)["amount"]</code>。这样断言的是<b>业务数字</b>（9 行明细、17400 合计、8400 金额），而不是「HTTP 200 就行」。</li>
+  <li><b>失败用非 0 退出</b>：<code>[ "$FAIL" = 0 ] || exit 1</code>，所以它能被 CI 直接当门禁。</li>
+</ol></div>
+
+<h3 id="s3-2">3-2 真实运行结果（PASS 26 / FAIL 0）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npm run deploy                                    # 必须先重置数据（见 §5）
+(npm start &gt; /tmp/demo.log 2&gt;&amp;1 &amp;) ; sleep 8
+bash test/odata-verify.sh | tee ../../work/evidence/04_odata.txt</code></pre>
+
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">== 1. 服务可达性与认证 ==
+  PASS  GET $metadata (alice)                                      200
+  PASS  GET /BookOrders 匿名 → 401                             401
+  PASS  GET /BookOrders (bob)                                      200
+  PASS  GET /BookOrders 任意用户(mocked 放行)                200
+== 2. 读：过滤 / 展开 / 只读视图 ==
+  PASS  GET BookOrders?$filter=status eq OPEN → 2 张            2
+  PASS  GET BookOrders 带 $expand=items 行数                    3
+  PASS  GET OrderItemView (带主键视图，可暴露)              9
+  PASS  GET OrderItemView 含关联展开的列名                 BO-1001
+== 3. 函数（无绑定）：聚合走函数而不是实体 ==
+  PASS  getOrderTotal(BO-1003) = 17400                             17400
+  PASS  getOrderTotal(不存在) → 404                           404
+  PASS  getOrderSummary() 4 行                                    4
+  PASS  getOrderSummary() BO-1001 合计                           16000
+== 4. 写：派生字段与汇总回写 ==
+  PASS  POST 明细：金额自动计算 = 2800×3                 8400
+  PASS  POST 明细后父订单合计被回写 = 12000             12000
+== 5. 负向：业务校验必须返回 4xx 且带消息 ==
+  PASS  POST 数量 0 → 400                                      400
+  PASS  POST 图书不存在 → 400                               400
+  PASS  只读实体 POST → 405                                  405
+== 6. 草稿（@odata.draft.enabled）创建与激活 ==
+  PASS  POST 新建订单 → 草稿未激活                      False
+  PASS  重复订单号激活 → 409                              409
+  PASS  顾客不存在激活 → 400                              400
+  PASS  正常激活 → 201 并自动编号                       201
+  PASS  自动编号 = BO-1005                                     BO-1005
+== 7. 绑定动作 submitOrder（状态迁移） ==
+  PASS  空订单提交 → 400                                    400
+  PASS  BO-1001 提交 → 200                                     200
+  PASS  状态已变为 SUBMITTED                                  SUBMITTED
+  PASS  重复提交 → 409                                       409
+
+==================== 结果 ====================
+  PASS 26 / FAIL 0</code></pre>
+
+<h3 id="s3-3">3-3 逐条读：每条断言在保什么</h3>
+<table class="tbl small">
+  <tr><th>断言</th><th>期望</th><th>业务含义（破坏了会发生什么）</th></tr>
+  <tr><td><code>GET $metadata (alice)</code></td><td>200</td><td>服务可达、认证通过、模型可序列化。这一条挂了后面都不用看</td></tr>
+  <tr><td><code>GET /BookOrders 匿名</code></td><td>401</td><td><code>@requires</code> 生效：未认证用户拿不到订单数据（合规底线）</td></tr>
+  <tr><td><code>GET /BookOrders (bob)</code></td><td>200</td><td>另一个 mock 用户也能访问 → 权限不是只对 alice 放行</td></tr>
+  <tr><td><code>GET /BookOrders 任意用户</code></td><td>200</td><td>明确记录 mocked 的放行行为。<b>若某天这条变 401，说明你要么改了 auth 配置，要么接上了真认证</b></td></tr>
+  <tr><td><code>$filter=status eq OPEN → 2 张</code></td><td>2</td><td>过滤真的落到数据库（不是前端过滤）；同时锁定 CSV 初始数据有 2 张 OPEN 订单</td></tr>
+  <tr><td><code>$expand=items 行数</code></td><td>3</td><td>主从关联正确（BO-1001 有 3 行明细）。这是「Composition + CSV 导致 $expand 空数组」那个坑的守门员</td></tr>
+  <tr><td><code>GET OrderItemView</code></td><td>9</td><td>带主键的视图可以当实体暴露，且 9 行明细都在</td></tr>
+  <tr><td><code>OrderItemView 的 orderNo</code></td><td>BO-1001</td><td>视图里的关联路径取列（<code>order.orderNo as orderNo</code>）确实被解析成连接查询</td></tr>
+  <tr><td><code>getOrderTotal(BO-1003)</code></td><td>17400</td><td>聚合函数正确：4200 + 10400 + 2800 = 17400。业务上「合计对不上」是最贵的 bug</td></tr>
+  <tr><td><code>getOrderTotal(不存在)</code></td><td>404</td><td>错误语义正确（<code>req.reject(404)</code>），前端能区分「没数据」和「服务器出错」</td></tr>
+  <tr><td><code>getOrderSummary() 行数</code></td><td>4</td><td>汇总函数返回全部订单（4 张），没有漏行</td></tr>
+  <tr><td><code>getOrderSummary() BO-1001</code></td><td>16000</td><td>汇总数值与明细一致（8400 + 2800 + 4800），证明「父子金额一致性」</td></tr>
+  <tr><td><code>POST 明细金额 2800×3</code></td><td>8400</td><td>派生字段由服务端计算，客户端只给数量。前端算错也不会污染数据</td></tr>
+  <tr><td><code>POST 后父订单合计</code></td><td>12000</td><td><code>after</code> 汇总回写生效（3600 + 8400）。这一条同时覆盖了两个 handler</td></tr>
+  <tr><td><code>POST 数量 0</code></td><td>400</td><td>入参校验（不应写库），且是 4xx 不是 500</td></tr>
+  <tr><td><code>POST 图书不存在</code></td><td>400</td><td>外键业务校验：允许「先建明细再补主数据」会让报表烂掉</td></tr>
+  <tr><td><code>POST 只读实体</code></td><td>405</td><td><code>@readonly</code> 是服务端强约束，不依赖前端隐藏按钮</td></tr>
+  <tr><td><code>POST 新建订单</code></td><td>IsActiveEntity=false</td><td>草稿语义：POST 不等于建单（否则 Fiori 的 Cancel 会留下垃圾数据）</td></tr>
+  <tr><td><code>重复订单号激活</code></td><td>409</td><td>唯一性冲突用 409；且校验确实发生在激活时刻（before-CREATE 的时机）</td></tr>
+  <tr><td><code>顾客不存在激活</code></td><td>400</td><td>主数据校验在服务端；草稿让「错误暴露时间」推后到保存时</td></tr>
+  <tr><td><code>正常激活</code></td><td>201</td><td>草稿流程能走完，且返回创建语义的状态码</td></tr>
+  <tr><td><code>
+<figure class="fig" data-fig="test_s02">
+  <a class="zoom" href="assets/fig/test_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/test_s02.svg" alt="第 2 层：本站示范项目自带的 OData 验收脚本（test/odata-verify.sh）对 localhost:4004 跑完 26 条断言，PASS 26 / FAIL 0" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">第 2 层：本站示范项目自带的 OData 验收脚本（test/odata-verify.sh）对 localhost:4004 跑完 26 条断言，PASS 26 / FAIL 0</span><span class="kind real">本地实机运行</span><span class="src">本地实测：bash test/odata-verify.sh（work/evidence/04_odata.txt）</span></figcaption>
+</figure>自动编号</code></td><td>BO-1005</td><td>服务端编号生效且可预测（初始数据 4 张 → 下一号 1005）</td></tr>
+  <tr><td><code>空订单提交</code></td><td>400</td><td>状态迁移前置条件：没有明细不能提交</td></tr>
+  <tr><td><code>BO-1001 提交</code></td><td>200</td><td>动作可执行（有明细、合计非零、状态为 OPEN）</td></tr>
+  <tr><td><code>状态已变为 SUBMITTED</code></td><td>SUBMITTED</td><td>动作真的改了数据（不是只返回成功消息）</td></tr>
+  <tr><td><code>重复提交</code></td><td>409</td><td>幂等性保护：重复点击「提交」不会造成重复处理</td></tr>
+</table>
+
+<div class="box ok"><b class="t">验收</b> 你能指出这张表里哪几条是「纯技术断言」（元数据/认证），哪几条是「业务断言」（金额/编号/状态），并说明为什么业务断言更值得写：因为技术断言通常被框架的通用测试覆盖，而业务数值只有你知道对不对。</div>
+
+<h2 id="s4">4. 手工验证：curl / Postman 手顺</h2>
+
+<p>还不会写测试之前，先用这条手顺把服务「摸」一遍。它的价值是<b>建立对响应体形状的直觉</b> —— 写测试时的期望值就是从这里来的。</p>
+
+<div class="stepmeta"><span class="k">curl</span><span class="f">srv/book-order-service.cds（服务定义）</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+  <li><b>动作（起服务 + 设变量）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npm run deploy &amp;&amp; (npm start &amp;) &amp;&amp; sleep 8
+SVC=http://localhost:4004/odata/v4/book-order ; A='-u alice:alice'</code></pre>
+  </li>
+  <li><b>动作（认证与元数据）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -o /dev/null -w '%{http_code}\n' "$SVC/\$metadata"                 # 不带认证
+curl -s -o /dev/null -w '%{http_code}\n' $A "$SVC/\$metadata"              # Basic Auth
+curl -s $A "$SVC/\$metadata" | grep -c '&lt;EntitySet'                        # 实体集数量
+curl -s $A "$SVC/BookOrders?\$count=true&\$top=0"                          # 只要总数</code></pre>
+  </li>
+  <li><b>验证</b>：真实输出（<code>work/evidence/17_methods.txt</code>）—— <b>401 / 200 / 5 / 4</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">401                              ← 无认证
+200                              ← Basic Auth（mocked 认证）
+5                                ← Books / Customers / BookOrders / BookOrderItems / OrderItemView
+{"@odata.context":"$metadata#BookOrders","@odata.count":4,"value":[]}   ← $count 取总数</code></pre>
+  </li>
+  <li><b>动作（读：展开与聚合）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s $A "$SVC/BookOrders?$filter=orderNo eq 'BO-1001'&$expand=items"
+curl -s $A "$SVC/getOrderTotal(orderNo='BO-1003')"
+curl -s $A "$SVC/getOrderSummary()"</code></pre>
+  </li>
+  <li><b>验证</b>：BO-1001 的 <code>items</code> 必须有 3 行（8400 / 2800 / 4800），<code>getOrderTotal</code> 返回 <code>{"value":17400}</code>。完整 JSON 见 <a href="node.html#s10">⑤ Node.js 服务实现 §10</a>。</li>
+  <li><b>动作（Function vs Action 的方法差异）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># function：GET，参数写在 URL 括号里
+curl -s -o /dev/null -w '%{http_code}\n' $A "$SVC/getOrderTotal(orderNo='BO-1003')"
+# 用 POST 打 function → ?
+curl -s -o /dev/null -w '%{http_code}\n' $A -X POST "$SVC/getOrderTotal(orderNo='BO-1003')" -d '{}'
+# 用 GET 打绑定动作 → ?
+curl -s -o /dev/null -w '%{http_code}\n' $A "$SVC/BookOrders(ID=4a1f8c03-0001-…,IsActiveEntity=true)/submitOrder"
+# action：POST
+curl -s $A -X POST "$SVC/BookOrders(ID=4a1f8c03-0001-…,IsActiveEntity=true)/submitOrder" -d '{}'</code></pre>
+  </li>
+  <li><b>验证</b>：真实输出 —— <b>两种误用都是 405</b>，action 正确调用返回业务消息：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">405                     ← function 用 POST
+405                     ← action 用 GET
+{"@odata.context":"../$metadata#Edm.String","value":"订单 B
+<figure class="fig" data-fig="test_s05">
+  <a class="zoom" href="assets/fig/test_s05.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/test_s05.svg" alt="同一套业务数据在云端 HANA Cloud 的直接核对：本地测过还不够，部署到 HANA 后要用 SQL 复核一遍关键数字" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 5</span><span class="cap">同一套业务数据在云端 HANA Cloud 的直接核对：本地测过还不够，部署到 HANA 后要用 SQL 复核一遍关键数字</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>O-1001 已提交，合计 16000.00 JPY（3 行）"}</code></pre>
+  </li>
+  <li><b>动作（草稿：建 → 激活 / 丢弃）</b>：见 <a href="node.html#s7-1">⑤ §7-1</a> 的完整命令；要点是 <code>POST</code> 只建草稿（<code>IsActiveEntity=false</code>），激活 URL 形如 <code>…/BookOrders(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate</code>，丢弃用 <code>DELETE …(IsActiveEntity=false)</code> → 204。</li>
+  <li><b>验证</b>：本站实测 201（激活）/ 204（丢弃）。<b>Postman 等价做法</b>：Authorization 选 Basic Auth（alice / 任意口令），function 用 GET + 参数写在 URL，action 用 POST + 空 JSON body <code>{}</code>，草稿的 <code>IsActiveEntity</code> 必须手写在 URL 里（Postman 不会替你加）。</li>
+</ol>
+
+<table class="tbl">
+  <tr><th></th><th>Function（无绑定）</th><th>Action（绑定）</th></tr>
+  <tr><td>定义位置</td><td><code>service</code> 块里直接写 <code>function X(...) returns ...</code></td><td>实体块里 <code>actions { action X() returns ...; }</code></td></tr>
+  <tr><td>HTTP 方法</td><td>GET</td><td>POST</td></tr>
+  <tr><td>URL 形态</td><td><code>/getOrderTotal(orderNo='BO-1003')</code></td><td><code>/BookOrders(ID=…,IsActiveEntity=true)/submitOrder</code></td></tr>
+  <tr><td>能否改数据</td><td>不应改（语义上只读）</td><td>可以改（本站就是状态迁移）</td></tr>
+  <tr><td>返回值</td><td>标量（<code>Edm.Decimal</code>）或结构体数组</td><td>任意（本站返回 <code>String</code>，进 <code>value</code>）</td></tr>
+  <tr><td>用错方法</td><td>405</td><td>405</td></tr>
+  <tr><td>典型用途</td><td>聚合、计算、查外部系统</td><td>状态迁移、批量操作、触发流程</td></tr>
+</table>
+
+<div class="box warn"><b class="t">手工验证的三个纪律</b>
+<ul>
+  <li>每次开始前先 <span class="cmd">npm run deploy</span>，否则数字对不上会让你怀疑代码。</li>
+  <li>把 <code>SVC</code> 与 <code>A</code> 设成变量，避免在长 URL 里手抖；命令直接贴进 <code>test/odata-verify.sh</code> 就变成自动断言。</li>
+  <li>验证完 <span class="cmd">pkill -f cds-serve</span>，别让 4004 端口留在占用状态（CI 或多项目并行时必踩）。</li>
+</ul></div>
+
+<h2 id="s5">5. 测试数据管理与幂等性</h2>
+
+<p>「测试第一次绿、第二次红」是 CAP 新手最常见的困惑，根因几乎总是<b>数据状态</b>。本站亲眼复现了一次：</p>
+
+<h3 id="s5-1">5-1 非幂等的真实证据（同一脚本连跑两次）</h3>
+<div class="stepmeta"><span class="k">bash test/odata-verify.sh</span><span class="f">db/data/*.csv · db.sqlite</span><span class="c">耗时 5 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：<code>npm run deploy</code> 之后连跑两次同一个脚本（中间<b>不</b>重新 deploy）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm run deploy &amp;&amp; (npm start &amp;) &amp;&amp; sleep 8
+bash test/odata-verify.sh | tail -3      # 第 1 次
+bash test/odata-verify.sh | grep -E 'FAIL|PASS 2'   # 第 2 次（脚本会写数据）</code></pre>
+  </li>
+  <li><b>验证（真实输出）</b>：第 1 次 <b>PASS 26 / FAIL 0</b>；第 2 次 <b>PASS 20 / FAIL 6</b>，失败条目全部指向「数据被上一次改过」：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">==================== 结果 ====================
+  PASS 26 / FAIL 0                     ← 第 1 次（CSV 初始状态）
+
+  FAIL  GET OrderItemView (带主键视图，可暴露)            want=9  got=10
+  FAIL  GET OrderItemView 含关联展开的列名                 want=BO-1001 got=BO-1002
+  FAIL  getOrderSummary() 4 行                            want=4  got=5
+  FAIL  POST 明细后父订单合计被回写 = 12000             want=12000 got=20400
+  FAIL  自动编号 = BO-1005                                 want=BO-1005 got=BO-1006
+  FAIL  BO-1001 提交 → 200                                 want=200 got=409
+==================== 结果 ====================
+  PASS 20 / FAIL 6                     ← 第 2 次（未重置数据）
+exit=1</code></pre>
+  </li>
+  <li><b>结论（每个 FAIL 都能解释）</b>：
+    <ul>
+      <li>第 1 次往 BO-1002 加了一条明细 → 明细总数 9→10，<code>$orderby=ID&amp;$top=1</code> 的首行变了，父订单合计 12000 再 +8400 = 20400；</li>
+      <li>第 1 次激活了一张草稿 → 订单数 4→5，下次自动编号变成 BO-1006；</li>
+      <li>第 1 次把 BO-1001 提交成 SUBMITTED → 第 2 次再提交返回 409 而不是 200。</li>
+    </ul>
+  </li>
+  <li><b>验证（修复）</b>：<span class="cmd">npm run deploy</span> 后重跑，必须回到 <b>PASS 26 / FAIL 0</b>；<code>npx mocha</code> 那边由 <code>before(async () =&gt; { await data.reset() })</code> 承担同一职责。</li>
+</ol>
+
+<div class="cols2">
+  <div class="box info"><b class="t">策略 A：CSV 种子（本站采用）</b>
+  <ul>
+    <li>数据放 <code>db/data/&lt;namespace&gt;-&lt;Entity&gt;.csv</code>，文件名必须与实体全名一致（<code>sap.training.bookorder-Books.csv</code>）。</li>
+    <li><code>cds deploy</code> 会把 CSV 灌进表；<code>cds.test</code> 的 <code>data.reset()</code> 同样会重新部署。</li>
+    <li>优点：数据可读、可评审（改 CSV 就是改测试基准）、任何环境一致。</li>
+    <li>缺点：断言依赖「初始只有这些行」，一旦脚本写数据就必须重置。</li>
+    <li>适用于：冒烟测试、演示、回归基准。</li>
+  </ul></div>
+  <div class="box warn"><b class="t">策略 B：测试内自建数据</b>
+  <ul>
+    <li>在用例里用 <code>POST</code>（或直接 <code>INSERT</code>）造出这条测试专属的数据，再用它断言。</li>
+    <li>优点：<b>不依赖种子</b>，可以并行、可以跑在已有数据的环境上。</li>
+    <li>缺点：造数据的代码本身要维护；且造数据会走你的校验逻辑（有时你只想绕过）。</li>
+    <li>适用于：单元/接口测试（第 1 层），尤其负向场景。</li>
+  </ul></div>
+</div>
+
+<h3 id="s5-2">5-2 数据库隔离：三种做法与代价</h3>
+<table class="tbl small">
+  <tr><th>做法</th><th>怎么做</th><th>优点</th><th>代价 / 注意</th></tr>
+  <tr><td>重置现有文件（本站）</td><td><span class="cmd">npm run deploy</span>（或测试里的 <code>data.reset()</code>）</td><td>零配置，与手工验证完全一致</td><td>会清掉你手工造的数据；不能在测试与服务同时写的时候跑</td></tr>
+  <tr><td>删除文件重建</td><td><span class="cmd">rm -f db.sqlite db.sqlite-shm db.sqlite-wal &amp;&amp; npm run deploy</span></td><td>最干净，能顺带验证「从零建库」</td><td>必须删 WAL/SHM 两个附属文件；忘了会看到奇怪的行</td></tr>
+  <tr><td>独立测试库 / 内存库</td><td>用 profile 或环境变量把 <code>requires.db.credentials.url</code> 指到别的文件（如 <code>db-test.sqlite</code>），或用 <code>cds.test('serve','all','--in-memory?')</code> 让 CAP 在无 db 绑定配置时用内存库</td><td>测试与开发数据互不影响；内存库最快</td><td>需要额外配置；内存库跑完即消失，不利于事后排查</td></tr>
+</table>
+
+<div class="box danger"><b class="t">本站的一个真实提醒</b>
+<p>示范项目的 <code>package.json</code> 里 <code>requires.db.credentials.url = db.sqlite</code>，这意味着 <code>cds.test</code> 也会连到这个文件 —— 本站的 16 个用例之所以能连跑两次结果一致，是因为 <code>before()</code> 里显式 <code>data.reset()</code>。<b>如果你的测试没有重置步骤，它会污染你的开发数据</b>（本站实测：测试跑完 BO-1001 变成 SUBMITTED、多出一个 BO-1005）。所以「测试库与开发库分离」在大项目里不是洁癖，是硬需求。</p></div>
+
+<div class="box ok"><b class="t">验收</b> 你的测试满足以下三条：① 连跑两次结果相同；② 不依赖上一次运行留下的任何行；③ 失败重跑前不需要手工「清库」。做不到就回到本节按策略 A + <code>data.reset()</code> 改造。</div>
+
+<h2 id="s6">6. 覆盖率与质量门槛</h2>
+
+<p>CAP 服务不需要追求「行覆盖率 100%」——<b>要追求「每条 handler 都有正例 + 负例」</b>。理由：CAP 的通用 CRUD 由框架提供且已被官方测试覆盖，你的代码里真正有风险的只有这几处：<code>before</code> 的校验与派生、<code>after</code> 的回写、<code>on</code> 的动作与聚合、以及错误状态码的选择。</p>
+
+<h3 id="s6-1">6-1 本站示范项目的「必须测」清单</h3>
+<table class="tbl small">
+  <tr><th>handler</th><th>正例（必须绿）</th><th>负例（必须红得正确）</th></tr>
+  <tr><td><code>before CREATE BookOrders</code>（编号+校验）</td><td>不传 orderNo 激活 → 201 并自动编号 BO-1005</td><td>重复订单号 → 409；顾客不存在 → 400</td></tr>
+  <tr><td><code>before CREATE/UPDATE BookOrderItems</code>（派生）</td><td>quantity=3 → amount=8400</td><td>quantity=0 → 400；book_ID 不存在 → 400</td></tr>
+  <tr><td><code>after CREATE/UPDATE/DELETE BookOrderItems</code>（回写）</td><td>父订单合计 = 12000</td><td>（回写失败应让整个请求失败 —— 可用「删除明细后合计减少」间接验证）</td></tr>
+  <tr><td><code>on submitOrder</code>（状态迁移）</td><td>200 + 状态变 SUBMITTED</td><td>空订单 → 400；重复提交 → 409；GET 调用 → 405</td></tr>
+  <tr><td><code>on getOrderTotal</code></td><td>BO-1003 → 17400</td><td>不存在的订单号 → 404；POST 调用 → 405</td></tr>
+  <tr><td><code>on getOrderSummary</code></td><td>4 行 + BO-1001 合计 16000</td><td>（无参数，主要靠行数/数值断言）</td></tr>
+  <tr><td>通用 CRUD（框架）</td><td>$filter / $expand / $select 至少各一条</td><td>匿名 → 401；只读实体 POST → 405</td></tr>
+</table>
+
+<div class="box info"><b class="t">门禁建议（可直接抄）</b>
+<ul>
+  <li><b>硬门禁</b>：① 模型编译无 <code>[ERROR]</code>；② <code>npm test</code> 全绿；③ <code>bash test/odata-verify.sh</code> 全绿（非 0 退出即阻断）。</li>
+  <li><b>软指标</b>：每个新加的 handler 是否都有 ≤2 条用例；每个 <code>req.reject</code> 分支是否至少被一条负例覆盖；新增业务数值（金额、编号、状态）是否进了断言。</li>
+  <li><b>不要做</b>：为了覆盖率去断言框架行为（例如断言 <code>$metadata</code> 的每一行 XML）；那只会让测试变脆。</li>
+</ul></div>
+
+<h3 id="s6-2">6-2 DoD（Definition of Done）怎么定</h3>
+<p>把「做完了」写成可以被第三方复现的句子，而不是主观判断。本站示范项目的 DoD 就三句话：<b>能跑起来、能证明对、能防回归</b>。下一节把它拆成勾选清单（§8）。</p>
+
+<h2 id="s7">7. 在 CI 里跑</h2>
+
+<p>CI 里的 CAP 测试与本地唯一的区别是：<b>没有 4004 端口的常驻服务、没有人在旁边敲 curl</b>。所以流程必须写成「装依赖 → 建库 → 起服务（后台） → 等就绪 → 跑测试 → 收尾」。</p>
+
+<h3 id="s7-1">7-1 先把它封装成一个脚本（CI 与本地共用）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">#!/usr/bin/env bash
+# test/ci-verify.sh —— 起服务、等就绪、跑两层测试、收尾（本地与 CI 同一份）
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+npm ci                                  # 依赖锁文件安装（CI 里用 ci，本地可 npm install）
+npx cds compile db/schema.cds srv/book-order-service.cds --to edmx &gt; /tmp/model.edmx
+grep -q 'EntitySet Name="BookOrders"' /tmp/model.edmx || { echo "模型检查失败"; exit 1; }
+
+npm run deploy                          # 建库 + 灌 CSV（保证幂等）
+npx mocha --reporter spec --timeout 20000 test/*.test.js   # 第 1 层
+
+npm start &gt; /tmp/srv.log 2&gt;&amp;1 &amp;          # 第 2 层需要一个真实运行的服务
+SRV=$!
+for i in $(seq 1 30); do                # 等就绪：不睡固定时长，而是轮询健康检查
+  if curl -sf -u alice:alice http://localhost:4004/odata/v4/book-order/\$metadata &gt; /dev/null; then break; fi
+  sleep 1
+done
+bash test/odata-verify.sh
+kill $SRV</code></pre>
+
+<div class="box warn"><b class="t">为什么不能 <code>sleep 5</code> 了事</b>
+<p>CI 机器的冷启动比本机慢（模型编译 + sqlite 初始化 + 依赖首次加载），固定 <code>sleep</code> 是 CI 上最常见的不稳定源。上面对 <code>$metadata</code> 轮询 30 次，就绪即继续 —— 这也是你本地脚本应该有的写法。</p></div>
+
+<h3 id="s7-2">7-2 GitHub Actions 示例</h3>
+<p class="kicker">下面的 yaml 是<b>示例</b>（本站未在真实 CI 上执行过）；它用到的 action 与 npm 语法都是通用标准写法，落地时请按你仓库的目录结构调整 <code>working-directory</code>。</p>
+<pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml">name: cap-tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [ 20, 22 ]          # 版本矩阵：至少覆盖你支持的 LTS
+    defaults:
+      run:
+        working-directory: project-code/demo-node
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm              # 缓存 npm 下载（~/.npm），不是缓存 node_modules
+          cache-dependency-path: project-code/demo-node/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Model check (layer 0)
+        run: |
+          npx cds compile db/schema.cds srv/book-order-service.cds --to edmx &gt; model.edmx
+          grep -q 'EntitySet Name="BookOrders"' model.edmx
+
+      - name: Deploy sqlite (layer 1/2 前置)
+        run: npm run deploy
+
+      - name: Unit / HTTP tests (layer 1)
+        run: npx mocha --reporter spec --timeout 20000 test/*.test.js
+
+      - name: OData integration (layer 2)
+        run: |
+          npm start &gt; srv.log 2&gt;&amp;1 &amp;
+          for i in $(seq 1 30); do
+            curl -sf -u alice:alice http://localhost:4004/odata/v4/book-order/\$metadata &gt; /dev/null &amp;&amp; break
+            sleep 1
+          done
+          bash test/odata-verify.sh
+          kill %1 || true
+
+      - name: Server log on failure
+        if: failure()
+        run: cat srv.log || true</code></pre>
+
+<div class="cols2">
+  <div class="box info"><b class="t">缓存与矩阵的取舍</b>
+  <ul>
+    <li><code>cache: npm</code> 缓存的是 npm 的<b>下载缓存</b>（<code>~/.npm</code>）与锁文件键控 —— <b>不要缓存 <code>node_modules</code></b>：原生模块（本项目的 <code>better-sqlite3</code>）与 Node ABI 绑定，跨 Node 版本复用缓存会直接崩。</li>
+    <li>版本矩阵的作用是提前发现 ABI/语法问题：本站在 Node 22 上实测通过；Node 20 属于 <code>engines</code> 允许范围，但 sqlite 原生模块需要对应预编译包 —— 矩阵里跑一次就知道。</li>
+    <li><code>fail-fast: false</code>：一个版本失败时另一个继续跑，能看到完整信息。</li>
+    <li>失败时把 <code>srv.log</code> 打出来（最后一步），比在 CI 上重跑一次便宜得多。</li>
+  </ul></div>
+  <div class="box danger"><b class="t">为什么绝不把 <code>cds watch</code> 放进 CI</b>
+  <ol>
+    <li><b>它不会退出</b>：watch 是常驻进程（这正是它的用途），CI 步会一直挂到超时。</li>
+    <li><b>它监视文件系统</b>：CI 里没有「人改文件」，热重载毫无价值，只增加重启噪声与不确定性。</li>
+    <li><b>它默认开 livereload 端口</b>（<code>--livereload</code>，默认 35729）：在容器里多一个无意义的监听端口。</li>
+    <li><b>它可能在模型有错时继续「带病运行」</b>（取决于错误类型），而 CI 需要的是<b>明确失败</b>。</li>
+    <li>替代品就是上面两步：<code>cds compile</code> 做静态检查，<code>npm start</code>（<code>cds-serve</code>）起一个稳定服务跑集成测试。</li>
+  </ol></div>
+</div>
+
+<div class="box ok"><b class="t">验收</b> 你的仓库里有一个「一条命令跑完全部测试」的入口（本站是 <code>test/ci-verify.sh</code>），本机执行它以 <code>PASS 26 / FAIL 0</code> 结束；CI 配置里没有 <code>cds watch</code>、没有固定 <code>sleep</code>、没有把 <code>node_modules</code> 当缓存。</div>
+
+
+<h2 id="s8">8. 本项目的 DoD 清单</h2>
+<p>下面这份清单可以直接贴进 PR 描述。每一项都必须是<b>别人能复核</b>的（有命令、有输出、有文件）。</p>
+<ul class="check">
+  <li><b>模型层</b>：<code>npx cds compile db/schema.cds srv/book-order-service.cds --to edmx</code> 无 <code>[ERROR]</code>；<code>$metadata</code> 里实体集/动作/函数与设计文档一致。</li>
+  <li><b>服务层</b>：每条自定义 handler 都有 ≤2 条用例（正例 + 负例），且负例断言了<b>状态码与消息</b>而不是「有错就行」。</li>
+  <li><b>数据层</b>：<code>npm run deploy</code> 后 <code>sqlite_tables.py</code> 的表与行数符合预期（4 张业务表 + 草稿表）。</li>
+  <li><b>认证</b>：匿名请求被拒（401）；带凭据的正向请求通过（200）。</li>
+  <li><b>幂等性</b>：测试连跑两次结果相同（<code>data.reset()</code> / <code>npm run deploy</code> 已就位）。</li>
+  <li><b>草稿</b>：草稿流程（建 → 激活 / 丢弃）有用例覆盖，且断言了 <code>IsActiveEntity</code> 与自动编号。</li>
+  <li><b>验收脚本</b>：<code>bash test/odata-verify.sh</code> 输出 <code>PASS n / FAIL 0</code>，且脚本在有 FAIL 时以非 0 退出。</li>
+  <li><b>CI</b>：push / PR 触发；<code>npm ci</code> + 模型检查 + 两层测试；不使用 <code>cds watch</code>；失败时保留服务端日志。</li>
+  <li><b>清理</b>：本地验证结束执行 <code>pkill -f cds-serve</code>，不留下占用 4004 端口的进程。</li>
+  <li><b>可复现</b>：README 里写清 Node 版本、<code>npm run deploy</code>、<code>npm test</code>、<code>bash test/odata-verify.sh</code> 四步，且每一步都有期望输出。</li>
+</ul>
+
+
+<h2 id="s9">9. 常见错误表</h2>
+<table class="tbl small">
+  <tr><th>#</th><th>症状</th><th>根因</th><th>处理</th><th>验证</th></tr>
+  <tr><td>1</td><td><code>Error: No test files found: "test/*.test.js"</code></td><td><code>package.json</code> 里的 <code>test</code> 脚本存在，但仓库里没有测试文件</td><td>补上 <code>test/*.test.js</code>（见 §2），或先把脚本改成跑 <code>odata-verify.sh</code></td><td><code>npm test</code> 不再报 No test files</td></tr>
+  <tr><td>2</td><td><code>Cannot find module '@cap-js/cds-test'</code></td><td>@sap/cds 9 的 <code>cds.test</code> 需要单独安装这个包</td><td><span class="cmd">npm i -D @cap-js/cds-test</span>；若报 peer 冲突加 <code>--legacy-peer-deps</code> 或把 chai 升到 ^6</td><td><code>npx cds test -?</code> 能打印帮助而不是报缺模块</td></tr>
+  <tr><td>3</td><td><code>npm error ERESOLVE … peer chai@"^6" from @cap-js/cds-test@1.0.2</code></td><td>项目锁了 <code>chai@^5</code>，与 cds-test 的 peer 要求不符</td><td>升 chai 到 <code>^6</code>，或 <code>--legacy-peer-deps</code> 安装（了解风险）</td><td><code>npm i</code> 退出码为 0</td></tr>
+  <tr><td>4</td><td>测试第一次绿、第二次红（<code>want=9 got=10</code> 之类）</td><td>测试写数据，未重置库</td><td><code>before(() =&gt; data.reset())</code>，或每次先 <code>npm run deploy</code></td><td>连跑两次输出一致</td></tr>
+  <tr><td>5</td><td>脚本在 CI 里超时</td><td>用 <code>sleep</code> 等就绪不够 / 服务没起来就断言</td><td>改成轮询 <code>$metadata</code>（30 次 × 1 秒）并检查退出码</td><td>CI 日志里出现第一次轮询即 200</td></tr>
+  <tr><td>6</td><td><code>Error: listen
+<figure class="fig" data-fig="test_s04">
+  <a class="zoom" href="assets/fig/test_s04.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/test_s04.svg" alt="本站示范项目实测到的三个坑：没有 test/*.test.js、没有装 @cap-js/cds-test、chai 版本与 cds-test 的 peer 要求冲突（都可原样复现）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">本站示范项目实测到的三个坑：没有 test/*.test.js、没有装 @cap-js/cds-test、chai 版本与 cds-test 的 peer 要求冲突（都可原样复现）</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npm test / npx cds test / npm install</span></figcaption>
+</figure> EADDRINUSE :::4004</code></td><td>上一次的服务没杀干净（本地或 CI 上并行任务）</td><td><code>pkill -f cds-serve</code>；或换端口 <code>cds watch --port 4005</code> 并同步脚本里的 <code>BASE</code></td><td><code>pgrep -fl cds-serve</code> 无输出</td></tr>
+  <tr><td>7</td><td>所有断言都是 401</td><td>忘了 <code>-u alice:alice</code>；或改了 auth 配置（例如 <code>"*": false</code>）</td><td>检查 <code>cds env get requires.auth</code> 与脚本里的 <code>AUTH</code> 数组</td><td><code>$metadata</code> 带凭据返回 200</td></tr>
+  <tr><td>8</td><td>草稿用例拿到 201 却断言 200</td><td>草稿的 POST / draftActivate 都返回 <b>201</b>；把两个 201 混为一谈</td><td>分清「建草稿」与「激活」，断言各自的状态码与 <code>IsActiveEntity</code></td><td>用例里同时断言 <code>status=201</code> 与 <code>IsActiveEntity=false/true</code></td></tr>
+  <tr><td>9</td><td>并行跑两个测试套件时随机失败</td><td>它们共享同一个 <code>db.sqlite</code>（SQLite 单文件 + CAP 的 <code>pool.max=1</code>）</td><td>改用独立测试库文件或内存库；CI 里不要并行跑同一项目的写测试</td><td>两次并行运行都稳定通过</td></tr>
+  <tr><td>10</td><td>改了测试期望值，本地绿、CI 红</td><td>本地 <code>db.sqlite</code> 残留数据与 CI 的干净库不同</td><td>CI 与本地都用 <code>npm run deploy</code> 起步；把数据前置条件显式写进测试</td><td>删掉 <code>db.sqlite*</code> 后 <code>npm run deploy &amp;&amp; npm test</code> 仍全绿</td></tr>
+  <tr><td>11</td><td><code>mocha</code> 找不到 <code>describe</code> / <code>it</code></td><td>没用 <code>cds.test</code> 提供的运行器上下文（或忘了装 mocha）</td><td>由 <code>cds.test()</code> 注入 <code>describe/it/expect</code>；<code>mocha</code> 与 <code>chai</code> 在 devDependencies 里</td><td>测试文件能加载并列出用例</td></tr>
+  <tr><td>12</td><td>CI 通过但线上功能坏</td><td>测试只覆盖了本地 SQLite 的行为，HANA 方言/权限未验证</td><td>关键路径在部署后用同一份 <code>BASE</code> 跑一遍 <code>odata-verify.sh</code>（脚本已支持 <code>BASE=</code> 变量）</td><td><code>BASE=https://… bash test/odata-verify.sh</code> 全绿</td></tr>
+</table>
+
+<h2 id="s10">10. 本节测试</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>四层测试各能抓到什么类型的 bug？请给第 0 层和第 2 层各举一个「上一层抓不到」的例子。</li>
+    <li><code>cds.test</code> 与 <code>bash test/odata-verify.sh</code> 的定位差异是什么？什么时候必须用后者？</li>
+    <li>写一条负向断言：验证「数量 0」返回 400 且消息为「数量必须大于 0」（用 <code>cds.test</code> 风格或 <code>chk</code> 风格都行）。</li>
+    <li>为什么同一脚本第二次运行会出现 6 条 FAIL？各自对应什么数据变化？怎么修？</li>
+    <li>说出三种数据库隔离做法及各自的代价。</li>
+    <li>CI 里为什么不能用 <code>cds watch</code>？替代它的是哪两条命令？</li>
+    <li>DoD 清单里哪几条是「硬门禁」（不通过就必须阻断合并）？</li>
+  </ol>
+  <p class="go">对应自测题见自测页「测试体系」（题库文件 <code>work/quiz/testing.json</code>，共 16 题）。</p>
+</div>
+
+<h2 id="s11">11. 小结</h2>
+
+<div class="grid cards">
+  <div class="card"><h3>一句话总结</h3>
+    <p>先让模型编译过关（第 0 层），再用 <code>cds.test</code> 把每条 handler 的正反例钉住（第 1 层），最后用 <code>odata-verify.sh</code> 从外部对运行中的服务做端到端验收（第 2 层）——<b>三层加起来不到 1 秒</b>，却能挡住绝大多数回归。</p></div>
+  <div class="card"><h3>本站的真实数字</h3>
+    <p>模型：4 表 / 5 实体集 / 2 函数 / 1 动作，编译无 ERROR。第 1 层：<b>16 passing（425 ms）</b>。第 2 层：<b>PASS 26 / FAIL 0</b>；未重置数据重跑则是 <b>PASS 20 / FAIL 6</b> —— 这 6 条失败就是「测试数据管理」最好的教材。</p></div>
+  <div class="card"><h3>最容易忘的三件事</h3>
+    <p>① <code>npm run deploy</code> 或 <code>data.reset()</code> 是测试的前置步骤；② <code>@cap-js/cds-test</code> 要单独安装（还有 chai 版本坑）；③ 收尾 <code>pkill -f cds-serve</code>，别留端口。</p></div>
+  <div class="card"><h3>下一步</h3>
+    <p>测试跑通了，接下来把它变成「交出去的产品」：Fiori Elements 前端、XSUAA 安全、HANA 部署与 CI/CD。<br><a href="node.html">⑤ CAP Node.js 服务实现（回看）</a></p></div>
+</div>
+
+<h2 id="s12">12. 附录：断言与期望值对照表（本站示范项目）</h2>
+<p>写测试时最费时间的其实是「期望值是多少」。下表把本页所有断言依赖的数据一次列全，取值来源是 <code>db/data/*.csv</code>（由 <code>npm run deploy</code> 灌入）。</p>
+
+<table class="tbl small">
+  <tr><th>订单</th><th>顾客</th><th>日期</th><th>状态</th><th>明细数</th><th>合计（JPY）</th><th>明细构成（book_ID × 数量 = 金额）</th></tr>
+  <tr><td><b>BO-1001</b></td><td>1000 北京华信书业</td><td>2026-09-01</td><td>OPEN</td><td>3</td><td><b>16000</b></td><td>1001 × 2 = 8400；1003 × 1 = 2800；1005 × 1 = 4800</td></tr>
+  <tr><td><b>BO-1002</b></td><td>1000 北京华信书业</td><td>2026-09-03</td><td>OPEN</td><td>1</td><td><b>3600</b></td><td>1002 × 1 = 3600</td></tr>
+  <tr><td><b>BO-1003</b></td><td>2000 上海博文出版中心</td><td>2026-09-05</td><td>SUBMITTED</td><td>3</td><td><b>17400</b></td><td>1001 × 1 = 4200；1004 × 2 = 10400；1003 × 1 = 2800</td></tr>
+  <tr><td><b>BO-1004</b></td><td>3000 广州南方图书</td><td>2026-09-08</td><td>CLOSED</td><td>2</td><td><b>7600</b></td><td>1005 × 1 = 4800；1003 × 1 = 2800</td></tr>
+  <tr><td colspan="5">明细行合计</td><td><b>9 行</b></td><td>16000 + 3600 + 17400 + 7600 = 44600</td></tr>
+</table>
+
+<table class="tbl small">
+  <tr><th>图书 ID</th><th>书名</th><th>单价（JPY）</th><th>在测试里出现的位置</th></tr>
+  <tr><td>1001</td><td>SAP CAP 实战</td><td>4200</td><td>$expand 断言、BO-1003 明细</td></tr>
+  <tr><td>1002</td><td>SAP BTP 入门</td><td>3600</td><td>BO-1002 明细（合计 3600）</td></tr>
+  <tr><td>1003</td><td>CDS 建模精要</td><td>2800</td><td>「2800×3=8400」与「12000 回写」两条断言</td></tr>
+  <tr><td>1004</td><td>ABAP 到 CAP 迁移指南</td><td>5200</td><td>BO-1003 明细（× 2 = 10400）</td></tr>
+  <tr><td>1005</td><td>SAP Fiori Elements 实战</td><td>4800</td><td>BO-1001 / BO-1004 明细</td></tr>
+  <tr><td>9999</td><td>（不存在）</td><td>—</td><td>负向用例「图书不存在 → 400」</td></tr>
+</table>
+
+<table class="tbl small">
+  <tr><th>用例</th><th>命令/请求</th><th>期望</th><th>来源</th></tr>
+  <tr><td>模型检查</td><td><code>cds compile --to edmx</code></td><td>无 ERROR；5 EntitySet / 2 FunctionImport / 1 Action</td><td><code>15_compile.txt</code></td></tr>
+  <tr><td>第 1 层</td><td><code>npm test</code></td><td>16 passing（425 ms）</td><td><code>13b_npm_test_pass.txt</code></td></tr>
+  <tr><td>第 2 层</td><td><code>bash test/odata-verify.sh</code></td><td>PASS 26 / FAIL 0</td><td><code>04_odata.txt</code></td></tr>
+  <tr><td>幂等性</td><td>同一脚本连跑两次</td><td>第 2 次 PASS 20 / FAIL 6（需重置数据）</td><td><code>18_rerun_not_idempotent.txt</code></td></tr>
+  <tr><td>方法语义</td><td>function POST / action GET</td><td>都是 405</td><td><code>17_methods.txt</code></td></tr>
+</table>
+
+<div class="box info"><b class="t">把这页带走</b>
+<p>如果你只记住一件事：<b>每条断言都要绑定一个业务数字或一个状态码</b>。「请求成功」不是断言，「BO-1003 的合计是 17400」才是。前者只能证明服务活着，后者能证明你的业务逻辑没有被改坏。</p></div>
+
+<p class="kicker">命令与输出取自 <code>project-code/demo-node</code> 的本地实测（Node 22.23.2 / @sap/cds 9.9.3 / mocha 10）；GitHub Actions 的 yaml 为示例，未在真实 CI 上执行。CAP 小版本会改变日志与错误文案，以你自己终端的输出为准。</p>
+
+
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

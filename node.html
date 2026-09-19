@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAP Node.js 服务实现 · SAP CAP 培训课程</title>
+<meta name="description" content="用 Node.js 实现 CAP 服务的完整过程：srv/*.cds 服务定义逐段讲解、before/on/after 事件处理器、五类业务实现位置（编号生成、派生字段、汇总回写、绑定动作、聚合函数）、CQN 查询、事务与 req.reject、草稿（@odata.draft.enabled）、本地运行与热重载、cds env 与 profiles。所有终端输出为本站示范项目的真实运行结果。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a class="active" href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>CAP Node.js 服务实现</span></p>
+<h1>CAP Node.js 服务实现：从服务定义到 OData 落地</h1>
+<p class="kicker">覆盖对象：<code>srv/book-order-service.cds</code>（服务定义）· <code>srv/book-order-service.js</code>（事件处理器）· <code>cds compile</code> / <code>cds watch</code> / <code>cds-serve</code> · CQN 查询构建 · 事务与 <code>req.reject</code> · 草稿 <code>@odata.draft.enabled</code> · <code>cds env</code> 与 profiles。本页所有终端输出都来自本站示范项目 <code>project-code/demo-node</code> 的真实运行。</p>
+
+<div class="toc">
+  <a href="#s0">0. 本页地图</a>
+  <a href="#s1">1. 从模型到 OData 的完整路径</a>
+  <a href="#s2">2. 服务定义逐段讲解</a>
+  <a href="#s3">3. 事件处理器体系与生命周期</a>
+  <a href="#s4">4. 五类实现位置（本站示范项目）</a>
+  <a href="#s5">5. CQN 查询构建</a>
+  <a href="#s6">6. 事务与错误处理</a>
+  <a href="#s7">7. 草稿（@odata.draft.enabled）</a>
+  <a href="#s8">8. 本地运行与热重载</a>
+  <a href="#s9">9. 环境变量与 profiles</a>
+  <a href="#s10">10. 手顺：把示范项目跑起来</a>
+  <a href="#s11">11. 常见错误表</a>
+  <a href="#s12">12. 练习与完成基准</a>
+  <a href="#s13">13. 本节测试</a>
+  <a href="#s14">14. 小结与下一页</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>读懂一个 <code>service</code> 块里的每一个注解（<code>@path</code> / <code>@requires</code> / <code>@readonly</code> / <code>@odata.draft.enabled</code> / <code>@cds.redirection.target</code>），并说清 <code>function</code> 与 <code>entity</code> 的取舍；</li>
+  <li>用 <code>before</code> / <code>on</code> / <code>after</code> 三类钩子写出编号生成、入参校验、派生字段、汇总回写、状态迁移、聚合函数六种逻辑；</li>
+  <li>用 <code>cds watch</code> 的终端输出证明「哪一条 HTTP 请求触发了哪个 handler」，并用 <code>curl</code> 复现 200 / 400 / 401 / 404 / 405 / 409 六种响应；</li>
+  <li>在 Node.js 里用 CQN 的 fluent API 写 SELECT / INSERT / UPDATE / DELETE，并解释它编译成什么 SQL；</li>
+  <li>把 <code>@odata.draft.enabled</code> 的草稿流程（POST → draft → draftActivate）说清，并写出正确的集成测试 URL。</li>
+</ul></div>
+
+<div class="box warn"><b class="t">事实口径（先读这一条）</b>
+<p>本页命令与输出都在本机实测过，环境：<b>Node 22.23.2</b>、<b>@sap/cds 9.9.3</b>、<b>@sap/cds-dk 9.9.6</b>、<b>@cap-js/sqlite 2.x</b>、数据库 <code>db.sqlite</code>。原始记录保存在 <code>work/evidence/*.txt</code>（<code>01_deploy.txt</code>、<code>04_odata.txt</code>、<code>05_node_server.log</code>、<code>09_watch.log</code>、<code>16_read_and_draft.txt</code> 等），长 JSON 在正文里折行，<code>…</code> 表示省略。凡本页没跑过的内容都会明确标注「未实测/以官方文档为准」；CAP 的小版本会改变日志文案，以你自己终端的输出为准。</p></div>
+
+<h2 id="s0">0. 本页地图：服务实现要交付什么</h2>
+
+<p>上一页（CDS 建模）交付的是<b>数据长什么样</b>；本页交付的是<b>对外能做什么</b>。在 CAP 里这两件事都由 CDS 声明，但「做什么」分成两层：</p>
+
+<div class="flow">
+  <span class="node">服务定义<br><small>srv/*.cds</small></span>
+  <span class="arrow">→</span>
+  <span class="node">通用实现<br><small>CRUD 自动可用</small></span>
+  <span class="arrow">→</span>
+  <span class="node">自定义 handler<br><small>srv/*.js</small></span>
+  <span class="arrow">→</span>
+  <span class="node">OData V4 接口<br><small>/odata/v4/book-order</small></span>
+</div>
+
+<p>本站示范项目 <code>demo-node</code> 故意做小：4 张表、5 个实体集、1 个绑定动作、2 个无绑定函数、5 类自定义 handler。它是本页所有代码与输出的唯一来源，请先打开文件对照阅读。</p>
+
+<table class="tbl small">
+  <tr><th>文件</th><th>角色</th><th>本页章节</th></tr>
+  <tr><td><code>db/schema.cds</code></td><td>领域模型（4 实体 + 1 视图）</td><td>§2 对照、§4 关联与外键</td></tr>
+  <tr><td><code>srv/book-order-service.cds</code></td><td>服务定义（38 行）</td><td>§2</td></tr>
+  <tr><td><code>srv/book-order-service.js</code></td><td>事件处理器（151 行）</td><td>§3 §4 §6</td></tr>
+  <tr><td><code>db/data/*.csv</code></td><td>初始数据（4 文件、21 行）</td><td>§10 手顺</td></tr>
+  <tr><td><code>test/odata-verify.sh</code></td><td>OData 验收脚本（26 条断言）</td><td><a href="testing.html#s3">⑦ 测试体系 §3</a></td></tr>
+</table>
+
+<div class="box ok"><b class="t">验收（本页的地基）</b>
+<p>在 <code>project-code/demo-node</code> 下执行 <span class="cmd">npx cds compile srv/book-order-service.cds --to edmx</span> 能输出含 <code>EntitySet Name="BookOrders"</code> 与 <code>FunctionImport Name="getOrderTotal"</code> 的 XML，说明服务定义语法正确、可被 OData 适配器消费。</p></div>
+
+<h2 id="s1">1. 从模型到 OData 的完整路径</h2>
+
+<p>同一批 <code>.cds</code> 文件会被三类消费者读取，产物完全不同。把这条路径记牢，90% 的「为什么服务里看不到我的字段」都有答案。</p>
+
+<div class="flow">
+  <span class="node">db/schema.cds<br><small>领域实体</small></span>
+  <span class="arrow">--to sql--&gt;</span>
+  <span class="node">建表语句<br><small>sap_training_bookorder_*</small></span>
+</div>
+<div class="flow">
+  <span class="node">srv/*.cds<br><small>service 定义</small></span>
+  <span class="arrow">--to edmx--&gt;</span>
+  <span class="node">$metadata<br><small>EntitySet / Action / Function</small></span>
+  <span class="arrow">→</span>
+  <span class="node">OData V4 客户端<br><small>Fiori / curl / Postman</small></span>
+</div>
+<div class="flow">
+  <span class="node">cds watch / cds-serve<br><small>运行时</small></span>
+  <span class="arrow">→</span>
+  <span class="node">csn 模型加载<br><small>cds.model</small></span>
+  <span class="arrow">→</span>
+  <span class="node">handler<br><small>this.entities.*</small></span>
+  <span class="arrow">→</span>
+  <span class="node">CQN → SQL<br><small>@cap-js/sqlite</small></span>
+</div>
+
+<table class="tbl small">
+  <tr><th>命令</th><th>产物</th><th>谁消费</th><th>典型用途</th></tr>
+  <tr><td><span class="cmd">cds compile --to sql</span></td><td>CREATE TABLE 语句</td><td>数据库（deploy 时）</td><td>确认字段类型 / 列名</td></tr>
+  <tr><td><span class="cmd">cds compile --to edmx</span></td><td>EDMX（$metadata）</td><td>OData 客户端、Fiori</td><td>确认实体集 / 动作 / 函数是否暴露</td></tr>
+  <tr><td><span class="cmd">cds watch</span></td><td>运行中的服务 + 热重载</td><td>开发者、Fiori 预览</td><td>改代码立刻生效、观察请求</td></tr>
+  <tr><td><span class="cmd">cds-serve</span>（<code>npm start</code>）</td><td>运行中的服务（不 watch）</td><td>本地验收 / 集成测试</td><td>稳定的端口与日志，供脚本打请求</td></tr>
+</table>
+
+<h3 id="s1-1">1-1 手顺：把「模型 → 两种产物」跑出来</h3>
+<div class="stepmeta"><span class="k">cds compile</span><span class="f">db/schema.cds · srv/book-order-service.cds</span><span class="c">耗时 3 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：在项目根目录编译成 SQL，确认实体到表的映射（这一步先证明「模型自身是通的」，与运行时无关）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds compile db/schema.cds srv/book-order-service.cds --to sql</code></pre>
+  </li>
+  <li><b>动作</b>：再编译成 EDMX，看服务层暴露了什么。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds compile srv/book-order-service.cds --to edmx | sed -n '26,44p'</code></pre>
+  </li>
+  <li><b>验证</b>：两条命令的真实输出（本站实测，见 <code>work/evidence/15_compile.txt</code>）。注意实体名 → 表名的变形、EntitySet 与 FunctionImport 的存在。
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ npx cds compile db/schema.cds srv/book-order-service.cds --to sql
+CREATE TABLE sap_training_bookorder_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120) NOT NULL,
+  author NVARCHAR(80),
+  price DECIMAL(9, 2) NOT NULL,
+  currency NVARCHAR(3) DEFAULT 'JPY',
+  stock INTEGER DEFAULT 0,
+  PRIMARY KEY(ID)
+);
+...
+$ npx cds compile srv/book-order-service.cds --to edmx | sed -n '26,44p'
+        &lt;EntitySet Name="Books" EntityType="BookOrderService.Books"/&gt;
+        &lt;EntitySet Name="BookOrders" EntityType="BookOrderService.BookOrders"&gt;
+          &lt;NavigationPropertyBinding Path="customer" Target="Customers"/&gt;
+          &lt;NavigationPropertyBinding Path="items" Target="BookOrderItems"/&gt;
+          &lt;NavigationPropertyBinding Path="SiblingEntity" Target="BookOrders"/&gt;
+        &lt;/EntitySet&gt;
+        &lt;EntitySet Name="BookOrderItems" EntityType="BookOrderService.BookOrderItems"&gt;
+          &lt;NavigationPropertyBinding Path="order" Target="BookOrders"/&gt;
+          &lt;NavigationPropertyBinding Path="book" Target="Books"/&gt;
+        &lt;/EntitySet&gt;
+        &lt;EntitySet Name="OrderItemView" EntityType="BookOrderService.OrderItemView"/&gt;
+        &lt;FunctionImport Name="getOrderTotal" Function="BookOrderService.getOrderTotal"/&gt;
+        &lt;FunctionImport Name="getOrderSummary" Function="BookOrderService.getOrderSummary"/&gt;
+      &lt;/EntityContainer&gt;</code></pre>
+  </li>
+</ol>
+<div class="box ok"><b class="t">验收</b> EDMX 里能数出 5 个 <code>EntitySet</code>（Books / Customers / BookOrders / BookOrderItems / OrderItemView）+ 2 个 <code>FunctionImport</code> + 1 个 <code>Action Name="submitOrder" IsBound="true"</code>。数不出就是定义写错了。</div>
+<div class="box warn"><b class="t">常见错误</b> 在 <code>cds compile</code> 里看到 <code>[ERROR]</code> 却仍然生成了文件 —— 编译报错不等于失败退出，脚本里要用 <span class="cmd">grep -q '\[ERROR\]' &amp;&amp; exit 1</span> 才能拦住。详见 §11。</div>
+
+
+<figure class="fig" data-fig="node_s02">
+  <a class="zoom" href="assets/fig/node_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/node_s02.svg" alt="同一个模型文件的两种编译产物：--to sql 给出建表语句，--to edmx 给出 OData 元数据（EntitySet / Action / Function）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">同一个模型文件的两种编译产物：--to sql 给出建表语句，--to edmx 给出 OData 元数据（EntitySet / Action / Function）</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npx cds compile（输出已按行截取）</span></figcaption>
+</figure><h2 id="s2">2. 服务定义逐段讲解：srv/book-order-service.cds</h2>
+
+<p>下面是本站示范项目服务定义的<b>全文</b>（38 行，与仓库文件逐行对应；为便于阅读，三处 JSDoc 风格的文档注释改写成普通块注释，文件末尾那行注释由原文译为中文）。请对照后面的段落编号读。</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">using { sap.training.bookorder as db } from '../db/schema';
+
+@path: '/odata/v4/book-order'
+service BookOrderService @(requires: 'authenticated-user') {
+
+  entity Books         as projection on db.Books;
+  entity Customers     as projection on db.Customers;
+
+  @odata.draft.enabled
+  entity BookOrders    as projection on db.BookOrders
+                       actions { action submitOrder() returns String; };
+
+  /* 两张实体都源自 db.BookOrderItems → 必须显式指定重定向目标，
+     否则 CAP 报 “can't auto-redirect BookOrders:items” */
+  @cds.redirection.target
+  entity BookOrderItems as projection on db.BookOrderItems;
+
+  /* 带主键的视图可以直接暴露为只读实体（对比服务层函数） */
+  @readonly
+  entity OrderItemView as projection on db.OrderItemView;
+
+  /* 单张订单的合计：聚合结果没有主键 → 只能用函数返回 */
+  function getOrderTotal(orderNo : String) returns Decimal(13,2);
+
+  /* 订单汇总一览：同上，函数返回结构体数组（结果结构体不需要主键） */
+  type OrderSummaryRow : {
+    orderNo      : String(16);
+    customerName : String(80);
+    orderDate    : Date;
+    status       : String(10);
+    itemCount    : Integer;
+    totalAmount  : Decimal(13,2);
+  };
+  function getOrderSummary() returns array of OrderSummaryRow;
+
+}
+
+/* Fiori Elements 用的 UI.* 注解放在 app/book-orders/annotations.cds */</code></pre>
+
+<div class="timeline">
+  <div class="tl"><b>第 1 行：using … as db</b>
+    <p>把领域模型命名空间 <code>sap.training.bookorder</code> 起别名为 <code>db</code>。服务内只写 <code>db.Books</code> 这样的短名，避免抄长命名空间。别名是任意标识符，<code>db</code> 只是惯例。</p></div>
+  <div class="tl"><b>@path: '/odata/v4/book-order'（服务前一行）</b>
+    <p>不写 <code>@path</code> 时 CAP 按服务名推导 URL（<code>BookOrderService</code> → <code>/odata/v4/book-order</code>，即去掉 Service 后缀并 kebab-case）。显式写死的好处：改了服务名不会悄悄改掉 URL，前端与测试脚本不用跟着改。<b>验证</b>：启动日志里 <code>serving BookOrderService { at: [ '/odata/v4/book-order' ], … }</code> 必须与之一致。</p></div>
+  <div class="tl"><b>service … @(requires: 'authenticated-user')</b>
+    <p>服务级鉴权：调用者必须已认证（把 <code>authenticated-user</code> 换成角色名就是角色校验）。本站用 <code>mocked</code> 认证策略，匿名访问会得到 <b>401 Unauthorized</b>（§10 手顺里有真实输出）。注意 <code>@(requires: 'authenticated-user')</code> 是注解的括号写法，等价于 <code>@requires: 'authenticated-user'</code>，后者在 CDS 里是保留语法的简写形式。</p></div>
+  <div class="tl"><b>entity X as projection on db.X</b>
+    <p>服务实体是领域实体的<b>投影（视图）</b>，不是同一张表。这是 CAP 的 facade 模式：可以只暴露部分字段（<code>excluding {…}</code>）、改字段名、加注解。查询最终会被重定向回领域实体与真实表。</p></div>
+  <div class="tl"><b>@odata.draft.enabled（BookOrders）</b>
+    <p>开启草稿（Fiori Elements 的 Edit/Create 流程必须它）。代价：这一张实体的写请求多了一层草稿表 <code>BookOrderService_BookOrders_drafts</code>，<b>before-CREATE 只在草案激活（draftActivate）时触发</b>（§7 有真实日志证明）。</p></div>
+  <div class="tl"><b>actions { action submitOrder() returns String; }</b>
+    <p>写在实体块里的 <code>actions</code> 是<b>绑定动作（bound action）</b>：它属于某一行的实例，URL 里要带主键。返回类型 <code>String</code> 会被放进响应体的 <code>value</code>。绑定动作必须写实现（§4-4），通用 CRUD 不会替你实现。</p></div>
+  <div class="tl"><b>@cds.redirection.target（BookOrderItems）</b>
+    <p>本节最容易「凭感觉写错」的一行。<code>BookOrders:items</code> 的关联目标是领域实体 <code>db.BookOrderItems</code>，而服务里<b>有两个实体都源自它</b>（<code>BookOrderItems</code> 与 <code>OrderItemView</code>），编译器无法自动判断该重定向到谁，于是直接报错。加上这一行（裸注解等价 <code>: true</code>）即声明「以我为准」。真实报错与修复对照：</p>
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ npx cds compile .tmpcheck/base.cds --to edmx     # 缺 @cds.redirection.target 的等价模型
+[ERROR] base.cds:7:10: Add “@cds.redirection.target” to either “BookOrderService.BookOrderItems” or
+“BookOrderService.OrderItemView” to select the entity as redirection target for
+“sap.training.bookorder.BookOrderItems” in this service; can't auto-redirect
+“BookOrderService.BookOrders:items” otherwise (in entity:“BookOrderService.BookOrderItems”)
+[ERROR] base.cds:9:10: … (in entity:“BookOrderService.OrderItemView”)
+
+$ npx cds compile .tmpcheck/anno.cds --to edmx      # 加一行 @cds.redirection.target 之后
+        &lt;EntitySet Name="BookOrders" EntityType="BookOrderService.BookOrders"&gt;
+          &lt;NavigationPropertyBinding Path="items" Target="BookOrderItems"/&gt;
+          &lt;NavigationPropertyBinding Path="SiblingEntity" Target="BookOrders"/&gt;</code></pre>
+    <p>官方文档口径：<code>@cds.redirection.target</code> 是布尔注解，<code>true</code> = 优先作为重定向目标，<code>false</code> = 排除该实体（CAP 文档「(Auto-) Redirected Associations」与二月 2021 发布说明）。<b>验证</b>：把注解删掉再编译一次，必须复现上面的 ERROR；加回来 EDMX 里 <code>Path="items" Target="BookOrderItems"</code> 才出现。</p></div>
+  <div class="tl"><b>@readonly（OrderItemView）</b>
+    <p>只读实体：GET 正常，写请求被运行时拦下，返回 <b>405</b> 与消息 <code>Entity "BookOrderService.OrderItemView" is read-only</code>（<code>ENTITY_IS_READ_ONLY</code>）。它和「服务层函数」是同一问题的两种解法：视图有主键 → 可以直接暴露成实体；聚合视图拿不到主键 → 只能走函数。</p></div>
+  <div class="tl"><b>function getOrderTotal(orderNo : String) returns Decimal(13,2)</b>
+    <p>无绑定函数（unbound function），HTTP 动词是 <b>GET</b>，参数写在 URL 括号里。<b>验证</b>：<span class="cmd">curl -u alice:alice "…/getOrderTotal(orderNo='BO-1003')"</span> → <code>{"@odata.context":"$metadata#Edm.Decimal","value":17400}</code>。</p></div>
+  <div class="tl"><b>type OrderSummaryRow + returns array of OrderSummaryRow</b>
+    <p>函数返回值可以是<b>结构体数组</b>：<code>type</code> 定义形状，不需要主键、不需要建表、也不会出现在 <code>$metadata</code> 的 EntitySet 里（只有 <code>FunctionImport</code>）。这就是「汇总一览」的落地方式。</p></div>
+</div>
+
+<div class="cols2">
+  <div class="box info"><b class="t">什么时候用 function，什么时候用 entity</b>
+  <ul>
+    <li>结果能映射到「一行一个主键」→ 用视图 + <code>@readonly</code> 实体（OData 全套 $filter/$orderby/$expand 免费获得）。</li>
+    <li>结果是聚合（GROUP BY）、或跨多表拼装、或需要参数计算 → 用函数。</li>
+    <li>结果是「动作」且要改数据 → 用 action（POST）；只要读 → 用 function（GET）。</li>
+  </ul></div>
+  <div class="box danger"><b class="t">两个高频翻车点</b>
+  <ul>
+    <li>视图忘了 <code>key</code>：<code>Expected entity to have a primary key</code>，服务起不来。</li>
+    <li>在 <code>resource</code> 里给子表用 <code>Composition</code>：CSV 初始化不会填父侧外键，<code>$expand</code> 返回空数组。本站示范项目故意用普通关联 + 显式外键列（见 <code>db/schema.cds</code> 注释）。</li>
+  </ul></div>
+</div>
+
+<div class="box ok"><b class="t">验收</b> 你能在不看文档的情况下解释：为什么 <code>OrderItemView</code> 可以暴露成实体，而 <code>getOrderSummary()</code> 不行？答案要点：前者有 <code>key ID</code>（OData 实体必须有键），后者的结果集是聚合产物，没有可用的主键。</div>
+
+
+<figure class="fig" data-fig="node_s01">
+  <a class="zoom" href="assets/fig/node_s01.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/node_s01.svg" alt="服务定义文件（srv/book-order-service.cds）与真实 cds watch 启动输出：路径、权限、重定向目标、只读视图、函数一次看全" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">服务定义文件（srv/book-order-service.cds）与真实 cds watch 启动输出：路径、权限、重定向目标、只读视图、函数一次看全</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npx cds watch（终端区为真实输出）</span></figcaption>
+</figure><h2 id="s3">3. 事件处理器体系与请求生命周期</h2>
+
+<p>CAP Node.js 的实现就是一个类：<code>module.exports = class X extends cds.ApplicationService</code>，在 <code>init()</code> 里注册钩子。三类钩子的差别只有一条：<b>能不能改数据、要不要自己实现「真正干活」那一步</b>。</p>
+
+<table class="tbl">
+  <tr><th>钩子</th><th>何时运行</th><th>能否改 <code>req.data</code></th><th>能否改结果集</th><th>典型用途</th></tr>
+  <tr><td><code>before</code></td><td>通用/自定义实现之前</td><td>✅</td><td>❌</td><td>校验、补默认值、派生字段、裁剪客户端不该改的字段</td></tr>
+  <tr><td><code>on</code></td><td>代替默认实现</td><td>✅</td><td>✅（返回值即结果）</td><td>自定义 action/function；覆写标准 CRUD</td></tr>
+  <tr><td><code>after</code></td><td>实现完成、结果已算出</td><td>❌（数据已落库）</td><td>✅</td><td>汇总回写（再发一次 UPDATE）、脱敏、补算列</td></tr>
+  <tr><td><code>on('error')</code></td><td>任何请求抛错后</td><td>—</td><td>—</td><td>统一日志、告警；不要在这里吞掉异常</td></tr>
+</table>
+
+<table class="tbl small">
+  <tr><th>事件</th><th>触发来源</th><th>本站示范项目对应代码</th></tr>
+  <tr><td><code>CREATE</code></td><td>POST /Entity</td><td><code>before('CREATE', BookOrders)</code>、<code>before(['CREATE','UPDATE'], BookOrderItems)</code></td></tr>
+  <tr><td><code>UPDATE</code></td><td>PATCH /Entity(key)</td><td><code>before('UPDATE', BookOrders)</code>、<code>after('UPDATE', BookOrderItems)</code></td></tr>
+  <tr><td><code>DELETE</code></td><td>DELETE /Entity(key)</td><td><code>after('DELETE', BookOrderItems)</code>（重算父表合计）</td></tr>
+  <tr><td><code>READ</code></td><td>GET /Entity</td><td>本站未用；练习 §12-2 让你加一个 <code>after('READ', …)</code></td></tr>
+  <tr><td><code>submitOrder</code>（自定义 action）</td><td>POST /Entity(key)/submitOrder</td><td><code>on('submitOrder', BookOrders)</code></td></tr>
+  <tr><td><code>getOrderTotal</code> / <code>getOrderSummary</code>（自定义 function）</td><td>GET /getOrderTotal(orderNo='…')</td><td><code>on('getOrderTotal')</code>、<code>on('getOrderSummary')</code></td></tr>
+  <tr><td><code>draftActivate</code> 等草稿事件</td><td>POST …(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate</td><td>不需要自己实现；它内部会触发 <code>CREATE</code>/<code>UPDATE</code>（§7）</td></tr>
+</table>
+
+<h3 id="s3-1">3-1 一个写请求的完整生命周期</h3>
+<div class="flow">
+  <span class="node">HTTP POST<br><small>OData V4</small></span>
+  <span class="arrow">→</span>
+  <span class="node">协议适配<br><small>解析 payload → CQN</small></span>
+  <span class="arrow">→</span>
+  <span class="node">认证 / 鉴权<br><small>@requires</small></span>
+  <span class="arrow">→</span>
+  <span class="node">before 钩子<br><small>校验、派生</small></span>
+  <span class="arrow">→</span>
+  <span class="node">通用实现<br><small>INSERT/UPDATE 落到 db</small></span>
+  <span class="arrow">→</span>
+  <span class="node">after 钩子<br><small>汇总回写</small></span>
+  <span class="arrow">→</span>
+  <span class="node">响应<br><small>201 + 行数据</small></span>
+</div>
+
+<p>几个必须记住的顺序事实（都由本站日志证实）：</p>
+<ul>
+  <li><b>401 在 before 之前</b>：鉴权失败根本进不了你的 handler，所以「校验不执行」先查 <code>@requires</code> 与是否带了 <code>-u</code>。</li>
+  <li><b>after 里再发 UPDATE 是合法且常见的</b>（本站的汇总回写就是这么做的），但它不会递归触发同一 <code>after</code>——因为它写的是另一张实体。</li>
+  <li><b>草稿实体的 CREATE 只在激活时发生</b>：POST 建草稿走的是草稿事件，不到你的 <code>before('CREATE')</code>。</li>
+  <li><b>一个请求一个事务</b>：before / 通用实现 / after 全在同一个数据库事务里，after 里抛错会让整个请求回滚（§6）。</li>
+</ul>
+
+<h3 id="s3-2">3-2 手顺：用 <code>cds watch</code> 观察 handler 被调用</h3>
+<div class="stepmeta"><span class="k">cds watch</span><span class="f">srv/book-order-service.js</span><span class="c">耗时 8 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：在项目根目录启动监视模式（自动加载模型 + 浏览器 livereload）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds watch</code></pre>
+  </li>
+  <li><b>验证（启动）</b>：真实输出见 <code>work/evidence/09_watch.log</code>；关键是这三行 —— 模型文件清单、服务挂载点、监听地址：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">cds serve all --with-mocks --in-memory? 
+( live reload enabled for browsers )
+[cds] - loaded model from 4 file(s):
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 224 ms</code></pre>
+  </li>
+  <li><b>动作</b>：另开一个终端，制造一次「被拒绝写」和一次「正常读」，观察 watch 窗口里的请求行与错误行。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order
+# ① 触发 before-CREATE 的校验（数量必须大于 0）
+curl -s -u alice:alice -X POST "$SVC/BookOrderItems" -H 'Content-Type: application/json' \
+  -d '{"order_ID":"x","book_ID":1003,"quantity":0}'
+# ② 触发无绑定函数
+curl -s -u alice:alice "$SVC/getOrderTotal(orderNo='BO-1003')"</code></pre>
+  </li>
+  <li><b>验证（handler 被调用的证据）</b>：watch 终端会多出下面几行（原始记录 <code>03_server.log</code> 与 <code>09_watch.log</code>）。<b>[odata] 行 = 请求进来了；[error] 行 = 你的 handler 主动拒绝了它；栈里的文件名:行号 = 具体哪个钩子。</b>
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[odata] - POST /odata/v4/book-order/BookOrderItems 
+[bookorder] - 未预期错误 undefined: 数量必须大于 0
+[error] - 400 - Error: 数量必须大于 0
+    at BookOrderService.&lt;anonymous
+<figure class="fig" data-fig="node_s03">
+  <a class="zoom" href="assets/fig/node_s03.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/node_s03.svg" alt="before-CREATE 钩子的代码与它在终端里的「证据」：每一条 [odata] 请求行后面，紧跟 handler 抛出的业务错误" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">before-CREATE 钩子的代码与它在终端里的「证据」：每一条 [odata] 请求行后面，紧跟 handler 抛出的业务错误</span><span class="kind real">本地实机运行</span><span class="src">本地实测：cds watch 终端输出（栈内绝对路径已用 … 省略）</span></figcaption>
+</figure>&gt; (…/srv/book-order-service.js:52:15)
+[odata] - GET /odata/v4/book-order/getOrderTotal(orderNo='BO-1003') </code></pre>
+  </li>
+  <li><b>动作（可选，更细的日志）</b>：在自己的钩子里打日志是默认就带命名空间的 —— 本站 <code>on('error')</code> 里写的 <code>cds.log('bookorder')</code>，输出前缀就是 <code>[bookorder]</code>。
+    <pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.on('error', (err, req) =&gt; {
+  if (!err.status) cds.log('bookorder').error(`未预期错误 ${req?.event}: ${err.message}`);
+});</code></pre>
+  </li>
+  <li><b>验证（热重载）</b>：保存 <code>srv/book-order-service.js</code>（本站用 <code>touch</code> 复现），watch 会打印分隔线并重新启动；重启后再打一次请求仍应 200。真实输出：<code>[cds] - server v9.9.3 launched in 191 ms</code>（第二次启动更快）。</li>
+</ol>
+<div class="box ok"><b class="t">验收</b> 你能仅凭 watch 终端的三类行，说出「哪个 URL 触发了哪个实体的哪类钩子，是被拒绝还是成功」。这是 CAP 排障的第一手段：<b>先看日志，再看代码</b>。</div>
+<div class="box warn"><b class="t">常见错误</b> 钩子里打了 <code>console.log</code> 却什么都没看到 —— 检查你注册的实体对象是否来自 <code>this.entities</code>（§4 开头），以及自己有没有把日志写在 <code>init()</code> 之外（模块级代码在服务实例化前就执行了）。</div>
+
+<h2 id="s4">4. 五类实现位置（本站示范项目逐段讲）</h2>
+
+<p>先把实体对象取出来，全项目统一用它做查询 —— 这是 CAP 的推荐做法，能避免到处写命名空间。</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">module.exports = class BookOrderService extends cds.ApplicationService {
+
+  async init() {
+    const { Books, Customers, BookOrders, BookOrderItems } = this.entities;
+    // … 下面的 ① ～ ⑤ 都注册在 init() 里
+    return super.init();
+  }
+};</code></pre>
+
+<p>下面 5 段是本站 <code>srv/book-order-service.js</code> 的真实代码（151 行里的核心部分），每段都给：<b>代码 → 为什么这么写 → 失败模式 → 验证方法</b>。</p>
+
+<h3 id="s4-1">4-1 ① 编号生成与校验（before CREATE，订单头）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.before('CREATE', BookOrders, async (req) =&gt; {
+  const data = req.data;
+
+  if (!data.orderNo) {
+    data.orderNo = await nextOrderNo();                 // 客户端没给 → 系统自动编号
+  } else {
+    const dup = await SELECT.one.from(BookOrders).where({ orderNo: data.orderNo });
+    if (dup) req.reject(409, `订单号 ${data.orderNo} 已存在，请更换`);   // 冲突 → 409
+  }
+  if (!data.orderDate) data.orderDate = new Date().toISOString().slice(0, 10);
+
+  if (data.customer_ID != null) {
+    const cust = await SELECT.one.from(Customers).where({ ID: data.customer_ID });
+    if (!cust) req.reject(400, `顾客 ${data.customer_ID} 不存在，请先维护主数据`);  // 入参非法 → 400
+  }
+});
+
+// 文件末尾的工具函数：取现有最大订单号 +1
+async function nextOrderNo() {
+  const row = await SELECT.one.from('sap.training.bookorder.BookOrders').columns('max(orderNo) as maxNo');
+  const n = row?.maxNo ? Number(String(row.maxNo).replace(/\D/g, '')) : 1000;
+  return `BO-${n + 1}`;
+}</code></pre>
+<ul>
+  <li><b>为什么这么写</b>：编号是业务不变量，必须由服务端产生（客户端给的号只做冲突校验）。<b>校验一律用 4xx</b>：409 表冲突、400 表入参非法，前端能据此给出不同提示。</li>
+  <li><b>失败模式</b>：<br>（a）把编号写在 <code>after</code> 里 → 值已经写库，改不动；<br>（b）用 <code>SELECT.one</code> 时忘了 <code>await</code> → <code>dup</code> 永远是 Promise，冲突永远查不出；<br>（c）<code>nextOrderNo()</code> 用字符串比较 <code>max(orderNo)</code>，超过 <code>BO-9999</code> 后字典序会乱（本项目用 <code>replace(/\D/g,'')</code> 转数字，仍有 5 位以上的隐患）；<br>（d）<code>BookOrders</code> 开了草稿 → 这段代码在 POST 建草稿时<b>不会执行</b>，只在激活时执行（§7）。</li>
+  <li><b>验证</b>：<br>（1）<span class="cmd">curl -u alice:alice -X POST "$SVC/BookOrders" -d '{"customer_ID":9999}'</span> 建草稿 → 再 <code>draftActivate</code> → 期望 <b>400</b> 与消息 <code>顾客 9999 不存在，请先维护主数据</code>；<br>（2）不传 <code>orderNo</code> 激活 → 期望 <b>201</b>，返回体里 <code>orderNo</code> 是系统编号（本站 CSV 初始状态下是 <code>BO-1005</code>）；<br>（3）把 <code>-u nosuch:wrong</code> 拿掉再试 → 期望 <b>401</b>（说明 401 发生在钩子之前）。</li>
+</ul>
+
+<h3 id="s4-2">4-2 ② 派生字段计算（before CREATE/UPDATE，明细）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.before(['CREATE', 'UPDATE'], BookOrderItems, async (req) =&gt; {
+  const data = req.data;
+  try {
+    if (data.quantity != null &amp;&amp; data.quantity &lt;= 0) {
+      req.reject(400, '数量必须大于 0');
+    }
+    // 改单行时 payload 可能只带 quantity → 关联字段要从库里取回来
+    const bookID = data.book_ID ?? (await SELECT.one.from(BookOrderItems).where({ ID: req.data.ID }))?.book_ID;
+    if (bookID == null) req.reject(400, '必须指定图书（book）');
+
+    const book = await SELECT.one.from(Books).where({ ID: bookID });
+    if (!book) req.reject(400, `图书 ${bookID} 不存在`);
+
+    const qty = data.quantity ?? (await SELECT.one.from(BookOrderItems).where({ ID: data.ID }))?.quantity ?? 0;
+    data.amount = round2(Number(book.price) * Number(qty));       // 服务端算金额，客户端说了不算
+  } catch (e) {
+    if (e.code === 400 || e.code === 409) throw e;                // 已用 req.reject 拒绝，原样抛出
+    req.reject(500, `计算金额失败：${e.message}`);                 // 其他异常兜底成 500
+  }
+});
+
+const round2 = (n) =&gt; Math.round((Number(n) + Number.EPSILON) * 100) / 100;</code></pre>
+<ul>
+  <li><b>为什么这么写</b>：<code>amount</code> 永远由 <code>price × quantity</code> 派生，用 <code>before</code> 覆盖客户端传来的值，杜绝「前端算错导致对不上账」。<code>??</code> 与「从库里回查」处理 PATCH 局部更新的场景。</li>
+  <li><b>失败模式</b>：<br>（a）只写 <code>before('CREATE')</code> → 改数量时金额不更新（务必同时挂 <code>UPDATE</code>）；<br>（b）直接 <code>data.price</code> —— payload 里没有 price，得到 <code>undefined</code>，金额变 NaN（真实症状：<code>Cannot read properties of undefined</code> 或 amount 为 null）；<br>（c）<code>req.reject()</code> 不写 <code>return</code> —— 它内部会 throw，所以后面代码不会继续；但如果你用了 <code>req.error()</code>，请求会继续执行，要自己保证后续逻辑安全；<br>（d）把校验放在 <code>after</code> → 数据已落库，拒绝也白拒。</li>
+  <li><b>验证</b>：<span class="cmd">curl … -X POST "$SVC/BookOrderItems" -d '{"order_ID":"&lt;BO-1002 的 ID&gt;","book_ID":1003,"quantity":3}'</span> → 期望 <code>201</code> 且 <code>amount=8400</code>（2800 × 3，真实输出见下）；再 <code>quantity:0</code> → <b>400 数量必须大于 0</b>；<code>book_ID:9999</code> → <b>400 图书 9999 不存在</b>。</li>
+</ul>
+
+<h3 id="s4-3">4-3 ③ 汇总回写（after CREATE/UPDATE/DELETE，明细）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">const recalc = async (orderID) =&gt; {
+  if (!orderID) return;
+  const row = await SELECT.one.from(BookOrderItems)
+    .columns('sum(amount) as total')
+    .where({ order_ID: orderID });
+  const total = round2(Number(row?.total ?? 0));
+  await UPDATE(BookOrders).set({ totalAmount: total }).where({ ID: orderID });
+};
+this.after('CREATE', BookOrderItems, async (_, req) =&gt; recalc(req.data.order_ID));
+this.after('UPDATE', BookOrderItems, async (_, req) =&gt; recalc(req.data.order_ID));
+this.after('DELETE', BookOrderItems, async (_, req) =&gt; {
+  // 删除后的行不再返回键值，必须从请求里取（CAP 已确认的行为）
+  const orderID = req.data?.order_ID ?? req.params?.[req.params.length - 1]?.order_ID;
+  await recalc(orderID);
+});
+
+/* 订单头：合计金额由子表汇总，客户端不可直接改 */
+this.before('UPDATE', BookOrders, (req) =&gt; { delete req.data.totalAmount; });</code></pre>
+<ul>
+  <li><b>为什么这么写</b>：合计的<b>真相</b>在子表（<code>sum(amount)</code>），父表的 <code>totalAmount</code> 只是缓存。用 <code>after</code> 在写入完成后回算，读写路径最短。<code>before('UPDATE')</code> 里删掉客户端提交的 <code>totalAmount</code>，防止被「顺手改高一点」。</li>
+  <li><b>失败模式</b>：<br>（a）DELETE 的 after 里读 <code>req.data.ID</code> → 已删除的行没有键值，拿不到 → 合计不更新（本项目从 <code>req.params</code> 兜底取）；<br>（b）在 after 里直接 <code>UPDATE Books</code> 而忘了 <code>await</code> → 请求先返回，合计偶发不对；<br>（c）把 <code>recalc</code> 写成递归调用同一实体的 <code>after</code> → 死循环（本项目写的是另一张实体，安全）；<br>（d）忘了 CQN 里 <code>order_ID</code> 是外键列名（不是 <code>order</code>）→ where 条件不生效，<code>sum</code> 变成全表合计。</li>
+  <li><b>验证</b>：写一条明细后立刻读父表（本站真实输出）：<br>POST 明细 → <code>amount=8400</code>；GET <code>BookOrders?$select=totalAmount&amp;$filter=orderNo eq 'BO-1002'</code> → <code>12000</code>（CSV 原始 3600 + 8400）。</li>
+</ul>
+
+<h3 id="s4-4">4-4 ④ 绑定动作：状态迁移（on submitOrder）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.on('submitOrder', BookOrders, async (req) =&gt; {
+  const ID = req.params[req.params.length - 1].ID;         // 绑定动作：主键在 params 里
+  const order = await SELECT.one.from(BookOrders).where({ ID });
+  if (!order) req.reject(404, `订单 ${ID} 不存在`);
+  if (order.status === 'SUBMITTED' || order.status === 'CLOSED') {
+    req.reject(409, `订单 ${order.orderNo} 当前状态为 ${order.status}，不能重复提交`);
+  }
+  const items = await SELECT.from(BookOrderItems).where({ order_ID: ID });
+  if (items.length === 0) req.reject(400, `订单 ${order.orderNo} 没有明细，不能提交`);
+  if (Number(order.totalAmount) &lt;= 0) req.reject(400, `订单 ${order.orderNo} 合计金额为 0，请检查明细金额`);
+
+  await UPDATE(BookOrders).set({ status: 'SUBMITTED' }).where({ ID });
+  return `订单 ${order.orderNo} 已提交，合计 ${Number(order.totalAmount).toFixed(2)} JPY（${items.length} 行）`;
+});</code></pre>
+<ul>
+  <li><b>为什么这么写</b>：状态迁移是「动作」，不是「字段更新」—— 用 action 能集中所有前置条件（存在性、当前状态、有无明细、金额非零），并且返回一句人类可读的结果给前端。</li>
+  <li><b>失败模式</b>：<br>（a）动作名与基类方法冲突（例如叫 <code>read</code>、<code>create</code>、<code>run</code>）→ 覆盖框架方法，服务行为诡异甚至启动失败；<br>（b）忘了 <code>await UPDATE</code> → 动作返回成功但状态没变；<br>（c）用 <code>after</code> 而不是 <code>on</code> 注册动作 → 通用实现先跑（找不到通用实现会 404/405），你的代码永远不执行；<br>（d）草稿实体上调用动作时 URL 少了 <code>IsActiveEntity=true</code> → 打到草稿行，行为与预期不同。</li>
+  <li><b>验证</b>：<br>（1）空订单提交 → <b>400</b> <code>订单 BO-1005 没有明细，不能提交</code>；<br>（2）正常提交 → <b>200</b> 且返回 <code>"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）"</code>；<br>（3）再提交一次 → <b>409</b> <code>当前状态为 SUBMITTED，不能重复提交</code>；<br>（4）用 GET 调这个 URL → <b>405</b>（action 只能 POST，见 <a href="testing.html#s4">⑦ 测试体系 §4</a>）。</li>
+</ul>
+
+<h3 id="s4-5">4-5 ⑤ 无绑定函数：聚合（on getOrderTotal / getOrderSummary）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">this.on('getOrderTotal', async (req) =&gt; {
+  const { orderNo } = req.data;
+  const order = await SELECT.one.from(BookOrders).where({ orderNo });
+  if (!order) req.reject(404, `订单号 ${orderNo} 不存在`);
+  const row = await SELECT.one.from(BookOrderItems)
+    .columns('sum(amount) as total')
+    .where({ order_ID: order.ID });
+  return round2(Number(row?.total ?? 0));
+});
+
+this.on('getOrderSummary', async () =&gt; {
+  const orders = await SELECT.from(BookOrders)
+    .columns('ID', 'orderNo', 'orderDate', 'status', 'customer.name as
+<figure class="fig" data-fig="node_s06">
+  <a class="zoom" href="assets/fig/node_s06.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/node_s06.svg" alt="草稿流程的真实 HTTP 往返：POST 只产生未激活草稿（orderNo=null）→ draftActivate 返回 201 并自动编号 BO-1005；绑定动作 submitOrder 成功返回业务消息，没有明细 400、重复提交 409（JSON 字段有省略）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">草稿流程的真实 HTTP 往返：POST 只产生未激活草稿（orderNo=null）→ draftActivate 返回 201 并自动编号 BO-1005；绑定动作 submitOrder 成功返回业务消息，没有明细 400、重复提交 409（JSON 字段有省略）</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl（CSV 初始数据状态）</span></figcaption>
+</figure> customerName')
+    .orderBy('orderNo');
+  const agg = await SELECT.from(BookOrderItems)
+    .columns('order_ID', 'count(ID) as itemCount', 'sum(amount) as totalAmount')
+    .groupBy('order_ID');
+  const byOrder = new Map(agg.map((a) =&gt; [a.order_ID, a]));
+  return orders.map((o) =&gt; ({
+    orderNo: o.orderNo,
+    customerName: o.customerName ?? '',
+    orderDate: o.orderDate,
+    status: o.status,
+    itemCount: Number(byOrder.get(o.ID)?.itemCount ?? 0),
+    totalAmount: round2(Number(byOrder.get(o.ID)?.totalAmount ?? 0))
+  }));
+});</code></pre>
+<ul>
+  <li><b>为什么这么写</b>：<code>getOrderSummary</code> 有意演示「聚合视图拿不到主键 → 不能当实体」的替代方案：两次查询（订单列表 + 一次 GROUP BY 聚合），在内存里 <code>Map</code> 拼装。这样把 <code>groupBy</code> 的成本压在数据库侧，不产生 N+1 查询。</li>
+  <li><b>失败模式</b>：<br>（a）把这条 SQL 写成「先查订单，再对每张订单查一次合计」→ N+1，10 万订单会打爆数据库；<br>（b）漏了 <code>customer.name as customerName</code>，返回里没有客户名（关联路径取列要用「关联名.字段 as 别名」）；<br>（c）返回对象里的字段名与 <code>type OrderSummaryRow</code> 不一致 → OData 序列化时被静默丢掉；<br>（d）函数里 <code>req.reject</code> 之后又 <code>return</code> 了别的值 → 无关紧要（reject 已 throw），但可读性差。</li>
+  <li><b>验证</b>：<br>（1）<span class="cmd">curl -u alice:alice "$SVC/getOrderTotal(orderNo='BO-1003')"</span> → <code>{"value":17400}</code>；<br>（2）不存在的订单号 → <b>404</b>（真实输出里有 <code>[error] - 404 - Error: 订单号 BO-9999 不存在</code>）；<br>（3）<code>getOrderSummary()</code> → 4 行，BO-1001 的 <code>itemCount=3 / totalAmount=16000</code>。</li>
+</ul>
+
+<div class="box ok"><b class="t">五类的统一验收（一条命令）</b>
+<p><span class="cmd">bash test/odata-verify.sh</span> 会把这五类逐条断言，本站真实结果 <b>PASS 26 / FAIL 0</b>（详情见 <a href="testing.html#s3">⑦ 测试体系 §3</a>）。改完任何一个 handler，先跑它再提交。</p></div>
+
+<h2 id="s5">5. CQN 查询构建：fluent API ↔ SQL</h2>
+
+<p>handler 里所有数据库访问都是 <b>CQN</b>（Core Query Notation）：<code>SELECT</code> / <code>INSERT</code> / <code>UPDATE</code> / <code>DELETE</code> 是全局对象，链式调用<b>只构造查询对象</b>，<code>await</code> 时才执行（默认打到 <code>cds.db</code>）。CAP 文档强调：CQN 不绑定 SQL，同一个查询对象也可以发给远端服务。</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">const { Books, BookOrders, BookOrderItems } = this.entities;
+
+// SELECT：列 / 过滤 / 排序 / 分页
+await SELECT.from(Books).columns('ID', 'title', 'price')
+  .where({ price: { '&gt;': 3000 } }).orderBy('title desc').limit(10);
+await SELECT.one.from(BookOrders).where({ orderNo: 'BO-1001' });          // 只取一行
+await SELECT.from(BookOrderItems).columns('book.title as bookTitle');      // 关联路径取列
+
+// 聚合 + group by（注意 as 别名就是返回对象里的字段名）
+await SELECT.from(BookOrderItems)
+  .columns('order_ID', 'count(ID) as itemCount', 'sum(amount) as totalAmount')
+  .groupBy('order_ID');
+
+// INSERT / UPDATE / DELETE
+await INSERT.into(BookOrderItems).entries({ order_ID: id, book_ID: 1003, quantity: 2, amount: 5600 });
+await UPDATE(BookOrders).set({ totalAmount: 12000 }).where({ orderNo: 'BO-1002' });
+await DELETE.from(BookOrderItems).where({ order_ID: 'x' });
+
+// 需要更复杂的条件时用标签模板（TTL），值会被参数化，不必自己拼字符串
+await SELECT.from(Books).where`price &gt; ${3000} and currency = ${'JPY'}`;</code></pre>
+
+<p>下面是本站实测的「同一查询 → CQN 对象 → 生成的 SQL」对照（脚本见 <code>work/evidence/14_cqn.txt</code>，用 <code>db.cqn2sql()</code> 打印）。<b>重点看外键列的命名与参数化。</b></p>
+
+<table class="tbl small">
+  <tr><th>fluent API 写法</th><th>生成的 SQL（SQLite 方言）</th></tr>
+  <tr>
+    <td><code>SELECT.from(Books).columns('ID','title','price').where({price:{'&gt;':3000}}).orderBy('title desc').limit(2)</code></td>
+    <td><code>SELECT "$B".ID,"$B".title as title,"$B".price FROM sap_training_bookorder_Books as "$B" WHERE "$B".price &gt; ? ORDER BY title DESC LIMIT ?</code></td>
+  </tr>
+  <tr>
+    <td><code>SELECT.from(BookOrderItems).columns('order_ID','count(ID) as itemCount','sum(amount) as total').groupBy('order_ID')</code></td>
+    <td><code>SELECT "$B".order_ID,count("$B".ID) as itemCount,sum("$B".amount) as total FROM sap_training_bookorder_BookOrderItems as "$B" GROUP BY "$B".order_ID</code></td>
+  </tr>
+  <tr>
+    <td><code>SELECT.one.from(BookOrderItems).columns('book.title as bookTitle','book.price as unitPrice')</code></td>
+    <td><code>SELECT book.title as bookTitle,book.price as unitPrice FROM sap_training_bookorder_BookOrderItems as "$B" left JOIN sap_training_bookorder_Books as book ON book.ID = "$B".book_ID LIMIT ?</code></td>
+  </tr>
+  <tr>
+    <td><code>UPDATE(BookOrders).set({totalAmount:12000, status:'OPEN'}).where({orderNo:'BO-1002'})</code></td>
+    <td><code>UPDATE sap_training_bookorder_BookOrders AS "$B" SET totalAmount=?,status=?,modifiedAt=session_context('$now'),modifiedBy=session_context('$user.id') WHERE "$B".orderNo = ?</code></td>
+  </tr>
+  <tr>
+    <td><code>DELETE.from(BookOrderItems).where({order_ID:'x'})</code></td>
+    <td><code>DELETE FROM sap_training_bookorder_BookOrderItems AS "$B" WHERE "$B".order_ID = ?</code></td>
+  </tr>
+</table>
+
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">--- INSERT
+CQN: {"INSERT":{"into":{"ref":["sap.training.bookorder.BookOrderItems"]},"entries":[{"ID":"11111111-…","order_ID":"x","book_ID":1003,"quantity":2,"amount":5600}]}}
+SQL: INSERT INTO sap_training_bookorder_BookOrderItems (createdAt,createdBy,modifiedAt,modifiedBy,ID,…)
+     SELECT (CASE WHEN json_type(value,'$."createdAt"') IS NULL THEN ISO(session_context('$now')) ELSE … END),
+     … FROM json_each(?)</code></pre>
+
+<div class="cols2">
+  <div class="box info"><b class="t">读这四行能学到什么</b>
+  <ul>
+    <li><b>实体名 → 表名</b>：<code>sap.training.bookorder.Books</code> → <code>sap_training_bookorder_Books</code>（点变下划线），SQL 里出现的就是它。</li>
+    <li><b>外键列 = 关联名 + <code>_ID</code></b>：<code>order_ID</code> / <code>book_ID</code> / <code>customer_ID</code>。这是最常见的错写法来源。</li>
+    <li><b>关联取列会变成 LEFT JOIN</b>，别名就是关联名（<code>book.title</code>）。</li>
+    <li><b>全部参数化</b>：值用 <code>?</code> 占位（<code>values=[…]</code>），所以 fluent API 天然不怕注入。</li>
+  </ul></div>
+  <div class="box warn"><b class="t">别踩的三个坑</b>
+  <ul>
+    <li><code>UPDATE(…).set(…)</code> 与 <code>UPDATE(…).with(…)</code> 不同：<code>set</code> 是「赋值」，<code>with</code> 支持 <code>+=</code> 这类表达式（本站用 <code>set</code>）。</li>
+    <li><code>SELECT.one</code> 在结果多于 1 行时行为不可依赖 —— 用 <code>SELECT.one</code> 时 where 必须唯一。</li>
+    <li>聚合结果里的 <code>sum</code> 在 SQLite/Node 驱动下可能是 <code>string</code> 或 <code>null</code>，所以本站到处是 <code>Number(row?.total ?? 0)</code>。</li>
+  </ul></div>
+</div>
+
+<div class="box ok"><b class="t">验收</b> 你能写出「查询 status = OPEN 的订单、只要 ID 与 orderNo、按 orderNo 倒序、取前 3 条」的 fluent API，并说出它会在 SQLite 上生成什么形式的 SQL（含 <code>ORDER BY … DESC LIMIT ?</code> 与参数化）。</div>
+
+<h2 id="s6">6. 事务与错误处理</h2>
+
+<p>CAP 的核心承诺是「<b>事件处理器里你已经在事务中</b>」：一个请求 = 一个根事务，before / 通用实现 / after 里的所有查询共享它，成功一起提交，抛错一起回滚。所以本站代码里<b>没有一处 <code>cds.tx()</code></b>，这是刻意的（见页面下方「示范项目避免了什么坑」）。</p>
+
+<h3 id="s6-1">6-1 <code>req.reject()</code>：把业务错误变成正确的 HTTP 状态</h3>
+<table class="tbl small">
+  <tr><th>写法</th><th>效果</th><th>本站用例</th></tr>
+  <tr><td><code>req.reject(400, '数量必须大于 0')</code></td><td>HTTP 400 + 消息</td><td>明细入参非法</td></tr>
+  <tr><td><code>req.reject(404, `订单号 X 不存在`)</code></td><td>HTTP 404</td><td>函数查不到订单</td></tr>
+  <tr><td><code>req.reject(409, `订单号 X 已存在`)</code></td><td>HTTP 409（冲突）</td><td>重复编号 / 重复提交</td></tr>
+  <tr><td>不 catch 的异常</td><td>HTTP 500</td><td>真正的 bug（例如读 <code>undefined</code> 的属性）</td></tr>
+  <tr><td><code>req.error(400, '…')</code></td><td>记录错误但<b>不中断</b>，可用于一次收集多条校验</td><td>本站未用（示范项目只要一条消息）</td></tr>
+</table>
+
+<p>真实的错误响应长这样（<code>code</code> 来自你传的状态码，<code>@Common.numericSeverity</code> 供 Fiori 展示级别）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{"error":{"message":"订单 BO-1005 没有明细，不能提交","code":"400","@Common.numericSeverity":4}}
+{"error":{"message":"订单 BO-1003 当前状态为 SUBMITTED，不能重复提交","code":"409","@Common.numericSeverity":4}}</code></pre>
+
+<div class="box info"><b class="t">为什么本站到处 <code>try/catch</code>（而且只 catch 一处）</b>
+<p>规范做法是：<b>能自己判断的错误用 <code>req.reject</code>，无法预料的异常留给框架 500</b>。本站只有「派生字段计算」一处包了 <code>try/catch</code>，因为里面有三次数据库查询与数值运算，任何一环坏掉都应该给出<b>可读的上下文</b>（<code>计算金额失败：…</code>），而不是让前端看到裸的 500。同时它把已经 <code>req.reject</code> 过的 4xx 原样抛出，避免「400 被重新包成 500」这种典型 bug。官方文档还提到：<b>生产环境里 5xx 的响应体会被脱敏</b>（只回 <code>500 Internal Server Error</code>），只有显式设置 <code>err.$sanitize = false</code> 才会带出细节 —— 所以排查 500 必须看服务端日志，别指望客户端。</p></div>
+
+<h3 id="s6-2">6-2 请求事务与 <code>cds.tx()</code>：示范项目避免了什么坑</h3>
+<ul>
+  <li><b>避免了「自己开事务导致 SQLite 死锁」</b>：官方文档明确警告，SQLite 下多个事务互相等待会死锁（并行事务不被允许）。在 handler 里再套 <code>cds.tx()</code> 属于典型误用 —— 请求本来就有事务。</li>
+  <li><b>避免了「after 里改了数据但没回滚」</b>：本站 <code>recalc()</code> 写在 <code>await</code> 的链上，异常会冒泡到框架，整个请求（含主插入）一起回滚，不会留下「明细写了、合计没算」的中间态。</li>
+  <li><b>避免了「把 Promise 忘了 await」</b>：所有 CQN 调用都 <code>await</code>。漏 await 的后果在 200 响应里看不出来，但测试会偶发失败 —— 这类问题只能靠 <a href="testing.html">⑦ 测试体系</a> 的重复运行暴露。</li>
+  <li><b>避免了自己管连接</b>：业务代码从不出现 <code>BEGIN</code>/<code>COMMIT</code>、也没有连接池参数，全部交给 CAP（<code>db.pool.max = 1</code> 是 sqlite 的默认设定，见 §9 的 <code>cds env</code> 输出）。</li>
+</ul>
+
+<div class="box danger"><b class="t">什么时候才需要 <code>cds.tx()</code> / <code>cds.spawn()</code></b>
+<p>两种场景：① 你在<b>非请求上下文</b>（启动脚本、定时任务）里连续做多次写操作，需要它们原子化 —— 用 <code>cds.tx(async () =&gt; { … })</code>；② 你要在<b>当前事务之外</b>异步跑后台任务（发邮件、写外部系统）—— 用 <code>cds.spawn()</code>。在任何 handler 内部，通常都不需要这两者。两处 API 的语义以 CAP 文档「Transaction Management」为准。</p></div>
+
+<div class="box ok"><b class="t">验收</b> 你能解释：为什么「明细插入成功但合计没回写」这种数据不一致在本项目里几乎不可能出现？（要点：同一个请求事务 + 回写失败会抛出 → 一起回滚；再配合 <code>test/odata-verify.sh</code> 的汇总断言兜底。）</div>
+
+<h2 id="s7">7. 草稿（@odata.draft.enabled）：流程与测试影响</h2>
+
+<p>给一张实体加 <code>@odata.draft.enabled</code>，CRUD 的语义就变了：客户端先产生一份<b>草稿（draft）</b>，反复修改，最后「激活」写成正式行。Fiori Elements 的 Create / Edit 流程依赖它（保存按钮 = draftActivate，取消 = 丢弃草稿）。</p>
+
+<div class="timeline">
+  <div class="tl"><b>1. 建草稿</b> POST <code>/BookOrders</code>（body 可以只带必填字段）
+    <p>响应里 <code>IsActiveEntity=false</code>，<code>orderNo=null</code>：<b>这时还没有正式订单</b>，你的 <code>before('CREATE')</code> 也没跑（真实输出见 <a href="#s7-1">§7-1</a>）。</p></div>
+  <div class="tl"><b>2. 改草稿</b> PATCH <code>/BookOrders(ID=…,IsActiveEntity=false)</code>
+    <p>草稿行存在 <code>BookOrderService_BookOrders_drafts</code> 表；<code>db/schema.cds</code> 里的 <code>managed</code> 字段（createdBy/modifiedBy）由框架维护。</p></div>
+  <div class="tl"><b>3. 激活</b> POST <code>/BookOrders(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate</code> → <b>201</b>
+    <p>此刻才真正写入正式表，并触发 <code>CREATE</code> 事件 —— <b>本站的自动编号与顾客校验都在这一刻发生</b>。注意 URL 里的动作名是带服务名前缀的：<code>BookOrderService.draftActivate</code>。</p></div>
+  <div class="tl"><b>4. 丢弃草稿</b> DELETE <code>/BookOrders(ID=…,IsActiveEntity=false)</code> → <b>204</b>
+    <p>真正删除发生在激活时（本站实测草稿建号但没激活的订单一直停在草稿表里，重新 deploy 才清掉）。</p></div>
+</div>
+
+<h3 id="s7-1">7-1 手顺：亲手走一遍草稿流程（含真实输出）</h3>
+<div class="stepmeta"><span class="k">draftActivate</span><span class="f">srv/book-order-service.js（before CREATE）</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：先确保服务在跑且数据是初始状态（草稿会改数据，这一步很重要）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npm run deploy &amp;&amp; (npm start &amp;) &amp;&amp; sleep 8
+SVC=http://localhost:4004/odata/v4/book-order ; A='-u alice:alice'</code></pre>
+  </li>
+  <li><b>动作</b>：建草稿（只带顾客），然后激活。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">D=$(curl -s $A -X POST "$SVC/BookOrders" -H 'Content-Type: application/json' -d '{"customer_ID":1000}')
+ID=$(echo "$D" | python3 -c 'import sys,json;print(json.load(sys.stdin)["ID"])')
+curl -s -w 'HTTP %{http_code}\n' $A -X POST \
+  "$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/BookOrderService.draftActivate" \
+  -H 'Content-Type: application/json' -d '{}'</code></pre>
+  </li>
+  <li><b>验证</b>：本站实测输出（<code>work/evidence/16_read_and_draft.txt</code>）—— 草稿阶段 <code>orderNo</code> 为 <code>null</code>，激活后变成系统编号 <code>BO-1005</code>：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">{"@odata.context":"$metadata#BookOrders/$entity","createdAt":"2026-09-19T11:47:50.261Z","createdBy":"alice",
+ "ID":"33f68968-b47b-4e2f-9473-120e0425e080","orderNo":null,"customer_ID":1000,"orderDate":"2026-09-19",
+ "status":"OPEN","totalAmount":0,"HasActiveEntity":false,"IsActiveEntity":false}
+HTTP 201
+{"@odata.context":"../$metadata#BookOrders/$entity","ID":"33f68968-b47b-4e2f-9473-120e0425e080",
+ "orderNo":"BO-1005","customer_ID":1000,"orderDate":"2026-09-19","status":"OPEN","totalAmount":0,"IsActiveEntity":true}</code></pre>
+  </li>
+  <li><b>验证（关键：钩子在激活时触发）</b>：草稿激活走的是同一套 <code>before('CREATE')</code>，所以「顾客不存在」会在<b>激活</b>时才被拒绝。本站脚本对此的断言：<code>顾客不存在激活 → 400</code>、<code>重复订单号激活 → 409</code>。日志里的证据：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[odata] - POST /odata/v4/book-order/BookOrders(ID=25349791-…,IsActiveEntity=false)/BookOrderService.draftActivate 
+[bookorder] - 未预期错误 undefined: 顾客 9999 不存在，请先维护主数据
+[error] - 400 - Error: 顾客 9999 不存在，请先维护主数据
+    at BookOrderService.&lt;anonymous&gt; (…/srv/book-order-service.js:38:24)
+    at async BookOrderService.draftHandle [as handle] (…/@sap/cds/libx/_runtime/fiori/lean-draft.js:1020:20) {</code></pre>
+  </li>
+  <li><b>验证（丢弃）</b>：<span class="cmd">curl -u alice:alice -X DELETE "$SVC/BookOrders(ID=$ID,IsActiveEntity=false)"</span> → <b>204</b>。</li>
+</ol>
+<div class="box warn"><b class="t">草稿对集成测试的三条硬影响（写测试前必看）</b>
+<ol>
+  <li><b>URL 形态变了</b>：所有对草稿行的请求必须带 <code>IsActiveEntity</code>；绑定动作要写 <code>/BookOrders(ID=…,IsActiveEntity=true)/submitOrder</code>，少了它可能打到草稿行（行为不同）。激活动作的完整形态是 <code>/BookOrders(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate</code>。</li>
+  <li><b>断言的层级多了一层</b>：<code>POST</code> 的响应码是 <b>201</b> 但 <code>IsActiveEntity=false</code>；真正建单要看 <code>draftActivate</code> 的结果（也是 201）。把两者搞混的典型症状：测试断言「POST 后订单号是 BO-1005」永远失败。</li>
+  <li><b>数据不幂等</b>：每次激活都会新增一行；重复跑测试必须先 <code>npm run deploy</code>（或测试里 <code>data.reset()</code>），否则「自动编号 = BO-1005」这类断言第二次就挂。</li>
+</ol></div>
+<div class="box ok"><b class="t">验收</b> 你能不看文档写出：建草稿、改草稿、激活、丢弃四个请求的完整 URL 与期望状态码（201 / 200 / 201 / 204）。</div>
+
+<h2 id="s8">8. 本地运行与热重载</h2>
+
+<p>项目里的两条启动路径差一个功能，别混用：</p>
+
+<table class="tbl">
+  <tr><th></th><th><span class="cmd">npm start</span>（= <code>cds-serve</code>）</th><th><span class="cmd">npx cds watch</span></th></tr>
+  <tr><td>用途</td><td>本地验收、集成测试、演示</td><td>日常开发</td></tr>
+  <tr><td>改动文件后</td><td>需手动重启</td><td>自动重启（热重载）</td></tr>
+  <tr><td>额外功能</td><td>无</td><td>浏览器 livereload、<code>--open</code>、<code>--profile</code></td></tr>
+  <tr><td>真实启动日志（本站）</td><td><code>04_odata.txt</code> 同一次会话的 <code>03_server.log</code></td><td><code>09_watch.log</code></td></tr>
+</table>
+
+<h3 id="s8-1">8-1 两条路径的真实输出对照</h3>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text"># npm start（cds-serve）—— 稳定、无监视
+> demo-node@1.0.0 start
+> cds-serve
+[cds] - loaded model from 3 file(s):
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+[cds] - connect to db &gt; sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 222 ms   ← 第一次；热重载后第二次是 191 ms</code></pre>
+
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text"># npx cds watch —— 监视 + livereload
+cds serve all --with-mocks --in-memory? 
+( live reload enabled for browsers )
+[cds] - loaded model from 4 file(s):
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+[cds] - using bindings from: { registry: '~/.cds-services.json' }
+[cds] - serving BookOrderService { at: [ '/odata/v4/book-order' ], impl: 'srv/book-order-service.js' }
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 224 ms
+
+# —— 这里 touch srv/book-order-service.js（模拟保存文件）——
+[cds] - loaded model from 4 file(s):   ← 自动重启：模型重新加载
+… (省略同一批启动行)
+[cds] - server v9.9.3 launched in 191 ms</code></pre>
+
+<div class="box info"><b class="t">为什么两次捕获的文件数不一样（3 个 vs 4 个）</b>
+<p>因为期间项目新增了 <code>app/book-orders/annotations.cds</code> —— <b>Fiori 的 UI 注解文件也是 CDS 模型的一部分</b>，会被一起编译。同一个项目的 <code>npm start</code> 与 <code>cds watch</code> 加载的是<b>同一份模型清单</b>，差别只在「是否监视文件变化」。所以：<b>永远以启动日志里列出的文件清单为准</b>，不要凭记忆判断「这个字段到底有没有进模型」。</p></div>
+
+<div class="box ok"><b class="t">验收（热重载）</b> 在 watch 运行中执行 <span class="cmd">touch srv/book-order-service.js</span>，终端必须出现新的 <code>[cds] - loaded model from …</code> 与 <code>server listening</code>，且随后 <code>curl -u alice:alice "$SVC/$metadata"</code> 仍返回 200。</div>
+<div class="box warn"><b class="t">常见错误</b> watch 里改了 <code>package.json</code> 的依赖或 <code>.cdsrc</code> 配置却不生效 —— 这两类变更通常不会重启服务，切到前台按 Ctrl+C 再启动一次；改了 <code>db/schema.cds</code> 的字段类型后列不一致，需要 <span class="cmd">npm run deploy</span> 重建表。</div>
+
+<h2 id="s9">9. 环境变量与 profiles：让同一份代码跑在三种地方</h2>
+
+<p><code>cds env</code> 是「配置的照妖镜」：它把内置默认值、<code>package.json</code> 的 <code>cds</code> 段、<code>.cdsrc*.json</code>、环境变量、服务绑定（service bindings）合并后的<b>最终有效配置</b>打印出来。本站的真实输出：</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds env get requires.db        # 数据库配置（注意 impl / credentials / data 目录 / pool.max）
+npx cds env get requires.auth      # 认证策略与 mock 用户
+npx cds env --profile production | head -20   # 生产 profile 下的有效配置</code></pre>
+
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ npx cds env get requires.db
+{
+  "impl": "@cap-js/sqlite",
+  "credentials": { "url": "db.sqlite" },
+  "data": [ "db/data", "db/csv", "test/data" ],
+  "pool": { "max": 1 },
+  "kind": "sqlite"
+}
+
+$ npx cds env get requires.auth      # 只截取关键部分
+{
+  "restrict_all_services": false,
+  "kind": "mocked",
+  "users": {
+    "alice": { "tenant": "t1", "roles": [ "admin" ] },
+    "bob":   { "tenant": "t1", "roles": [ "cds.ExtensionDeveloper" ] },
+    …,
+    "*": true            ← 关键：mock 认证放行其他任意用户名
+  },
+  "tenants": { "t1": { "features": [ "isbn" ] }, "t2": { "features": "*" } }
+}
+
+$ npx cds env --profile production | head -6
+{
+  "_context": "cds",
+  "_home": "/…/project-code/demo-node",
+  "_sources": [ "…/node_modules/@sap/cds/lib/env/defaults.js", "…/node_modules/@sap/cds-fiori/package.json",
+                "…/project-code/demo-node/package.json", "process.env" ],
+  "_profiles": { "_defined": {} },
+  "production": true,        ← 生效的 profile 会体现在这里</code></pre>
+
+<p>这一段正好解释了两个此前见过的「怪现象」：<b>为什么 <code>-u nosuch:wrong</code> 也能返回 200</b>（<code>cds env get requires.auth</code> 里预定义用户之外还有 <code>"*": true</code> 兜底 —— mocked 是开发期策略，官方文档明确「不适合生产」），以及<b>为什么本地库是 sqlite 而云端是 hana 却不用改代码</b>（同一个 <code>requires.db</code> 配置项被不同的绑定来源覆盖）。要限制 mock 登录，必须显式覆盖 <code>"*": false</code>，或改用 <code>basic</code> / <code>jwt</code>。</p>
+
+<div class="cols2">
+  <div class="box info"><b class="t">本站用到的配置项（package.json 的 cds 段）</b>
+  <pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">"cds": {
+  "requires": {
+    "db":   { "kind": "sqlite", "credentials": { "url": "db.sqlite" } },
+    "auth": { "kind": "mocked" }
+  }
+}</code></pre>
+  <p>它的作用是「本地跑得起来」：sqlite 落盘文件、认证用 mock。上云时这两个值都会被服务绑定（CF 的 VCAP_SERVICES 或 <code>cds bind</code>）覆盖 —— <b>代码一行都不用改</b>。</p></div>
+  <div class="box warn"><b class="t">三个 profile 的分工</b>
+  <ul>
+    <li><code>development</code>（默认）：本地 sqlite + mocked 认证，<code>cds watch</code> / <code>npm start</code> 都是它；</li>
+    <li><code>production</code>：<code>cds build --production</code> 与云端部署用；<code>cds env --profile production</code> 可本地核对生效值（CAP 文档建议在 <code>gen/srv</code> 里执行来验证部署产物）；</li>
+    <li><code>hybrid</code>：本地连云端服务（HANA / XSUAA 等），由 <span class="cmd">cds bind db --to &lt;实例名&gt;</span> 写入 <code>.cdsrc-private.json</code> 的 <code>[hybrid]</code> 段，再用 <span class="cmd">cds watch --profile hybrid</span> 启动（命令帮助里原文：<code>--profile &lt;profile,...&gt; Specify from which profile(s) the binding information is taken. Example: cds w --profile hybrid,production</code>）。</li>
+  </ul>
+  <p>配置写法（CAP 文档口径）是把环境相关项包进 profile 名：<code>"[production]": { "kind": "hana" }</code>；用户私有配置（含凭据）放 <code>.cdsrc-private.json</code>，不要提交到仓库。</p></div>
+</div>
+
+<div class="box ok"><b class="t">验收</b> 你能回答：① 为什么本地 <code>cds env get requires.db</code> 是 sqlite，而云端是 hana？② 想临时把日志级别调高，你会在哪里改、用什么命令验证生效？</div>
+
+<h2 id="s10">10. 手顺：把示范项目在本地跑起来（每步都给期望输出）</h2>
+<div class="stepmeta"><span class="k">npm install / deploy / start / curl</span><span class="f">project-code/demo-node</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+  <li><b>动作（Node 版本）</b>：用 LTS 版本的 Node（本站实测 <b>v22.23.2</b>）。<code>@cap-js/sqlite</code> 背后是原生模块 <code>better-sqlite3</code>（本站安装到的版本 12.11.1），它与 Node 的 ABI 绑定 —— 版本不对会报 <code>NODE_MODULE_VERSION</code> 不匹配。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">node -v          # 期望 v22.x（本站实测 v22.23.2）
+npx cds --version | head -3   # 期望 @sap/cds 9.9.3 / @sap/cds-dk 9.9.6</code></pre>
+  </li>
+  <li><b>动作（装依赖）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npm install</code></pre>
+  </li>
+  <li><b>验证（装完）</b>：<code>node_modules/@sap/cds/package.json</code> 存在，且 <code>npx cds --version</code> 能打印版本表（含 <code>@sap/cds-compiler</code>）。</li>
+  <li><b>动作（建库 + 灌初始数据）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npm run deploy      # = cds deploy --to sqlite:db.sqlite</code></pre>
+  </li>
+  <li><b>验证（deploy）</b>：真实输出（<code>work/evidence/01_deploy.txt</code>）—— 4 个 CSV 被加载，最后一行是成功标志：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">&gt; demo-node@1.0.0 deploy
+&gt; cds deploy --to sqlite:db.sqlite
+
+  &gt; init from db/data/sap.training.bookorder-Customers.csv 
+  &gt; init from db/data/sap.training.bookorder-Books.csv 
+  &gt; init from db/data/sap.training.bookorder-BookOrders.csv 
+  &gt; init from db/data/sap.training.bookorder-BookOrderItems.csv 
+/&gt; successfully deployed to db.sqlite </code></pre>
+  </li>
+  <li><b>验证（表与行数）</b>：<span class="cmd">python3 ../../work/sqlite_tables.py</span> 的真实输出（<code>02_tables.txt</code>）—— 注意多出来的草稿表与 outbox 表，这是 CAP 自己建的：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">TABLES: ['BookOrderService_BookOrders_drafts', 'DRAFT_DraftAdministrativeData', 'cds_outbox_Messages', 'sap_training_bookorder_BookOrderItems', 'sap_training_bookorder_BookOrders', 'sap_training_bookorder_Books', 'sap_training_bookorder_Customers']
+  BookOrderService_BookOrders_drafts 0 rows
+  DRAFT_DraftAdministrativeData      0 rows
+  cds_outbox_Messages                0 rows
+  sap_training_bookorder_BookOrderItems 9 rows
+  sap_training_bookorder_BookOrders  4 rows
+  sap_training_bookorder_Books       5 rows
+  sap_training_bookorder_Customers   3 rows</code></pre>
+  </li>
+  <li><b>动作（起服务）</b>：后台启动并在另一个终端验证（前台启动会占住终端，脚本里用 <code>&amp;</code>）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">(npm start &gt; /tmp/demo.log 2&gt;&amp;1 &amp;)
+sleep 8
+curl -s -o /dev/null -w 'metadata=%{http_code}\n' -u alice:alice \
+  'http://localhost:4004/odata/v4/book-order/$metadata'</code></pre>
+  </li>
+  <li><b>验证（服务起来）</b>：期望 <code>metadata=200</code>；日志里能看到 <code>server listening on { url: 'http://localhost:4004' }</code> 与 <code>serving BookOrderService</code>。</li>
+  <li><b>动作（读写各一次，确认业务逻辑生效）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order ; A='-u alice:alice'
+curl -s $A "$SVC/getOrderSummary()"                     # 汇总函数
+curl -s $A "$SVC/getOrderTotal(orderNo='BO-1003')"      # 单张合计
+curl -s -o /dev/null -w '%{http_code}\n' "$SVC/BookOrders"   # 匿名 → 401</code></pre>
+  </li>
+  <li><b>验证（读）</b>：真实输出（<code>16_read_and_draft.txt</code>）—— 4 张订单、汇总与 CSV 对得上、匿名 401：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ curl -s $A "$SVC/getOrderSummary()"
+{"@odata.context":"$metadata#Collection(BookOrderService.OrderSummaryRow)","value":[
+ {"orderNo":"BO-1001","customerName":"北京华信书业","orderDate":"2026-09-01","status":"OPEN","itemCount":3,"totalAmount":16000},
+ {"orderNo":"BO-1002","customerName":"北京华信书业","orderDate":"2026-09-03","status":"OPEN","itemCount":1,"totalAmount":3600},
+ {"orderNo":"BO-1003","customerName":"上海博文出版中心","orderDate":"2026
+<figure class="fig" data-fig="node_s05">
+  <a class="zoom" href="assets/fig/node_s05.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/node_s05.svg" alt="node_s05" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 5</span><span class="cap">node_s05</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>-09-05","status":"SUBMITTED","itemCount":3,"totalAmount":17400},
+ {"orderNo":"BO-1004","customerName":"广州南方图书","orderDate":"2026-09-08","status":"CLOSED","itemCount":2,"totalAmount":7600}]}
+$ curl -s $A "$SVC/getOrderTotal(orderNo='BO-1003')"
+{"@odata.context":"$metadata#Edm.Decimal","value":17400}
+$ curl -s -o /dev/null -w '%{http_code}\n' "$SVC/BookOrders"
+401</code></pre>
+  </li>
+  <li><b>动作（跑一遍完整验收）</b>：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">bash test/odata-verify.sh | tee ../../work/evidence/04_odata.txt | tail -3</code></pre>
+  </li>
+  <li><b>验证（全绿）</b>：最后一行是 <code>PASS 26 / FAIL 0</code>（本站真实输出）。<b>注意</b>：这个脚本会写数据（新增明细、激活草稿、提交订单），所以重跑前必须 <span class="cmd">npm run deploy</span>。</li>
+  <li><b>动作（收工）</b>：停掉服务，让出 4004 端口（否则下一个项目/下一个实验会撞端口）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">pkill -f cds-serve ; pgrep -fl cds-serve || echo "server stopped"</code></pre>
+  </li>
+</ol>
+<div class="box ok"><b class="t">验收</b> 你能在 15 分钟内从零把服务跑起来，并能用三条 curl（$metadata / 函数 / 匿名 401）向别人证明「服务确实在跑、鉴权确实生效、业务逻辑确实算对了」。</div>
+<div class="box danger"><b class="t">常见错误（本节范围）</b>
+<ul>
+  <li>端口占用：<code>Error: listen EADDRINUSE :::4004</code> → <span class="cmd">pkill -f cds-serve</span>，或用 <span class="cmd">cds watch --port 4005</span>。</li>
+  <li>忘了 <code>-u alice:alice</code>：所有请求 401（不是服务坏了）。</li>
+  <li><code>db.sqlite</code> 被测试改脏：断言「2 张 OPEN 订单」失败 → 先 <span class="cmd">npm run deploy</span>。</li>
+</ul></div>
+
+<h2 id="s11">11. 常见错误表（症状 → 原因 → 处理 → 验证）</h2>
+
+<table class="tbl small">
+  <tr><th>#</th><th>症状</th><th>根因</th><th>处理</th><th>验证</th></tr>
+  <tr><td>1</td><td>handler 完全不触发（日志里没有你的前缀）</td><td>注册在错误的实体对象上（用了 <code>db.Xxx</code> 而不是 <code>this.entities.Xxx</code>），或写在了 <code>init()</code> 之外</td><td>统一用 <code>this.entities</code>，全部注册进 <code>async init()</code></td><td>watch 里发一次请求，看到自己 <code>cds.log</code> 的前缀</td></tr>
+  <tr><td>2</td><td><code>$expand=items</code> 返回 <code>[]</code></td><td>用了 <code>Composition</code> 但 CSV 初始化没填父侧外键列；或关联 <code>on</code> 条件写错</td><td>改普通关联 + 显式填 <code>order_ID</code>（本站做法），或改用 managed composition</td><td><code>curl "$SVC/BookOrders?\$filter=orderNo eq 'BO-1001'&amp;\$expand=items"</code> → 3 行</td></tr>
+  <tr><td>3</td><td>查询返回空 / 条件不生效</td><td>外键列名写错：写成 <code>order</code> 而不是 <code>order_ID</code>（<code>book</code>→<code>book_ID</code>、<code>customer</code>→<code>customer_ID</code>）</td><td>用 <code>db.cqn2sql()</code> 打印真实 SQL 核对列名</td><td>SQL 里出现 <code>WHERE "$B".order_ID = ?</code></td></tr>
+  <tr><td>4</td><td><code>Cannot read properties of undefined (reading 'X')</code> → 500</td><td>在 before 里读了 payload 里不存在的字段（例如 <code>req.data.book.price</code>），或 <code>req.params[0]</code> 取错位置</td><td>关联字段先 <code>SELECT</code> 回查；绑定动作用 <code>req.params[req.params.length - 1].ID</code></td><td>同类请求返回 4xx（业务消息）而不是 500</td></tr>
+  <tr><td>5</td><td>业务错误返回 500 而不是 400</td><td>用了 <code>throw new Error('…')</code>，而不是 <code>req.reject(400, '…')</code></td><td>一律 <code>req.reject(status, message)</code>；5xx 会脱敏，客户端看不到原因</td><td>响应体 <code>error.code = "400"</code></td></tr>
+  <tr><td>6</td><td>动作/函数注册后行为怪异，甚至服务起不来</td><td>动作名与基类方法冲突（<code>read</code> / <code>create</code> / <code>update</code> / <code>delete</code> / <code>run</code> / <code>init</code>）</td><td>改业务化的名字（本站 <code>submitOrder</code>）</td><td>启动日志不再有覆盖警告，动作按预期返回</td></tr>
+  <tr><td>7</td><td>POST 建单后校验没执行、订单号是空</td><td>实体开了 <code>@odata.draft.enabled</code>：POST 只建草稿，<code>before('CREATE')</code> 要等激活</td><td>调 <code>…/BookOrderService.draftActivate</code>；测试里断言激活结果</td><td>激活返回 201 且 <code>orderNo=BO-1005</code>；日志出现 <code>draftActivate</code></td></tr>
+  <tr><td>8</td><td><code>no such table: sap_training_bookorder_XXX</code></td><td>改了 <code>db/schema.cds</code> 没重新 deploy，或 deploy 到了别的 sqlite 文件</td><td><code>npm run deploy</code>，并核对 <code>cds env get requires.db</code> 里的 <code>credentials.url</code></td><td><code>sqlite_tables.py</code> 里出现新表名</td></tr>
+  <tr><td>9</td><td>字段长度/格式校验「只在客户端生效」，绕过前端就写进去了</td><td><code>@mandatory</code>、<code>@assert.range</code>、<code>@assert.format</code>、字段类型长度是 CDS 层声明，OData 会校验；但自定义规则（如「数量必须 &gt; 0」）你不写就没人管</td><td>能在模型声明的用注解；业务规则写 <code>before</code> 校验</td><td>用 curl 直接 P
+<figure class="fig" data-fig="node_s04">
+  <a class="zoom" href="assets/fig/node_s04.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/node_s04.svg" alt="用 curl 直接读服务：$select/$orderby、$expand=items、无绑定函数 getOrderSummary()、匿名 401 与只读实体 405（长 JSON 已折行，ID 尾部以 … 省略）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">用 curl 直接读服务：$select/$orderby、$expand=items、无绑定函数 getOrderSummary()、匿名 401 与只读实体 405（长 JSON 已折行，ID 尾部以 … 省略）</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl（CSV 初始数据状态）</span></figcaption>
+</figure>OST 越界值 → 400</td></tr>
+  <tr><td>10</td><td><code>Expected entity to have a primary key</code></td><td>把没有 <code>key</code> 的视图（尤其聚合视图）当作服务实体暴露</td><td>有主键的视图才暴露成实体；聚合改成无绑定函数</td><td><code>cds compile --to edmx</code> 无 ERROR，<code>$metadata</code> 里有该 EntitySet</td></tr>
+  <tr><td>11</td><td><code>add &quot;@cds.redirection.target&quot; … can't auto-redirect</code></td><td>同一领域实体在服务里被投影成两个实体，关联无法自动重定向</td><td>给「应当作为目标」的那个加 <code>@cds.redirection.target</code></td><td>编译无 ERROR，EDMX 里出现 <code>Path="items" Target="BookOrderItems"</code></td></tr>
+  <tr><td>12</td><td>写请求 405：<code>Entity … is read-only</code></td><td>实体标了 <code>@readonly</code></td><td>要么去掉只读，要么把写入逻辑做成 action</td><td>POST 返回 405 且消息含 <code>is read-only</code></td></tr>
+  <tr><td>13</td><td>匿名请求 401，但带 <code>-u</code> 也 401</td><td>mock 认证下用户名/口令均可，问题多半是 URL 拼错（少了 <code>/odata/v4/book-order</code>）或端口不对</td><td>先 <code>curl -sv</code> 看真实 URL 与响应头</td><td><code>$metadata</code> 返回 200</td></tr>
+  <tr><td>14</td><td>函数返回 405，或动作返回 405</td><td>方法用错：function 只能 GET、action 只能 POST</td><td>function 用 <code>curl</code> GET + URL 括号参数；action 用 <code>-X POST -d '{}'</code></td><td>两种误用都是 405（本站实测）</td></tr>
+  <tr><td>15</td><td>本地 200、云端 500（或反之）</td><td>本地 sqlite / 云端 HANA 的方言差异（日期、聚合返回类型），或云端缺服务绑定</td><td>用 <code>cds env --profile production</code> 核对配置；云端看 <code>cf logs</code></td><td>同一 curl 在两边都 200 且数值一致</td></tr>
+  <tr><td>16</td><td>草稿行越积越多、订单列表出现奇怪的行</td><td>草稿未激活也未丢弃（默认 30 天超时清理），或测试反复建草稿</td><td>测试前 <code>data.reset()</code> / <code>npm run deploy</code>；必要时 <code>cds.fiori.draft_deletion_timeout</code> 调整</td><td>草稿表行数回到 0</td></tr>
+</table>
+
+<h2 id="s12">12. 练习（3 个）与完成基准</h2>
+
+<h3 id="s12-1">练习 1：给订单头加一条 before-CREATE 校验（必做）</h3>
+<div class="stepmeta"><span class="k">before CREATE</span><span class="f">srv/book-order-service.js</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+  <li><b>要求</b>：订单的 <code>note</code> 字段禁止出现「测试」二字，出现则 <b>400</b>，消息为 <code>备注中不允许出现「测试」</code>。</li>
+  <li><b>提示</b>：在已有的 <code>before('CREATE', BookOrders, …)</code> 里追加判断即可；注意草稿实体上的这一钩子在<b>激活</b>时执行，所以你的 curl 要打 <code>draftActivate</code>。</li>
+  <li><b>验证</b>：建草稿时带 <code>note:'测试订单'</code> → 激活 → 期望 <b>400</b> 且消息一致；不带 note 激活 → 期望 <b>201</b>。</li>
+</ol>
+
+<h3 id="s12-2">练习 2：加一个 after-READ 的计算字段（必做）</h3>
+<div class="stepmeta"><span class="k">after READ</span><span class="f">srv/book-order-service.js</span><span class="c">耗时 25 分</span></div>
+<ol class="steps">
+  <li><b>要求</b>：读 <code>BookOrders</code> 时，给每一行附加 <code>itemCount</code>（明细行数）。不改模型时可以先只改返回值看效果，再决定是否加字段定义。</li>
+  <li><b>提示</b>：<code>after('READ', BookOrders, (rows, req) =&gt; …)</code>，<code>rows</code> 在单行读时可能是对象、列表读时是数组，要兼容两者；用一次 <code>groupBy</code> 聚合拿到每个订单的行数，避免在循环里查询。</li>
+  <li><b>验证</b>：<span class="cmd">curl -u alice:alice "$SVC/BookOrders?\$filter=orderNo eq 'BO-1001'"</span> 的返回里出现 <code>itemCount: 3</code>（与 <code>getOrderSummary()</code> 的数字一致）。<b>注意</b>：如果字段没有在模型里声明，OData 序列化会丢掉它 —— 这正是要你观察的现象，请记录你选择的做法。</li>
+</ol>
+
+<h3 id="s12-3">练习 3：把某个 <code>on</code> 改成 <code>after</code>，说明差异（必做）</h3>
+<div class="stepmeta"><span class="k">on → after</span><span class="f">srv/book-order-service.js</span><span class="c">耗时 20 分</span></div>
+<ol class="steps">
+  <li><b>要求</b>：把 <code>on('submitOrder', …)</code> 改成 <code>after('submitOrder', …)</code>，观察并解释发生了什么。</li>
+  <li><b>提示</b>：<code>on</code> 是「代替默认实现」，<code>after</code> 是「默认实现之后」。自定义动作没有默认实现，所以 <code>after</code> 注册的动作不会被调用（请求会同 404/405 级别的错误失败）。</li>
+  <li><b>验证</b>：改完重启后调用 <span class="cmd">…/BookOrders(ID=…,IsActiveEntity=true)/submitOrder</span>，记录真实响应码与日志；然后改回 <code>on</code> 并确认恢复 <b>200</b>。把你的观察写成一句话结论（这份结论就是练习的交付物）。</li>
+</ol>
+
+<h3 id="s12-4">完成基准（自检清单）</h3>
+<ul class="check">
+  <li>三个练习都能在本地跑通，且每一个都有 <code>curl</code> 证据（响应码 + 关键字段）。</li>
+  <li>练习 3 能用一句话说清 <code>on</code> 与 <code>after</code> 在「自定义动作」上的差别，并给出真实日志作为依据。</li>
+  <li><span class="cmd">bash test/odata-verify.sh</span> 仍是 <b>PASS 26 / FAIL 0</b>（你的改动没有破坏既有行为）。</li>
+  <li>改动后执行过 <span class="cmd">npx cds compile srv/book-order-service.cds --to edmx</span>，输出里没有 <code>[ERROR]</code>。</li>
+</ul>
+
+<h2 id="s13">13. 本节测试</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li><code>@path: '/odata/v4/book-order'</code> 不写会怎样？为什么仍然建议显式写？</li>
+    <li>为什么 <code>BookOrderItems</code> 那行必须加 <code>@cds.redirection.target</code>？不加时编译器的报错关键词是什么？</li>
+    <li>同一个「汇总」需求，什么时候用 <code>@readonly</code> 实体、什么时候用 <code>function</code>？判断标准是什么？</li>
+    <li>订单开了草稿之后，<code>before('CREATE')</code> 里的校验会在哪个请求上执行？请写出完整 URL 形态。</li>
+    <li><code>after('DELETE', BookOrderItems)</code> 里为什么不能取 <code>req.data.ID</code>？替代方案是什么？</li>
+    <li>业务校验失败应该返回 400 还是 500？各自在客户端看到什么（结合 5xx 脱敏）？</li>
+    <li>写出「查 status=OPEN 的订单、只要 ID/orderNo、按 orderNo 倒序、取前 3 条」的 CQN fluent API。</li>
+  </ol>
+  <p class="go">对应自测题见自测页「CAP Node.js 服务实现」（题库文件 <code>work/quiz/node.json</code>，共 19 题）。</p>
+</div>
+
+<h2 id="s14">14. 小结与下一页</h2>
+
+<div class="grid cards">
+  <div class="card"><h3>一句话总结</h3>
+    <p>服务定义（<code>.cds</code>）决定<b>对外能做什么</b>，事件处理器（<code>.js</code>）决定<b>怎么做</b>：校验与派生放 <code>before</code>、状态迁移与聚合放 <code>on</code>、汇总回写放 <code>after</code>；错误一律用 <code>req.reject(4xx)</code>；草稿把「建单」拆成了「建草稿 + 激活」两步。</p></div>
+  <div class="card"><h3>本站示范项目的 5 类实现</h3>
+    <p>① 编号生成与校验（before CREATE）② 派生字段（before CREATE/UPDATE）③ 汇总回写（after，含 DELETE 兜底）④ 绑定动作状态迁移（on submitOrder）⑤ 无绑定函数聚合（on getOrderTotal / getOrderSummary）。</p></div>
+  <div class="card"><h3>下一步</h3>
+    <p>服务已经能用 curl 证明是对的 —— 但「能跑」不等于「不会坏」。下一页把这件事工程化：模型编译检查、mocha + <code>cds.test</code>、26 条断言的验收脚本，以及放进 CI。<br><a href="testing.html">⑦ 测试体系：从一条 curl 到 CI →</a></p></div>
+  <div class="card"><h3>与 Java 版对照（java.html）</h3>
+    <p>同一份 CDS 模型可以换运行时：Java 侧没有 <code>this.before(…)</code> 这种注册式写法，而是用 <code>@Component</code> + <code>@ServiceName</code> 的 <code>EventHandler</code> 类 + <code>@Before</code> / <code>@On</code> / <code>@After</code> 注解方法，查询用 CQL（<code>Select.from(...)</code>）而不是 JS 的 fluent API；草稿与错误处理由 <code>DraftService</code> 与 <code>ServiceException</code> 承担。<b>两边的模型、URL、返回状态码是一致的</b> —— 这正是 CAP 的价值。对照阅读时重点看：同一个 <code>submitOrder</code> 在两边分别写在哪个类、在哪一行注册。</p></div>
+</div>
+
+<div class="box info"><b class="t">回读清单</b>
+<p>读到这里你应该能：打开任意一个 CAP Node.js 项目的 <code>srv/</code> 目录，5 分钟内说出「这个服务暴露了什么、哪些逻辑被定制、哪些错误会返回 4xx、有没有草稿」；并能用 <code>cds watch</code> + <code>curl</code> 验证你的判断。做不到的话，回到 §3（钩子语义）与 §4（五类实现）重读一遍再继续。</p></div>
+
+<p class="kicker">命令与输出取自 <code>project-code/demo-node</code> 的本地实测（Node 22.23.2 / @sap/cds 9.9.3）；CAP 小版本会改变日志文案，以你自己终端的输出为准。</p>
+
+
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

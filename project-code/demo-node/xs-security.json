@@ -1,0 +1,46 @@
+{
+  "xsappname": "demo-node",
+  "tenant-mode": "dedicated",
+  "description": "图书受注管理 —— CAP 示范项目的授权定义",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.view",
+      "description": "查看订单与主数据"
+    },
+    {
+      "name": "$XSAPPNAME.edit",
+      "description": "创建与修改订单"
+    },
+    {
+      "name": "$XSAPPNAME.submit",
+      "description": "提交订单（状态迁移，业务上等同于放行）"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "OrderViewer",
+      "description": "订单只读",
+      "scope-references": [
+        "$XSAPPNAME.view"
+      ]
+    },
+    {
+      "name": "OrderEditor",
+      "description": "订单维护（新建与修改，含明细）",
+      "scope-references": [
+        "$XSAPPNAME.view",
+        "$XSAPPNAME.edit"
+      ]
+    },
+    {
+      "name": "OrderAdmin",
+      "description": "订单管理员：可提交订单并触发状态迁移",
+      "scope-references": [
+        "$XSAPPNAME.view",
+        "$XSAPPNAME.edit",
+        "$XSAPPNAME.submit"
+      ]
+    }
+  ]
+}

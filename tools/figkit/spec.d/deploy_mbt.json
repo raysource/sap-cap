@@ -1,0 +1,58 @@
+{
+  "key": "deploy_mbt",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — mbt build -t mta_archives",
+  "lh": 20,
+  "caption": "Cloud MTA Build Tool 把项目打成部署单元 .mtar：MTA 名字与版本决定文件名（ID_version.mtar），-t 指定输出目录",
+  "label": "高保真重绘",
+  "src": "本站重绘：MBT 1.2.x 输出形态（未在本机实跑 mbt，命令与参数见 MBT 官方 Usage）",
+  "lines": [
+    "$ mbt -v                 # 没装会提示 command not found",
+    "Cloud MTA Build Tool version 1.2.49",
+    "",
+    "$ mbt build -t mta_archives",
+    "[2026-09-19 21:33:04]  INFO Cloud MTA Build Tool version 1.2.49",
+    "[2026-09-19 21:33:05]  INFO generating the \"Makefile_20260919213305.mta\" file...",
+    "[2026-09-19 21:33:06]  INFO done",
+    "[2026-09-19 21:33:07]  INFO building the \"demo-node_1.0.0.mtar\" file...",
+    "[2026-09-19 21:33:11]  INFO done",
+    "[2026-09-19 21:33:11]  INFO finished building process",
+    "",
+    "$ ls -lh mta_archives/",
+    "-rw-r--r--  1 jason  staff   12M  9月 19 21:33 demo-node_1.0.0.mtar",
+    "",
+    "$ tar -tf mta_archives/demo-node_1.0.0.mtar | head -10",
+    "META-INF/mtad.yaml",
+    "~META-INF/MANIFEST.MF",
+    "demo-node-srv/",
+    "demo-node-db-deployer/",
+    "demo-node/",
+    "demonodebookorders/",
+    "book-orders.zip",
+    "",
+    "$ # 只改 mta.yaml 的 version 再构建 → 文件名跟着变（版本号策略见正文）",
+    "$ sed -i '' 's/^version: 1.0.0/version: 1.0.1/' mta.yaml && mbt build -t mta_archives",
+    "[2026-09-19 21:36:20]  INFO building the \"demo-node_1.0.1.mtar\" file...",
+    "[2026-09-19 21:36:24]  INFO done"
+  ],
+  "callouts": [
+    {
+      "on": "Cloud MTA Build Tool version 1.2.49",
+      "text": "1. 先确认 mbt 在 PATH"
+    },
+    {
+      "on": "-t mta_archives",
+      "text": "2. -t 指定输出目录"
+    },
+    {
+      "on": "demo-node_1.0.0.mtar",
+      "text": "3. 文件名=ID_版本"
+    },
+    {
+      "on": "META-INF/mtad.yaml",
+      "text": "4. 部署描述符在归档内"
+    }
+  ]
+}

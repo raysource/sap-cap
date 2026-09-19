@@ -1,0 +1,73 @@
+=== npx cds watch -? ===
+
+[1mSYNOPSIS[0m
+
+  [1mcds watch[0m [<project>]
+
+  Tells cds to watch for relevant things to come or change in the specified
+  project or the current work directory. Compiles and (re-)runs the server
+  on every change detected.
+
+  Actually, cds watch is just a convenient shortcut for:
+  [1mcds serve all --with-mocks --in-memory?[0m
+
+[1mOPTIONS[0m
+
+  [1m--port[0m <number>
+
+    Specify the port on which the launched server listens.
+    If you specify '0', the server picks a random free port.
+    Alternatively, specify the port using env variable [4mPORT[0m.
+
+  [1m--ext[0m <extensions>
+
+    Specify file extensions to watch for in a comma-separated list.
+    [1mExample:[0m cds w --ext cds,json,js.
+
+  [1m--include[0m <paths,...>
+
+    Comma-separated list of additional paths to watch.
+
+  [1m--exclude[0m <paths,...>
+
+    Comma-separated list of additional paths to ignore.
+
+  [1m--livereload[0m <port | false>
+
+    Specify the port for the livereload server. Defaults to '35729'.
+    Disable it with value [4mfalse[0m.
+
+  [1m--experimental-hot-reload[0m <true | false>
+
+
+=== npx cds compile -? ===
+
+[1mSYNOPSIS[0m
+
+  [1mcds compile[0m <models> [<options>]
+
+  Compiles the specified models to CSN format, applying processors to unfold
+  and generate target outputs using the <options>.
+  
+
+[1mOPTIONS[0m
+  
+
+  [1m-2[0m | [1m--to[0m <target format>
+
+    Compiles the given models to the specified <target format>.
+    Currently supported:
+
+    - json, yml
+    - edm, edmx, edmx-v2, edmx-v4, edmx-w4, edmx-x4
+    - sql, hana, hdbtable
+    - cdl
+    - xsuaa
+    - openapi
+    - asyncapi
+
+  [1m-4[0m | [1m--for[0m <target>
+
+    Unfolds the compiled CSN for the specified <target> usages,
+    or get a comma-separated list, without generating target formats.
+    Currently supported:

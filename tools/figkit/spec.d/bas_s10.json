@@ -1,0 +1,47 @@
+{
+  "key": "bas_s10",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "caption": "从 BAS 部署：mbt build 生成 MTAR，再 cf deploy 上传；命令行与 Task Explorer / 右键菜单等价",
+  "alt": "从 BAS 部署：mbt build 生成 MTAR，再 cf deploy 上传；命令行与 Task Explorer / 右键菜单等价",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 命令出自 capire「Deploy to Cloud Foundry」与 SAP Help「Building and Deploying Multitarget Applications」",
+  "title": "jason@BAS-devspace: ~/projects/demo-node",
+  "lines": [
+    "$ cf login --sso          # 企业 IdP / 试用：浏览器取一次性验证码",
+    "  API endpoint: https://api.cf.ap10.hana.ondemand.com",
+    "  Org: trial   Space: dev",
+    "",
+    "$ mbt build -t gen --mtar mta.tar",
+    "#  build-parameters.before-all: npm ci && npx cds build --production",
+    "@[2026-09-19 21:10:02]  INFO Cloud MTA Build Tool version ~1.2.x",
+    "@[2026-09-19 21:10:31]  INFO generating the MTA archive...",
+    "@[2026-09-19 21:10:44]  INFO the MTA archive generated at: gen/mta.tar",
+    "",
+    "$ cf deploy gen/mta.tar -f",
+    "@Deploying multicarget application...",
+    "@  demo-node-db-deployer  (type: hdb)    → HDI 容器建表",
+    "@  demo-node-srv          (type: nodejs) → 启动 CAP 服务",
+    "@Application \"demo-node-srv\" started and available at",
+    "@  https://<subaccount>-trial-dev-demo-node-srv.cfapps.ap10.hana.ondemand.com"
+  ],
+  "callouts": [
+    {
+      "on": "$ cf login --sso          # 企业 IdP / 试用：浏览器取一次性验证码",
+      "text": "1. 先登录并 target 到正确 space"
+    },
+    {
+      "on": "$ mbt build -t gen --mtar mta.tar",
+      "text": "2. mbt 读 mta.yaml 打包"
+    },
+    {
+      "on": "[2026-09-19 21:10:44]  INFO the MTA archive generated at: gen/mta.tar",
+      "text": "3. 产物：MTAR；行文随版本变化 ~"
+    },
+    {
+      "on": "demo-node-db-deployer  (type: hdb)    → HDI 容器建表",
+      "text": "4. hdb 模块先建表再启动服务"
+    }
+  ]
+}

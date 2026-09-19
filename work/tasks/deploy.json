@@ -1,0 +1,8 @@
+[
+  {"no": "DEPLOY-01", "title": "复现并修复「部署成功但没有表」：对比 [production].db.kind 有无时的 gen/ 产物", "basis": "cds build 的 tasks 列表由 profile 解析出的数据库类型决定；gen/db 缺失会导致 HDI 部署器无事可做", "time": "20 分", "rel": "deploy.html#s12-1"},
+  {"no": "DEPLOY-02", "title": "用 MTA 扩展描述符把 srv 的内存与实例数做成 dev/prod 两套配置", "basis": "_schema-version / ID / extends / modules[].parameters 的写法；cf deploy -e 与 cds up --overlay 的用法", "time": "20 分", "rel": "deploy.html#s12-2"},
+  {"no": "DEPLOY-03", "title": "写一条 CI 工作流：npm ci → cds build → 校验 gen/db → mbt build → 只在 main 上 cf deploy", "basis": "构建门禁（test -d gen/srv / gen/db）、cap-js/cf-setup@v2 的变量与 Secret、--sso 无法用于无人值守环境", "time": "35 分", "rel": "deploy.html#s12-3"},
+  {"no": "DEPLOY-04", "title": "逐段读懂本项目的 mta.yaml 并说出删掉每个模块/资源的后果", "basis": "srv(nodejs, gen/srv) / db-deployer(hdb, gen/db) / approuter(nodejs, app/router) / app-deployer(com.sap.application.content) / html5 模块；resources 的 hana hdi-shared、xsuaa application、html5-apps-repo app-host/app-runtime", "time": "30 分", "rel": "deploy.html#s2"},
+  {"no": "DEPLOY-05", "title": "从 .mtar 检查到部署后验证：完整走一遍 5 条验收清单并留下输出", "basis": "mbt build -t / tar -tf 检查归档；部署后 curl $metadata → 取数据 → 查表 → cf apps → 打开 Fiori", "time": "30 分", "rel": "deploy.html#s5"},
+  {"no": "DEPLOY-06", "title": "给一次失败的部署取全量日志并定位到具体模块", "basis": "cf mta-ops 拿 Operation ID、cf dmol -i <id> -d <dir> 取日志、cf logs <app> --recent 看应用日志", "time": "20 分", "rel": "deploy.html#s6-4"}
+]

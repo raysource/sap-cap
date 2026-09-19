@@ -1,0 +1,18 @@
+### 1) POST /BookOrders {"customer_ID":1000} —— 建草稿
+{"@odata.context":"$metadata#BookOrders/$entity","createdAt":"2026-09-19T11:41:37.792Z","createdBy":"alice","modifiedAt":"2026-09-19T11:41:37.792Z","modifiedBy":"alice","ID":"0b5a9612-94d3-424f-a3c1-04391d8abd60","orderNo":null,"customer_ID":1000,"orderDate":"2026-09-19","status":"OPEN","note":null,"totalAmount":0,"HasActiveEntity":false,"DraftMessages":[],"HasDraftEntity":false,"IsActiveEntity":false}
+
+### 2) GET 草稿行 (IsActiveEntity=false) 只取 orderNo,IsActiveEntity,HasActiveEntity
+{"@odata.context":"$metadata#BookOrders/$entity","orderNo":null,"HasActiveEntity":false,"ID":"0b5a9612-94d3-424f-a3c1-04391d8abd60","DraftMessages":[],"IsActiveEntity":false}
+### 3) POST draftActivate
+HTTP 201
+{"@odata.context":"../$metadata#BookOrders/$entity","createdAt":"2026-09-19T11:41:37.845Z","createdBy":"alice","modifiedAt":"2026-09-19T11:41:37.845Z","modifiedBy":"alice","ID":"0b5a9612-94d3-424f-a3c1-04391d8abd60","orderNo":"BO-1006","customer_ID":1000,"orderDate":"2026-09-19","status":"OPEN","note":null,"totalAmount":0,"HasActiveEntity":false,"HasDraftEntity":false,"IsActiveEntity":true}
+
+### 4) 再 GET 该订单的激活行
+{"@odata.context":"$metadata#BookOrders/$entity","orderNo":"BO-1006","status":"OPEN","totalAmount":0,"ID":"0b5a9612-94d3-424f-a3c1-04391d8abd60","IsActiveEntity":true}
+### 5) 绑定动作 submitOrder（空订单 → 400）
+HTTP 400
+{"error":{"message":"订单 BO-1005 没有明细，不能提交","code":"400","@Common.numericSeverity":4}}
+
+### 6) BO-1003 submitOrder（有明细 → 200 + 返回字符串）
+HTTP 409
+{"error":{"message":"订单 BO-1003 当前状态为 SUBMITTED，不能重复提交","code":"409","@Common.numericSeverity":4}}

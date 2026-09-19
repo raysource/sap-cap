@@ -1,0 +1,71 @@
+{
+  "key": "sec_s11",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap — 部署后取 JWT 并访问受保护资源",
+  "src": "本站自绘（命令依据 SAP Help / CAP 文档；本机无 XSUAA 实例，未实测端点行为）",
+  "caption": "两条取 token 的路：client_credentials（技术用户）与 password（业务用户）；scope 不同，403 与 200 就差在这里",
+  "lh": 19,
+  "lines": [
+    "$ cf create-service-key demo-node-uaa demo-key",
+    "Creating service key demo-key for service instance demo-node-uaa as jason@example.com...",
+    "OK",
+    "$ cf service-key demo-node-uaa demo-key | tail -n +2 | jq -r '.credentials.url'",
+    "https://trial-dev-demo-node.authentication.ap10.hana.ondemand.com",
+    "$ TOKEN_URL=\"$(cf service-key demo-node-uaa demo-key | tail -n +2 | jq -r '.credentials.url')/oauth/token\"",
+    "$ CLIENT_ID=$(cf service-key demo-node-uaa demo-key | tail -n +2 | jq -r '.credentials.clientid')",
+    "$ export CLIENT_SECRET='<只放在环境变量里，不要写进脚本和聊天记录>'",
+    "",
+    "# ① client_credentials —— 技术用户（API 对 API）",
+    "$ curl -s -X POST \"$TOKEN_URL\" -u \"$CLIENT_ID:$CLIENT_SECRET\" -d 'grant_type=client_credentials' \\",
+    "    | jq -r .access_token | cut -c1-32",
+    "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRlZmF1bHQifQ",
+    "# 该 token 只有 system-user 角色，业务 scope 一个也没有 → 访问业务接口 403",
+    "# （这正是 curl 冒烟测试必须用业务用户 token 的原因）",
+    "",
+    "# ② password —— 业务用户（需要该客户端允许 password 授权，且用户在默认 IdP 可直接登录）（~）",
+    "$ curl -s -X POST \"$TOKEN_URL\" -u \"$CLIENT_ID:$CLIENT_SECRET\" \\",
+    "    -d 'grant_type=password&username=order.admin@example.com&password=<口令>' | jq -r .access_token > /tmp/user.jwt",
+    "$ python3 -c \"import sys,json,base64;p=sys.stdin.read().split('.')[1];print(json.loads(base64.urlsafe_b64decode(p+'='*(-len(p)%4)))['scope'])\" < /tmp/user.jwt",
+    "['openid', 'demo-node-trial-dev.view', 'demo-node-trial-dev.submit']",
+    "",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' -H \"Authorization: Bearer $(cat /tmp/user.jwt)\" \"$SVC/BookOrders?\\$top=1\"",
+    "200",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' \"$SVC/BookOrders?\\$top=1\"        # 不带 Authorization 头",
+    "401",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' -H \"Authorization: Bearer $(cat /tmp/svc.jwt)\" \"$SVC/BookOrders?\\$top=1\"",
+    "403",
+    "# service token 有身份没 scope → 403；换成订单管理员用户 token → 200"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        680
+      ],
+      "text": "1. 技术 token 无角色"
+    },
+    {
+      "at": [
+        60,
+        716
+      ],
+      "text": "2. scope 决定 200/403"
+    },
+    {
+      "at": [
+        60,
+        752
+      ],
+      "text": "3. 没带 token = 401"
+    },
+    {
+      "at": [
+        60,
+        788
+      ],
+      "text": "4. 有身份缺权限 = 403"
+    }
+  ]
+}

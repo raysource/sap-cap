@@ -1,0 +1,70 @@
+## Generated MTA Deployment Descriptor (SAP CAP 培训课程示范项目)
+_schema-version: '3.1'
+ID: demo-node
+version: 1.0.0
+description: 图书受注管理 —— CAP Node.js 服务 + Fiori Elements 前端
+parameters:
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+
+modules:
+  # ---------------- 服务模块（CAP Node.js 运行时） ----------------
+  - name: demo-node-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 256M
+      disk-quota: 512M
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: demo-node-db
+      - name: demo-node-uaa
+
+  # ---------------- 应用路由（对外入口 + 认证） ----------------
+  - name: demo-node-approuter
+    type: nodejs
+    path: approuter
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 128M
+    build-parameters:
+      builder: npm-ci
+    requires:
+      - name: demo-node-uaa
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+
+resources:
+  # ---------------- HANA Cloud（HDI 容器） ----------------
+  - name: demo-node-db
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
+  # ---------------- XSUAA（认证与角色集合） ----------------
+  - name: demo-node-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: demo-node-${org}-${space}
+        tenant-mode: dedicated

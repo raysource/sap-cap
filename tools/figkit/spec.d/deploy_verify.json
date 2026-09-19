@@ -1,0 +1,53 @@
+{
+  "key": "deploy_verify",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects — 部署后验证清单（逐条 curl）",
+  "lh": 20,
+  "caption": "部署后四问：$metadata 通不通、数据取得到吗、应用与路由的状态对不对、日志里服务在用什么数据库；四条命令的输出就是验收证据",
+  "label": "高保真重绘",
+  "src": "本站重绘：CF CLI v8 + curl 的真实输出形态（域名按 trial org/space 规则）",
+  "lines": [
+    "$ R=https://trial-dev-demo-node.cfapps.ap10.hana.ondemand.com",
+    "",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' $R/odata/v4/book-order/$metadata",
+    "200                                   # ① 服务活着且元数据可序列化",
+    "",
+    "$ curl -s -u alice: \"$R/odata/v4/book-order/BookOrders?\\$select=orderNo,status,totalAmount\" -G \\",
+    "    --data-urlencode '\\$top=2'",
+    "{\"@odata.context\":\"$metadata#BookOrders\",\"value\":[{\"orderNo\":\"BO-1001\",\"status\":\"OPEN\",",
+    " \"totalAmount\":16000},{\"orderNo\":\"BO-1002\",\"status\":\"OPEN\",\"totalAmount\":3600}]}    # ② 数据在",
+    "",
+    "$ cf apps",
+    "name                 requested state   processes   routes",
+    "demo-node-srv        started           web:1/1     trial-dev-demo-node-srv.cfapps.ap10…",
+    "demo-node            started           web:1/1     trial-dev-demo-node.cfapps.ap10…",
+    "",
+    "$ cf logs demo-node-srv --recent | tail -4",
+    "  [APP/PROC/WEB/0] OUT [cds] - serving BookOrderService { at: '/odata/v4/book-order' }",
+    "  [APP/PROC/WEB/0] OUT [cds] - using HANA from service demo-node-db",
+    "  [APP/PROC/WEB/0] OUT Server listening on port 8080          # ③ ④ 应用起来了、用的是 HANA",
+    "",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' $R/",
+    "200                                   # ⑤ approuter 首页（未登录会先跳登录页）"
+  ],
+  "callouts": [
+    {
+      "on": "200                                   # ① 服务活着且元数据可序列化",
+      "text": "1. $metadata 必须 200"
+    },
+    {
+      "on": "totalAmount\":16000",
+      "text": "2. 数据与 CSV 一致"
+    },
+    {
+      "on": "using HANA from service demo-node-db",
+      "text": "3. 确认连的是 HANA"
+    },
+    {
+      "on": "demo-node            started",
+      "text": "4. UI 入口是 approuter"
+    }
+  ]
+}

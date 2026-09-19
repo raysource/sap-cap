@@ -1,0 +1,45 @@
+{
+ "key": "btp_s10",
+ "kind": "terminal",
+ "w": 1440,
+ "h": 900,
+ "title": "jason@MacBook-Pro: ~/projects/demo-node",
+ "caption": "btp CLI：brew 安装 → --sso 登录 → 确认目标再执行全局账户命令",
+ "alt": "macOS 终端窗口，显示 brew 安装 btp CLI、btp login --sso 登录与 btp list accounts/subaccount 输出",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 命令与服务器地址依据 SAP Help「Download and Start Using the btp CLI Client」「Log in with Single Sign-On」；输出为示意",
+ "lines": [
+  "$ brew install --cask btp",
+  "$ btp --version",
+  "SAP BTP command line interface (btp CLI)",
+  "$ btp login --sso",
+  "# 提示确认 CLI server URL，直接回车",
+  "CLI server URL (https://cli.btp.cloud.sap/): ",
+  "# 浏览器里完成 SSO，回到终端",
+  "$ btp target",
+  "Global account: trial-9f3a2b (trial)",
+  "$ btp list accounts/subaccount",
+  "Subaccount ID                          Display Name  Region  State",
+  "9c1e4d70-1a2b-4c3d-8e4f-5a6b7c8d9e0f   trial         ap21    OK",
+  "$ btp get security/user \"jason@example.com\"",
+  "# 输出里能看到该用户已分配的角色集合"
+ ],
+ "callouts": [
+  {
+   "on": "brew install --cask btp",
+   "text": "1. 官方 macOS 安装方式"
+  },
+  {
+   "on": "btp login --sso",
+   "text": "2. 走浏览器，终端不输密码"
+  },
+  {
+   "on": "cli.btp.cloud.sap",
+   "text": "3. 默认服务器地址"
+  },
+  {
+   "on": "ap21",
+   "text": "4. 区域要和 cockpit 对上"
+  }
+ ]
+}

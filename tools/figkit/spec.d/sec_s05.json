@@ -1,0 +1,173 @@
+{
+  "key": "sec_s05",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "window": "book-order-service.cds - demo-node - SAP Business Application Studio",
+  "caption": "在 srv/book-order-service.cds 里追加业务角色注解：服务级只要登录，实体级再按动作分角色",
+  "src": "本站自绘（figkit 高保真画面）",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds",
+          "tag": "M"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "data"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds",
+          "tag": "M"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.js"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "test",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "odata-verify.sh"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "mta.yaml",
+          "tag": "U"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "xs-security.json",
+          "tag": "U"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "book-order-service.cds",
+    "schema.cds"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node › srv › book-order-service.cds",
+  "editor": {
+    "lang": "cds",
+    "fs": 12.5,
+    "lh": 21,
+    "hl": [
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "lines": [
+      "using { sap.training.bookorder as db } from '../db/schema';",
+      "",
+      "@path: '/odata/v4/book-order'",
+      "service BookOrderService @(requires: 'authenticated-user') {",
+      "",
+      "  entity Books         as projection on db.Books;",
+      "  entity Customers     as projection on db.Customers;",
+      "  @odata.draft.enabled",
+      "  entity BookOrders    as projection on db.BookOrders",
+      "                       actions { action submitOrder() returns String; };",
+      "  @readonly",
+      "  entity OrderItemView as projection on db.OrderItemView;",
+      "",
+      "  function getOrderTotal(orderNo : String) returns Decimal(13,2);",
+      "  function getOrderSummary() returns array of OrderSummaryRow;",
+      "}",
+      "",
+      "/* 本章练习：实体级授权。角色名 = xs-security.json 的 scope 名去掉 $XSAPPNAME. 前缀 */",
+      "annotate BookOrderService.BookOrders with @(restrict: [",
+      "  { grant: 'READ',                to: 'view' },      // OrderViewer 拥有",
+      "  { grant: ['CREATE', 'UPDATE'],  to: 'edit' },      // OrderEditor 拥有",
+      "  { grant: 'submitOrder',         to: 'submit' }     // OrderAdmin 拥有",
+      "]);",
+      "",
+      "annotate BookOrderService.OrderItemView with @(restrict: [ { grant: 'READ', to: 'view' } ]);"
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 120,
+    "extraTabs": [
+      "PROBLEMS",
+      "OUTPUT"
+    ],
+    "lines": [
+      "$ npx cds compile srv --to xsuaa",
+      "@@> scopes: $XSAPPNAME.view / .edit / .submit",
+      "$ npx cds compile srv --to edmx | grep -c EntityType",
+      "@@> 17（注解不改变 OData 结构，只改变谁能访问）"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.23.2",
+    "CAP 9.9.3",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        662
+      ],
+      "text": "1. 服务级：只要登录"
+    },
+    {
+      "at": [
+        60,
+        698
+      ],
+      "text": "2. 授权写在模型里"
+    },
+    {
+      "at": [
+        60,
+        734
+      ],
+      "text": "3. to: 用 scope 名"
+    }
+  ]
+}

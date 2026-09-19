@@ -1,0 +1,120 @@
+{
+  "key": "bas_s09",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "caption": "BAS 内置 Git 面板：Changes / Staged Changes 分区、提交与推送；HTTPS 需要 Personal Access Token",
+  "alt": "BAS 内置 Git 面板：Changes / Staged Changes 分区、提交与推送；HTTPS 需要 Personal Access Token",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 面板结构出自 SAP Help「Understanding the UI」「Providing Authentication to Git」",
+  "window": "demo-node [main] - SAP Business Application Studio",
+  "sideTitle": "SOURCE CONTROL",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "SOURCE CONTROL: GIT",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "file",
+          "label": "Commit  (Ctrl+Enter)"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "Message: add submitOrder validation"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "Staged Changes"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "srv/book-order-service.js",
+          "tag": "M"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "Changes"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "db/schema.cds",
+          "tag": "M"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "test/odata-verify.sh",
+          "tag": "A"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "Last Commit: init demo-node"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "book-order-service.js"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "p",
+      "text": "Git 面板与终端命令等价；凭据用 HTTPS + Personal Access Token（PAT），不要用 GitHub 密码。"
+    },
+    {
+      "t": "code",
+      "lang": "bash",
+      "fs": 12.5,
+      "lh": 21,
+      "title": "TERMINAL",
+      "numbers": false,
+      "lines": [
+        "$ git init && git add -A && git commit -m \"init demo-node\"",
+        "$ git remote add origin https://github.com/<user>/demo-node.git",
+        "$ git push -u origin main      # Username 填 GitHub 用户名，Password 填 PAT",
+        "$ git remote -v                 # 验证 remote 指对了"
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "认证失败最常见三种：用密码代替 PAT、PAT 过期 / 缺 repo 权限、remote URL 里带旧用户名。BAS 也支持 GitHub OAuth（弹窗复制验证码）。"
+    }
+  ],
+  "status": [
+    "⑂ main",
+    "1 ▲ 1 ●",
+    "Node 22.20.0",
+    "CAP 9.9.3",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "on": "Message: add submitOrder validation",
+      "text": "1. 提交信息在上方输入框"
+    },
+    {
+      "on": "Staged Changes",
+      "text": "2. 已暂存；Changes 是未暂存"
+    },
+    {
+      "on": "$ git push -u origin main      # Username 填 GitHub 用户名，Password 填 PAT",
+      "text": "3. 密码位置填 PAT"
+    },
+    {
+      "on": "认证失败最常见三种：用密码代替 PAT、PAT 过期 / 缺 repo 权限、remote URL 里带旧用户名。BAS 也支持 GitHub OAuth（弹窗复制验证码）。",
+      "text": "4. 认证失败的三种典型原因"
+    }
+  ]
+}

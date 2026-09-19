@@ -1,0 +1,125 @@
+{
+ "key": "btp_s08",
+ "kind": "cockpit",
+ "w": 1440,
+ "h": 900,
+ "product": "SAP Business Technology Platform",
+ "caption": "Security › Users：平台用户的角色集合分配入口（Cloud Foundry 角色不在这里）",
+ "alt": "BTP cockpit 子账户 Security Users 页面，显示成员邮箱、origin sap.ids 与已分配的角色集合",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 角色集合名依据 SAP Help「Default Role Collections of SAP BTP」与 hana-cloud-mission-trial-2",
+ "crumbs": [
+  "Global Account: trial-9f3a2b (trial)",
+  "Subaccount: trial",
+  "Security / Users"
+ ],
+ "nav": {
+  "title": "Subaccount: trial",
+  "items": [
+   {
+    "label": "Overview"
+   },
+   {
+    "label": "Services",
+    "sub": [
+     "Service Marketplace",
+     "Instances and Subscriptions"
+    ]
+   },
+   {
+    "label": "Cloud Foundry",
+    "sub": [
+     "Org Members",
+     "Spaces",
+     "Space Quotas"
+    ]
+   },
+   {
+    "label": "Connectivity",
+    "sub": [
+     "Destinations",
+     "Cloud Connectors"
+    ]
+   },
+   {
+    "label": "Security",
+    "sub": [
+     "Role Collections",
+     "Users",
+     "Trust Configuration"
+    ],
+    "active": true
+   },
+   {
+    "label": "Entitlements"
+   }
+  ]
+ },
+ "title": "Users",
+ "subtitle": "平台用户与角色集合（Role Collections）· Origin 默认 sap.ids",
+ "blocks": [
+  {
+   "t": "toolbar",
+   "items": [
+    {
+     "label": "Assign Role Collection",
+     "primary": true
+    }
+   ]
+  },
+  {
+   "t": "table",
+   "cols": [
+    "User",
+    "Origin",
+    "Role Collections"
+   ],
+   "widths": [
+    1.5,
+    0.8,
+    1.7
+   ],
+   "rows": [
+    [
+     "jason@example.com (yours)",
+     "sap.ids",
+     "Subaccount Administrator"
+    ],
+    [
+     "jason@example.com (yours)",
+     "sap.ids",
+     "SAP HANA Cloud Administrator"
+    ],
+    [
+     "dev@example.com",
+     "sap.ids",
+     "Subaccount Viewer"
+    ]
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "warn",
+   "text": "Cloud Foundry 的 Org / Space 角色不在 Users 页分配，走 Cloud Foundry › Org Members / Space Members。"
+  }
+ ],
+ "status": "Subaccount: trial · Trust: SAP ID service (sap.ids) · 3 assignments",
+ "callouts": [
+  {
+   "on": "Assign Role Collection",
+   "text": "1. 选中用户后再点这里"
+  },
+  {
+   "on": "sap.ids",
+   "text": "2. 默认身份提供者 origin"
+  },
+  {
+   "on": "SAP HANA Cloud Administrator",
+   "text": "3. 打开 HANA Cloud Central 需要它"
+  },
+  {
+   "on": "Cloud Foundry 的 Org / Space 角色不在 Users 页分配",
+   "text": "4. CF 角色另有入口"
+  }
+ ]
+}

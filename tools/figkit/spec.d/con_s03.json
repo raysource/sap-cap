@@ -1,0 +1,61 @@
+{
+  "key": "con_s03",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap/project-code/demo-node — 编译产物 ① SQL DDL",
+  "label": "本地实机运行",
+  "src": "本地实测：npx cds compile db/schema.cds --to sql",
+  "caption": "同一份 .cds 编译成数据库 schema：命名空间变表名前缀，managed 补审计列，类型按数据库方言翻译",
+  "lh": 19,
+  "lines": [
+    "$ npx cds compile db/schema.cds --to sql",
+    "",
+    "CREATE TABLE sap_training_bookorder_Books (",
+    "  ID INTEGER NOT NULL,",
+    "  title NVARCHAR(120) NOT NULL,",
+    "  author NVARCHAR(80),",
+    "  price DECIMAL(9, 2) NOT NULL,",
+    "  currency NVARCHAR(3) DEFAULT 'JPY',",
+    "  stock INTEGER DEFAULT 0,",
+    "  PRIMARY KEY(ID)",
+    ");",
+    "",
+    "CREATE TABLE sap_training_bookorder_BookOrders (",
+    "  createdAt TIMESTAMP_TEXT,",
+    "  createdBy NVARCHAR(255),",
+    "  modifiedAt TIMESTAMP_TEXT,",
+    "  modifiedBy NVARCHAR(255),",
+    "  ID NVARCHAR(36) NOT NULL,",
+    "  orderNo NVARCHAR(16) NOT NULL,",
+    "  customer_ID INTEGER,",
+    "  orderDate DATE_TEXT DEFAULT CURRENT_TIMESTAMP,",
+    "  status NVARCHAR(10) DEFAULT 'OPEN'",
+    ");",
+    "",
+    "# 换方言：npx cds compile db/schema.cds --to hana | --to postgres"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        560
+      ],
+      "text": "1. 命名空间 → 表名前缀"
+    },
+    {
+      "at": [
+        60,
+        596
+      ],
+      "text": "2. managed 补四列"
+    },
+    {
+      "at": [
+        60,
+        632
+      ],
+      "text": "3. 换 target 换 SQL 方言"
+    }
+  ]
+}

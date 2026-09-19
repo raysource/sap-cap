@@ -1,0 +1,24 @@
+=== CAP Java (demo-java) 实测记录 2026-09-19 21:04 JST ===
+
+--- 编译 ---
+[INFO] Compiling 72 source files with javac [debug release 21] to target/classes
+[INFO] BUILD SUCCESS
+[INFO] Total time:  6.544 s
+
+--- 启动自检（摘自 07_java_server.log）---
+c.s.c.services.impl.ServiceCatalogImpl   : Registered service BookOrderService
+c.s.c.f.s.c.adapter.AdapterBeanFactory   : Servlet CdsODataV4Servlet mapped to /odata/v4
+c.s.c.s.impl.runtime.CdsRuntimeImpl      : Registered handler class com.training.bookorder.handlers.BookOrderServiceHandler
+c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.Books from ../db/data/sap.training.bookorder-Books.csv
+c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.Customers from ../db/data/sap.training.bookorder-Customers.csv
+c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.BookOrderItems from ../db/data/sap.training.bookorder-BookOrderItems.csv
+c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.BookOrders from ../db/data/sap.training.bookorder-BookOrders.csv
+o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+f.s.c.r.IndexPageLinkLoggerConfiguration : CAP Index Page served at http://localhost:8080/
+com.training.bookorder.Application       : Started Application in 1.328 seconds (process running for 1.474)
+
+--- HTTP 实测 ---
+GET $metadata (alice)                          200
+GET BookOrders (alice)                         401
+GET BookOrders (anonymous)                     401
+→ 结论：端点路径已修正（含 @path 语义差异），$metadata 200；带认证的实体读仍 401（本地 mock 用户配置未找到正确写法）。

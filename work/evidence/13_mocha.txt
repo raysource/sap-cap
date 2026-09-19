@@ -1,0 +1,23 @@
+
+
+  图书受注服务 —— OData 集成测试（mocha + cds.test）
+    ✔ ① GET $metadata → 200，且暴露 BookOrderService.BookOrders (67ms)
+    ✔ ② 匿名（无 Basic Auth）→ 401
+    ✔ ③ 过滤 status eq OPEN → 2 张（BO-1001 / BO-1002）
+    ✔ ④ $expand=items → BO-1001 有 3 行明细
+    ✔ ⑤ 只读视图 OrderItemView → 9 行，首行 orderNo=BO-1001
+    ✔ ⑥ 函数 getOrderTotal(BO-1003) → 17400
+    ✔ ⑦ 函数 getOrderSummary() → 4 行，BO-1001 合计 16000
+    ✔ ⑧ 派生字段：POST 明细 2800×3 → amount 8400，父订单合计回写 12000
+    ✔ ⑨ 负向：数量 0 → 400 且带业务消息
+    ✔ ⑩ 负向：图书 9999 不存在 → 400
+    ✔ ⑪ 负向：只读实体 POST → 405
+    ✔ ⑫ 草稿：POST 新建订单 → IsActiveEntity=false（未激活）
+    ✔ ⑬ 草稿：draftActivate → 201，触发 before-CREATE 自动编号
+    ✔ ⑭ 绑定动作：空订单提交 → 400
+    ✔ ⑮ 绑定动作：BO-1001 提交 → 200，状态迁移为 SUBMITTED
+    ✔ ⑯ 绑定动作：重复提交同一张订单 → 409
+
+
+  16 passing (482ms)
+

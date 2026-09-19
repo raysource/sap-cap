@@ -1,0 +1,190 @@
+{
+  "key": "cds_s04",
+  "kind": "hana",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP HANA Cloud",
+  "user": "JASON",
+  "navW": 300,
+  "caption": "同一份 CDS 在 HANA 上的物理形态（Database Explorer 的 Columns 页）：TIMESTAMP/DATE 取代 SQLite 的 *_TEXT，标识符被折叠成大写",
+  "alt": "HANA Database Explorer 显示 SAP_TRAINING_BOOKORDER_BOOKORDERS 的列定义与 HANA 类型",
+  "src": "本站自绘（列名与类型取自 npx cds compile db/schema.cds --to sql --dialect hana 的实际输出）",
+  "nav": {
+    "title": "Database Explorer",
+    "items": [
+      {
+        "label": "demo-hana-db (HDI)",
+        "active": true,
+        "sub": [
+          "Catalog",
+          "SQL Console",
+          "Load",
+          "Import"
+        ]
+      },
+      {
+        "label": "BOOKORDER (schema)"
+      },
+      {
+        "label": "Tables",
+        "group": true
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKS"
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKORDERS",
+        "active": true
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKORDERITEMS"
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_CUSTOMERS"
+      },
+      {
+        "label": "Views",
+        "group": true
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_ORDERITEMVIEW"
+      }
+    ]
+  },
+  "title": "SAP_TRAINING_BOOKORDER_BOOKORDERS — Columns",
+  "tabs": [
+    "Columns",
+    "Constraints",
+    "Indexes",
+    "SQL Console 1"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "table",
+      "cols": [
+        "COLUMN NAME",
+        "DATA TYPE NAME",
+        "LENGTH",
+        "SCALE",
+        "IS NULLABLE"
+      ],
+      "widths": [
+        2.2,
+        1.5,
+        0.7,
+        0.6,
+        0.9
+      ],
+      "rows": [
+        [
+          "ID",
+          "NVARCHAR",
+          "36",
+          "",
+          "FALSE"
+        ],
+        [
+          "ORDERNO",
+          "NVARCHAR",
+          "16",
+          "",
+          "FALSE"
+        ],
+        [
+          "CUSTOMER_ID",
+          "INTEGER",
+          "",
+          "",
+          "TRUE"
+        ],
+        [
+          "ORDERDATE",
+          "DATE",
+          "",
+          "",
+          "TRUE"
+        ],
+        [
+          "STATUS",
+          "NVARCHAR",
+          "10",
+          "",
+          "TRUE"
+        ],
+        [
+          "NOTE",
+          "NVARCHAR",
+          "255",
+          "",
+          "TRUE"
+        ],
+        [
+          "TOTALAMOUNT",
+          "DECIMAL",
+          "13",
+          "2",
+          "TRUE"
+        ],
+        [
+          "STATUSCRITICALITY",
+          "INTEGER",
+          "",
+          "",
+          "TRUE"
+        ],
+        [
+          "CREATEDAT",
+          "TIMESTAMP",
+          "7",
+          "",
+          "TRUE"
+        ],
+        [
+          "CREATEDBY",
+          "NVARCHAR",
+          "255",
+          "",
+          "TRUE"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "HANA 建表用未加引号的标识符 → 名字被折叠成大写；SQLite 侧保留 CDS 里的写法（sap_training_bookorder_BookOrders）。"
+    },
+    {
+      "t": "code",
+      "lang": "sql",
+      "fs": 12.5,
+      "lh": 20,
+      "title": "SQL Console 1",
+      "numbers": true,
+      "lines": [
+        "SELECT \"ORDERNO\", \"ORDERDATE\", \"TOTALAMOUNT\"",
+        "  FROM \"BOOKORDER\".\"SAP_TRAINING_BOOKORDER_BOOKORDERS\"",
+        " WHERE \"ORDERNO\" = 'BO-1001';"
+      ]
+    }
+  ],
+  "status": "Connected · demo-hana-db (HDI container) · 1 row · 0.03 s",
+  "callouts": [
+    {
+      "on": "CREATEDAT",
+      "text": "1. managed → TIMESTAMP（SQLite 是 TIMESTAMP_TEXT）"
+    },
+    {
+      "on": "ORDERDATE",
+      "text": "2. Date → DATE（SQLite 是 DATE_TEXT）"
+    },
+    {
+      "on": "CUSTOMER_ID",
+      "text": "3. 关联 FK 列名与 CDS 完全一致"
+    },
+    {
+      "on": "SAP_TRAINING_BOOKORDER_BOOKORDERS",
+      "text": "4. 未加引号标识符被折叠成大写"
+    }
+  ]
+}

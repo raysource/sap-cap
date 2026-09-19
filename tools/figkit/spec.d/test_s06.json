@@ -1,0 +1,41 @@
+{
+  "key": "test_s06",
+  "kind": "terminal",
+  "w": 1440, "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — 手工验证：认证、method、动作与函数",
+  "lh": 19,
+  "caption": "手工验证要看的四件事：Basic Auth 与 401/200、$metadata 里暴露了几个实体集、$count、以及 function 只能 GET、action 只能 POST（两种方法各回 405）",
+  "label": "本地实机运行",
+  "src": "本地实测：curl（脚本见 work/evidence/17_methods.txt）",
+  "lines": [
+    "$ SVC=http://localhost:4004/odata/v4/book-order ; A='-u alice:alice'",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' \"$SVC/\\$metadata\"                    # 不带认证",
+    "401",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' $A \"$SVC/\\$metadata\"                 # Basic Auth",
+    "200",
+    "$ curl -s $A \"$SVC/\\$metadata\" | grep -c '<EntitySet'",
+    "5",
+    "$ curl -s $A \"$SVC/BookOrders?\\$count=true&\\$top=0\"",
+    "{\"@odata.context\":\"$metadata#BookOrders\",\"@odata.count\":4,\"value\":[]}",
+    "",
+    "$ curl -s $A \"$SVC/getOrderTotal(orderNo='BO-1003')\"                            # function: GET",
+    "{\"@odata.context\":\"$metadata#Edm.Decimal\",\"value\":17400}",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' $A -X POST \"$SVC/getOrderTotal(orderNo='BO-1003')\" -d '{}'",
+    "405",
+    "",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' $A \"$SVC/BookOrders(ID=4a1f8c03-0001-…,IsActiveEntity=true)/submitOrder\"",
+    "405",
+    "$ curl -s $A -X POST \"$SVC/BookOrders(ID=4a1f8c03-0001-…,IsActiveEntity=true)/submitOrder\" -d '{}'   # action: POST",
+    "{\"@odata.context\":\"../$metadata#Edm.String\",\"value\":\"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）\"}",
+    "",
+    "$ curl -s -o /dev/null -w '%{http_code}\\n' $A -X DELETE \"$SVC/BookOrders(ID=$DID,IsActiveEntity=false)\"",
+    "204"
+  ],
+  "callouts": [
+    {"on": "401", "on_index": 1, "text": "1. 先确认 401 不是 bug"},
+    {"on": "5", "on_index": 1, "text": "2. 实体集数量对得上模型"},
+    {"on": "{\"@odata.context\":\"$metadata#BookOrders\",\"@odata.count\":4,\"value\":[]}", "text": "3. $count 取总数，不做分页"},
+    {"on": "405", "on_index": 2, "text": "4. action 只能 POST / function 只能 GET"},
+    {"on": "204", "on_index": 1, "text": "6. 丢草稿 = DELETE IsActiveEntity=false"}
+  ]
+}

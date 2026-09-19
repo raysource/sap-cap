@@ -1,0 +1,105 @@
+{
+  "key": "hana_s05",
+  "kind": "hana",
+  "w": 1440,
+  "h": 900,
+  "caption": "Database Explorer 的 Catalog 树：HDI 容器 → BOOKORDER schema → CAP 生成的表（命名空间 → 大写 + 下划线）",
+  "alt": "Database Explorer 的 Catalog 树：HDI 容器 → BOOKORDER schema → CAP 生成的表（命名空间 → 大写 + 下划线）",
+  "label": "本地实机运行",
+  "src": "本站自绘（figkit 高保真画面）· 表名由本教材项目实测生成：cds build --for hana 产出的 .hdbtable / .hdbtabledata",
+  "product": "SAP HANA Cloud",
+  "user": "JASON",
+  "navW": 320,
+  "nav": {
+    "title": "DATABASE EXPLORER",
+    "items": [
+      {
+        "label": "demo-hana-db (HDI container)",
+        "active": true,
+        "sub": [
+          "Catalog",
+          "SQL Console",
+          "Tables",
+          "Views"
+        ]
+      },
+      {
+        "label": "BOOKORDER (schema)"
+      },
+      {
+        "label": "Tables",
+        "group": true
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKS"
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKORDERS"
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_BOOKORDERITEMS"
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_CUSTOMERS"
+      },
+      {
+        "label": "Views",
+        "group": true
+      },
+      {
+        "label": "SAP_TRAINING_BOOKORDER_ORDERITEMVIEW"
+      }
+    ]
+  },
+  "title": "Catalog — BOOKORDER",
+  "subtitle": "schema 名来自服务实例参数，表名来自 CDS 命名空间 + 实体名",
+  "tabs": [
+    "BOOKORDER (Schema)",
+    "SQL Console 1"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "code",
+      "lang": "text",
+      "fs": 12.5,
+      "lh": 20,
+      "numbers": false,
+      "title": "gen/db/src/gen/sap.training.bookorder.BookOrders.hdbtable",
+      "lines": [
+        "COLUMN TABLE sap_training_bookorder_BookOrders (",
+        "  ID NVARCHAR(36) NOT NULL,",
+        "  orderNo NVARCHAR(16) NOT NULL,",
+        "  customer_ID INTEGER,",
+        "  orderDate DATE DEFAULT CURRENT_TIMESTAMP,",
+        "  totalAmount DECIMAL(13, 2) DEFAULT 0,",
+        "  PRIMARY KEY(ID)",
+        ")"
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "未加引号的标识符在 HANA 里会折叠成大写，所以实际表名/列名是 SAP_TRAINING_BOOKORDER_BOOKORDERS 与 ORDERNO、TOTALAMOUNT。"
+    }
+  ],
+  "status": "Connected · demo-hana-db (HDI container) · schema BOOKORDER · 9 tables / 1 view",
+  "callouts": [
+    {
+      "on": "SAP_TRAINING_BOOKORDER_BOOKORDERS",
+      "text": "1. 命名空间点→下划线，整体大写"
+    },
+    {
+      "on": "COLUMN TABLE sap_training_bookorder_BookOrders (",
+      "text": "2. 未加引号 → HANA 折叠为大写"
+    },
+    {
+      "on": "SAP_TRAINING_BOOKORDER_ORDERITEMVIEW",
+      "text": "3. @readonly 视图也建成对象"
+    },
+    {
+      "on": "BOOKORDER (schema)",
+      "text": "4. schema 名以绑定凭据为准"
+    }
+  ]
+}

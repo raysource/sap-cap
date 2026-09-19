@@ -1,0 +1,13 @@
+[
+  {"no": "PRJ-01", "title": "读懂需求表并说出每条需求对应哪个文件", "basis": "能指出 R1–R10 各自落在 schema.cds / 服务定义 / handler / annotations / mta.yaml 的哪一处", "time": "20 分", "rel": "project.html#req"},
+  {"no": "PRJ-02", "title": "安装并让示范项目跑起来", "basis": "npm install → npm run deploy → npm start，服务挂载在 /odata/v4/book-order", "time": "30 分", "rel": "project.html#step1"},
+  {"no": "PRJ-03", "title": "用 SQL 核对建库结果", "basis": "能列出 6 张表并说出各自的正确行数（Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9）", "time": "15 分", "rel": "project.html#step3"},
+  {"no": "PRJ-04", "title": "逐段讲出 schema.cds 的三个设计决定", "basis": "能解释为什么不用 Composition、不用 Currency 型、聚合不能做成实体", "time": "30 分", "rel": "project.html#step2"},
+  {"no": "PRJ-05", "title": "手工触发 5 类业务规则并观察状态码", "basis": "编号生成、409 重复、金额派生 8400、汇总回写 12000、空订单提交 400 全部亲手复现", "time": "45 分", "rel": "project.html#step5"},
+  {"no": "PRJ-06", "title": "跑通 26 条 OData 验收断言", "basis": "bash test/odata-verify.sh 输出 PASS 26 / FAIL 0，并能解释其中任意 3 条的业务含义", "time": "20 分", "rel": "project.html#step6"},
+  {"no": "PRJ-07", "title": "在浏览器里打开 Fiori 界面并完成一次完整交互", "basis": "能看到 4 张订单、状态列有颜色、能进入 Object Page 看到明细；能说出 dev-proxy 的作用", "time": "40 分", "rel": "project.html#step7"},
+  {"no": "PRJ-08", "title": "自己设计一个新的负向用例", "basis": "写出 curl 命令与期望状态码，实际跑一遍并解释消息来自哪一行代码（例如数量为负、订单号重复、对只读视图写入）", "time": "30 分", "rel": "project.html#step6"},
+  {"no": "PRJ-09", "title": "把项目改成另一个业务场景（课堂作业）", "basis": "按「模型 → 服务 → 规则 → 注解 → 重新部署」的顺序改完，建库成功且至少 3 条断言仍然通过", "time": "120 分", "rel": "project.html#final"},
+  {"no": "PRJ-10", "title": "写出部署链路每一步的产物", "basis": "能画出 cds build → gen/ → mbt build → .mtar → cf deploy → 应用 + HDI 容器 的流程图，并说明每步失败时的现象", "time": "30 分", "rel": "project.html#step9"},
+  {"no": "PRJ-11", "title": "（可选）在真实 BTP 账号上完成部署", "basis": "cf apps 显示两个应用 started；路由上 curl $metadata 返回 200；Database Explorer 里能看到 4 张表", "time": "90 分", "rel": "project.html#step9"}
+]

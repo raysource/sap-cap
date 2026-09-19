@@ -1,0 +1,16 @@
+########## 第 1 次（deploy 后初始数据）##########
+  PASS  重复提交 → 409                                       409
+
+==================== 结果 ====================
+  PASS 26 / FAIL 0
+
+########## 第 2 次（未重新 deploy，直接重跑）##########
+  FAIL  GET OrderItemView (带主键视图，可暴露)            want=9 got=10
+  FAIL  GET OrderItemView 含关联展开的列名                 want=BO-1001 got=BO-1002
+  FAIL  getOrderSummary() 4 行                                    want=4 got=5
+  FAIL  POST 明细后父订单合计被回写 = 12000             want=12000 got=20400
+  FAIL  自动编号 = BO-1005                                     want=BO-1005 got=BO-1006
+  FAIL  BO-1001 提交 → 200                                     want=200 got=409
+==================== 结果 ====================
+  PASS 20 / FAIL 6
+exit=1

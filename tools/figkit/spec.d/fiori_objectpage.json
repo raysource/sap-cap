@@ -1,0 +1,145 @@
+{
+  "key": "fiori_objectpage",
+  "kind": "fiori",
+  "w": 1440,
+  "h": 900,
+  "mode": "app",
+  "product": "SAP Fiori",
+  "user": "JASON",
+  "title": "图书受注管理",
+  "subtitle": "Object Page · BO-1003",
+  "crumbs": "Home  ›  图书受注管理  ›  BO-1003",
+  "caption": "Object Page：页头来自 UI.HeaderInfo、分节来自 UI.Facets、明细表来自 items/@UI.LineItem，「提交订单」按钮来自 UI.DataFieldForAction（绑定动作 submitOrder）",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）",
+  "toolbar": {
+    "items": [
+      {
+        "label": "编辑",
+        "primary": true
+      },
+      {
+        "label": "提交订单"
+      },
+      {
+        "label": "删除"
+      }
+    ]
+  },
+  "blocks": [
+    {
+      "t": "cards",
+      "cols": 3,
+      "h": 104,
+      "items": [
+        {
+          "title": "订单号 BO-1003",
+          "value": "SUBMITTED",
+          "text": "订单日期 2026-09-05"
+        },
+        {
+          "title": "客户",
+          "value": "上海博文出版中心",
+          "text": "ID 2000 · 上海市浦东新区"
+        },
+        {
+          "title": "合计",
+          "value": "17,400",
+          "text": "JPY · 3 行明细"
+        }
+      ]
+    },
+    {
+      "t": "h3",
+      "text": "订单信息（引用 @UI.FieldGroup#Order）"
+    },
+    {
+      "t": "kv",
+      "lw": 110,
+      "rows": [
+        [
+          "订单号",
+          "BO-1003"
+        ],
+        [
+          "客户",
+          "2000 上海博文出版中心"
+        ],
+        [
+          "状态",
+          "SUBMITTED（已提交，不能重复提交）"
+        ],
+        [
+          "合计 (JPY)",
+          "17,400"
+        ]
+      ]
+    },
+    {
+      "t": "h3",
+      "text": "订单明细（引用 items/@UI.LineItem）"
+    },
+    {
+      "t": "table",
+      "fs": 13,
+      "cols": [
+        "图书",
+        "单价",
+        "数量",
+        "金额"
+      ],
+      "widths": [
+        2.6,
+        0.9,
+        0.6,
+        1.0
+      ],
+      "rows": [
+        [
+          "1001 SAP CAP 实战",
+          "4,200",
+          "1",
+          "4,200"
+        ],
+        [
+          "1004 ABAP 到 CAP 迁移指南",
+          "5,200",
+          "2",
+          "10,400"
+        ],
+        [
+          "1003 CDS 建模精要",
+          "2,800",
+          "1",
+          "2,800"
+        ]
+      ]
+    },
+    {
+      "t": "p",
+      "text": "明细金额之和 17,400 = 订单头 totalAmount —— 两者不一致时先查服务的汇总回写，而不是注解。",
+      "size": 12.5,
+      "fill": "#6a6d70"
+    }
+  ],
+  "callouts": [
+    {
+      "on": "BO-1003",
+      "on_index": 1,
+      "text": "1. 页头来自 HeaderInfo"
+    },
+    {
+      "on": "@UI.FieldGroup#Order",
+      "text": "2. 分节来自 Facets"
+    },
+    {
+      "on": "17,400",
+      "on_index": 1,
+      "text": "3. 明细之和=合计"
+    },
+    {
+      "on": "提交订单",
+      "text": "4. 按钮=动作注解"
+    }
+  ]
+}

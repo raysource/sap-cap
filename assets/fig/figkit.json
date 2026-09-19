@@ -1,0 +1,922 @@
+{
+ "bas_s01": {
+  "bottom": 450.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s01",
+  "kind": "cockpit",
+  "texts": 59,
+  "w": 1440
+ },
+ "bas_s02": {
+  "bottom": 750.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s02",
+  "kind": "dialog",
+  "texts": 45,
+  "w": 1440
+ },
+ "bas_s03": {
+  "bottom": 849.5,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s03",
+  "kind": "bas",
+  "texts": 126,
+  "w": 1440
+ },
+ "bas_s04": {
+  "bottom": 361.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s04",
+  "kind": "bas",
+  "texts": 54,
+  "w": 1440
+ },
+ "bas_s05": {
+  "bottom": 310.7,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s05",
+  "kind": "bas",
+  "texts": 60,
+  "w": 1440
+ },
+ "bas_s06": {
+  "bottom": 835.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s06",
+  "kind": "bas",
+  "texts": 78,
+  "w": 1440
+ },
+ "bas_s07": {
+  "bottom": 432.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s07",
+  "kind": "terminal",
+  "texts": 27,
+  "w": 1440
+ },
+ "bas_s08": {
+  "bottom": 800.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s08",
+  "kind": "bas",
+  "texts": 67,
+  "w": 1440
+ },
+ "bas_s09": {
+  "bottom": 303.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s09",
+  "kind": "bas",
+  "texts": 53,
+  "w": 1440
+ },
+ "bas_s10": {
+  "bottom": 337.2,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s10",
+  "kind": "terminal",
+  "texts": 23,
+  "w": 1440
+ },
+ "bas_s11": {
+  "bottom": 482.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "bas_s11",
+  "kind": "cockpit",
+  "texts": 63,
+  "w": 1440
+ },
+ "btp_s01": {
+  "bottom": 339.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s01",
+  "kind": "cockpit",
+  "texts": 35,
+  "w": 1440
+ },
+ "btp_s02": {
+  "bottom": 690.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s02",
+  "kind": "dialog",
+  "texts": 47,
+  "w": 1440
+ },
+ "btp_s03": {
+  "bottom": 300.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s03",
+  "kind": "cockpit",
+  "texts": 35,
+  "w": 1440
+ },
+ "btp_s04": {
+  "bottom": 660.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s04",
+  "kind": "cockpit",
+  "texts": 76,
+  "w": 1440
+ },
+ "btp_s05": {
+  "bottom": 740.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s05",
+  "kind": "dialog",
+  "texts": 54,
+  "w": 1440
+ },
+ "btp_s06": {
+  "bottom": 692.4,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s06",
+  "kind": "dialog",
+  "texts": 68,
+  "w": 1440
+ },
+ "btp_s07": {
+  "bottom": 503.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s07",
+  "kind": "cockpit",
+  "texts": 68,
+  "w": 1440
+ },
+ "btp_s08": {
+  "bottom": 368.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s08",
+  "kind": "cockpit",
+  "texts": 48,
+  "w": 1440
+ },
+ "btp_s09": {
+  "bottom": 444.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s09",
+  "kind": "cockpit",
+  "texts": 56,
+  "w": 1440
+ },
+ "btp_s10": {
+  "bottom": 300.2,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s10",
+  "kind": "terminal",
+  "texts": 23,
+  "w": 1440
+ },
+ "btp_s11": {
+  "bottom": 596.2,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s11",
+  "kind": "terminal",
+  "texts": 39,
+  "w": 1440
+ },
+ "btp_s12": {
+  "bottom": 473.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s12",
+  "kind": "cockpit",
+  "texts": 68,
+  "w": 1440
+ },
+ "btp_s13": {
+  "bottom": 365.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s13",
+  "kind": "cockpit",
+  "texts": 51,
+  "w": 1440
+ },
+ "btp_s14": {
+  "bottom": 318.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "btp_s14",
+  "kind": "terminal",
+  "texts": 24,
+  "w": 1440
+ },
+ "cds_s01": {
+  "bottom": 826.7,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "cds_s01",
+  "kind": "bas",
+  "texts": 137,
+  "w": 1440
+ },
+ "cds_s02": {
+  "bottom": 759.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "cds_s02",
+  "kind": "terminal",
+  "texts": 42,
+  "w": 1440
+ },
+ "cds_s03": {
+  "bottom": 651.0,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "cds_s03",
+  "kind": "terminal",
+  "texts": 39,
+  "w": 1440
+ },
+ "cds_s04": {
+  "bottom": 649.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "cds_s04",
+  "kind": "hana",
+  "texts": 87,
+  "w": 1440
+ },
+ "cds_s05": {
+  "bottom": 499.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "cds_s05",
+  "kind": "terminal",
+  "texts": 27,
+  "w": 1440
+ },
+ "cds_s06": {
+  "bottom": 341.0,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "cds_s06",
+  "kind": "bas",
+  "texts": 67,
+  "w": 1440
+ },
+ "cli_s02": {
+  "bottom": 819.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "cli_s02",
+  "kind": "terminal",
+  "texts": 41,
+  "w": 1440
+ },
+ "cli_s03": {
+  "bottom": 759.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "cli_s03",
+  "kind": "terminal",
+  "texts": 39,
+  "w": 1440
+ },
+ "con_s01": {
+  "bottom": 870.0,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s01",
+  "kind": "bas",
+  "texts": 108,
+  "w": 1440
+ },
+ "con_s02": {
+  "bottom": 676.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s02",
+  "kind": "terminal",
+  "texts": 26,
+  "w": 1440
+ },
+ "con_s03": {
+  "bottom": 640.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s03",
+  "kind": "terminal",
+  "texts": 29,
+  "w": 1440
+ },
+ "con_s04": {
+  "bottom": 600.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s04",
+  "kind": "terminal",
+  "texts": 30,
+  "w": 1440
+ },
+ "con_s05": {
+  "bottom": 862.5,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s05",
+  "kind": "bas",
+  "texts": 104,
+  "w": 1440
+ },
+ "con_s06": {
+  "bottom": 700.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s06",
+  "kind": "fiori",
+  "texts": 55,
+  "w": 1440
+ },
+ "con_s07": {
+  "bottom": 740.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s07",
+  "kind": "cockpit",
+  "texts": 57,
+  "w": 1440
+ },
+ "con_s08": {
+  "bottom": 720.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s08",
+  "kind": "hana",
+  "texts": 44,
+  "w": 1440
+ },
+ "con_s09": {
+  "bottom": 852.5,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s09",
+  "kind": "bas",
+  "texts": 102,
+  "w": 1440
+ },
+ "con_s10": {
+  "bottom": 736.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "con_s10",
+  "kind": "terminal",
+  "texts": 25,
+  "w": 1440
+ },
+ "deploy_cf": {
+  "bottom": 642.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "deploy_cf",
+  "kind": "terminal",
+  "texts": 34,
+  "w": 1440
+ },
+ "deploy_cockpit": {
+  "bottom": 542.6,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "deploy_cockpit",
+  "kind": "cockpit",
+  "texts": 61,
+  "w": 1440
+ },
+ "deploy_gen": {
+  "bottom": 719.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "deploy_gen",
+  "kind": "terminal",
+  "texts": 41,
+  "w": 1440
+ },
+ "deploy_mbt": {
+  "bottom": 579.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "deploy_mbt",
+  "kind": "terminal",
+  "texts": 32,
+  "w": 1440
+ },
+ "deploy_mta": {
+  "bottom": 860.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "deploy_mta",
+  "kind": "bas",
+  "texts": 155,
+  "w": 1440
+ },
+ "deploy_verify": {
+  "bottom": 479.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "deploy_verify",
+  "kind": "terminal",
+  "texts": 26,
+  "w": 1440
+ },
+ "deploy_wizard": {
+  "bottom": 710.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "deploy_wizard",
+  "kind": "dialog",
+  "texts": 56,
+  "w": 1440
+ },
+ "fiori_ann": {
+  "bottom": 830.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_ann",
+  "kind": "bas",
+  "texts": 115,
+  "w": 1440
+ },
+ "fiori_debug": {
+  "bottom": 499.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_debug",
+  "kind": "terminal",
+  "texts": 29,
+  "w": 1440
+ },
+ "fiori_draft": {
+  "bottom": 599.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_draft",
+  "kind": "terminal",
+  "texts": 32,
+  "w": 1440
+ },
+ "fiori_launchpad": {
+  "bottom": 429.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_launchpad",
+  "kind": "fiori",
+  "texts": 37,
+  "w": 1440
+ },
+ "fiori_listreport": {
+  "bottom": 487.2,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_listreport",
+  "kind": "fiori",
+  "texts": 54,
+  "w": 1440
+ },
+ "fiori_objectpage": {
+  "bottom": 651.9,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_objectpage",
+  "kind": "fiori",
+  "texts": 57,
+  "w": 1440
+ },
+ "fiori_s02": {
+  "bottom": 521.2,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_s02",
+  "kind": "fiori",
+  "texts": 65,
+  "w": 1440
+ },
+ "fiori_triangle": {
+  "bottom": 358.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "fiori_triangle",
+  "kind": "fiori",
+  "texts": 32,
+  "w": 1440
+ },
+ "hana_s01": {
+  "bottom": 484.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s01",
+  "kind": "cockpit",
+  "texts": 64,
+  "w": 1440
+ },
+ "hana_s02": {
+  "bottom": 740.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s02",
+  "kind": "dialog",
+  "texts": 54,
+  "w": 1440
+ },
+ "hana_s03": {
+  "bottom": 828.3,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s03",
+  "kind": "hana",
+  "texts": 68,
+  "w": 1440
+ },
+ "hana_s04": {
+  "bottom": 318.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s04",
+  "kind": "hana",
+  "texts": 41,
+  "w": 1440
+ },
+ "hana_s05": {
+  "bottom": 462.4,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s05",
+  "kind": "hana",
+  "texts": 44,
+  "w": 1440
+ },
+ "hana_s06": {
+  "bottom": 828.3,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s06",
+  "kind": "hana",
+  "texts": 66,
+  "w": 1440
+ },
+ "hana_s07": {
+  "bottom": 355.8,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s07",
+  "kind": "terminal",
+  "texts": 23,
+  "w": 1440
+ },
+ "hana_s08": {
+  "bottom": 815.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s08",
+  "kind": "bas",
+  "texts": 79,
+  "w": 1440
+ },
+ "hana_s09": {
+  "bottom": 358.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s09",
+  "kind": "terminal",
+  "texts": 24,
+  "w": 1440
+ },
+ "hana_s10": {
+  "bottom": 730.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "hana_s10",
+  "kind": "dialog",
+  "texts": 53,
+  "w": 1440
+ },
+ "node_s01": {
+  "bottom": 822.5,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "node_s01",
+  "kind": "bas",
+  "texts": 121,
+  "w": 1440
+ },
+ "node_s02": {
+  "bottom": 515.8,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "node_s02",
+  "kind": "terminal",
+  "texts": 32,
+  "w": 1440
+ },
+ "node_s03": {
+  "bottom": 820.0,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "node_s03",
+  "kind": "bas",
+  "texts": 113,
+  "w": 1440
+ },
+ "node_s04": {
+  "bottom": 537.0,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "node_s04",
+  "kind": "terminal",
+  "texts": 34,
+  "w": 1440
+ },
+ "node_s05": {
+  "bottom": 566.6,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "node_s05",
+  "kind": "fiori",
+  "texts": 79,
+  "w": 1440
+ },
+ "node_s06": {
+  "bottom": 461.0,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "node_s06",
+  "kind": "terminal",
+  "texts": 30,
+  "w": 1440
+ },
+ "sec_s01": {
+  "bottom": 700.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s01",
+  "kind": "cockpit",
+  "texts": 53,
+  "w": 1440
+ },
+ "sec_s02": {
+  "bottom": 736.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s02",
+  "kind": "cockpit",
+  "texts": 56,
+  "w": 1440
+ },
+ "sec_s03": {
+  "bottom": 776.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s03",
+  "kind": "terminal",
+  "texts": 24,
+  "w": 1440
+ },
+ "sec_s04": {
+  "bottom": 700.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s04",
+  "kind": "terminal",
+  "texts": 17,
+  "w": 1440
+ },
+ "sec_s05": {
+  "bottom": 860.0,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s05",
+  "kind": "bas",
+  "texts": 107,
+  "w": 1440
+ },
+ "sec_s06": {
+  "bottom": 832.1,
+  "callouts": 2,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s06",
+  "kind": "bas",
+  "texts": 125,
+  "w": 1440
+ },
+ "sec_s07": {
+  "bottom": 776.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s07",
+  "kind": "terminal",
+  "texts": 32,
+  "w": 1440
+ },
+ "sec_s08": {
+  "bottom": 780.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s08",
+  "kind": "cockpit",
+  "texts": 61,
+  "w": 1440
+ },
+ "sec_s09": {
+  "bottom": 640.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s09",
+  "kind": "cockpit",
+  "texts": 53,
+  "w": 1440
+ },
+ "sec_s10": {
+  "bottom": 780.1,
+  "callouts": 3,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s10",
+  "kind": "dialog",
+  "texts": 54,
+  "w": 1440
+ },
+ "sec_s11": {
+  "bottom": 796.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s11",
+  "kind": "terminal",
+  "texts": 35,
+  "w": 1440
+ },
+ "sec_s12": {
+  "bottom": 756.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "sec_s12",
+  "kind": "terminal",
+  "texts": 29,
+  "w": 1440
+ },
+ "test_s01": {
+  "bottom": 518.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "test_s01",
+  "kind": "terminal",
+  "texts": 30,
+  "w": 1440
+ },
+ "test_s02": {
+  "bottom": 692.0,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "test_s02",
+  "kind": "terminal",
+  "texts": 44,
+  "w": 1440
+ },
+ "test_s03": {
+  "bottom": 785.1,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "test_s03",
+  "kind": "bas",
+  "texts": 123,
+  "w": 1440
+ },
+ "test_s04": {
+  "bottom": 423.0,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "test_s04",
+  "kind": "terminal",
+  "texts": 27,
+  "w": 1440
+ },
+ "test_s05": {
+  "bottom": 517.1,
+  "callouts": 4,
+  "forced": 0,
+  "h": 900,
+  "key": "test_s05",
+  "kind": "hana",
+  "texts": 64,
+  "w": 1440
+ },
+ "test_s06": {
+  "bottom": 495.0,
+  "callouts": 5,
+  "forced": 0,
+  "h": 900,
+  "key": "test_s06",
+  "kind": "terminal",
+  "texts": 30,
+  "w": 1440
+ }
+}

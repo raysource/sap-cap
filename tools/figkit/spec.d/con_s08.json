@@ -1,0 +1,108 @@
+{
+  "key": "con_s08",
+  "kind": "hana",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP HANA Cloud",
+  "user": "JASON",
+  "navW": 260,
+  "caption": "编译产物落地：HANA Cloud 的 HDI 容器里就是 db/schema.cds 编译出来的表（命名空间成了 schema 前缀）",
+  "nav": {
+    "title": "Database Explorer",
+    "items": [
+      {
+        "label": "Tables",
+        "active": true,
+        "sub": [
+          "BOOK_ORDERS",
+          "BOOKS",
+          "CUSTOMERS"
+        ]
+      },
+      {
+        "label": "SQL Console"
+      },
+      {
+        "label": "Diagram"
+      }
+    ]
+  },
+  "title": "SQL Console — BOOKORDER.BOOK_ORDERS",
+  "tabs": [
+    "SQL Console 1"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "code",
+      "lang": "sql",
+      "title": "statement.sql",
+      "fs": 12.5,
+      "lh": 19,
+      "lines": [
+        "SELECT \"orderNo\", \"status\", \"totalAmount\"",
+        "  FROM \"sap.training.bookorder.BookOrders\"",
+        " ORDER BY \"orderNo\";"
+      ]
+    },
+    {
+      "t": "table",
+      "cols": [
+        "orderNo",
+        "status",
+        "totalAmount"
+      ],
+      "widths": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "rows": [
+        [
+          "BO-1001",
+          "OPEN",
+          "16000.00"
+        ],
+        [
+          "BO-1003",
+          "SUBMITTED",
+          "17400.00"
+        ],
+        [
+          "BO-1004",
+          "OPEN",
+          "2800.00"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "HDI 容器由 mta.yaml 的 com.sap.xs.hdi-container resources 建立，部署时执行 cds build 产出的 DDL。"
+    }
+  ],
+  "status": "Connected · demo-node-db (HDI container) · 0.09 s · 3 rows",
+  "callouts": [
+    {
+      "at": [
+        110,
+        640
+      ],
+      "text": "1. 表名 = 命名空间 + 表名"
+    },
+    {
+      "at": [
+        110,
+        676
+      ],
+      "text": "2. managed 审计列在此"
+    },
+    {
+      "at": [
+        110,
+        712
+      ],
+      "text": "3. Decimal 精度按模型"
+    }
+  ]
+}

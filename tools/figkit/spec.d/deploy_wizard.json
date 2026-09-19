@@ -1,0 +1,130 @@
+{
+  "key": "deploy_wizard",
+  "kind": "dialog",
+  "w": 1440,
+  "h": 900,
+  "dw": 820,
+  "dh": 560,
+  "title": "Create Instance",
+  "subtitle": "Service: SAP HANA Cloud · Plan: hdi-shared",
+  "caption": "如果不想让 MTA 建库，也可以在 Cockpit 里手动建：服务选 hana-cloud、计划必须选 hdi-shared —— 选错计划（如 schema/tools）部署会直接失败",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）",
+  "under": {
+    "kind": "cockpit",
+    "product": "SAP Business Technology Platform",
+    "crumbs": [
+      "Global Account: trial-eu10-9f3a2b (trial)",
+      "Subaccount: trial"
+    ],
+    "nav": {
+      "title": "Subaccount: trial",
+      "items": [
+        {
+          "label": "Overview"
+        },
+        {
+          "label": "Instances and Subscriptions",
+          "active": true
+        },
+        {
+          "label": "Security"
+        }
+      ]
+    },
+    "title": "Instances and Subscriptions",
+    "tabs": [
+      "Instances",
+      "Subscriptions"
+    ],
+    "activeTab": 0,
+    "blocks": [
+      {
+        "t": "table",
+        "cols": [
+          "名称",
+          "服务",
+          "计划"
+        ],
+        "rows": [
+          [
+            "demo-node-db",
+            "hana-cloud",
+            "hdi-shared"
+          ],
+          [
+            "demo-node-auth",
+            "xsuaa",
+            "application"
+          ]
+        ]
+      }
+    ]
+  },
+  "steps": {
+    "items": [
+      "Basic Information",
+      "Parameters",
+      "Review"
+    ],
+    "active": 1
+  },
+  "blocks": [
+    {
+      "t": "form",
+      "cols": 1,
+      "fields": [
+        [
+          "Instance Name",
+          "demo-node-db",
+          "只能用小写字母、数字与连字符"
+        ],
+        [
+          "Service",
+          "hana-cloud",
+          "从 Service Marketplace 选，不要选 hana（旧的 SAP HANA 服务）"
+        ],
+        [
+          "Plan",
+          "hdi-shared",
+          "CAP 需要 HDI 容器：容器内自带 schema 与部署器"
+        ],
+        [
+          "Runtime",
+          "Cloud Foundry",
+          "与子账户环境一致"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "试用（trial）子账户的 HANA Cloud 实例会每天被停止：第二天部署失败时先去 Instance 页面点 Start，再重试 cf deploy。"
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Cancel"
+    },
+    {
+      "label": "Create",
+      "primary": true
+    }
+  ],
+  "callouts": [
+    {
+      "on": "hana-cloud",
+      "on_index": 1,
+      "text": "1. 服务名 hana-cloud"
+    },
+    {
+      "on": "hdi-shared",
+      "on_index": 2,
+      "text": "2. 只认 hdi-shared"
+    },
+    {
+      "on": "每天被停止",
+      "text": "3. 试用实例会停机"
+    }
+  ]
+}

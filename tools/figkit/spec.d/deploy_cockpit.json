@@ -1,0 +1,155 @@
+{
+  "key": "deploy_cockpit",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "product": "SAP Business Technology Platform",
+  "crumbs": [
+    "Global Account: trial-eu10-9f3a2b (trial)",
+    "Subaccount: trial"
+  ],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {
+        "label": "Overview"
+      },
+      {
+        "label": "Instances and Subscriptions",
+        "active": true
+      },
+      {
+        "label": "Connectivity",
+        "sub": [
+          "Destinations",
+          "Cloud Connectors"
+        ]
+      },
+      {
+        "label": "Cloud Foundry",
+        "sub": [
+          "Org Members",
+          "Spaces",
+          "Service Marketplace"
+        ]
+      },
+      {
+        "label": "Security",
+        "sub": [
+          "Role Collections",
+          "Users"
+        ]
+      },
+      {
+        "label": "Services"
+      }
+    ]
+  },
+  "title": "Instances and Subscriptions",
+  "subtitle": "MTA 部署会自动创建这些实例；删掉 MTA 时它们按 --delete-services 才会被清掉",
+  "tabs": [
+    "Instances",
+    "Subscriptions"
+  ],
+  "activeTab": 0,
+  "caption": "部署后子账户里出现的服务实例：HANA 的 hdi-shared 容器、XSUAA 授权实例、html5-apps-repo 的两个计划（app-host / app-runtime）",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）",
+  "blocks": [
+    {
+      "t": "table",
+      "fs": 13,
+      "cols": [
+        "名称",
+        "服务",
+        "计划",
+        "状态"
+      ],
+      "widths": [
+        1.7,
+        1.3,
+        1.1,
+        0.9
+      ],
+      "rows": [
+        [
+          "demo-node-db",
+          "hana-cloud",
+          "hdi-shared",
+          "Create succeeded"
+        ],
+        [
+          "demo-node-auth",
+          "xsuaa",
+          "application",
+          "Create succeeded"
+        ],
+        [
+          "demo-node-html5-repo-host",
+          "html5-apps-repo",
+          "app-host",
+          "Create succeeded"
+        ],
+        [
+          "demo-node-html5-runtime",
+          "html5-apps-repo",
+          "app-runtime",
+          "Create succeeded"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "名字全部来自 mta.yaml 的 resources[].name —— 部署前先想好命名，改名等于换一套新实例（旧实例会留下来继续占用配额）。"
+    },
+    {
+      "t": "h3",
+      "text": "Cloud Foundry › Routes（同一个子账户）"
+    },
+    {
+      "t": "table",
+      "fs": 13,
+      "cols": [
+        "路由",
+        "应用",
+        "类型"
+      ],
+      "widths": [
+        3.2,
+        1.6,
+        0.8
+      ],
+      "rows": [
+        [
+          "trial-dev-demo-node.cfapps.ap10.hana.ondemand.com",
+          "demo-node (approuter)",
+          "shared"
+        ],
+        [
+          "trial-dev-demo-node-srv.cfapps.ap10.hana.ondemand.com",
+          "demo-node-srv",
+          "shared"
+        ]
+      ]
+    }
+  ],
+  "callouts": [
+    {
+      "on": "demo-node-db",
+      "text": "1. 表就建在 HDI 容器"
+    },
+    {
+      "on": "demo-node-auth",
+      "text": "2. 角色定义在此实例"
+    },
+    {
+      "on": "trial-dev-demo-node.cfapps.ap10.hana.ondemand.com",
+      "text": "3. 访问入口是路由"
+    },
+    {
+      "on": "hdi-shared",
+      "text": "4. CAP 必需的计划"
+    }
+  ]
+}

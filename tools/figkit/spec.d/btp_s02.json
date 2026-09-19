@@ -1,0 +1,113 @@
+{
+ "key": "btp_s02",
+ "kind": "dialog",
+ "w": 1440,
+ "h": 900,
+ "dw": 760,
+ "dh": 520,
+ "caption": "试用注册时先选区域再建租户——区域决定 API 端点与延迟（清单以页面实际显示为准）",
+ "alt": "SAP BTP Trial 首页上的区域选择对话框，列出 us10、ap21 等可试用区域并给出 Create Account 按钮",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 区域可用性依据 SAP Help「Regions for Trial Accounts」",
+ "under": {
+  "kind": "cockpit",
+  "product": "SAP Business Technology Platform",
+  "crumbs": [
+   "Trial Home: trial-9f3a2b (trial)"
+  ],
+  "nav": {
+   "title": "Trial Home",
+   "items": [
+    {
+     "label": "Enter Your Trial Account",
+     "active": true
+    },
+    {
+     "label": "Guided Tours"
+    }
+   ]
+  },
+  "title": "Trial Home",
+  "subtitle": "A trial account on SAP Business Technology Platform enables you to experience the platform for free for a limited amount of time.",
+  "blocks": [
+   {
+    "t": "p",
+    "text": "选择区域 → 创建租户 → 进入 cockpit：注册完成后系统自动生成 1 个全局账户 + 1 个子账户 + 1 个 space。"
+   }
+  ],
+  "status": "cockpit.hanatrial.ondemand.com/trial · Trial accounts are limited to 90 days in total."
+ },
+ "title": "Create Account",
+ "subtitle": "区域在创建时选定；试用的 Cloud Foundry 环境目前只在下列区域提供",
+ "blocks": [
+  {
+   "t": "table",
+   "cols": [
+    "区域",
+    "位置",
+    "IaaS 提供方",
+    "试用可用"
+   ],
+   "widths": [
+    0.7,
+    1.4,
+    1.6,
+    1.0
+   ],
+   "rows": [
+    [
+     "us10",
+     "US East (VA)",
+     "Amazon Web Services",
+     "✓"
+    ],
+    [
+     "ap21",
+     "Singapore",
+     "Microsoft Azure",
+     "✓"
+    ],
+    [
+     "eu10",
+     "Europe (Frankfurt)",
+     "Amazon Web Services",
+     "✗ 新试用已停"
+    ],
+    [
+     "ap10",
+     "Australia (Sydney)",
+     "Amazon Web Services",
+     "仅企业账户"
+    ]
+   ]
+  },
+  {
+   "t": "note",
+   "kind": "warn",
+   "text": "区域清单以页面实际显示为准；SAP Help 的「Regions for Trial Accounts」当前只列 us10 与 ap21。"
+  }
+ ],
+ "buttons": [
+  {
+   "label": "Cancel"
+  },
+  {
+   "label": "Create Account",
+   "primary": true
+  }
+ ],
+ "callouts": [
+  {
+   "on": "us10",
+   "text": "1. CF 试用目前仅 us10/ap21"
+  },
+  {
+   "on": "仅企业账户",
+   "text": "2. ap10 等属企业区域"
+  },
+  {
+   "on": "Create Account",
+   "text": "3. 点它即开始，区域不可改"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+
+> demo-node@1.0.0 start
+> cds-serve
+
+[cds] - loaded model from 4 file(s):
+ 
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - connect to db > sqlite { url: 'db.sqlite' }
+[cds] - using auth strategy { kind: 'mocked' }
+[cds] - serving BookOrderService {
+  at: [ '/odata/v4/book-order' ],
+  decl: 'srv/book-order-service.cds:4',
+  impl: 'srv/book-order-service.js'
+}
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server v9.9.3 launched in 247 ms
+[odata] - GET /odata/v4/book-order/BookOrders { '$select': 'orderNo,status,totalAmount', '$orderby': 'orderNo' }
+[odata] - GET /odata/v4/book-order/getOrderSummary() 
+[odata] - POST /odata/v4/book-order/BookOrders 
+[odata] - POST /odata/v4/book-order/BookOrders(ID=33f68968-b47b-4e2f-9473-120e0425e080,IsActiveEntity=false)/BookOrderService.draftActivate 
+[odata] - GET /odata/v4/book-order/BookOrders { '$select': 'ID', '$filter': "orderNo eq 'BO-1001'" }
+[odata] - POST /odata/v4/book-order/BookOrders(ID=4a1f8c03-0001-4000-8000-000000000001,IsActiveEntity=true)/submitOrder 

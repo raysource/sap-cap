@@ -1,0 +1,64 @@
+== ⑧ 认证策略对照实测：mocked vs dummy（本地 demo-node，@sap/cds 9.9.3，Node v22.23.2）
+== 执行：bash /tmp/auth_run.sh（脚本原样输出，未加工）
+
+==================== kind=mocked (port 4123)
+-- A) anonymous (no credentials):
+HTTP 401
+WWW-Authenticate: Basic realm="Users"
+Unauthorized
+-- B) alice:alice
+HTTP 200
+{"@odata.context":"$metadata#BookOrders","value":[{"createdAt":"2026-09-19T11:42:29.753Z","createdBy":"anonymous","modifiedAt":"2026-09-19T11:42:29.753Z","modifiedBy":"anonymous","ID":"4a1f8c03-0001-4000-8000-000000000001","orderNo":"BO-1001","customer_ID":1000,"orderDate":"2026-09-01","status":"OPEN","note":"首次订
+-- C) alice:wrongpassword
+HTTP 200
+-- D) unknown user zoe:pw
+HTTP 200
+{"@odata.context":"$metadata#BookOrders","value":[{"createdAt":"2026-09-19T11:42:29.753Z","createdBy":"anonymous","modifiedAt":"2026-09-19T11:42:29.753Z","modifiedBy":"anonymous","ID":"4a1f8c03-0001-4000-8000-00000000000
+-- server log tail:
+[cds] - server v9.9.3 launched in 241 ms
+[odata] - GET /odata/v4/book-order/BookOrders { '$top': '1' }
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/BookOrders { '$top': '1' }
+==================== kind=dummy (port 4124)
+-- A) anonymous (no credentials):
+HTTP 200
+{"@odata.context":"$metadata#BookOrders","value":[{"createdAt":"2026-09-19T11:42:29.753Z","createdBy":"anonymous","modifiedAt":"2026-09-19T11:42:29.753Z","modifiedBy":"anonymous","ID":"4a1f8c03-0001-4
+-- B) alice:alice
+HTTP 200
+{"@odata.context":"$metadata#BookOrders","value":[{"createdAt":"2026-09-19T11:42:29.753Z","createdBy":"anonymous","modifiedAt":"2026-09-19T11:42:29.753Z","modifiedBy":"anonymous","ID":"4a1f8c03-0001-4000-8000-000000000001","orderNo":"BO-1001","customer_ID":1000,"orderDate":"2026-09-01","status":"OPEN","note":"首次订
+-- C) alice:wrongpassword
+HTTP 200
+-- D) unknown user zoe:pw
+HTTP 200
+{"@odata.context":"$metadata#BookOrders","value":[{"createdAt":"2026-09-19T11:42:29.753Z","createdBy":"anonymous","modifiedAt":"2026-09-19T11:42:29.753Z","modifiedBy":"anonymous","ID":"4a1f8c03-0001-4000-8000-00000000000
+-- server log tail:
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/BookOrders { '$top': '1' }
+[odata] - GET /odata/v4/book-order/BookOrders 
+[odata] - GET /odata/v4/book-order/BookOrders { '$top': '1' }
+==================== cds env get requires.auth (default/mocked)
+{
+  "restrict_all_services": false,
+  "kind": "mocked",
+  "users": {
+    "alice": {
+      "tenant": "t1",
+      "roles": [
+        "admin"
+      ]
+    },
+    "bob": {
+      "tenant": "t1",
+      "roles": [
+        "cds.ExtensionDeveloper"
+      ]
+    },
+    "carol": {
+      "tenant": "t1",
+      "roles": [
+        "admin",
+        "cds.ExtensionDeveloper"
+      ]
+    },
+    "dave": {
+      "tenant": "t1",

@@ -1,0 +1,71 @@
+##### SQLITE #####
+
+CREATE TABLE demo_zoo_Zoo (
+  ID NVARCHAR(36) NOT NULL,
+  sStr NVARCHAR(20),
+  sDef NVARCHAR(255),
+  sBig NCLOB,
+  iInt INTEGER,
+  i16 SMALLINT,
+  i64 BIGINT,
+  dDec DECIMAL(9, 2),
+  dDef DECIMAL,
+  dDbl DOUBLE,
+  bBool BOOLEAN,
+  dDate DATE_TEXT,
+  tTime TIME_TEXT,
+  tsStamp TIMESTAMP_TEXT,
+  dtDateTime DATETIME_TEXT,
+  uUuid NVARCHAR(36),
+  binSmall BINARY_BLOB(16),
+  binLarge BLOB,
+  sArr NCLOB,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE demo_zoo_Books (
+  ID INTEGER NOT NULL,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE demo_zoo_Assocs (
+  ID NVARCHAR(36) NOT NULL,
+  book_ID INTEGER,
+  PRIMARY KEY(ID)
+);
+
+##### HANA #####
+
+CREATE TABLE demo_zoo_Zoo (
+  ID NVARCHAR(36) NOT NULL,
+  sStr NVARCHAR(20),
+  sDef NVARCHAR(5000),
+  sBig NCLOB,
+  iInt INTEGER,
+  i16 SMALLINT,
+  i64 BIGINT,
+  dDec DECIMAL(9, 2),
+  dDef DECIMAL,
+  dDbl DOUBLE,
+  bBool BOOLEAN,
+  dDate DATE,
+  tTime TIME,
+  tsStamp TIMESTAMP,
+  dtDateTime SECONDDATE,
+  uUuid NVARCHAR(36),
+  binSmall VARBINARY(16),
+  binLarge BLOB,
+  sArr NCLOB,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE demo_zoo_Books (
+  ID INTEGER NOT NULL,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE demo_zoo_Assocs (
+  ID NVARCHAR(36) NOT NULL,
+  book_ID INTEGER,
+  PRIMARY KEY(ID)
+);

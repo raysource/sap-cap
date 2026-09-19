@@ -1,0 +1,143 @@
+{
+  "key": "sec_s10",
+  "kind": "dialog",
+  "w": 1440,
+  "h": 900,
+  "caption": "把角色集合分配给用户：BTP 侧的最后一步，做完用户下次登录的 JWT 里才有对应 scope",
+  "dw": 760,
+  "dh": 470,
+  "under": {
+    "kind": "cockpit",
+    "product": "SAP Business Technology Platform",
+    "crumbs": [
+      "Subaccount: trial",
+      "Security",
+      "Users"
+    ],
+    "nav": {
+      "title": "Subaccount: trial",
+      "items": [
+        {
+          "label": "Overview"
+        },
+        {
+          "label": "Instances and Subscriptions"
+        },
+        {
+          "label": "Security",
+          "group": true
+        },
+        {
+          "label": "Role Collections"
+        },
+        {
+          "label": "Users",
+          "active": true
+        },
+        {
+          "label": "Trust Configuration"
+        }
+      ]
+    },
+    "title": "Users",
+    "subtitle": "Subaccount: trial · 默认 IdP（sap.default）",
+    "tabs": [
+      "Users"
+    ],
+    "activeTab": 0,
+    "blocks": [
+      {
+        "t": "table",
+        "cols": [
+          "User Name",
+          "Origin",
+          "Role Collections"
+        ],
+        "widths": [
+          2.0,
+          1.0,
+          1.2
+        ],
+        "rows": [
+          [
+            "order.admin@example.com",
+            "sap.default",
+            "订单管理员"
+          ],
+          [
+            "order.clerk@example.com",
+            "sap.default",
+            "BookOrder.View (demo-node trial-dev)"
+          ]
+        ]
+      }
+    ]
+  },
+  "title": "Assign Role Collection",
+  "subtitle": "order.admin@example.com ← 订单管理员",
+  "blocks": [
+    {
+      "t": "form",
+      "cols": 1,
+      "fields": [
+        [
+          "User",
+          "order.admin@example.com",
+          "origin: sap.default"
+        ],
+        [
+          "Role Collection",
+          "订单管理员",
+          "contains: BookOrder.Submit, BookOrder.View"
+        ],
+        [
+          "Effective",
+          "next login / token refresh",
+          "token 过期时间由 oauth2-configuration.token-validity 决定（~）"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "分配后要让用户重新登录或刷新 token，旧 JWT 里不会有新 scope。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "用属性（如 country）批量分配的方案见 Setting Up Instance-Based Authorizations（~ 视版本而定）。"
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Cancel"
+    },
+    {
+      "label": "Assign",
+      "primary": true
+    }
+  ],
+  "callouts": [
+    {
+      "at": [
+        110,
+        700
+      ],
+      "text": "1. 可多个角色集合"
+    },
+    {
+      "at": [
+        110,
+        736
+      ],
+      "text": "2. 不重登看不到新权"
+    },
+    {
+      "at": [
+        110,
+        772
+      ],
+      "text": "3. 生效由 token 决定"
+    }
+  ]
+}

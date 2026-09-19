@@ -1,0 +1,54 @@
+{
+  "key": "btp_s04",
+  "kind": "cockpit",
+  "w": 1440, "h": 900,
+  "product": "SAP Business Technology Platform",
+  "crumbs": ["Global Account: trial-eu10-9f3a2b (trial)", "Subaccount: trial"],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {"label": "Overview", "active": true},
+      {"label": "Instances and Subscriptions"},
+      {"label": "Connectivity", "sub": ["Destinations", "Cloud Connectors"]},
+      {"label": "Cloud Foundry", "sub": ["Org Members", "Spaces", "Service Marketplace"]},
+      {"label": "Security", "sub": ["Role Collections", "Users", "Trust Configuration"]},
+      {"label": "Services"},
+      {"label": "Users"}
+    ]
+  },
+  "title": "Trial Subaccount — Overview",
+  "subtitle": "Region: Singapore (ap10) · Environment: Cloud Foundry · Created: 2026-09-19 20:41 (JST)",
+  "tabs": ["Overview", "Entitlements", "Quota"],
+  "activeTab": 0,
+  "blocks": [
+    {"t": "metrics", "items": [
+      {"label": "Subaccount ID", "value": "9c1e4d70-…-8b21"},
+      {"label": "Used memory", "value": "2 / 4 GB"},
+      {"label": "Service instances", "value": "3"},
+      {"label": "Costs (this month)", "value": "0.00 EUR"}
+    ]},
+    {"t": "h3", "text": "Cloud Foundry Environment"},
+    {"t": "tiles", "cols": 3, "h": 104, "items": [
+      {"title": "Org: trial", "sub": "Region ap10 · 2 spaces", "glyph": "CF", "chip": "enabled"},
+      {"title": "Space: dev", "sub": "2 apps · 1 MTA deployed", "glyph": "SP", "chip": "active", "accent": "#0070f2"},
+      {"title": "Space: test", "sub": "0 apps", "glyph": "SP", "chip": "empty", "accent": "#256f3a", "chipBg": "#f2f2f2", "chipInk": "#6a6d70"}
+    ]},
+    {"t": "h3", "text": "Recent Activities"},
+    {"t": "table", "cols": ["Time (JST)", "User", "Activity", "Result"], "widths": [1.1, 1, 2.6, 0.9],
+     "rows": [
+       ["20:41:12", "jason (yours)", "Created subaccount 'trial' in region ap10", "Completed"],
+       ["20:44:03", "jason (yours)", "Assigned role collection 'Cloud Foundry Admin'", "Completed"],
+       ["20:52:38", "jason (yours)", "Created service instance 'demo-hana-db' (hana-cloud, hdi-shared)", "Completed"],
+       ["21:07:55", "jason (yours)", "Created service instance 'demo-xsuaa' (xsuaa, application)", "Completed"]
+     ]},
+    {"t": "note", "kind": "info",
+     "text": "试用（trial）子账户会自动获得 hana-cloud / xsuaa / destination / html5-apps-repo 等服务的有限配额；试用期 30 天后若未延长，实例会被停止。"}
+  ],
+  "status": "● 3 service instances · ● 2 applications in space 'dev' · Region: ap10 (Singapore)",
+  "callouts": [
+    {"on": "Subaccount: trial", "text": "1. 子账户：部署与授权的作用域"},
+    {"on": "Instances and Subscriptions", "text": "2. 服务实例一律在此创建"},
+    {"on": "Created service instance 'demo-hana-db' (hana-cloud, hdi-shared)", "text": "3. 按时间核对操作结果"},
+    {"on": "Used memory", "text": "4. CF 内存配额（试用 4 GB）"}
+  ]
+}

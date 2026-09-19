@@ -1,0 +1,231 @@
+{
+  "key": "deploy_mta",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "window": "mta.yaml - demo-node - SAP Business Application Studio",
+  "menus": [
+    "File",
+    "Edit",
+    "Selection",
+    "View",
+    "Go",
+    "Run",
+    "Terminal",
+    "Help"
+  ],
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "app",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "open": true,
+          "label": "book-orders"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "annotations.cds"
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "open": true,
+          "label": "router"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "fiori-apps.html"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "undeploy.json"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "mta.yaml",
+          "tag": "M"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "xs-security.json"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "mta.yaml",
+    "annotations.cds",
+    "xs-security.json"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node  ›  mta.yaml",
+  "editor": {
+    "lang": "yaml",
+    "fs": 10.5,
+    "lh": 15,
+    "hl": [
+      2,
+      3,
+      12,
+      14,
+      16,
+      28,
+      30,
+      31,
+      36,
+      39,
+      45,
+      47,
+      48,
+      50
+    ],
+    "lines": [
+      "_schema-version: 3.3.0",
+      "ID: demo-node",
+      "version: 1.0.0",
+      "parameters:",
+      "  enable-parallel-deployments: true",
+      "  deploy_mode: html5-repo",
+      "build-parameters:",
+      "  before-all:",
+      "    - builder: custom",
+      "      commands:",
+      "        - npm ci",
+      "        - npx cds build --production",
+      "modules:",
+      "  - name: demo-node-srv",
+      "    type: nodejs",
+      "    path: gen/srv",
+      "    parameters:",
+      "      buildpack: nodejs_buildpack",
+      "    build-parameters:",
+      "      builder: npm-ci",
+      "    provides:",
+      "      - name: srv-api",
+      "        properties:",
+      "          srv-url: ${default-url}",
+      "    requires:                 # 服务实例：授权 + 数据库",
+      "      - name: demo-node-auth",
+      "      - name: demo-node-db",
+      "  - name: demo-node-db-deployer",
+      "    type: hdb",
+      "    path: gen/db",
+      "    requires:",
+      "      - name: demo-node-db",
+      "  - name: demo-node",
+      "    type: approuter.nodejs",
+      "    path: app/router",
+      "    parameters: { memory: 256M }",
+      "    requires:",
+      "      - name: srv-api",
+      "        group: destinations",
+      "        properties:",
+      "          url: ~{srv-url}",
+      "          forwardAuthToken: true",
+      "      - name: demo-node-auth",
+      "resources:",
+      "  - name: demo-node-db",
+      "    type: com.sap.xs.hdi-container",
+      "    parameters:",
+      "      service: hana",
+      "      service-plan: hdi-shared"
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 120,
+    "extraTabs": [
+      "PROBLEMS",
+      "OUTPUT"
+    ],
+    "lines": [
+      "$ npx cds add hana xsuaa approuter mta",
+      "$ npx cds add html5-repo   # Fiori 应用走 HTML5 Application Repository",
+      "@Adding facet: mta / hana / xsuaa / approuter",
+      "@Successfully added features to your project"
+    ]
+  },
+  "activity": [
+    {
+      "glyph": "⧉",
+      "active": true
+    },
+    {
+      "glyph": "⌕"
+    }
+  ],
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.23.2",
+    "CAP 9.9.3",
+    "YAML"
+  ],
+  "caption": "mta.yaml 的模块与资源：srv(nodejs, gen/srv) / db-deployer(hdb, gen/db) / approuter(nodejs, app/router) 三个模块 + xsuaa、hdi-container、html5-apps-repo 三组资源（本站真实生成文件的片段）",
+  "label": "高保真重绘",
+  "src": "本站自绘（内容取自 cds-dk 9.9.x 在本地真实生成的 mta.yaml）",
+  "callouts": [
+    {
+      "on": "        - npx cds build --production",
+      "text": "1. 打包时自动构建"
+    },
+    {
+      "on": "    path: gen/srv",
+      "text": "2. srv 指向构建产物"
+    },
+    {
+      "on": "    type: hdb",
+      "text": "3. HDI 部署器建表"
+    },
+    {
+      "on": "    path: app/router",
+      "text": "4. approuter 是 UI 入口"
+    }
+  ]
+}

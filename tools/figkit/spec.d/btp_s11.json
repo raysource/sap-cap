@@ -1,0 +1,61 @@
+{
+ "key": "btp_s11",
+ "kind": "terminal",
+ "w": 1440,
+ "h": 900,
+ "title": "jason@MacBook-Pro: ~/projects/demo-node",
+ "caption": "cf CLI：-a 端点决定区域，cf target 确认 org/space，cf marketplace -e 先确认计划存在",
+ "alt": "macOS 终端窗口，显示 cf login --sso、cf target、cf spaces 与 cf marketplace -e hana 的输出",
+ "label": "高保真重绘",
+ "src": "本站自绘（figkit 高保真画面）· 命令与选项依据 cf CLI v8 参考手册与 SAP Help「Log On to the Cloud Foundry Environment…」；输出为示意",
+ "lines": [
+  "$ brew install cloudfoundry/tap/cf-cli@8",
+  "$ cf --version",
+  "cf version 8.x.y",
+  "$ cf api https://api.cf.ap21.hana.ondemand.com",
+  "Setting api endpoint to https://api.cf.ap21.hana.ondemand.com...",
+  "API endpoint:   https://api.cf.ap21.hana.ondemand.com",
+  "api version:    3.x.0",
+  "$ cf login -a https://api.cf.ap21.hana.ondemand.com --sso",
+  "API endpoint: https://api.cf.ap21.hana.ondemand.com",
+  "Temporary Authentication Code (get one at https://login.cf.ap21.hana.ondemand.com/passcode):",
+  "# 浏览器打开该链接，把一次性验证码粘回终端",
+  "Authenticating...",
+  "OK",
+  "$ cf target",
+  "api endpoint:   https://api.cf.ap21.hana.ondemand.com",
+  "user:           jason@example.com",
+  "org:            trial",
+  "space:          dev",
+  "$ cf spaces",
+  "Getting spaces in org trial as jason@example.com...",
+  "name",
+  "dev",
+  "test",
+  "$ cf marketplace -e hana",
+  "Getting service plan information for service hana as jason@example.com...",
+  "broker: hana-broker",
+  "plan         description        free or paid",
+  "hdi-shared   HDI container      free",
+  "schema       Schema             free",
+  "securestore  Secure Store       free"
+ ],
+ "callouts": [
+  {
+   "on": "cf login -a https://api.cf.ap21.hana.ondemand.com --sso",
+   "text": "1. 端点必须与子账户区域一致"
+  },
+  {
+   "on": "space:          dev",
+   "text": "2. 目标 space 决定部署位置"
+  },
+  {
+   "on": "hdi-shared",
+   "text": "3. 先确认计划真的存在"
+  },
+  {
+   "on": "Temporary Authentication Code",
+   "text": "4. 一次性验证码，短时有效"
+  }
+ ]
+}

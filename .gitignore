@@ -1,0 +1,8 @@
+node_modules/
+db.sqlite
+target/
+gen/
+work/render/
+mta_archives/
+*.mtar
+.DS_Store

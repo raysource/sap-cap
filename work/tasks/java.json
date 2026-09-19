@@ -1,0 +1,13 @@
+[
+  {"no": "JAVA-01", "title": "安装并验证 JDK 21 + Maven", "basis": "java -version 显示 21.x，mvn -v 显示 3.9+，且 JAVA_HOME 已导出", "time": "20 分", "rel": "java.html#env"},
+  {"no": "JAVA-02", "title": "用 cds init --java 生成工程骨架并看懂目录结构", "basis": "能指出父 POM / srv 模块 / db 的位置，并说明 db 为什么在项目根", "time": "30 分", "rel": "java.html#scaffold"},
+  {"no": "JAVA-03", "title": "首次编译（mvn -DskipTests compile）", "basis": "结尾出现 BUILD SUCCESS，且 target/classes/cds/gen 下生成了类型", "time": "15 分", "rel": "java.html#pom"},
+  {"no": "JAVA-04", "title": "用 javap 或 IDE 核对生成的类型签名", "basis": "能说出 BookOrderService_ / BookOrdersSubmitOrderContext / GetOrderTotalContext 各自的用途，并指出外键访问器是 getCustomerId() 而不是 getCustomer_ID()", "time": "25 分", "rel": "java.html#types"},
+  {"no": "JAVA-05", "title": "把 Node 版的 5 类业务规则改写成 Java 事件处理器", "basis": "编译通过；规则与 Node 版逐条对应（编号/校验/派生金额/汇总回写/动作/函数）", "time": "90 分", "rel": "java.html#handler"},
+  {"no": "JAVA-06", "title": "启动应用并核对启动自检清单", "basis": "日志里能看到 Registered service BookOrderService、CsvDataLoader 的 4 行 Filling、Registered handler class、Tomcat started on port 8080", "time": "20 分", "rel": "java.html#run"},
+  {"no": "JAVA-07", "title": "用 CAP 索引页找出端点的真实 URL", "basis": "打开 http://localhost:8080/ 能列出所有服务的 URL，并指出与预期不一致时会拼成什么形状", "time": "15 分", "rel": "java.html#run"},
+  {"no": "JAVA-08", "title": "把 @path 改成 Java 语义并让 $metadata 返回 200", "basis": "curl -u alice:alice http://localhost:8080/odata/v4/book-order/$metadata → 200", "time": "20 分", "rel": "java.html#traps"},
+  {"no": "JAVA-09", "title": "配置本地身份模拟（或改用真实 XSUAA）让读实体通过", "basis": "带凭据读 BookOrders 返回 200 且能看到 4 张种子订单；能说明 mock 用户配置的属性从哪查", "time": "60 分", "rel": "java.html#fail"},
+  {"no": "JAVA-10", "title": "写 3 个 JUnit + MockMvc 用例并跑通", "basis": "mvn -pl srv test 通过：$metadata 200、匿名 401、函数返回值正确", "time": "60 分", "rel": "java.html#test"},
+  {"no": "JAVA-11", "title": "完成 Node 与 Java 的对照表复述", "basis": "能不看资料说出 8 个以上维度的差异（注册方式/类型安全/查询写法/错误响应/事务/数据库/启动/测试/产物）", "time": "30 分", "rel": "java.html#node-vs-java"}
+]

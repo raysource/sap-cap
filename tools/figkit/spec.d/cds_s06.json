@@ -1,0 +1,115 @@
+{
+  "key": "cds_s06",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "caption": "db/data/sap.training.bookorder-BookOrderItems.csv 的真实内容：文件名 = <命名空间>-<实体名>.csv，表头 = 物理列名（order_ID / book_ID）",
+  "alt": "BAS 中打开的订单明细 CSV，表头为 ID,order_ID,book_ID,quantity,amount",
+  "src": "本站示范项目 project-code/demo-node/db/data/（实际文件内容）",
+  "window": "sap.training.bookorder-BookOrderItems.csv - demo-node - SAP Business Application Studio",
+  "sideTitle": "EXPLORER",
+  "sideW": 300,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "open": true,
+      "mb": 4,
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "open": true,
+          "label": "data"
+        },
+        {
+          "d": 2,
+          "k": "file",
+          "label": "sap.training.bookorder-Books.csv"
+        },
+        {
+          "d": 2,
+          "k": "file",
+          "label": "sap.training.bookorder-Customers.csv"
+        },
+        {
+          "d": 2,
+          "k": "file",
+          "label": "sap.training.bookorder-BookOrders.csv"
+        },
+        {
+          "d": 2,
+          "k": "file",
+          "label": "sap.training.bookorder-BookOrderItems.csv",
+          "tag": "M"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "sap.training.bookorder-BookOrderItems.csv",
+    "sap.training.bookorder-BookOrders.csv",
+    "schema.cds"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node  ›  db  ›  data  ›  sap.training.bookorder-BookOrderItems.csv",
+  "editor": {
+    "lang": "text",
+    "fs": 13,
+    "lh": 21,
+    "hl": [
+      1
+    ],
+    "lines": [
+      "ID,order_ID,book_ID,quantity,amount",
+      "5b2f9d10-0001-4000-8000-000000000001,4a1f8c03-0001-4000-8000-000000000001,1001,2,8400",
+      "5b2f9d10-0002-4000-8000-000000000002,4a1f8c03-0001-4000-8000-000000000001,1003,1,2800",
+      "5b2f9d10-0003-4000-8000-000000000003,4a1f8c03-0001-4000-8000-000000000001,1005,1,4800",
+      "5b2f9d10-0004-4000-8000-000000000004,4a1f8c03-0002-4000-8000-000000000002,1002,1,3600",
+      "5b2f9d10-0005-4000-8000-000000000005,4a1f8c03-0003-4000-8000-000000000003,1001,1,4200",
+      "5b2f9d10-0006-4000-8000-000000000006,4a1f8c03-0003-4000-8000-000000000003,1004,2,10400",
+      "5b2f9d10-0007-4000-8000-000000000007,4a1f8c03-0003-4000-8000-000000000003,1003,1,2800",
+      "5b2f9d10-0008-4000-8000-000000000008,4a1f8c03-0004-4000-8000-000000000004,1005,1,4800",
+      "5b2f9d10-0009-4000-8000-000000000009,4a1f8c03-0004-4000-8000-000000000004,1003,1,2800"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.23.2",
+    "CAP 9.9.3 · cds-dk 9.9.6",
+    "UTF-8",
+    "CSV"
+  ],
+  "callouts": [
+    {
+      "on": "ID,order_ID,book_ID,quantity,amount",
+      "text": "1. 表头必须是物理列名"
+    },
+    {
+      "on": "5b2f9d10-0006-4000-8000-000000000006,4a1f8c03-0003-4000-8000-000000000003,1004,2,10400",
+      "text": "2. 金额=单价×数量(5200×2)"
+    },
+    {
+      "on": "sap.training.bookorder-BookOrderItems.csv",
+      "on_index": 2,
+      "text": "3. 文件名 = 命名空间-实体名.csv"
+    }
+  ]
+}

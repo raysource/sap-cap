@@ -1,0 +1,61 @@
+{
+  "key": "con_s04",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap/project-code/demo-node — 编译产物 ② EDMX / ③ CSN",
+  "label": "本地实机运行",
+  "src": "本地实测：npx cds compile srv --to edmx / --to csn",
+  "caption": "服务层的两个产物：EDMX 是给 OData 客户端看的契约，CSN 是编译器与运行时之间的事实标准（JSON，含注解）",
+  "lh": 18,
+  "lines": [
+    "$ npx cds compile srv --to edmx | sed -n '1,10p'",
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+    "<edmx:Edmx Version=\"4.0\" xmlns:edmx=\"http://docs.oasis-open.org/odata/ns/edmx\">",
+    "  <edmx:Reference Uri=\".../Org.OData.Capabilities.V1.xml\">",
+    "    <edmx:Include Alias=\"Capabilities\" Namespace=\"Org.OData.Capabilities.V1\"/>",
+    "  </edmx:Reference>",
+    "  <edmx:Reference Uri=\"https://sap.github.io/odata-vocabularies/vocabularies/Common.xml\">",
+    "    <edmx:Include Alias=\"Common\" Namespace=\"com.sap.vocabularies.Common.v1\"/>",
+    "  </edmx:Reference>",
+    "",
+    "$ npx cds compile srv --to csn | sed -n '1,14p'",
+    "{",
+    "  \"definitions\": {",
+    "    \"BookOrderService\": {",
+    "      \"kind\": \"service\",",
+    "      \"@path\": \"/odata/v4/book-order\",",
+    "      \"@requires\": \"authenticated-user\"",
+    "    },",
+    "    \"BookOrderService.Books\": {",
+    "      \"kind\": \"entity\",",
+    "      \"projection\": { \"from\": { \"ref\": [ \"sap.training.bookorder.Books\" ] } },",
+    "      \"elements\": { \"ID\": { \"key\": true, \"type\": \"cds.Integer\" }, ... }",
+    "    },",
+    "",
+    "# CSN 顶层键：definitions / meta / $version；17 个 EntityType 在 EDMX 里"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        520
+      ],
+      "text": "1. EDMX = OData 契约"
+    },
+    {
+      "at": [
+        60,
+        556
+      ],
+      "text": "2. CSN = 运行时中间表示"
+    },
+    {
+      "at": [
+        60,
+        592
+      ],
+      "text": "3. 注解也进 CSN"
+    }
+  ]
+}

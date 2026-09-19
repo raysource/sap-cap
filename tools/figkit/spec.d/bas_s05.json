@@ -1,0 +1,111 @@
+{
+  "key": "bas_s05",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "caption": "命令面板里的常用命令：Ports: Preview、Ports: Stop the process、MTA: Build MTA Project、CF: Login to Cloud Foundry",
+  "alt": "命令面板里的常用命令：Ports: Preview、Ports: Stop the process、MTA: Build MTA Project、CF: Login to Cloud Foundry",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 命令名出自 SAP Help「Application Preview Settings」「Building and Deploying Multitarget Applications」「Cloud Foundry Tools」",
+  "window": "bookorder - SAP Business Application Studio",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "BOOKORDER (WORKSPACE)",
+      "open": true,
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.js"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "mta.yaml"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "schema.cds",
+    "package.json"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "p",
+      "text": "> 输入框（命令面板）：Ports"
+    },
+    {
+      "t": "list",
+      "items": [
+        "Ports: Preview — 列出已暴露的端口，点选后在浏览器新标签打开",
+        "Ports: Stop the process running on the port — 端口被占用时强杀进程",
+        "MTA: Build MTA Project — 右键 mta.yaml 或此处执行 mbt 构建",
+        "MTA: Deploy MTA Archive — 把 .mtar 部署到 Cloud Foundry",
+        "CF: Login to Cloud Foundry — 输入 SSO 一次性验证码登录",
+        "Runtime: Install / Runtime: Set default — 切换 Node.js / Java 版本",
+        "Debug: Start Debugging / Debug: Attach to Node Process — 调试与附加"
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "端口通知：新端口被监听时右下角会提示，可选择在新标签打开（不同版本按钮文字略有差异 ~）；不想被提示可在设置里配 Exclude Expose Notifications。"
+    }
+  ],
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.20.0",
+    "CAP 9.9.3",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "on": "Ports: Preview — 列出已暴露的端口，点选后在浏览器新标签打开",
+      "text": "1. 端口预览：官方记载的唯一入口"
+    },
+    {
+      "on": "Ports: Stop the process running on the port — 端口被占用时强杀进程",
+      "text": "2. 停不掉的应用这样收尾"
+    },
+    {
+      "on": "MTA: Build MTA Project — 右键 mta.yaml 或此处执行 mbt 构建",
+      "text": "3. 部署前的构建"
+    },
+    {
+      "on": "CF: Login to Cloud Foundry — 输入 SSO 一次性验证码登录",
+      "text": "4. 也可在终端 cf login --sso"
+    }
+  ]
+}

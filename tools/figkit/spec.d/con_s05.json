@@ -1,0 +1,147 @@
+{
+  "key": "con_s05",
+  "kind": "bas",
+  "w": 1440,
+  "h": 900,
+  "window": "book-order-service.js - demo-node - SAP Business Application Studio",
+  "caption": "Service 层的实现：模型声明「有什么」，JS 类里的 before / on / after 决定「怎么做」",
+  "src": "代码与示范项目 project-code/demo-node/srv/book-order-service.js 一致（节选）",
+  "sideTitle": "EXPLORER",
+  "sideW": 272,
+  "side": [
+    {
+      "label": "DEMO-NODE (WORKSPACE)",
+      "items": [
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "srv",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.cds"
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "book-order-service.js",
+          "tag": "M"
+        },
+        {
+          "d": 0,
+          "k": "folder",
+          "open": true,
+          "label": "db",
+          "b": true
+        },
+        {
+          "d": 1,
+          "k": "file",
+          "label": "schema.cds"
+        },
+        {
+          "d": 1,
+          "k": "folder",
+          "label": "data"
+        },
+        {
+          "d": 0,
+          "k": "file",
+          "label": "package.json"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    "book-order-service.js",
+    "book-order-service.cds"
+  ],
+  "activeTab": 0,
+  "breadcrumb": "demo-node › srv › book-order-service.js",
+  "editor": {
+    "lang": "js",
+    "fs": 11.8,
+    "lh": 17.5,
+    "hl": [
+      7,
+      19,
+      26,
+      28
+    ],
+    "lines": [
+      "module.exports = class BookOrderService extends cds.ApplicationService {",
+      "",
+      "  async init() {",
+      "    const { BookOrders, BookOrderItems } = this.entities;",
+      "",
+      "    /* ① before：入参校验 + 自动编号（失败一律 4xx） */",
+      "    this.before('CREATE', BookOrders, async (req) => {",
+      "      const data = req.data;",
+      "      if (!data.orderNo) data.orderNo = await nextOrderNo();",
+      "      else {",
+      "        const dup = await SELECT.one.from(BookOrders).where({ orderNo: data.orderNo });",
+      "        if (dup) req.reject(409, `订单号 ${data.orderNo} 已存在，请更换`);",
+      "      }",
+      "      const cust = await SELECT.one.from(Customers).where({ ID: data.customer_ID });",
+      "      if (!cust) req.reject(400, `顾客 ${data.customer_ID} 不存在，请先维护主数据`);",
+      "    });",
+      "",
+      "    /* ② 明细：金额 = 单价 × 数量（派生字段，不信任客户端） */",
+      "    this.before(['CREATE', 'UPDATE'], BookOrderItems, async (req) => {",
+      "      if (req.data.quantity != null && req.data.quantity <= 0)",
+      "        req.reject(400, '数量必须大于 0');",
+      "      req.data.amount = round2(Number(book.price) * Number(req.data.quantity));",
+      "    /* ④ on：绑定动作 submitOrder（状态迁移） */",
+      "    this.on('submitOrder', BookOrders, async (req) => {",
+      "      const order = await SELECT.one.from(BookOrders).where({ ID });",
+      "      if (order.status === 'SUBMITTED') req.reject(409, '不能重复提交');",
+      "      await UPDATE(BookOrders).set({ status: 'SUBMITTED' }).where({ ID });",
+      "    });"
+    ]
+  },
+  "panel": {
+    "title": "TERMINAL",
+    "h": 100,
+    "extraTabs": [
+      "PROBLEMS"
+    ],
+    "lines": [
+      "$ npm test",
+      "@@> 9 passing (odata.test.js: 认证 401 / 过滤 / 展开 / 动作 / 草稿)",
+      "@@> npm start  →  cds-serve (生产端口由 PORT 决定)"
+    ]
+  },
+  "status": [
+    "⑂ main",
+    "0 ▲ 0 ●",
+    "Node 22.23.2",
+    "CAP 9.9.3",
+    "UTF-8"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        640
+      ],
+      "text": "1. before = 校验与派生"
+    },
+    {
+      "at": [
+        60,
+        676
+      ],
+      "text": "2. on = 动作/函数实现"
+    },
+    {
+      "at": [
+        60,
+        712
+      ],
+      "text": "3. req.reject → 4xx + 消息"
+    }
+  ]
+}

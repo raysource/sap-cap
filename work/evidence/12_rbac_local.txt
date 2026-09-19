@@ -1,0 +1,39 @@
+== ⑧ 本地 RBAC 实测：@restrict + mocked users（/tmp/authtest5 副本，未改动示范项目）
+== 配置：kind=mocked, users={alice:[BookOrder.View], bob:[], zoe:[BookOrder.View,BookOrder.Submit], '*':false}
+== 注解：annotate BookOrderService.BookOrders with @(restrict: [{grant:'READ',to:'BookOrder.View'},{grant:'submitOrder',to:'BookOrder.Submit'}])
+
+== A) 匿名 GET BookOrders
+401
+== B) alice:alice（roles=[BookOrder.View]）
+200
+{"@odata.context":"$metadata#BookOrders","value":[{"orderNo":"BO-1001","ID":"4a1f8c03-0001-4000-8000-000000000001","IsActiveEntity":true}]}
+== C) bob:bob（roles=[]）→ 期望 403
+403
+{"error":{"message":"Forbidden","code":"403","@Common.numericSeverity":4}}
+== D) alice 密码错误
+401
+== E) 未配置用户 mimo（'*': false）
+401
+== F) alice（无 BookOrder.Submit）POST BO-1001/submitOrder → 期望 403
+403
+{"error":{"message":"Forbidden","code":"403","@Common.numericSeverity":4}}
+== G) bob（无任何角色）同请求 → 期望 403
+403
+== H) zoe（roles=[BookOrder.View, BookOrder.Submit]）同请求 → 期望 200
+200
+{"@odata.context":"../$metadata#Edm.String","value":"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）"}
+== I) 状态回读
+{"@odata.context":"$metadata#BookOrders","value":[{"orderNo":"BO-1001","status":"SUBMITTED","ID":"4a1f8c03-0001-4000-8000-000000000001","IsActiveEntity":true}]}
+== 服务端日志（401/403 行）
+[error] - 403 - Error: Forbidden
+    at reject (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds/libx/_runtime/common/generic/auth/utils.js:20:14)
+    at BookOrderService.enforce_auth (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds/libx/_runtime/common/generic/auth/restrict.js:229:5)
+  code: '403',
+[error] - 403 - Error: Forbidden
+    at reject (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds/libx/_runtime/common/generic/auth/utils.js:20:14)
+    at BookOrderService.enforce_auth (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds/libx/_runtime/common/generic/auth/restrict.js:229:5)
+  code: '403',
+[error] - 403 - Error: Forbidden
+    at reject (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds/libx/_runtime/common/generic/auth/utils.js:20:14)
+    at BookOrderService.enforce_auth (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-node/node_modules/@sap/cds/libx/_runtime/common/generic/auth/restrict.js:229:5)
+  code: '403',

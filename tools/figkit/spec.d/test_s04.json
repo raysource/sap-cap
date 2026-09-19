@@ -1,0 +1,39 @@
+{
+  "key": "test_s04",
+  "kind": "terminal",
+  "w": 1440, "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — 三个真实的「测试跑不起来」",
+  "lh": 19,
+  "caption": "本站示范项目实测到的三个坑：没有 test/*.test.js、没有装 @cap-js/cds-test、chai 版本与 cds-test 的 peer 要求冲突（都可原样复现）",
+  "label": "本地实机运行",
+  "src": "本地实测：npm test / npx cds test / npm install",
+  "lines": [
+    "$ npm test                                  # 项目里还没有 test/*.test.js 时",
+    "> mocha --reporter spec --timeout 20000 test/*.test.js",
+    "Error: No test files found: \"test/*.test.js\"",
+    "",
+    "$ npx cds test -?                           # @cap-js/cds-test 未安装时",
+    "Error: Cannot find module '@cap-js/cds-test/bin/chest.js'",
+    "",
+    "$ npm i -D @cap-js/cds-test                 # 直接装会被 peer 依赖挡住",
+    "npm error code ERESOLVE",
+    "npm error Found: chai@5.3.3",
+    "npm error   dev chai@\"^5\" from the root project",
+    "npm error Could not resolve dependency:",
+    "npm error peer chai@\"^6\" from @cap-js/cds-test@1.0.2",
+    "",
+    "$ npm i -D @cap-js/cds-test --legacy-peer-deps     # 或把 chai 升到 ^6 后重装",
+    "$ npx mocha --reporter spec --timeout 20000 test/*.test.js",
+    "  16 passing (425ms)",
+    "",
+    "# 不想引入 cds-test 也可以用项目自带的 bash 脚本作为集成测试：",
+    "$ bash test/odata-verify.sh   # → PASS 26 / FAIL 0（见上一张画面）"
+  ],
+  "callouts": [
+    {"on": "Error: No test files found: \"test/*.test.js\"", "text": "1. 脚本存在但文件不存在"},
+    {"on": "Error: Cannot find module '@cap-js/cds-test/bin/chest.js'", "text": "2. cds.test 需要单独装包"},
+    {"on": "npm error peer chai@\"^6\" from @cap-js/cds-test@1.0.2", "text": "3. chai 版本是常见卡点"},
+    {"on": "  16 passing (425ms)", "text": "4. 装上之后同一命令即通过"},
+    {"on": "$ bash test/odata-verify.sh   # → PASS 26 / FAIL 0（见上一张画面）", "text": "5. 不装包也有兜底方案"}
+  ]
+}

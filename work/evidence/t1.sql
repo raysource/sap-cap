@@ -1,0 +1,60 @@
+
+CREATE TABLE sap_training_bookorder_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(120) NOT NULL,
+  author NVARCHAR(80),
+  price DECIMAL(9, 2) NOT NULL,
+  currency NVARCHAR(3) DEFAULT 'JPY',
+  stock INTEGER DEFAULT 0,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_training_bookorder_Customers (
+  ID INTEGER NOT NULL,
+  name NVARCHAR(80) NOT NULL,
+  city NVARCHAR(60),
+  country NVARCHAR(20),
+  email NVARCHAR(120),
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_training_bookorder_BookOrders (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  orderNo NVARCHAR(16) NOT NULL,
+  customer_ID INTEGER,
+  orderDate DATE_TEXT DEFAULT CURRENT_TIMESTAMP,
+  status NVARCHAR(10) DEFAULT 'OPEN',
+  note NVARCHAR(255),
+  totalAmount DECIMAL(13, 2) DEFAULT 0,
+  statusCriticality INTEGER DEFAULT 2,
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE sap_training_bookorder_BookOrderItems (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  order_ID NVARCHAR(36),
+  book_ID INTEGER,
+  quantity INTEGER DEFAULT 1,
+  amount DECIMAL(13, 2),
+  PRIMARY KEY(ID)
+);
+
+CREATE VIEW sap_training_bookorder_OrderItemView AS SELECT
+  BookOrderItems_0.ID,
+  order_1.orderNo AS orderNo,
+  order_1.orderDate AS orderDate,
+  BookOrderItems_0.book_ID AS bookID,
+  book_2.title AS bookTitle,
+  book_2.price AS unitPrice,
+  BookOrderItems_0.quantity,
+  BookOrderItems_0.amount
+FROM ((sap_training_bookorder_BookOrderItems AS BookOrderItems_0 LEFT JOIN sap_training_bookorder_BookOrders AS order_1 ON BookOrderItems_0.order_ID = order_1.ID) LEFT JOIN sap_training_bookorder_Books AS book_2 ON BookOrderItems_0.book_ID = book_2.ID);
+

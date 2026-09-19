@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAP Java 服务实现 · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP Java 运行时：JDK 21 + Maven 工程结构、cds-maven-plugin 的编译链、@Before/@After/@On 事件处理器、CqnAnalyzer 取绑定动作的键、与 Node 版的逐项对照，以及本机实测结果（含未通过的验证项与原因）。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a class="active" href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>⑥ CAP Java 服务实现</span></p>
+<h1>CAP Java：同一套 CDS 模型，换成 Java 运行时</h1>
+<p class="kicker">JDK 21 + Maven · cds-maven-plugin · @Before / @After / @On · 与 Node 版逐项对照 · 含本机实测结论</p>
+
+<div class="toc">
+  <a href="#why">0. 为什么要学第二个运行时</a><a href="#env">1. 环境准备</a><a href="#scaffold">2. 工程结构</a>
+  <a href="#pom">3. pom.xml 与编译链</a><a href="#types">4. 生成的类型（cds.gen）</a><a href="#handler">5. 事件处理器全文</a>
+  <a href="#node-vs-java">6. 与 Node 版逐项对照</a><a href="#run">7. 本地运行与验证</a><a href="#traps">8. 本机踩到的 4 个坑</a>
+  <a href="#test">9. 测试（JUnit + MockMvc）</a><a href="#fail">10. 实测结果与未通过项</a><a href="#issues">11. 常见错误表</a>
+  <a href="#sectest">12. 本节测试</a>
+</div>
+
+<div class="box info"><b class="t">本页的诚实声明</b>
+本机的 Java 侧验证做到了：<b>编译成功、服务启动成功、模型注册成功、CSV 灌入 H2 成功、<code>$metadata</code> 返回 200</b>；
+但<b>带认证的实体读取没有验证通过</b>——CAP Java 的本地 mock 用户配置在本会话中没找出正确写法（§10 有完整记录与排查方向）。
+因此本页凡标注「✅ 实测」的都是本机真实输出，标注「⚠ 未验证」的请当作待验证的手顺，
+不要当成已经跑通的事实。Node 版（<a href="node.html">⑤</a>）的全部结论都是实测通过的。</div>
+
+<h2 id="why">0. 为什么要学第二个运行时</h2>
+<p>CAP 的核心主张是<b>模型与运行时解耦</b>：领域模型（<code>db/schema.cds</code>）与服务定义（<code>srv/*.cds</code>）
+是<b>同一份文件</b>，换的只是实现运行时。本站示范项目就是证据：<code>project-code/demo-node/db/</code> 与
+<code>project-code/demo-java/db/</code> 的 <code>schema.cds</code> 内容一致，<code>srv/book-order-service.cds</code> 也只差一行（见 §8 的 <code>@path</code> 坑）。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>你的背景</th><th>先看哪个</th><th>为什么</th></tr></thead>
+<tbody>
+<tr><td>JavaScript / TypeScript</td><td><a href="node.html">⑤ Node 服务</a> → 本页</td><td>Node 版上手快、改一次 <code>.cds</code> 就能看到结果；本页用于理解「同一模型换运行时」的成本在哪</td></tr>
+<tr><td>ABAP / Java 企业后端</td><td>本页 → <a href="node.html">⑤</a></td><td>Java 版有编译期类型检查与 Spring 生态，适合大团队；Node 版用于快速验证模型</td></tr>
+<tr><td>架构决策</td><td>本页 §6 对照表</td><td>两种运行时的取舍（类型安全 / 启动速度 / 依赖体积 / 生态 / 团队技能）</td></tr>
+</tbody></table></div>
+
+<h2 id="env">1. 环境准备</h2>
+<div class="stepmeta"><span class="k">JDK 21</span><span class="k">Maven 3.9+</span><span class="k">Node 20/22 LTS</span><span class="c">本机实测版本见下表</span></div>
+<ol class="steps">
+<li><b>装 JDK 21 与 Maven</b>（macOS / Homebrew）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">brew install openjdk@21 maven
+export JAVA_HOME=$(brew --prefix openjdk@21)
+export PATH="$JAVA_HOME/bin:$PATH"
+java -version      # openjdk version "21.0.12.1"
+mvn -v             # Apache Maven 3.9.16</code></pre>
+<span>验证：两条命令都打印版本；若 <code>java -version</code> 报 “Unable to locate a Java Runtime”，说明 <code>JAVA_HOME</code> 没导出。</span></li>
+<li><b>Node 也要有</b>（CAP 的 CDS 编译器是 Node 工具）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">export PATH="$(dirname "$(npx -y node@22 -p process.execPath)"):$PATH"
+node -v            # v22.x</code></pre>
+<span>验证：<code>mvn compile</code> 时 cds-maven-plugin 会调 Node（它也可以自己下载一个）。</span></li>
+<li><b>拉取示范项目并首次编译</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-java
+mvn -B -DskipTests compile</code></pre>
+<span>验证：结尾必须出现 <code>BUILD SUCCESS</code>；首次约 35 秒（含依赖下载与 CDS 代码生成）。</span></li>
+</ol>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>组件</th><th>本机实测</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>JDK</td><td><code>OpenJDK 21.0.12.1</code>（Homebrew）</td><td>CAP Java 4.x 要求 17 或 21，模板里 <code>&lt;jdk.version&gt;</code> 默认 21</td></tr>
+<tr><td>Maven</td><td><code>3.9.16</code>（Homebrew）</td><td>模板的 enforcer 要求 ≥ 3.6.3</td></tr>
+<tr><td>CAP Java SDK</td><td><code>cds.services.version = 4.9.1</code></td><td>由 <code>cds init --java</code> 写进根 pom</td></tr>
+<tr><td>Spring Boot</td><td><code>3.5.15</code></td><td>同上；CAP Java 以 Spring Boot 为宿主</td></tr>
+<tr><td>本地数据库</td><td><code>H2</code>（内存）</td><td>编译时由 <code>cds deploy --to h2 --dry</code> 生成 <code>schema-h2.sql</code></td></tr>
+</tbody></table></div>
+
+<h2 id="scaffold">2. 工程结构（<code>cds init --java</code> 生成后补齐 db / srv）</h2>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">demo-java/
+├── pom.xml                                 父 POM（packaging=pom，dependencyManagement 里锁版本）
+├── package.json                            只有 @sap/cds-dk（供 cds-maven-plugin 调 cds 用）
+├── db/                                     ← 与 Node 版相同的模型层
+│   ├── schema.cds
+│   └── data/*.csv                          种子数据（启动时由 CsvDataLoader 灌入 H2）
+└── srv/                                     Maven 模块（jar）
+    ├── pom.xml                             依赖 + cds-maven-plugin 的 5 个 execution
+    ├── book-order-service.cds              ← 与 Node 版几乎相同（只有 @path 不同，见 §8）
+    └── src/
+        ├── main/java/com/training/bookorder/
+        │   ├── Application.java            Spring Boot 入口
+        │   └── handlers/BookOrderServiceHandler.java   业务逻辑
+        ├── main/resources/
+        │   ├── application.yaml            H2 + mock 用户配置
+        │   └── schema-h2.sql               编译时生成（DDL + CSV 的 INSERT）
+        └── test/java/com/training/bookorder/BookOrderServiceTest.java   JUnit + MockMvc</code></pre>
+<div class="box warn"><b class="t">两个容易踩的结构问题</b>
+<ul>
+<li><code>db/</code> 在<b>项目根</b>，不在 <code>srv/</code> 里 —— cds-maven-plugin 在 <code>srv</code> 模块里执行，
+但会向上找到含 <code>package.json</code> 的项目根，因此日志里会看到 <code>Filling sap.training.bookorder.Books from ../db/data/…</code>。</li>
+<li>不要同时用 “根 pom 直接构建 Java 源码” 的旧式布局 —— 新模板是<b>父 POM + srv 子模块</b>，
+从根目录执行 <code>mvn</code> 才会按 reactor 顺序构建。</li>
+</ul></div>
+
+<h2 id="pom">3. pom.xml 与编译链</h2>
+<p>根 POM 只做三件事：锁版本、声明模块、配置编译器与 enforcer。真正的“CAP 味道”在 <code>srv/pom.xml</code> 的
+<code>cds-maven-plugin</code> —— 它把 CDS 编译、Node 下载、npm 安装、H2 schema 生成、Java 类型生成串成一条链：</p>
+<pre class="hl"><div class="code-head"><span class="lang">xml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-xml">&lt;plugin&gt;
+  &lt;groupId&gt;com.sap.cds&lt;/groupId&gt;
+  &lt;artifactId&gt;cds-maven-plugin&lt;/artifactId&gt;
+  &lt;executions&gt;
+    &lt;!-- ① 清掉上次生成物 --&gt;
+    &lt;execution&gt;&lt;id&gt;cds.clean&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;clean&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+    &lt;!-- ② 按需下载一个 Node 到插件缓存（本机已有 Node 时也照跑，保证可复现） --&gt;
+    &lt;execution&gt;&lt;id&gt;cds.install-node&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;install-node&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+    &lt;!-- ③ npm ci（装 @sap/cds-dk） --&gt;
+    &lt;execution&gt;&lt;id&gt;cds.npm-ci&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;npm&lt;/goal&gt;&lt;/goals&gt;
+      &lt;configuration&gt;&lt;arguments&gt;ci&lt;/arguments&gt;&lt;/configuration&gt;&lt;/execution&gt;
+    &lt;!-- ④ 解析依赖（含 @sap/cds/common 等复用包） --&gt;
+    &lt;execution&gt;&lt;id&gt;cds.resolve&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;resolve&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+    &lt;!-- ⑤ 编译模型：cds build --for java，并生成 H2 建表脚本 --&gt;
+    &lt;execution&gt;&lt;id&gt;cds.build&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;cds&lt;/goal&gt;&lt;/goals&gt;
+      &lt;configuration&gt;&lt;commands&gt;
+        &lt;command&gt;build --for java&lt;/command&gt;
+        &lt;command&gt;deploy --to h2 --with-mocks --dry --out "${project.basedir}/src/main/resources/schema-h2.sql"&lt;/command&gt;
+      &lt;/commands&gt;&lt;/configuration&gt;&lt;/execution&gt;
+    &lt;!-- ⑥ 从模型生成 Java 接口（cds.gen.*） --&gt;
+    &lt;execution&gt;&lt;id&gt;cds.generate&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;generate&lt;/goal&gt;&lt;/goals&gt;
+      &lt;configuration&gt;
+        &lt;basePackage&gt;cds.gen&lt;/basePackage&gt;
+        &lt;betterNames&gt;true&lt;/betterNames&gt;          &lt;!-- orderNo() 而不是 orderNo() 这种更好用的名字 --&gt;
+        &lt;cqnServiceGetters&gt;true&lt;/cqnServiceGetters&gt;
+        &lt;linkedInterfaces&gt;true&lt;/linkedInterfaces&gt;
+      &lt;/configuration&gt;&lt;/execution&gt;
+  &lt;/executions&gt;
+&lt;/plugin&gt;</code></pre>
+<div class="box ok"><b class="t">本机实测（✅）</b>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[INFO] Compiling 71 source files with javac [debug release 21] to target/classes
+[INFO] demo-java parent ................................... SUCCESS [  1.600 s]
+[INFO] demo-java .......................................... SUCCESS [ 34.283 s]
+[INFO] BUILD SUCCESS</code></pre>
+这 71 个源文件里，绝大多数是 <code>cds.gen.*</code> 生成的类型 —— 这正是 Java 版「先编译模型再写代码」的体现。</div>
+
+<h2 id="types">4. 生成的类型：<code>cds.gen</code> 里有什么</h2>
+<p>模型编译后，每个实体/服务/动作/函数都会生成 Java 接口。<b>写处理器就是对着这些类型写</b>，所以先把它们的命名规则记住：</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>生成的类</th><th>对应模型里的什么</th><th>你在处理器里怎么用</th></tr></thead>
+<tbody>
+<tr><td><code>cds.gen.bookorderservice.BookOrderService_</code></td><td>服务 <code>BookOrderService</code></td><td><code>@ServiceName(BookOrderService_.CDS_NAME)</code></td></tr>
+<tr><td><code>…bookorderservice.BookOrders</code> / <code>BookOrderItems</code> / <code>Books</code> / <code>Customers</code></td><td>服务投影后的实体</td><td>before 钩子的<b>参数类型</b>；<code>item.setAmount(...)</code> 这类 setter</td></tr>
+<tr><td><code>…bookorderservice.BookOrders_</code></td><td>实体的静态访问器（字段 path）</td><td><code>BookOrders_.CDS_NAME</code>、<code>o.orderNo().eq("BO-1001")</code> 的类型化条件</td></tr>
+<tr><td><code>…bookorderservice.BookOrdersSubmitOrderContext</code></td><td>绑定动作 <code>submitOrder</code></td><td><code>@On(event="submitOrder", entity=BookOrders_.CDS_NAME)</code>，参数用这个类型</td></tr>
+<tr><td><code>…bookorderservice.GetOrderTotalContext</code> / <code>GetOrderSummaryContext</code></td><td>两个无绑定函数</td><td>取参数 <code>ctx.getOrderNo()</code>；回结果 <code>ctx.setResult(...)</code></td></tr>
+<tr><td><code>…bookorderservice.OrderSummaryRow</code></td><td>服务里定义的 <code>type OrderSummaryRow</code></td><td><code>OrderSummaryRow.create()</code> 然后 setter 逐个赋值</td></tr>
+<tr><td><code>…bookorderservice.BookOrdersDraftActivateContext</code> 等</td><td><code>@odata.draft.enabled</code> 带来的草稿事件</td><td>需要干预草稿流程时才用（本示范未干预）</td></tr>
+</tbody></table></div>
+<p>字段常量的命名是<b>大写下划线</b>（<code>BookOrders.ORDER_NO</code>、<code>BookOrderItems.ORDER_ID</code>），
+而访问器方法是<b>驼峰</b>（<code>getOrderNo()</code>、<code>getOrderId()</code>）。注意
+<code>customer : Association to Customers</code> 的生成结果是 <code>getCustomer()</code>（对象）+
+<code>getCustomerId()</code>（外键值），<b>不是</b> <code>getCustomer_ID()</code> —— 写错会有 “找不到符号” 的编译错。</p>
+
+<h2 id="handler">5. 事件处理器：与 Node 版一一对应</h2>
+<p>完整文件见 <a href="code.html">源码页</a>（<code>#f-</code> 锚点）。下面是骨架与关键片段：</p>
+<pre class="hl"><div class="code-head"><span class="lang">java</span><button class="copy-btn" type="button">复制</button></div><code class="lang-java">@Component
+@ServiceName(BookOrderService_.CDS_NAME)
+public class BookOrderServiceHandler implements EventHandler {
+
+    private final PersistenceService db;      // 相当于 Node 里的 cds.db
+    private final CqnAnalyzer analyzer;       // 取绑定动作的键
+
+    public BookOrderServiceHandler(PersistenceService db, CdsModel model) {
+        this.db = db;
+        this.analyzer = CqnAnalyzer.create(model);
+    }
+
+    /* ① 编号生成 + 校验 + 派生字段（Node: this.before('CREATE', BookOrders, …)） */
+    @Before(event = CqnService.EVENT_CREATE, entity = BookOrders_.CDS_NAME)
+    public void beforeCreateOrder(BookOrders order) {
+        if (order.getOrderNo() == null || order.getOrderNo().isBlank()) {
+            order.setOrderNo(nextOrderNo());
+        } else if (db.run(Select.from(BookOrders_.class)
+                .where(o -> o.orderNo().eq(order.getOrderNo()))).first(BookOrders.class).isPresent()) {
+            throw new ServiceException(ErrorStatuses.CONFLICT, "订单号 " + order.getOrderNo() + " 已存在");
+        }
+        if (order.getOrderDate() == null) order.setOrderDate(LocalDate.now());
+        if (order.getStatus() == null)     order.setStatus("OPEN");
+        order.setStatusCriticality(criticalityOf(order.getStatus()));
+        Integer customerId = order.getCustomerId();
+        if (customerId != null &amp;&amp; db.run(Select.from(Customers_.class)
+                .where(c -> c.ID().eq(customerId))).first(Customers.class).isEmpty()) {
+            throw new ServiceException(ErrorStatuses.BAD_REQUEST, "顾客 " + customerId + " 不存在");
+        }
+    }
+
+    /* ② 明细：金额 = 单价 × 数量 */
+    @Before(event = { CqnService.EVENT_CREATE, CqnService.EVENT_UPDATE }, entity = BookOrderItems_.CDS_NAME)
+    public void beforeBookOrderItems(BookOrderItems item) {
+        Integer quantity = item.getQuantity();
+        if (quantity != null &amp;&amp; quantity &lt;= 0) {
+            throw new ServiceException(ErrorStatuses.BAD_REQUEST, "数量必须大于 0");
+        }
+        Books book = db.run(Select.from(Books_.class).where(b -> b.ID().eq(item.getBookId())))
+                .first(Books.class).orElse(null);
+        if (book == null) throw new ServiceException(ErrorStatuses.BAD_REQUEST, "图书不存在");
+        item.setAmount(book.getPrice().multiply(BigDecimal.valueOf(quantity)));
+    }
+
+    /* ④ 绑定动作：键在 CQN 里，必须用 CqnAnalyzer 取（不要解析 URL） */
+    @On(event = "submitOrder", entity = BookOrders_.CDS_NAME)
+    public void submitOrder(BookOrdersSubmitOrderContext ctx) {
+        Map&lt;String, Object&gt; keys = analyzer.analyze(ctx.getCqn()).rootKeys();
+        String id = (String) keys.get(BookOrders.ID);
+        …
+        ctx.setResult(String.format("订单 %s 已提交，合计 %s JPY（%d 行）",
+                order.getOrderNo(), order.getTotalAmount().toPlainString(), items.size()));
+    }
+
+    /* ⑤ 无绑定函数：聚合结果没有主键，不能做成实体 */
+    @On(event = "getOrderTotal")
+    public void getOrderTotal(GetOrderTotalContext ctx) {
+        BookOrders order = db.run(Select.from(BookOrders_.class)
+                .where(o -> o.orderNo().eq(ctx.getOrderNo()))).first(BookOrders.class).orElse(null);
+        if (order == null) throw new ServiceException(ErrorStatuses.NOT_FOUND, "订单号不存在");
+        ctx.setResult(totalOf(order.getId()));
+    }
+}</code></pre>
+<div class="box info"><b class="t">三个必须记住的类型细节</b>
+<ul>
+<li>事件常量来自 <code>CqnService</code>（<b>不是</b> <code>CdsService</code>：CAP Java 4.9.1 里没有这个类）。</li>
+<li><code>Result.first(Class)</code> 返回 <code>Optional&lt;T&gt;</code>；需要对象就 <code>.orElse(null)</code>，
+只想判断存在就用 <code>.isPresent() / .isEmpty()</code>。<code>Result.single(Class)</code> 才直接返回对象。</li>
+<li>绑定动作的键<b>只能</b>从 CQN 里取（<code>CqnAnalyzer.analyze(ctx.getCqn()).rootKeys()</code>），context 上没有 <code>getID()</code>。</li>
+</ul></div>
+
+<h2 id="node-vs-java">6. 与 Node 版逐项对照</h2>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>维度</th><th>Node.js 版（<a href="node.html">⑤</a>）</th><th>Java 版（本页）</th><th>实际影响</th></tr></thead>
+<tbody>
+<tr><td>项目结构</td><td><code>db/ srv/ app/</code> + <code>package.json</code></td><td>父 POM + <code>srv</code> 模块 + <code>db/</code></td><td>Java 多一层 Maven 模块，构建命令从 <code>npm</code> 换成 <code>mvn</code></td></tr>
+<tr><td>模型文件</td><td colspan="2" style="text-align:center"><b>完全相同</b>（只差 <code>@path</code>，见 §8）</td><td>这是 CAP 最有价值的地方</td></tr>
+<tr><td>处理器注册</td><td><code>this.before('CREATE', Entity, cb)</code> 运行时注册</td><td><code>@Before(event=…, entity=…)</code> 注解 + Spring Bean</td><td>Java 写错实体名是<b>编译或启动期</b>报错，Node 是运行时静默不触发</td></tr>
+<tr><td>类型安全</td><td>无（<code>req.data</code> 是普通对象）</td><td>生成的接口（<code>getOrderNo()</code> 等）</td><td>Java 重命名字段时 IDE 能一次改完；Node 要靠测试兜底</td></tr>
+<tr><td>查询写法</td><td>CQN：<code>SELECT.from(BookOrders).where({...})</code></td><td>类型化 CQL：<code>Select.from(BookOrders_.class).where(o -&gt; o.orderNo().eq(x))</code></td><td>都能下推到 SQL；Java 版写错列名编译不过</td></tr>
+<tr><td>错误响应</td><td><code>req.reject(400, msg)</code></td><td><code>throw new ServiceException(ErrorStatuses.BAD_REQUEST, msg)</code></td><td>都要用框架 API，抛裸异常会变成 500</td></tr>
+<tr><td>事务</td><td>请求事务（ambient CQN）</td><td>PersistenceService 自动加入请求事务</td><td>两边都不需要手写 begin/commit</td></tr>
+<tr><td>本地数据库</td><td>SQLite 文件（<code>db.sqlite</code>）</td><td>H2 内存（<code>schema-h2.sql</code>）</td><td>Java 每次启动都是干净数据；Node 要 <code>rm db.sqlite</code> 重建</td></tr>
+<tr><td>启动</td><td><code>npm start</code>（<code>cds-serve</code>，4004 端口）</td><td><code>mvn spring-boot:run</code>（Tomcat，8080 端口）</td><td>端口不同；Java 启动约 1.4 秒（本机实测）</td></tr>
+<tr><td>测试</td><td>mocha + <code>cds.test</code> / curl 脚本</td><td>JUnit 5 + MockMvc</td><td>Java 测试能直接 <code>mvn test</code> 进 CI</td></tr>
+<tr><td>部署产物</td><td>nodejs buildpack 推源码</td><td>Maven 打 jar（<code>*-exec.jar</code>）+ JVM buildpack</td><td>内存占用、启动时间、镜像体积都要按 Java 计</td></tr>
+<tr><td>依赖体积</td><td>~330 包 / 数十 MB</td><td>Maven 依赖在本机 <code>~/.m2</code>（首次拉取较慢）</td><td>Java 首次构建慢、之后靠本地仓库</td></tr>
+<tr><td>适合场景</td><td>快速验证模型、小服务、全栈 JS 团队</td><td>大团队、强类型、已有 Spring 生态与运维</td><td>选型要看团队技能与既有资产，不是性能</td></tr>
+</tbody></table></div>
+
+<h2 id="run">7. 本地运行与验证</h2>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-java
+export JAVA_HOME=$(brew --prefix openjdk@21) &amp;&amp; export PATH="$JAVA_HOME/bin:$PATH"
+
+# 开发运行（前台，Ctrl+C 结束）
+mvn -pl srv spring-boot:run
+
+# 若被 spring-boot-devtools 的自动重启干扰（本机会导致 servlet 注册失效），关掉它：
+mvn -pl srv spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.devtools.restart.enabled=false"</code></pre>
+<p>启动后 CAP Java 会打印一份“自检清单”，这几行是关键（✅ 本机实测）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">Loaded CDS model from CSN resource path 'edmx/csn.json'          ← 模型找到了
+Registered service BookOrderService                              ← 服务注册成功
+Registered service PersistenceService$Default                    ← 数据库接上
+Servlet CdsODataV4Servlet mapped to /odata/v4                    ← OData 端点基路径
+Filling sap.training.bookorder.Books from ../db/data/sap.training.bookorder-Books.csv      ← CSV 自动灌入
+Filling sap.training.bookorder.BookOrders from ../db/data/sap.training.bookorder-BookOrders.csv
+Registered handler class com.training.bookorder.handlers.BookOrderServiceHandler           ← 你的处理器被挂上了
+Tomcat started on port 8080 (http)
+Started Application in 1.372 seconds
+CAP Index Page served at http://localhost:8080/                 ← 打开它会列出全部端点（排错神器）</code></pre>
+<div class="box ok"><b class="t">排错神器：CAP Index Page</b>
+<code>http://localhost:8080/</code> 会列出所有服务的真实 URL。本机就是靠它发现路径被拼了两次的
+（页面上写着 <code>/odata/v4/odata/v4/book-order/…</code>）—— 所以「端点 404 时先看这一页」。</div>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 元数据（本机实测 200 ✅）
+curl -s -o /dev/null -w '%{http_code}\n' -u alice:alice \
+  "http://localhost:8080/odata/v4/book-order/\$metadata"
+
+# 读实体（⚠ 本机因本地认证配置未通过而返回 401，见 §10）
+curl -s -u alice:alice \
+  "http://localhost:8080/odata/v4/book-order/BookOrders?\$select=orderNo,status,totalAmount"
+
+# 无绑定函数（同上，未验证）
+curl -s -u alice:alice \
+  "http://localhost:8080/odata/v4/book-order/getOrderTotal(orderNo='BO-1003')"</code></pre>
+
+<h2 id="traps">8. 本机踩到的 4 个坑（每个都真实发生过）</h2>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>#</th><th>现象</th><th>根因</th><th>修复</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>所有请求 404，错误来自 <code>ResourceHttpRequestHandler</code>（“No static resource odata/v4/…”）</td><td>用 <code>-pl srv</code> / devtools 重启后 servlet 注册丢失</td><td>从 <code>srv</code> 目录直接 <code>mvn spring-boot:run</code>，并关闭 devtools 自动重启</td></tr>
+<tr><td>2</td><td>404 依旧，但这次是 CAP 自己返回的</td><td><b><code>@path</code> 语义在两种运行时不同</b>：Node 把 <code>@path</code> 当完整路径；CAP Java 会把 servlet 基路径 <code>/odata/v4</code> 加在前面 → 实际变成 <code>/odata/v4/odata/v4/book-order</code></td><td>Java 版写 <code>@path: '/book-order'</code>，对外 URL 两边一致</td></tr>
+<tr><td>3</td><td><code>找不到符号: クラス CdsService</code></td><td>CAP Java 4.x 的事件常量在 <code>CqnService</code> 上</td><td><code>import com.sap.cds.services.cds.CqnService;</code></td></tr>
+<tr><td>4</td><td><code>Optional&lt;Books&gt; は Books に適合しません</code></td><td><code>Result.first(Class)</code> 返回 <code>Optional</code></td><td><code>.first(X.class).orElse(null)</code> 或 <code>.isPresent()</code>；需要单值可直接 <code>.single(X.class)</code></td></tr>
+</tbody></table></div>
+
+<h2 id="test">9. 测试：JUnit + MockMvc</h2>
+<p>Java 侧的集成测试与 Node 的 <code>odata-verify.sh</code> 覆盖<b>同一批规则</b>：
+<code>$metadata</code> 公开、匿名 401、读 4 张订单、<code>$expand</code> 拿明细、两个函数、数量 ≤ 0 → 400、
+派生金额与合计回写。写法（需要 <code>spring-security-test</code> 才能用 <code>httpBasic(...)</code>）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">java</span><button class="copy-btn" type="button">复制</button></div><code class="lang-java">@SpringBootTest
+@AutoConfigureMockMvc
+class BookOrderServiceTest {
+
+    @Autowired MockMvc mvc;
+
+    @Test void metadataIsPublic() throws Exception {
+        mvc.perform(get("/odata/v4/book-order/$metadata")).andExpect(status().isOk());
+    }
+
+    @Test void anonymousIsRejected() throws Exception {
+        mvc.perform(get("/odata/v4/book-order/BookOrders")).andExpect(status().isUnauthorized());
+    }
+
+    @Test void ordersAreReadable() throws Exception {
+        mvc.perform(get("/odata/v4/book-order/BookOrders?$select=orderNo")
+                .with(httpBasic("alice", "alice")))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.value.length()").value(4));
+    }
+
+    @Test void orderTotalFunction() throws Exception {
+        mvc.perform(get("/odata/v4/book-order/getOrderTotal(orderNo='BO-1003')")
+                .with(httpBasic("alice", "alice")))
+           .andExpect(jsonPath("$.value").value(17400));
+    }
+}</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-java
+mvn -pl srv test            # 只跑 srv 模块的测试
+mvn test                    # 全 reactor</code></pre>
+<div class="box warn"><b class="t">为什么这套测试在本机也没跑绿</b>
+这些用例依赖<b>同一个本地认证配置</b>（mock 用户 alice）——那正是 §10 未解决的那一项。
+<code>metadataIsPublic</code> 与 <code>anonymousIsRejected</code> 两个用例不依赖它，可以独立通过；
+其余用例在认证配置正确之前会得到 401。请把 §10 的排查当作前置任务。</div>
+
+<h2 id="fail">10. 实测结果与未通过项（诚实记录）</h2>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>检查项</th><th>结果</th><th>证据 / 说明</th></tr></thead>
+<tbody>
+<tr><td><code>mvn compile</code></td><td>✅ 通过</td><td><code>BUILD SUCCESS</code>，71 个源文件，34 秒；<code>cds.gen.bookorderservice.*</code> 已生成（用 <code>javap</code> 核对了 <code>BookOrderService_</code>、<code>BookOrdersSubmitOrderContext</code>、<code>GetOrderTotalContext</code>、<code>OrderSummaryRow</code> 的真实签名）</td></tr>
+<tr><td>应用启动</td><td>✅ 通过</td><td><code>Started Application in 1.372 seconds</code>；服务、处理器、持久化服务均注册成功</td></tr>
+<tr><td>CSV 种子数据</td><td>✅ 通过</td><td>日志 4 行 <code>Filling sap.training.bookorder.…</code>（Books / Customers / BookOrderItems / BookOrders）</td></tr>
+<tr><td><code>GET $metadata</code>（带认证）</td><td>✅ 200</td><td><code>curl -u alice:alice …/odata/v4/book-order/$metadata</code> → 200（模型可被 Fiori 读取）</td></tr>
+<tr><td><code>GET BookOrders</code>（带认证）</td><td>⚠ 未通过 → 401</td><td><code>{"error":{"code":"401003","message":"ログインする必要があります。"}}</code></td></tr>
+<tr><td>匿名 <code>GET BookOrders</code> → 401</td><td>✅ 通过（但无区分度）</td><td>认证没配好时匿名与具名都会被拒，所以这条不能证明授权规则正确</td></tr>
+<tr><td>函数 / 动作 / 业务校验</td><td>⚠ 未验证</td><td>都卡在同一道认证门后面</td></tr>
+<tr><td>JUnit 测试</td><td>⚠ 部分未验证</td><td>依赖 mock 用户的用例与上面同一原因</td></tr>
+</tbody></table></div>
+<div class="box danger"><b class="t">未解决项：CAP Java 的本地 mock 用户没有生效</b>
+<p>已尝试且<b>都无效</b>（每次都重启验证）：</p>
+<ul>
+<li><code>cds.security.mock.enabled: true</code> + <code>cds.security.mock.users: [{name, password, roles}]</code>（application.yaml）</li>
+<li>用 <code>SPRING_APPLICATION_JSON</code> 注入同样结构的配置（排除 YAML 绑定问题）</li>
+<li><code>cds.requires.auth.kind: dummy</code>（这是 Node 侧的写法，Java 侧不适用）</li>
+</ul>
+<p><b>下一步排查方向</b>（留给下一位接手的人，按顺序做）：① 到 CAP Java 官方文档的
+“Mock Users / Local Development” 一节核对<b>当前版本（4.9.1）</b>的确切属性名与层级；
+② 打开配置诊断日志确认配置是否被读到（<code>logging.level.com.sap.cds=DEBUG</code> 或 <code>spring.config</code> 相关日志）；
+③ 或者干脆建一个真的 XSUAA 实例 + <code>cds bind</code> 走真实认证（<a href="security.html">⑧</a> 有手顺），
+这比继续猜本地 mock 配置更靠近生产。</p>
+<p><b>对学员的意义</b>：这条记录本身就是教材 —— CAP Java 的本地认证配置比 Node 侧更容易踩坑，
+并且「<code>$metadata</code> 能打开 ≠ 数据能读」是排错时最重要的第一课。</p></div>
+
+<h2 id="issues">11. 常见错误表</h2>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象</th><th>根因</th><th>对策</th></tr></thead>
+<tbody>
+<tr><td><code>Unable to locate a Java Runtime</code></td><td>没设 <code>JAVA_HOME</code></td><td><code>export JAVA_HOME=$(brew --prefix openjdk@21)</code></td></tr>
+<tr><td>enforcer 报 Maven 版本过低</td><td>模板要求 ≥ 3.6.3</td><td>升级 Maven（<code>brew upgrade maven</code>）</td></tr>
+<tr><td>第一次 <code>mvn compile</code> 很慢／超时</td><td>在下载 CAP Java SDK、Spring Boot 与一个 Node 运行时</td><td>正常现象（本机约 35 秒）；CI 里缓存 <code>~/.m2</code></td></tr>
+<tr><td>改了 <code>.cds</code> 但 Java 代码编译不过</td><td><code>cds.gen</code> 还没重新生成</td><td>跑 <code>mvn -pl srv compile</code>（cds.generate 会自动重跑）</td></tr>
+<tr><td><code>Cannot find symbol getCustomer_ID()</code></td><td>外键访问器名是 <code>getCustomerId()</code></td><td>以生成的接口为准（IDE 里跳进去看）</td></tr>
+<tr><td>端点 404 且报 “No static resource …”</td><td>servlet 未注册（多模块/devtools 重启）</td><td>从 <code>srv</code> 目录运行，并加 <code>-Dspring.devtools.restart.enabled=false</code></td></tr>
+<tr><td>端点被拼成 <code>/odata/v4/odata/v4/…</code></td><td><code>@path</code> 在 Java 侧是<b>相对</b>基路径的</td><td>写 <code>@path: '/book-order'</code>；用 <code>http://localhost:8080/</code> 的索引页核对真实 URL</td></tr>
+<tr><td>所有请求 401 “ログインする必要があります”</td><td>本地认证没配置（见 §10）</td><td>按 §10 的三步排查，或改用真实 XSUAA + <code>cds bind</code></td></tr>
+<tr><td>启动日志里没有 <code>Filling … from ../db/data</code></td><td><code>db/</code> 不在项目根，或 CSV 表头不是物理列名</td><td>核对目录结构与表头（见 <a href="cds.html">④</a>）</td></tr>
+<tr><td>业务异常返回 500</td><td>抛了裸异常而不是 <code>ServiceException</code></td><td><code>throw new ServiceException(ErrorStatuses.BAD_REQUEST, "…")</code></td></tr>
+<tr><td><code>spring-boot:run</code> 后改代码不生效</td><td>devtools 重启把 servlet 注册弄丢</td><td>关掉 devtools 自动重启后手动重启</td></tr>
+</tbody></table></div>
+
+<h2 id="sectest">12. 本节测试</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>Java 版与 Node 版共享哪些文件？哪些必须各写一份？</li>
+    <li><code>@Before</code> / <code>@After</code> / <code>@On</code> 分别对应 Node 版的哪些注册方式？</li>
+    <li>绑定动作的键为什么必须用 <code>CqnAnalyzer</code> 取？</li>
+    <li><code>Result.first(Class)</code> 与 <code>Result.single(Class)</code> 有什么区别？</li>
+    <li>为什么 CAP Java 里 <code>@path</code> 不能照抄 Node 版的写法？</li>
+    <li>端点 404 时，第一个应该打开的页面是什么？为什么？</li>
+    <li><code>mvn compile</code> 生成的 <code>cds.gen</code> 包有什么价值？没有它可行吗？</li>
+    <li>本页 §10 里那条 401 说明了什么？如果要修，你的第一步做什么？</li>
+  </ol>
+  <p class="go">参考答案见 <a href="instructor.html">讲师版</a>；在线自测见 <a href="quiz.html#q-java">自测 · Java 服务</a>。</p>
+</div>
+
+<div class="box info"><b class="t">下一页</b>
+服务写完了就该证明它是对的 —— 去 <a href="testing.html">⑦ 测试体系</a>，把 Node 版的 26 条断言与 Java 版的 JUnit 用例拼成一套可进 CI 的测试。</div>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

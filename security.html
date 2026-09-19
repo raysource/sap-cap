@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⑧ 认证与授权：XSUAA、角色与 @requires/@restrict · SAP CAP 培训课程</title>
+<meta name="description" content="SAP CAP 的认证与授权：mocked/dummy/basic/jwt 四种本地身份模拟的真实差异（含实测）、@requires 与 @restrict 的完整语法、xs-security.json 与 mta.yaml 的接线、部署后角色集合与 JWT 的完整链路，以及「只有订单管理员能提交订单」的端到端手顺与 401/403 排错表。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a class="active" href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>⑧ 认证与授权</span></p>
+<h1>⑧ 认证与授权：谁在证明身份，谁在决定能做什么</h1>
+<p class="kicker">对象：<code>cds.requires.auth</code> · <code>@requires</code> / <code>@restrict</code> · <code>xs-security.json</code> · <code>mta.yaml</code> 的 xsuaa 资源 · cockpit 角色集合 · JWT 的 <code>scope</code>。每个手顺都给出可观察的验证（状态码 401 / 403 / 200）。</p>
+
+<div class="toc">
+  <a href="#s0">0. 本页地图</a><a href="#s1">1. 认证 vs 授权</a><a href="#s2">2. 认证链路</a>
+  <a href="#s3">3. 本地身份模拟</a><a href="#s4">4. mock 用户规则</a><a href="#s5">5. 手顺：本地 401/200</a>
+  <a href="#s6">6. @requires</a><a href="#s7">7. @restrict</a><a href="#s8">8. @readonly / 行级授权</a>
+  <a href="#s9">9. xs-security.json 与 mta.yaml</a><a href="#s10">10. 手顺：只有订单管理员能提交</a>
+  <a href="#s11">11. 部署后授权生效链路</a><a href="#s12">12. 常见错误表</a><a href="#s13">13. 安全基线</a>
+  <a href="#s14">14. 本节测试</a><a href="#s15">15. 小结</a>
+</div>
+
+<h2 id="s0">0. 本页地图</h2>
+<p>权限这件事在 CAP 里被劈成了两半，而且<b>两半都盖不住对方</b>：</p>
+<div class="flow">
+  <span class="node">① CAP 之外（XSUAA + IdP + cockpit）<br><small>证明「你是谁」、签发 JWT</small></span>
+  <span class="arrow">+</span>
+  <span class="node">② CAP 之内（CDS 注解 + 运行时）<br><small>决定「你能做什么」</small></span>
+  <span class="arrow">=</span>
+  <span class="node">可用的接口<br><small>200 / 401 / 403</small></span>
+</div>
+<p>本页按这个顺序走：先建立认证链路的心智模型（1–2 节），再把本地开发的身份模拟弄准（3–5 节），
+然后用 CDS 注解表达授权规则（6–8 节），最后接到 XSUAA 实例与角色集合上（9–11 节），
+并以排错表与安全基线收尾。示范项目（图书受注管理）的
+<code>srv/book-order-service.cds</code>、<code>xs-security.json</code>、<code>mta.yaml</code>、<code>approuter/xs-app.json</code> 会在第 9–11 节逐段出现。</p>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>解释清楚 401 与 403 的分工，并知道在 CAP 里分别是谁返回的；</li>
+  <li>说清 <code>mocked</code> / <code>dummy</code> / <code>basic</code> / <code>jwt</code>（含 <code>xsuaa</code>）的行为差异，尤其是「为什么本地测匿名 401 绝不能用 dummy」；</li>
+  <li>用 <code>@requires</code> 与 <code>@restrict</code>（grant / to / where）写出服务级、实体级、动作级与行级授权；</li>
+  <li>维护 <code>xs-security.json</code>（scopes / attributes / role-templates / role-collections）并说明它如何被 <code>mta.yaml</code> 引用；</li>
+  <li>部署后在 cockpit 建角色集合、加用户，取出 JWT 并验证 401 / 403 / 200 三态；</li>
+  <li>用第 12 节的排错表把「用户在界面上点不动」定位到模型、token 还是角色集合。</li>
+</ul></div>
+
+<h2 id="s1">1. 认证 vs 授权：两个不同的问题</h2>
+<p>CAP 文档把这件事讲得非常直白：<b>认证</b>（authentication）验证身份与随之而来的 claim，回答 <i>who</i>；
+<b>授权</b>（authorization）控制这个用户能如何与应用资源交互，回答 <i>what / which</i>。
+授权依赖身份信息，所以<b>认证是授权的前提</b>；但反过来，认证成功不代表能访问任何东西——服务默认没有访问控制，
+注解写了什么才生效什么。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>问题</th><th>谁负责</th><th>CAP 里的对应物</th><th>失败时的表现</th></tr></thead>
+<tbody>
+<tr><td>你是谁</td><td>IdP 签发凭据 → XSUAA 发 JWT（或本地 mock 认证中间件）</td><td><code>cds.requires.auth.kind</code>、<code>req.user.id</code></td><td><b>401 Unauthorized</b>（没有可用凭据）</td></tr>
+<tr><td>你能做什么</td><td>CDS 模型里的 <code>@requires</code> / <code>@restrict</code>，由 CAP 运行时按通用框架强制</td><td><code>req.user.roles</code>、<code>@restrict.grant/to/where</code></td><td><b>403 Forbidden</b>（凭据有效但角色/条件不足）</td></tr>
+<tr><td>数据行能不能看到</td><td><code>@restrict</code> 的 <code>where</code> 条件（instance-based authorization）</td><td>CQN 查询上附加的过滤条件</td><td>403（写）/ 结果被过滤（读）</td></tr>
+<tr><td>哪些操作天生不允许</td><td><code>@readonly</code> / <code>@insertonly</code> / <code>@Capabilities</code></td><td>静态访问控制（与用户无关）</td><td>405 / 403（取决于方法与适配器）</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="t">两个必须记住的句子</b>
+<ul>
+  <li><b>CDS 服务默认没有访问控制</b>：不写注解，只要通过认证就能访问所有实体。安全不是默认值，是建模产物。</li>
+  <li><b>CAP 不能替你发明授权模型</b>：注解只是执行器；规则本身取决于你的业务（谁能提交订单、能看哪些订单）。</li>
+</ul></div>
+
+<h2 id="s2">2. 认证链路：用户 → IdP → XSUAA → JWT → CAP</h2>
+<p>把这条链路的每一跳的责任摆清楚，后面所有的「401 还是 403」判断都会变成机械操作：</p>
+<div class="flow">
+  <span class="node">用户<br><small>浏览器 / curl</small></span><span class="arrow">→</span>
+  <span class="node">IdP<br><small>默认身份提供者或企业 IdP</small></span><span class="arrow">→</span>
+  <span class="node">XSUAA<br><small>交换/签发 JWT</small></span><span class="arrow">→</span>
+  <span class="node">JWT（含 scope）<br><small>Authorization: Bearer …</small></span><span class="arrow">→</span>
+  <span class="node">approuter<br><small>登录 + 转发</small></span><span class="arrow">→</span>
+  <span class="node">CAP 运行时<br><small>解析身份 + 执行注解</small></span><span class="arrow">→</span>
+  <span class="node">服务 / 实体<br><small>200 / 403</small></span>
+</div>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>环节</th><th>它做什么</th><th>它不做什么</th><th>本地开发时的替身</th></tr></thead>
+<tbody>
+<tr><td>IdP</td><td>验证用户凭据（密码/证书/企业 SSO）、返回断言</td><td>不知道 CAP 的角色</td><td>—（本地没有 IdP）</td></tr>
+<tr><td>XSUAA</td><td>按 <code>xs-security.json</code> 把角色映射成 <code>scope</code> 放进 JWT</td><td>不判断业务规则</td><td><code>kind: mocked</code> 的假用户</td></tr>
+<tr><td>approuter</td><td>触发登录流程、把 JWT 放进对后端的 <code>Authorization</code> 头</td><td>不做授权判断</td><td>本地直连 4004 端口（无 approuter）</td></tr>
+<tr><td>CAP 运行时</td><td>校验 token、构造 <code>req.user</code>、执行 <code>@requires</code> / <code>@restrict</code></td><td>不做登录交互（那是 approuter 的事）</td><td>同左（本地也走同一个运行时）</td></tr>
+</tbody></table></div>
+<p>CAP 从 JWT 里取出的身份信息有固定映射（下表来自 CAP 的「Users &amp; Roles」章节，Node.js 与 Java 一致）：</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>用户属性</th><th>Node.js</th><th>XSUAA JWT 里的来源</th><th>在注解里怎么引用</th></tr></thead>
+<tbody>
+<tr><td>登录名</td><td><code>req.user.id</code></td><td><code>user_name</code></td><td><code>$user</code></td></tr>
+<tr><td>租户</td><td><code>req.tenant</code></td><td><code>zid</code></td><td><code>$tenant</code></td></tr>
+<tr><td>属性</td><td><code>req.user.attr.&lt;x&gt;</code></td><td><code>xs.user.attributes.&lt;x&gt;</code></td><td><code>$user.&lt;x&gt;</code></td></tr>
+<tr><td>角色</td><td><code>req.user.is('view')</code></td><td><code>scopes</code>（<b>去掉 xsappname 前缀</b>）</td><td><code>to: 'view'</code></td></tr>
+</tbody></table></div>
+<div class="box ok"><b class="t">本机核对过的一件事</b>
+<code>@sap/cds 9.9.3</code> 的 <code>lib/srv/middlewares/auth/jwt-auth.js</code> 里，角色是按
+<code>scope.replace(xsappname + '.', '')</code> 得到的——也就是说 <b>CAP 会剥掉 xsappname 前缀再与注解比对</b>。
+这条源码事实解释了第 12 节里一整类「云端 403」错误的根因，也解释了为什么 JWT 里写
+<code>demo-node-trial-dev.view</code>、模型里却只写 <code>view</code>。</div>
+<figure class="fig" data-fig="sec_s01">
+  <a class="zoom" href="assets/fig/sec_s01.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s01.svg" alt="子账户 Security → Trust Configuration：用户身份到底由谁签发（CAP 只认 JWT，不关心 IdP 是哪个）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">子账户 Security → Trust Configuration：用户身份到底由谁签发（CAP 只认 JWT，不关心 IdP 是哪个）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+<div class="box info"><b class="t">安全提示</b>避免在业务代码里直接读 XSUAA 的私有字段（例如 <code>req.user.tokenInfo</code> 之类）：
+CAP 提供了抽象的 <code>req.user</code>，这样换 IdP / 换认证策略时业务逻辑不用改。</div>
+
+<h2 id="s3">3. 本地开发的身份模拟：<code>cds.requires.auth.kind</code> 的四个取值</h2>
+<p>本地没有 IdP，也没有 XSUAA。CAP 为此提供了几种认证中间件，通过 <code>cds.requires.auth.kind</code> 选择；
+每种的可信度完全不同，<b>用错了会得出错误的结论</b>。</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>kind</th><th>它验证什么</th><th>匿名请求</th><th>角色从哪来</th><th>什么时候用</th></tr></thead>
+<tbody>
+<tr><td><code>mocked</code></td><td>HTTP Basic 头里的用户名/密码（用 <code>cds.requires.auth.users</code> 里的配置校验）</td><td>不拦（放行匿名）</td><td>配置里写的 <code>roles</code></td><td><b>本地开发默认</b>；验证 401 与角色差异</td></tr>
+<tr><td><code>dummy</code></td><td>什么都不验证：每个请求都当成「特权用户」</td><td><b>放行（这也是它的目的）</b></td><td>全部角色都为真</td><td>临时关掉全部注解做排障；<b>绝不能用来测 401</b></td></tr>
+<tr><td><code>basic</code></td><td>同样走 Basic，但<b>不加载内置的 mock 用户</b>，用户完全由你配置</td><td>同上（按 <code>login_required</code>）</td><td>配置里写的 <code>roles</code></td><td>想避免「alice/bob 通吃」时替换 <code>mocked</code></td></tr>
+<tr><td><code>jwt</code> / <code>xsuaa</code></td><td>校验 XSUAA 签发的 JWT（签名、issuer、有效期）</td><td>不拦（但后续 <code>@requires</code> 会拦）</td><td>JWT 的 <code>scope</code>（去前缀）</td><td>云端生产；本地联调需要绑定 XSUAA（<code>cds bind</code>）</td></tr>
+<tr><td><code>ias</code></td><td>校验 IAS 的 JWT（含 x5t / proof-of-possession 校验）</td><td>不拦</td><td><b>不含 scope</b>，角色要靠 AMS 注入</td><td>用 SAP Cloud Identity Services 的组织</td></tr>
+<tr><td>自定义 <code>impl</code></td><td>你自己的中间件（必须设置 <code>cds.context.user</code>）</td><td>自己决定</td><td>自己决定</td><td>特殊网关/测试桩</td></tr>
+</tbody></table></div>
+<p>对照用一句话概括：<b><code>dummy</code> 是「关掉权限」，<code>mocked</code> 是「假的登录」，<code>jwt</code> 是「真的登录」</b>。</p>
+<figure class="fig" data-fig="sec_s03">
+  <a class="zoom" href="assets/fig/sec_s03.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s03.svg" alt="本地 mocked 实测：匿名 401、alice 200、未配置的用户 zoe 也 200 —— mocked 的密码与用户名都不校验" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">本地 mocked 实测：匿名 401、alice 200、未配置的用户 zoe 也 200 —— mocked 的密码与用户名都不校验</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npx cds-serve + curl（@sap/cds 9.9.3, Node v22.23.2）</span></figcaption>
+</figure>
+<figure class="fig" data-fig="sec_s04">
+  <a class="zoom" href="assets/fig/sec_s04.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s04.svg" alt="同一个项目换成 kind = dummy：匿名请求直接 200 —— 因此用 dummy 测「匿名必须 401」必然测不出来" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">同一个项目换成 kind = dummy：匿名请求直接 200 —— 因此用 dummy 测「匿名必须 401」必然测不出来</span><span class="kind real">本地实机运行</span><span class="src">本地实测：cds_requires_auth_kind=dummy npx cds-serve + curl</span></figcaption>
+</figure>
+<div class="box danger"><b class="t">真实踩坑（本地实测）：用 dummy 测匿名 401 → 永远是 200</b>
+<code>dummy</code> 的实现在 CAP 里只有两行：<code>req.user = cds.User.privileged; next()</code>——
+它把每个请求（包括没有 <code>Authorization</code> 头的匿名请求）都当成长着所有角色的特权用户。
+所以「匿名必须 401」这类断言在 <code>dummy</code> 下必然失败（实测见上方画面：匿名请求返回 <b>200</b>）。
+做认证相关的测试，请把 kind 保持在 <code>mocked</code>。</div>
+
+<h2 id="s4">4. mock 用户的规则与自定义</h2>
+<h3 id="s4-1">4-1 内置用户比想象的多</h3>
+<p><code>@sap/cds</code> 默认带的 mock 用户是 <code>alice</code>（<code>admin</code>）、<code>bob</code>（<code>cds.ExtensionDeveloper</code>）、
+<code>carol</code>、<code>dave</code>、<code>erin</code>、<code>fred</code>、<code>me</code>、<code>yves</code>…… 并且默认还有一条
+<code>"*": true</code>——<b>其它任何用户名也允许登录</b>。用一条命令确认当前生效的配置（本机实测输出）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ npx cds env get requires.auth
+{
+  "restrict_all_services": false,
+  "kind": "mocked",
+  "users": {
+    "alice": { "tenant": "t1", "roles": [ "admin" ] },
+    "bob":   { "tenant": "t1", "roles": [ "cds.ExtensionDeveloper" ] },
+    "carol": { "tenant": "t1", "roles": [ "admin", "cds.ExtensionDeveloper" ] },
+    "dave":  { "tenant": "t1", "roles": [ "admin" ], "features": [] },
+    "erin":  { "tenant": "t2", "roles": [ "admin", "cds.ExtensionDeveloper" ] },
+    "fred":  { "tenant": "t2", "features": [ "isbn" ] },
+    "me":    { "tenant": "t1", "features": [ "*" ] },
+    "yves":  { "roles": [ "internal-user" ] },
+    "*": true
+  },
+  "tenants": {
+    "t1": { "features": [ "isbn" ] },
+    "t2": { "features": "*" }
+  }
+}</code></pre>
+<div class="box danger"><b class="t">实测结论：mocked 的三个「想不到」</b>
+<ul>
+  <li><b>默认用户没有密码</b>：<code>alice</code> 配置里没有 <code>password</code> 字段，所以 <code>-u alice:wrong</code> 也返回 <b>200</b>（密码没配就不校验）；</li>
+  <li><b>任意用户名放行</b>：<code>"*": true</code> 让 <code>-u zoe:pw</code> 也返回 <b>200</b>——这是本站 OData 验收脚本里
+    「未知用户 → 401」这一条 <b>FAIL</b> 的唯一原因（脚本对 mocked 的期望写错了，不是产品缺陷）；</li>
+  <li><b>角色是纯字符串</b>：<code>alice</code> 的角色是 <code>admin</code>，跟 XSUAA 里的 scope 没有任何自动关联——
+    本地要模拟 <code>to: 'view'</code>，就得在配置里写 <code>roles: ['view']</code>。</li>
+</ul></div>
+
+<h3 id="s4-2">4-2 自定义用户、角色与属性</h3>
+<div class="stepmeta"><span class="k">cds.requires.auth.users</span><span class="f">package.json / .cdsrc.json</span><span class="c">耗时 10 分</span></div>
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "cds": {
+    "requires": {
+      "auth": {
+        "kind": "mocked",
+        "users": {
+          "alice": { "password": "alice", "roles": ["view"],                "tenant": "t1" },
+          "bob":   { "password": "bob",   "roles": [],                      "tenant": "t1" },
+          "zoe":   { "password": "zoe",   "roles": ["view", "submit"],      "tenant": "t1" },
+          "amy":   { "password": "amy",   "roles": ["view"], "attr": { "country": ["JP"] } },
+          "*": false
+        }
+      }
+    }
+  }
+}</code></pre>
+<ol class="steps">
+  <li><b>动作</b>：把 <code>alice/bob/zoe</code> 写成与 <code>@restrict</code> 里 <code>to:</code> 相同的角色名——
+    这样本地测出来的通过与云端 XSUAA 下的通过含义一致（云端角色名就是 scope 名去前缀）。</li>
+  <li><b>动作</b>：<code>"*": false</code> 关掉通吃；给要用到的用户<b>显式配密码</b>，否则密码不校验。</li>
+  <li><b>动作</b>：需要测行级授权时给用户配 <code>attr</code>（对应 JWT 的 <code>xs.user.attributes</code>，
+    在注解里用 <code>$user.&lt;x&gt;</code> 引用）。</li>
+  <li><b>验证</b>：<code>npx cds env get requires.auth</code> 能看到合并后的配置；
+    用 <code>-u alice:wrong</code> 请求受保护资源应得 <b>401</b>（密码不匹配 → 触发登录）；用未配置的用户名应得 <b>401</b>（<code>"*": false</code>）。</li>
+</ol>
+<div class="box warn"><b class="t">注意配置合并方向</b>自定义的 <code>users</code> 是<b>与内置默认值合并</b>的：
+不写 <code>"*": false</code>，通吃的默认值仍然生效；要彻底只留自己的用户，必须显式覆盖 <code>"*"</code>。</div>
+
+<h2 id="s5">5. 手顺：本地把 401 / 403 / 200 三态跑出来</h2>
+<p>目标：在没有 BTP 账号的情况下，用「服务的 <code>@requires</code> + 实体的 <code>@restrict</code>」把三种结果都复现一遍。
+这是后面所有云端问题的对照基线。</p>
+<div class="stepmeta"><span class="k">npx cds-serve</span><span class="f">srv/book-order-service.cds · package.json</span><span class="c">耗时 15 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：在模型里加一条按角色分的授权（示范项目的实体级授权，第 10 节会再接上 XSUAA 的角色名）：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">annotate BookOrderService.BookOrders with @(restrict: [
+  { grant: 'READ',        to: 'view' },
+  { grant: 'submitOrder', to: 'submit' }
+]);</code></pre>
+  </li>
+  <li><b>动作</b>：按 4-2 的写法配置 <code>users</code>：<code>alice</code> 只有 <code>view</code>、<code>bob</code> 什么都没有、
+    <code>zoe</code> 有 <code>view</code> 与 <code>submit</code>，并写 <code>"*": false</code>。</li>
+  <li><b>动作</b>：起服务并用 curl 打三种身份（本机实测，服务端口 4131、服务路径 <code>/odata/v4/book-order</code>）：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ curl -s -o /dev/null -w '%{http_code}\n' localhost:4131/odata/v4/book-order/BookOrders
+401
+$ curl -s -u alice:alice -o /dev/null -w '%{http_code}\n' "localhost:4131/odata/v4/book-order/BookOrders?\$top=1"
+200
+$ curl -s -u bob:bob -o /dev/null -w '%{http_code}\n' "localhost:4131/odata/v4/book-order/BookOrders?\$top=1"
+403
+$ curl -s -u alice:wrong -o /dev/null -w '%{http_code}\n' "localhost:4131/odata/v4/book-order/BookOrders?\$top=1"
+401
+$ curl -s -u mimo:pw   -o /dev/null -w '%{http_code}\n' "localhost:4131/odata/v4/book-order/BookOrders?\$top=1"
+401</code></pre>
+  </li>
+  <li><b>动作</b>：再打绑定动作，看「有身份但缺角色」是 403、拿到角色后是 200：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ ID=$(curl -s -u zoe:zoe "localhost:4131/odata/v4/book-order/BookOrders?\$select=ID&\$filter=orderNo%20eq%20'BO-1001'" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"][0]["ID"])')
+$ curl -s -u alice:alice -X POST "localhost:4131/odata/v4/book-order/BookOrders(ID=$ID,IsActiveEntity=true)/submitOrder" -H 'Content-Type: application/json' -d '{}' -o /dev/null -w '%{http_code}\n'
+403
+$ curl -s -u zoe:zoe   -X POST "localhost:4131/odata/v4/book-order/BookOrders(ID=$ID,IsActiveEntity=true)/submitOrder" -H 'Content-Type: application/json' -d '{}'
+{"@odata.context":"../$metadata#Edm.String","value":"订单 BO-1001 已提交，合计 16000.00 JPY（3 行）"}</code></pre>
+  </li>
+  <li><b>验证</b>：把四次结果对上下表。任何一格不符，先看 <code>npx cds env get requires.auth</code>
+    的 <code>kind</code> 与 <code>users</code>，再看注解是否真的写在了<b>请求目标实体</b>上（第 7 节的覆盖陷阱）。</li>
+</ol>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>请求</th><th>期望</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>匿名 GET <code>/BookOrders</code></td><td><b>401</b></td><td>服务级 <code>@requires: 'authenticated-user'</code> 生效，返回头带 <code>WWW-Authenticate: Basic realm="Users"</code></td></tr>
+<tr><td><code>-u alice:alice</code>（角色 <code>view</code>）GET</td><td><b>200</b></td><td>实体级 <code>READ → view</code> 满足</td></tr>
+<tr><td><code>-u bob:bob</code>（无角色）GET</td><td><b>403</b></td><td>认证通过但没有满足任何 privilege；响应体 <code>{"error":{"message":"Forbidden","code":"403"}}</code></td></tr>
+<tr><td><code>-u alice:wrong</code>、未配置用户</td><td><b>401</b></td><td>凭据不成立等同于未认证</td></tr>
+<tr><td>动作 <code>submitOrder</code>：alice → 403，zoe → 200</td><td><b>403 / 200</b></td><td>动作级授权按 <code>to: 'submit'</code> 判定</td></tr>
+</tbody></table></div>
+<div class="box ok"><b class="t">验收</b>三态齐全（401 / 403 / 200），且 <code>bob</code> 的 403 响应体里带的是 CAP 生成的
+<code>Forbidden</code>（不是 500）。这份本地基线会在第 11 节与云端 JWT 结果对照。</div>
+<div class="box warn"><b class="t">常见错误</b>把注解写在 <code>BookOrderItems</code> 上却去测 <code>BookOrders</code>：
+Node.js 运行时<b>只对请求的目标实体做检查</b>，关联实体的授权不会自动参与（见第 7 节「限制」）。
+另外，<code>kind: dummy</code> 下上表所有 401/403 都会变成 200。</div>
+
+<h2 id="s6">6. 服务级授权：<code>@requires</code></h2>
+<p><code>@requires</code> 回答「访问这个资源需要什么角色」。写在服务上就等于<b>服务级入口检查</b>——
+示范项目用的就是最小的一档：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">@path: '/odata/v4/book-order'
+service BookOrderService @(requires: 'authenticated-user') {
+  entity Books         as projection on db.Books;
+  entity Customers     as projection on db.Customers;
+  @odata.draft.enabled
+  entity BookOrders    as projection on db.BookOrders
+                       actions { action submitOrder() returns String; };
+}</code></pre>
+<p>除了业务角色，CAP 还预定义了几个<b>伪角色</b>（pseudo role），它们不由管理员分配，而由运行时按技术层级自动加上：</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>伪角色</th><th>含义</th><th>典型用法</th></tr></thead>
+<tbody>
+<tr><td><code>authenticated-user</code></td><td>任何认证成功的用户</td><td>服务级兜底：<code>@(requires: 'authenticated-user')</code></td></tr>
+<tr><td><code>any</code></td><td>所有请求（含匿名）</td><td>显式开放某个实体/操作</td></tr>
+<tr><td><code>system-user</code></td><td>技术用户（<code>client_credentials</code> 流）</td><td>接口对接口的批处理入口</td></tr>
+<tr><td><code>internal-user</code></td><td>同一应用内部的技术调用（共享身份实例）</td><td>只给自家服务的端点</td></tr>
+</tbody></table></div>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">/* 三种写法：服务级、实体级、动作/函数级 */
+annotate BrowseBooksService with @(requires: 'authenticated-user');
+annotate ShopService.Books              with @(requires: ['Vendor', 'ProcurementManager']);
+annotate ShopService.ReplicationAction  with @(requires: 'system-user');</code></pre>
+<div class="box info"><b class="t">三个容易踩的点</b>
+<ul>
+  <li><b>元数据也被一起保护</b>：给服务加 <code>@requires</code> 后，<code>/$metadata</code> 与服务根 <code>/</code> 默认也要求认证
+    （浏览器直接打开会 401）。确实需要公共元数据时，用自定义中间件以特权用户放行，或（Java）设
+    <code>cds.security.authentication.authenticateMetadataEndpoints = false</code>。</li>
+  <li><b>生产环境默认更严</b>：认证策略配置为 <code>jwt</code> 时，<b>没有写任何注解的服务也会被隐式要求 <code>authenticated-user</code></b>；
+    想关掉要设 <code>cds.requires.auth.restrict_all_services: false</code>。本地 <code>mocked</code> 的默认值是 <code>false</code>，
+    所以「本地匿名能读、云端匿名 401」的差异经常来自这里。</li>
+  <li><b>@requires 是 @restrict 的简写</b>：<code>@requires: 'Vendor'</code> 等价于 <code>@restrict: [{ grant: '*', to: 'Vendor' }]</code>。</li>
+</ul></div>
+
+<h2 id="s7">7. 实体与动作级授权：<code>@restrict</code> 的 grant / to / where</h2>
+<p><code>@restrict</code> 的最小构件叫一条 <b>privilege</b>，三个属性分别是「对什么事件」「给谁」「哪些实例」：</p>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">{ grant: &lt;events&gt;, to: &lt;roles&gt;, where: &lt;filter-condition&gt; }</code></pre>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>属性</th><th>可取值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><code>grant</code></td><td><code>READ</code> / <code>CREATE</code> / <code>UPDATE</code> / <code>DELETE</code> / <code>UPSERT</code>、
+  <code>WRITE</code>（写类事件的总称）/ <code>*</code>（全部）/ 动作与函数名</td><td>一个 privilege 可以列多个事件，<b>命中其一即满足</b>该 privilege</td></tr>
+<tr><td><code>to</code></td><td>业务角色名，或 <code>authenticated-user</code> / <code>any</code> / <code>system-user</code> / <code>internal-user</code></td>
+  <td>省略时默认为 <code>any</code>（即所有用户，包括匿名）</td></tr>
+<tr><td><code>where</code></td><td>CQL 布尔表达式（可用 <code>$user</code>、<code>$user.&lt;attr&gt;</code>、实体字段、关联路径、<code>exists</code> 子查询）</td>
+  <td><b>实例级</b>授权：读时作为结果过滤，写时作为拒绝条件</td></tr>
+</tbody></table></div>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">/* ① 多条 privilege：满足任意一条即可（逻辑 OR） */
+entity Orders @(restrict: [
+  { grant: ['READ', 'WRITE'], to: 'Admin' },
+  { grant: 'READ', where: (buyer = $user) }        // 任何登录用户都能读自己下的单
+]) { /* ... */ }
+
+/* ② 角色与事件都可以是数组；命中其一即满足这条 privilege */
+entity Reviews @(restrict: [
+  { grant: ['READ', 'WRITE'], to: ['Reviewer', 'Customer'] }
+]) { /* ... */ }
+
+/* ③ 层级是「与」：服务级 + 实体级 + 动作级全都要过 */
+service CustomerService @(requires: 'authenticated-user') {
+  entity Products @(restrict: [
+    { grant: 'READ' },
+    { grant: 'WRITE', to: 'Vendor' },
+    { grant: 'addRating', to: 'Customer' }         // 绑定动作也能在实体级授予
+  ]) { /* ... */ }
+  actions { action addRating (stars: Integer); }
+  entity Orders @(restrict: [
+    { grant: '*', to: 'Customer', where: (CreatedBy = $user) }
+  ]) { /* ... */ }
+  action monthlyBalance @(requires: 'Vendor') ();
+}</code></pre>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>CDS 资源</th><th><code>grant</code></th><th><code>to</code></th><th><code>where</code></th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>service（服务）</td><td>—</td><td>✔</td><td>—</td><td>等价于 <code>@requires</code></td></tr>
+<tr><td>entity（实体）</td><td>✔</td><td>✔</td><td>✔</td><td>三种能力都支持，最常用</td></tr>
+<tr><td>action / function</td><td>被忽略</td><td>✔</td><td>受限</td><td>直接写在动作上时 <code>grant</code> 被当作 <code>*</code>；绑定动作的行级条件写在<b>实体</b>的 privilege 里</td></tr>
+</tbody></table></div>
+<div class="box danger"><b class="t">实测陷阱：同一目标重复 annotate，后者整体覆盖前者（只有 [WARNING]）</b>
+把两段 <code>annotate BookOrderService.BookOrders with @(restrict: […])</code> 写在同一个模型里，
+编译时会提示 <code>Duplicate assignment with "@restrict", using last</code>，然后<b>前面的整段 privilege 全部消失</b>——
+实测结果是编译产物里只剩后一段的角色 scope。<b>对策</b>：<code>@restrict</code> 一处写全；
+确实要分文件维护时，用 <code>extend</code> 或把不同资源的权限拆到不同 annotate 目标上。</div>
+<div class="box warn"><b class="t">Node.js 的限制（Java 不同，注意版本差异）</b>
+Node.js 运行时的安全检查<b>只作用于请求的目标实体</b>：
+<ul>
+  <li><code>$expand</code> / inlined 展开出来的关联实体，其 <code>@restrict</code> <b>不会被检查</b>（Java 从 CAP Java 4.0 起默认做 deep authorization）；</li>
+  <li>deep insert / deep update 只检查根实体；</li>
+  <li>因此敏感数据不要靠「关联实体上有注解」来兜底，最好为它建独立的、带授权的服务实体。</li>
+</ul></div>
+
+
+<figure class="fig" data-fig="sec_s05">
+  <a class="zoom" href="assets/fig/sec_s05.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s05.svg" alt="在 srv/book-order-service.cds 里追加业务角色注解：服务级只要登录，实体级再按动作分角色" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">在 srv/book-order-service.cds 里追加业务角色注解：服务级只要登录，实体级再按动作分角色</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure><h2 id="s8">8. <code>@readonly</code> / <code>@Capabilities</code>、实例级条件与它们的边界</h2>
+<h3 id="s8-1">8-1 静态访问控制 ≠ 权限控制</h3>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">service BookOrderService @(requires: 'authenticated-user') {
+  @readonly
+  entity OrderItemView as projection on db.OrderItemView;    // 对所有人只读
+  @insertonly
+  entity Orders { /* ... */ }                                // 对所有人只允许插入
+
+  @Capabilities: {
+    InsertRestrictions.Insertable: true,
+    UpdateRestrictions.Updatable: true,
+    DeleteRestrictions.Deletable: false
+  }
+  entity Foo { key ID : UUID; }
+}</code></pre>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>注解</th><th>作用范围</th><th>它是授权吗</th><th>和 <code>@restrict</code> 的关系</th></tr></thead>
+<tbody>
+<tr><td><code>@readonly</code></td><td>对所有用户一致</td><td><b>不是</b>——它不区分用户</td><td>等价于 <code>@restrict: [{ grant: 'READ' }]</code>（默认 <code>to: 'any'</code>）</td></tr>
+<tr><td><code>@insertonly</code></td><td>同上</td><td>不是</td><td>等价于只授予 <code>CREATE</code></td></tr>
+<tr><td><code>@Capabilities</code>（OData 词汇表）</td><td>同上，由运行时强制执行</td><td>不是</td><td>关闭某类操作；与用户角色无关</td></tr>
+<tr><td><code>@restrict</code> / <code>@requires</code></td><td>按用户角色/属性</td><td><b>是</b></td><td>—</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="t">把 <code>@readonly</code> 当权限控制是最常见的误解</b>
+示范项目的 <code>OrderItemView</code> 用 <code>@readonly</code>，意思是「这个只读视图不允许任何写操作」——
+它是<b>接口契约</b>，不是「只给某些人看」。要让「只有管理员能看汇总」，仍然要写
+<code>@(restrict: [{ grant: 'READ', to: 'view' }])</code>。</div>
+
+<h3 id="s8-2">8-2 实例级授权：<code>where</code> 怎么写才对</h3>
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">/* ① 只看自己创建的记录（managed 提供的 CreatedBy） */
+annotate Orders with @(restrict: [
+  { grant: ['READ', 'UPDATE', 'DELETE'], where: (CreatedBy = $user) }
+]);
+
+/* ② 按用户属性过滤：用户属性 / 实体字段可以互相比较 */
+annotate BookOrders with @(restrict: [
+  { grant: 'READ', to: 'view', where: (customer.country = $user.country) }
+]);
+
+/* ③ 通过 exists 子查询（ACL 思路）：只有项目成员能读该项目 */
+annotate Projects with @(restrict: [
+  { grant: ['READ', 'WRITE'], where: (exists members[userId = $user and role = 'Editor']) }
+]);</code></pre>
+<ol class="steps">
+  <li><b>动作</b>：把 <code>where</code> 写成 CDS 编译器表达式（不要写成字符串拼 SQL），并在本地用带 <code>attr</code> 的 mock 用户测；
+    上面第 ② 条里的 <code>customer.country</code> 是<b>关联路径</b>，CAP 支持在 <code>where</code> 里用路径导航。</li>
+  <li><b>验证</b>：<code>npx cds compile srv --to sql</code> 与 <code>--to edmx</code> 都应无 error；
+    运行时用两个不同 <code>attr</code> 的用户请求同一资源，结果集应不同（读被过滤）。</li>
+</ol>
+<div class="box info"><b class="t">语义细节（教学时最容易被追问的三条）</b>
+<ul>
+  <li><code>$user.&lt;attr&gt;</code> 是<b>值的列表</b>：命中列表里任一值即成立；<b>属性为空/未定义 → 条件为 false</b>（用户被完全挡住）。</li>
+  <li><code>where</code> 对标准事件的作用不同：<code>READ</code> 是结果过滤，<code>UPDATE</code> / <code>DELETE</code> 是拒绝条件；
+    Java 还会校验 <code>CREATE</code> / <code>UPDATE</code> 的输入数据（不满足返回 400），Node.js 对 <code>CREATE</code> 只支持不含模型引用的简单表达式（如 <code>where: $user.level = 2</code>）。</li>
+  <li>XSUAA 的属性默认 <code>valueRequired: true</code>；确实要做「不限范围」的属性，需要把属性设成
+    <code>valueRequired: false</code> 并把条件写成 <code>$user.country = countryCode or $user.country is null</code>——
+    文档明确警告这种写法很容易变成越权，优先用「一个角色带条件 + 另一个角色不带条件」的写法。</li>
+</ul></div>
+
+<h2 id="s9">9. XSUAA 实例、<code>xs-security.json</code> 与 <code>mta.yaml</code> 的接线</h2>
+<h3 id="s9-1">9-1 <code>xs-security.json</code> 的五个段</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>字段</th><th>作用</th><th>关键规则</th></tr></thead>
+<tbody>
+<tr><td><code>xsappname</code></td><td>应用标识，决定所有 scope 的前缀</td><td>字符集限定 <code>a-z A-Z 0-9 - _ / \</code>，≤100 字符；同一子账户内需唯一</td></tr>
+<tr><td><code>tenant-mode</code></td><td><code>dedicated</code>（默认，每个子账户各自密钥）/ <code>shared</code> / <code>external</code></td><td>多租户 SaaS 用 <code>shared</code>（application plan）</td></tr>
+<tr><td><code>scopes</code></td><td>权限点（<code>$XSAPPNAME.xxx</code>）</td><td><b>本地 scope 必须带 <code>$XSAPPNAME</code> 前缀</b>；跨应用引用写成 <code>$XSAPPNAME(application,其它应用)</code></td></tr>
+<tr><td><code>attributes</code></td><td>行级授权用的属性（<code>name</code> / <code>valueType</code>（<code>string</code>|<code>s</code>、<code>int</code>、<code>date</code>）/ <code>valueRequired</code>）</td><td>属性值来自 cockpit 静态分配或 IdP；默认 <code>valueRequired: true</code></td></tr>
+<tr><td><code>role-templates</code></td><td>角色的模板：<code>name</code> / <code>description</code> / <code>default-role-name</code> / <code>scope-references</code> / <code>attribute-references</code></td><td>一个模板可聚合多个 scope；带 <code>default-values</code> 的属性引用才能在部署时自动生成角色</td></tr>
+<tr><td><code>role-collections</code>（可选）</td><td>预定义角色集合，部署时直接出现在 cockpit</td><td>只能引用<b>同一子账户</b>的 role template；模板必须「无属性引用」或「有默认值」</td></tr>
+<tr><td><code>oauth2-configuration</code>（可选）</td><td><code>redirect-uris</code>（approuter 的登录回调）、<code>token-validity</code>、<code>credential-types</code></td><td>本地联调 XSUAA 时必须把 <code>http://localhost:5000/login/callback</code> 加进 redirect-uris</td></tr>
+</tbody></table></div>
+<p>这是示范项目里<b>真实维护</b>的 <code>xs-security.json</code>（全文见 <a href="code.html">源码页</a>）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "xsappname": "demo-node",
+  "tenant-mode": "dedicated",
+  "description": "图书受注管理 —— CAP 示范项目的授权定义",
+  "scopes": [
+    { "name": "$XSAPPNAME.view",   "description": "查看订单与主数据" },
+    { "name": "$XSAPPNAME.edit",   "description": "创建与修改订单" },
+    { "name": "$XSAPPNAME.submit", "description": "提交订单（状态迁移，业务上等同于放行）" }
+  ],
+  "attributes": [],
+  "role-templates": [
+    { "name": "OrderViewer", "description": "订单只读",
+      "scope-references": [ "$XSAPPNAME.view" ] },
+    { "name": "OrderEditor", "description": "订单维护（新建与修改，含明细）",
+      "scope-references": [ "$XSAPPNAME.view", "$XSAPPNAME.edit" ] },
+    { "name": "OrderAdmin",  "description": "订单管理员：可提交订单并触发状态迁移",
+      "scope-references": [ "$XSAPPNAME.view", "$XSAPPNAME.edit", "$XSAPPNAME.submit" ] }
+  ]
+}</code></pre>
+<div class="box info"><b class="t">两种常见的命名风格（示范项目 vs 教科书示例）</b>
+示范项目用的是「动词式」短名（<code>view</code> / <code>edit</code> / <code>submit</code>），CAP 生成器也会默认用 <code>to:</code> 的名字当 scope 名。
+很多项目更喜欢「域 + 动作」的带点写法，例如
+<code>$XSAPPNAME.BookOrder.View</code> / <code>$XSAPPNAME.BookOrder.Edit</code> / <code>$XSAPPNAME.BookOrder.Submit</code>，
+此时 CDS 里就要相应写 <code>to: 'BookOrder.View'</code>。<b>规则只有一条：两边逐字对应（scope 名 = 角色名 + xsappname 前缀）</b>，
+用哪种风格都可以，但不要一半点号一半没有。role-template 名则可自由起名（示范项目里的 <code>OrderAdmin</code> 就等于「订单管理员」这个业务角色）。</div>
+<figure class="fig" data-fig="sec_s06">
+  <a class="zoom" href="assets/fig/sec_s06.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s06.svg" alt="示范项目里真实维护的 xs-security.json：scopes 是权限点，role-templates 把权限打成一包发给用户" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 5</span><span class="cap">示范项目里真实维护的 xs-security.json：scopes 是权限点，role-templates 把权限打成一包发给用户</span><span class="kind">高保真重绘</span><span class="src">文件全文与示范项目 project-code/demo-node/xs-security.json 一致；结构依据 SAP Help《Application Security Descriptor Configuration Syntax》</span></figcaption>
+</figure>
+<h3 id="s9-2">9-2 三个名字，别混</h3>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>名字</th><th>写在哪</th><th>示范项目的值</th><th>谁在用它</th></tr></thead>
+<tbody>
+<tr><td><b>scope 名（全名）</b></td><td><code>xs-security.json</code> 的 <code>scopes</code></td><td><code>$XSAPPNAME.submit</code>，部署后是 <code>demo-node-trial-dev.submit</code></td><td>XSUAA 放进 JWT 的 <code>scope</code></td></tr>
+<tr><td><b>CAP 角色名</b></td><td>CDS 的 <code>to:</code> / <code>@requires</code></td><td><code>submit</code></td><td>CAP 运行时（<b>等于 scope 名去掉 xsappname 前缀</b>）</td></tr>
+<tr><td><b>role-template 名</b></td><td><code>xs-security.json</code> 的 <code>role-templates[].name</code></td><td><code>OrderAdmin</code>（= 订单管理员）</td><td>管理员在 cockpit 组装角色集合时看到的模板；<b>它本身不是 CAP 角色</b></td></tr>
+<tr><td><b>角色（cockpit 上的实例）</b></td><td>由模板实例化，编译/部署时生成</td><td><code>OrderAdmin (demo-node trial-dev)</code></td><td>被加进角色集合 → 用户 → JWT</td></tr>
+</tbody></table></div>
+<div class="box danger"><b class="t">这张表解释了「JWT 里有 scope 却 403」</b>
+CDS 的 <code>to:</code> 必须写 <b>CAP 角色名</b>（示范项目是 <code>view</code> / <code>edit</code> / <code>submit</code>），
+不能写 role-template 名（<code>OrderAdmin</code>）。两者在 cockpit 上都叫「角色」，但只有 scope 会被放进 JWT。</div>
+<h3 id="s9-3">9-3 由模型生成描述符（并核对一致性）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ npx cds compile srv --to xsuaa        # 只写 authenticated-user 时：三个空数组
+{ "scopes": [], "attributes": [], "role-templates": [] }
+
+$ npx cds compile srv --to xsuaa        # 加上 to: 'view' / 'edit' / 'submit' 之后
+{
+  "scopes": [
+    { "name": "$XSAPPNAME.view",   "description": "view" },
+    { "name": "$XSAPPNAME.edit",   "description": "edit" },
+    { "name": "$XSAPPNAME.submit", "description": "submit" }
+  ],
+  "attributes": [],
+  "role-templates": [
+    { "name": "view", "description": "generated",
+      "scope-references": [ "$XSAPPNAME.view" ], "attribute-references": [] },
+    ...
+  ]
+}
+
+$ npx cds add xsuaa --for production    # 落成 xs-security.json 并给 package.json 加 [production] 档
+Successfully added features to your project</code></pre>
+<p>两件事要注意：<b>「只有 <code>authenticated-user</code>」不会生成任何 scope</b>（伪角色不需要授权数据）；
+生成器的 role-template 名默认就是 <code>to:</code> 名，示范项目手工改成了语意更好的
+<code>OrderViewer</code> / <code>OrderEditor</code> / <code>OrderAdmin</code>——<b>scope 引用必须保持一致</b>，
+这是 CAP 文档明确提醒的：手工改过 <code>xs-security.json</code> 后，scope 名要与 CDS 里的角色名严格对应，因为运行时按它比对。</p>
+<figure class="fig" data-fig="sec_s07">
+  <a class="zoom" href="assets/fig/sec_s07.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s07.svg" alt="模型里的 to: 角色会被编译成 scopes + role-templates；一个也没写时（只写 authenticated-user）输出是三个空数组" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">模型里的 to: 角色会被编译成 scopes + role-templates；一个也没写时（只写 authenticated-user）输出是三个空数组</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npx cds compile srv --to xsuaa / npx cds add xsuaa --for production（CAP 9.9.3）</span></figcaption>
+</figure>
+<h3 id="s9-4"><code>mta.yaml</code> 如何引用它</h3>
+<pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml">modules:
+  - name: demo-node-srv
+    type: nodejs
+    path: gen/srv
+    requires:
+      - name: demo-node-db
+      - name: demo-node-uaa            # 绑定 XSUAA 实例
+  - name: demo-node-approuter
+    type: nodejs
+    path: approuter
+    requires:
+      - name: demo-node-uaa            # approuter 也要绑，才能发起登录
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api                # 必须与 xs-app.json 的 destination 同名
+          url: ~{srv-url}
+          forwardAuthToken: true       # ★ 把用户 JWT 转发给后端
+
+resources:
+  - name: demo-node-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application         # 普通应用用 application；多租户 SaaS 用 broker
+      path: ./xs-security.json          # ★ 描述符文件在这里被引用
+      config:
+        xsappname: demo-node-${org}-${space}
+        tenant-mode: dedicated</code></pre>
+<ol class="steps">
+  <li><b>动作</b>：把 <code>resources</code> 里的 xsuaa 资源 <code>path</code> 指向描述符文件；<code>service-plan</code> 选
+    <code>application</code>（应用自己的 OAuth 客户端）或 <code>broker</code>（多租户订阅场景）。</li>
+  <li><b>动作</b>：在 <code>config</code> 里固定 <code>xsappname</code>（示范项目用 <code>demo-node-${org}-${space}</code>，避免同子账户重名）。
+    <b>mta.yaml 的 <code>config</code> 与文件内容会合并，冲突时以 MTA 的配置优先</b>。</li>
+  <li><b>动作</b>：approuter 的 destination 上加 <code>forwardAuthToken: true</code>，并在 <code>xs-app.json</code> 的路由上声明
+    <code>authenticationType: xsuaa</code>（示范项目两个路由都设了）；否则后端收到的请求里没有 <code>Authorization</code> 头 → 匿名 → 401。</li>
+  <li><b>验证</b>：<code>npx cds build --production</code> 后检查 <code>gen/</code>；<code>mbt build</code> 打包前用
+    <code>python3 -c "import yaml,sys;yaml.safe_load(open('mta.yaml'))"</code> 或编辑器插件确认 YAML 合法；
+    部署后 <code>cf env demo-node-srv</code> 里应出现 <code>VCAP_SERVICES.xsuaa</code> 段（第 11 节）。</li>
+</ol>
+<figure class="fig" data-fig="sec_s08">
+  <a class="zoom" href="assets/fig/sec_s08.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s08.svg" alt="xsuaa 服务实例详情：xsappname 决定 scope 前缀，三个角色模板就是 CDS 里 to: 的三个名字" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 7</span><span class="cap">xsuaa 服务实例详情：xsappname 决定 scope 前缀，三个角色模板就是 CDS 里 to: 的三个名字</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+
+<h2 id="s10">10. 手顺：让「只有订单管理员能提交订单」真正生效</h2>
+<p>这是把 6–9 节串起来的一条完整链路。示范项目当前只做了服务级
+<code>@requires: 'authenticated-user'</code>（任何登录用户都能提交订单），下面是把它收紧到「订单管理员」的六步。</p>
+<div class="stepmeta"><span class="k">cds compile · cds add · mbt build · cf deploy · cockpit</span><span class="f">srv/book-order-service.cds · xs-security.json · mta.yaml</span><span class="c">耗时 60 分</span></div>
+<ol class="steps">
+  <li><b>动作（模型）</b>：在 <code>srv/book-order-service.cds</code> 末尾追加实体级授权，动作只授予 <code>submit</code> 角色：
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">/* 角色名 = xs-security.json 的 scope 名去掉 $XSAPPNAME. 前缀 */
+annotate BookOrderService.BookOrders with @(restrict: [
+  { grant: 'READ',               to: 'view' },      // OrderViewer 拥有
+  { grant: ['CREATE', 'UPDATE'], to: 'edit' },      // OrderEditor 拥有
+  { grant: 'submitOrder',        to: 'submit' }     // OrderAdmin 拥有
+]);
+annotate BookOrderService.OrderItemView with @(restrict: [ { grant: 'READ', to: 'view' } ]);</code></pre>
+    <b>验证</b>：<code>npx cds compile srv --to sql</code> 无 error；<code>npx cds compile srv --to xsuaa</code> 输出三个 scope
+    （<code>$XSAPPNAME.view / .edit / .submit</code>），与项目里手工维护的 <code>xs-security.json</code> 一致。</li>
+  <li><b>动作（授权数据）</b>：确认 <code>xs-security.json</code> 里 <code>scopes</code> 的名称与上一步一致，
+    并且 <code>OrderAdmin</code> 模板引用了 <code>$XSAPPNAME.submit</code>（第 9-1 节的全文）。
+    <b>验证</b>：把两边的名字逐字对照一次——差一个前缀或大小写，云端就是 403。</li>
+  <li><b>动作（部署描述）</b>：确认 <code>mta.yaml</code> 的 <code>demo-node-uaa</code> 资源带着
+    <code>path: ./xs-security.json</code> 与 <code>service-plan: application</code>，且 srv / approuter 都 <code>requires</code> 它。
+    <b>验证</b>：<code>npx cds build --production</code> → <code>mbt build -t mta_archives</code> 生成 <code>.mtar</code> 无报错。</li>
+  <li><b>动作（本地先验证）</b>：在 <code>package.json</code> 里按 4-2 配好
+    <code>zoe: roles: ['view','submit']</code>、<code>alice: roles: ['view']</code>，用第 5 节的两条 curl 打一遍。
+    <b>验证</b>：alice 提交 → <b>403</b>；zoe 提交 → <b>200</b> 且返回「订单 BO-1001 已提交…」。本地先立好基线，云端出问题才知道该怀疑谁。</li>
+  <li><b>动作（部署 + 角色集合）</b>：<code>cf deploy mta_archives/demo-node_1.0.0.mtar -f</code>，然后在 cockpit
+    <b>Subaccount → Security → Role Collections</b> 新建 <code>订单管理员</code>，加入应用 <code>demo-node-trial-dev</code> 的角色
+    <code>OrderAdmin</code>，再把用户邮箱加进 <b>Users</b>。
+    <b>验证</b>：角色集合详情里 <code>OrderAdmin</code> 一行存在，Users 列表里能看到你的账号；用户那边要<b>重新登录</b>后才生效。</li>
+  <li><b>动作（用 JWT 验证）</b>：按第 11 节取用户 token，然后：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ SVC=https://trial-dev-demo-node.cfapps.ap10.hana.ondemand.com/odata/v4/book-order
+$ curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $(cat /tmp/other.jwt)" "$SVC/BookOrders?\$top=1"
+403                                  # 有身份（用了技术用户 token）但没有业务 scope
+$ curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $(cat /tmp/user.jwt)" "$SVC/BookOrders?\$top=1"
+200                                  # 订单管理员用户 token，scope 里有 view / submit
+$ curl -s -o /dev/null -w '%{http_code}\n' "$SVC/BookOrders?\$top=1"
+401                                  # 不带 Authorization 头</code></pre>
+    <b>验证</b>：三态齐全（403 / 200 / 401），且换成一个只被分配了 <code>OrderViewer</code> 的用户，
+    提交动作应得 <b>403</b>（能看不能提交）。</li>
+</ol>
+<figure class="fig" data-fig="sec_s09">
+  <a class="zoom" href="assets/fig/sec_s09.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s09.svg" alt="角色集合「订单管理员」详情：一个角色集合可以有多个应用的角色，用户加进来后才拿得到 scope" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 8</span><span class="cap">角色集合「订单管理员」详情：一个角色集合可以有多个应用的角色，用户加进来后才拿得到 scope</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+<figure class="fig" data-fig="sec_s10">
+  <a class="zoom" href="assets/fig/sec_s10.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s10.svg" alt="把角色集合分配给用户：BTP 侧的最后一步，做完用户下次登录的 JWT 里才有对应 scope" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 9</span><span class="cap">把角色集合分配给用户：BTP 侧的最后一步，做完用户下次登录的 JWT 里才有对应 scope</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+<div class="box ok"><b class="t">这条链路的每一环都不能省</b>
+模型（谁能做什么）→ 描述符（角色 → scope）→ MTA（把描述符交给 XSUAA）→ 角色集合（把角色发给用户）→ JWT（凭据）→ 请求。
+少任何一环的表现都一样：<b>403</b>。所以第 12 节的排错表按「顺序往下查」组织。</div>
+
+<h2 id="s11">11. 部署后授权如何真正生效</h2>
+<div class="timeline">
+  <div class="tl"><b>① cf deploy：xsuaa 实例被创建/更新</b>
+    <small>描述符里的 scopes 与 role templates 注册进子账户（此时还没有任何用户拥有它们）。</small></div>
+  <div class="tl"><b>② cockpit：角色模板实例化成角色</b>
+    <small>Security → Role Collections 上能看到 <code>OrderAdmin (demo-node trial-dev)</code> 这样的角色。</small></div>
+  <div class="tl"><b>③ cockpit：建角色集合，把角色装进去</b>
+    <small>角色集合是「发给用户的单位」，可以跨应用组合多个角色。</small></div>
+  <div class="tl"><b>④ cockpit：把用户（邮箱）加进角色集合</b>
+    <small>用户必须先存在于子账户可用的 IdP（见 Trust Configuration）。</small></div>
+  <div class="tl"><b>⑤ 用户登录：XSUAA 签发带 scope 的 JWT</b>
+    <small>approuter 触发登录流程；token 里的 <code>scope</code> 就是角色集合里的角色对应的 scope。</small></div>
+  <div class="tl"><b>⑥ 请求带上 Authorization 头 → CAP 校验并执行注解</b>
+    <small>通过 = 200，身份缺失 = 401，角色/条件不足 = 403。</small></div>
+</div>
+<h3 id="s11-1">11-1 取凭据：service key 与 <code>cf env</code></h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 机器用凭据：为 xsuaa 实例建一个 service key
+$ cf create-service-key demo-node-uaa demo-key
+$ cf service-key demo-node-uaa demo-key | tail -n +2 | jq -r '.credentials.url'
+https://trial-dev-demo-node.authentication.ap10.hana.ondemand.com
+
+# 应用实际绑定的是什么（排查 401 的第一手材料）
+$ cf env demo-node-srv | jq -r '.VCAP_SERVICES.xsuaa[0].credentials.xsappname'
+demo-node-trial-dev</code></pre>
+<p><code>cf service-key</code> 的输出第一行是提示文字，所以要用 <code>tail -n +2</code> 才能直接喂给 <code>jq</code>。
+凭据里可用的键随绑定方式与平台版本会有差异（<code>url</code> 与 <code>uaa.url</code> 两种形态都见过）——用
+<code>jq '.credentials | keys'</code> 先看一眼自己环境里到底有什么。</p>
+<figure class="fig" data-fig="sec_s12">
+  <a class="zoom" href="assets/fig/sec_s12.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s12.svg" alt="cf env 里的 VCAP_SERVICES：xsuaa 绑定的 xsappname / clientid / url 就在这，排查 401 先看它绑的是哪个实例" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 10</span><span class="cap">cf env 里的 VCAP_SERVICES：xsuaa 绑定的 xsappname / clientid / url 就在这，排查 401 先看它绑的是哪个实例</span><span class="kind">高保真重绘</span><span class="src">本站自绘（VCAP_SERVICES 字段名随绑定/平台版本可能不同，标 ~ 处请以自己环境为准）</span></figcaption>
+</figure>
+<h3 id="s11-2">11-2 取 JWT：两条路</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ TOKEN_URL="$(cf service-key demo-node-uaa demo-key | tail -n +2 | jq -r '.credentials.url')/oauth/token"
+$ CLIENT_ID=$(cf service-key demo-node-uaa demo-key | tail -n +2 | jq -r '.credentials.clientid')
+$ export CLIENT_SECRET='<只放在环境变量里，不要写进脚本和聊天记录>'
+
+# ① client_credentials：技术用户（后端对后端 / 冒烟测试）
+$ curl -s -X POST "$TOKEN_URL" -u "$CLIENT_ID:$CLIENT_SECRET" \
+    -d 'grant_type=client_credentials' | jq -r .access_token | cut -c1-32
+eyJhbGciOiJSUzI1NiIsImtpZCI6ImRlZmF1bHQifQ
+
+# ② password：业务用户（需要该 OAuth 客户端允许 password 授权，且用户在默认 IdP 能直接登录）（~ 视 IdP 策略）
+$ curl -s -X POST "$TOKEN_URL" -u "$CLIENT_ID:$CLIENT_SECRET" \
+    -d 'grant_type=password&username=order.admin@example.com&password=<口令>' \
+    | jq -r .access_token > /tmp/user.jwt
+
+# 不装 jwt 工具也能看 payload：base64url 解第二段
+$ python3 -c "import sys,json,base64;p=sys.stdin.read().split('.')[1];print(json.loads(base64.urlsafe_b64decode(p+'='*(-len(p)%4)))['scope'])" < /tmp/user.jwt
+['openid', 'demo-node-trial-dev.view', 'demo-node-trial-dev.submit']</code></pre>
+<div class="box warn"><b class="t">两条路的角色完全不同（这是 403 的头号来源）</b>
+<ul>
+  <li><b>client_credentials</b> 得到的是<b>技术用户</b>：CAP 会把它映射成 <code>system-user</code>（自带的客户端再额外得到 <code>internal-user</code>），
+    <b>业务角色一个也没有</b>——所以拿它去调业务接口几乎必然 403，它适合验证「token 端点通不通」。CAP 里要给技术用户开的口子，注解写 <code>@requires: 'system-user'</code>。</li>
+  <li><b>password（或 UI 登录）</b>得到的是<b>业务用户</b>：JWT 的 <code>scope</code> 与角色集合一致，是验证业务授权唯一可信的方式。</li>
+</ul></div>
+<figure class="fig" data-fig="sec_s11">
+  <a class="zoom" href="assets/fig/sec_s11.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s11.svg" alt="两条取 token 的路：client_credentials（技术用户）与 password（业务用户）；scope 不同，403 与 200 就差在这里" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 11</span><span class="cap">两条取 token 的路：client_credentials（技术用户）与 password（业务用户）；scope 不同，403 与 200 就差在这里</span><span class="kind">高保真重绘</span><span class="src">本站自绘（命令依据 SAP Help / CAP 文档；本机无 XSUAA 实例，未实测端点行为）</span></figcaption>
+</figure>
+<h3 id="s11-3">11-3 访问受保护资源：三态对照</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>请求</th><th>状态码</th><th>含义</th><th>下一步查什么</th></tr></thead>
+<tbody>
+<tr><td>不带 <code>Authorization</code></td><td><b>401</b></td><td>没有凭据</td><td>approuter 是否转发（<code>forwardAuthToken</code> / <code>authenticationType</code>）</td></tr>
+<tr><td>带过期/错实例的 token</td><td><b>401</b></td><td>凭据无效（签名或 issuer 不匹配）</td><td><code>cf env</code> 里的 <code>url</code> / <code>uaadomain</code> 是否与签发端一致</td></tr>
+<tr><td>带技术用户 token</td><td><b>403</b></td><td>身份有效但无业务 scope</td><td>换 password 流的业务用户 token</td></tr>
+<tr><td>带业务用户 token 但缺角色</td><td><b>403</b></td><td>scope 里没有 <code>to:</code> 要求的那个</td><td>JWT 的 <code>scope</code> 与 <code>to:</code> 逐字比对（含前缀剥离）</td></tr>
+<tr><td>带业务用户 token 且角色齐全</td><td><b>200</b></td><td>授权通过</td><td>—</td></tr>
+</tbody></table></div>
+<figure class="fig" data-fig="sec_s02">
+  <a class="zoom" href="assets/fig/sec_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/sec_s02.svg" alt="Security → Role Collections：部署后 xs-security.json 里的角色集合会出现在这里，手工建的也在同一张表上" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 12</span><span class="cap">Security → Role Collections：部署后 xs-security.json 里的角色集合会出现在这里，手工建的也在同一张表上</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>
+
+<h2 id="s12">12. 常见错误表</h2>
+<p>按「先看状态码 → 再按顺序查链路」使用。每一行都给出<b>怎么确认</b>，不要凭猜改配置。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>现象</th><th>最可能的原因</th><th>怎么确认</th><th>对策</th></tr></thead>
+<tbody>
+<tr><td>匿名请求 401，但你的用法就是要匿名</td><td>服务被 <code>@requires</code> 覆盖，或生产下隐式 <code>authenticated-user</code></td><td><code>cds env get requires.auth</code> 看 <code>restrict_all_services</code>；看服务级注解</td><td>把该实体/服务显式标成 <code>@(requires: 'any')</code>，或调整 <code>restrict_all_services</code></td></tr>
+<tr><td>带着 token 却 401（不是 403）</td><td>token 过期 / 签名校验失败 / 绑错了 xsuaa 实例（issuer、audience 不匹配）</td><td>解 JWT 看 <code>exp</code>、<code>iss</code>、<code>aud</code>；<code>cf env</code> 比对 <code>credentials.url</code> 与 <code>xsappname</code></td><td>重新取 token；核对应用绑定的实例与签发端是同一个</td></tr>
+<tr><td>403，但用户在 cockpit 里明明有角色集合</td><td>scope 名与 CDS 的 <code>to:</code> 不一致（前缀、大小写、拼写）</td><td>打印 JWT 的 <code>scope</code>，与注解逐个字符比对</td><td>统一命名：CDS 用 scope 名去前缀，或反之调整描述符</td></tr>
+<tr><td>403，且 <code>scope</code> 里确实有需要的角色</td><td><code>to:</code> 写的是 role-template 名（如 <code>OrderAdmin</code>）而不是 CAP 角色名（<code>submit</code>）</td><td>对照 9-2 的三名字表</td><td>把注解改成 CAP 角色名</td></tr>
+<tr><td>403，scope 与名字都对</td><td>层级未全部通过：服务级要求 A、实体级要求 B，用户只有 B</td><td>把服务的 <code>@requires</code> 与实体的 <code>@restrict</code> 一起列出来</td><td>补齐该用户缺失的那一层，或放宽上层</td></tr>
+<tr><td>本地 mocked 通过，云端 403</td><td>本地 mock 角色是自己写的字符串，与 XSUAA 的 scope 名无关</td><td>把本地 mock 的 <code>roles</code> 与云端 <code>scope</code> 并排看</td><td>本地就用 <code>view</code> / <code>submit</code> 这种最终角色名</td></tr>
+<tr><td>匿名也是 200，怎么测都不 401</td><td><code>kind: dummy</code></td><td><code>cds env get requires.auth.kind</code></td><td>改回 <code>mocked</code>（或 <code>basic</code>）</td></tr>
+<tr><td>本地一切都 200（含匿名）</td><td>注解没生效：profile 覆盖、文件没被加载、或注解写在别的实体上</td><td><code>cds watch</code> 启动日志里的 <code>loaded model from N file(s)</code></td><td>确认文件在加载列表里；把注解写到请求目标实体</td></tr>
+<tr><td>用户刚被加进角色集合，仍然 403</td><td>旧 JWT 里没有新 scope（token 还没刷新）</td><td>解 JWT 看 <code>iat</code> / <code>exp</code></td><td>让用户重新登录或等 token 过期；排查期间用重新取的 token</td></tr>
+<tr><td>浏览器直接打 <code>/$metadata</code> 得 401</td><td><code>@requires</code> 默认也保护元数据端点</td><td>用带 token 的 curl 打同一 URL</td><td>需要公开元数据时用特权用户中间件放行，或（Java）关掉元数据认证</td></tr>
+<tr><td>approuter 路由上 401 / 403，直连 srv 却正常</td><td><code>xs-app.json</code> 未声明 <code>authenticationType</code>，或 destination 未开 <code>forwardAuthToken</code></td><td>看 <code>approuter/xs-app.json</code> 与 <code>mta.yaml</code> 的 destination properties</td><td>补上 <code>forwardAuthToken: true</code> 与 <code>authenticationType: xsuaa</code></td></tr>
+<tr><td>把 Destination 配置与 XSUAA 混为一谈</td><td>概念混淆：Destination 是<b>出站</b>调用目标，XSUAA 是<b>入站</b>认证</td><td>问「这个请求是别人来调我，还是我去调别人」</td><td>入站问题查 role collection / JWT；出站问题查 destination + 目标系统的认证方式</td></tr>
+<tr><td><code>grant_type=password</code> 返回 <code>unsupported_grant_type</code></td><td>该 OAuth 客户端不允许 password 授权，或用户在企业 IdP（含 2FA）</td><td>看返回体里的 <code>error_description</code></td><td>改用 authorization_code（浏览器登录）拿用户 token</td></tr>
+<tr><td>改了 <code>xs-security.json</code>，cockpit 上的角色没更新</td><td>没有重新部署/更新实例；或角色集合同名更新会清空用户分配</td><td><code>cf deploy</code> 的输出里是否有服务更新步骤</td><td>重新部署后核对；改名会重建角色集合，用户分配要重加</td></tr>
+<tr><td>重复 <code>annotate @restrict</code> 后权限「少了一半」</td><td>同一目标重复赋值，后者覆盖前者（只有 WARNING）</td><td><code>cds compile srv --to xsuaa</code> 的输出里 scope 少了几条</td><td>合并到一处；把 WARNING 当错误处理</td></tr>
+<tr><td>加了 <code>where</code> 但用户还是看到全部数据</td><td>属性的值为空/未定义时条件为 false（该被挡住）；反之用了 <code>valueRequired: false</code> 又写了 <code>or $user.x is null</code>，就等于放开</td><td>打印 JWT 里的 <code>xs.user.attributes</code></td><td>先确认属性真的进了 token，再收紧条件写法</td></tr>
+<tr><td>多租户场景下角色串了子账户</td><td>plan 用错（<code>application</code> vs <code>broker</code>）或 <code>xsappname</code> 不唯一</td><td><code>cf marketplace -e xsuaa</code> 看当前可用的 plan</td><td>多租户用 broker plan，并在 <code>config</code> 里固定唯一的 <code>xsappname</code></td></tr>
+</tbody></table></div>
+
+<h2 id="s13">13. 安全基线清单（生产必须做）</h2>
+<div class="cols2">
+<div>
+<h3>配置与模型</h3>
+<ul class="check">
+  <li>生产 profile 里 <code>auth.kind</code> 明确设为 <code>xsuaa</code>（或 <code>jwt</code>），<b>绝不允许 <code>mocked</code> / <code>dummy</code> 进入生产</b>；<code>[production]</code> 档要在 <code>package.json</code> 里显式写出。</li>
+  <li>每一个暴露的服务都有显式授权（<code>@requires</code> / <code>@restrict</code>），不依赖「隐式 authenticated-user」这一个默认值兜底。</li>
+  <li>敏感实体不靠关联路径兜底：为它建独立服务实体并单独写授权（Node.js 不检查 expand 出的关联实体）。</li>
+  <li><code>where</code> 条件用编译器表达式并配单元测试（两个不同属性的用户 → 结果集不同）。</li>
+</ul>
+</div>
+<div>
+<h3>凭据与运行</h3>
+<ul class="check">
+  <li>角色集合按最小权限发放：能只给 <code>OrderViewer</code> 就不要给 <code>OrderAdmin</code>；<code>clientsecret</code> 只通过 service key / 环境变量传递，<b>不进 Git、不进日志、不贴聊天</b>。</li>
+  <li>定期审计角色集合与用户分配（含离职账号），并给每个 role template 写清 <code>description</code>，让管理员知道发出去的是什么。</li>
+  <li>生产关闭特权用户中间件与认证调试日志（<code>cds.log.levels.auth: debug</code> 不要把 token 打进日志）。</li>
+  <li>把 401 / 403 / 200 三态断言纳入验收脚本与 CI：匿名必须 401、越权必须 403、授权必须 200。</li>
+</ul>
+</div>
+</div>
+<div class="box ok"><b class="t">讲师提示</b>基线清单可以直接当实验报告的检查项：让学员在自己环境里逐条勾，
+其中「本地把 403 跑出来」和「用 JWT 复现同一个 403」这两条最能暴露理解漏洞。</div>
+
+<h2 id="s14">14. 本节测试</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>401 与 403 分别由链路上的哪一环产生？各自该怎么确认原因？</li>
+    <li>为什么测「匿名请求必须 401」时不能用 <code>kind: dummy</code>？用它测出来的结果会是什么？</li>
+    <li><code>mocked</code> 下 <code>-u anyname:whatever</code> 也返回 200，原因是什么？要让它只认自己配的用户怎么做？</li>
+    <li>CDS 里写 <code>to: 'sub'</code>（少一个字母）而 <code>xs-security.json</code> 里是 <code>$XSAPPNAME.submit</code>，会发生什么？为什么？</li>
+    <li>服务级 <code>@requires: 'authenticated-user'</code> 与实体级 <code>@restrict</code> 同时存在时，判断规则是什么？</li>
+    <li>同一实体写了两段 <code>annotate … with @(restrict: […])</code>，最终生效的是哪一段？编译时有什么提示？</li>
+    <li><code>@readonly</code> 表达的是「只读」还是「权限控制」？要给「只有管理员能读」该怎么写？</li>
+    <li>角色集合、角色模板、scope、CAP 角色名，这四者是什么关系？（画一条从 <code>to:</code> 到 JWT 的箭头链）</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-security">自测 · ⑧ 权限</a>；排错条目见 <a href="issues.html#security">排错页 · 权限</a>。</p>
+</div>
+
+<h2 id="s15">15. 小结</h2>
+<div class="box ok"><b class="t">三句话记住这一章</b>
+<ul>
+  <li><b>认证在 CAP 之外，授权在 CAP 之内</b>：IdP/XSUAA 负责「你是谁」并签发带 scope 的 JWT，
+    CDS 注解 + 运行时负责「你能做什么」；两者用<b>角色名 = scope 名去前缀</b>这一条约定连接。</li>
+  <li><b>本地测权限用 <code>mocked</code>，不要用 <code>dummy</code></b>：<code>dummy</code> 会把匿名请求也放行，
+    让你对 401/403 的判断全部失效；<code>mocked</code> 的默认用户既没有密码还有 <code>"*": true</code>，也要显式收紧。</li>
+  <li><b>403 是排查目标，不是结论</b>：按「模型 → 描述符 → MTA → 角色集合 → JWT → 请求头」的顺序查，
+    每一环都有一个命令可看（<code>cds compile … --to xsuaa</code>、<code>cf deploy</code>、cockpit、解 JWT、<code>cf env</code>）。</li>
+</ul></div>
+<div class="flow">
+  <span class="node">上一章：<a href="testing.html">⑦ 测试体系</a></span><span class="arrow">→</span>
+  <span class="node">本页：⑧ 认证与授权</span><span class="arrow">→</span>
+  <span class="node">下一章：<a href="fiori.html">⑨ Fiori UI</a><br><small>把带权限的服务接到界面上，看 403 在 UI 里的样子</small></span>
+</div>
+<p>配套：<a href="code.html">源码页</a> 有 <code>xs-security.json</code> / <code>mta.yaml</code> / <code>xs-app.json</code> 全文；
+<a href="cli.html">速查页</a> 收录了本章全部 cds / cf / curl 命令与注解写法；
+<a href="issues.html">排错页</a> 按错误信息汇总了第 12 节的条目；
+<a href="tasks.html#SEC">任务索引</a> 里有本章的实训任务与完成基准。</p>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>

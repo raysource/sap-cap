@@ -1,0 +1,140 @@
+{
+  "key": "bas_s11",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "caption": "部署后用 cockpit 核对：space 里的应用（srv 与 db-deployer）与服务实例、最近活动",
+  "alt": "部署后用 cockpit 核对：space 里的应用（srv 与 db-deployer）与服务实例、最近活动",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 页面结构与字段出自 SAP BTP cockpit（Cloud Foundry > Spaces）",
+  "product": "SAP Business Technology Platform",
+  "crumbs": [
+    "Global Account: trial-eu10-9f3a2b (trial)",
+    "Subaccount: trial",
+    "Cloud Foundry",
+    "Space: dev"
+  ],
+  "nav": {
+    "title": "Space: dev",
+    "items": [
+      {
+        "label": "Applications",
+        "active": true
+      },
+      {
+        "label": "Service Instances"
+      },
+      {
+        "label": "Routes"
+      },
+      {
+        "label": "Security",
+        "sub": [
+          "Space Members"
+        ]
+      },
+      {
+        "label": "Events"
+      }
+    ]
+  },
+  "title": "Space: dev — Applications",
+  "subtitle": "Region: Singapore (ap10) · Org: trial · 内存配额 4 GB（试用）",
+  "tabs": [
+    "Applications"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "table",
+      "cols": [
+        "NAME",
+        "STATE",
+        "TYPE",
+        "MEMORY",
+        "ROUTES"
+      ],
+      "widths": [
+        1.5,
+        0.9,
+        1.1,
+        0.8,
+        2.0
+      ],
+      "rows": [
+        [
+          "demo-node-srv",
+          "started",
+          "nodejs",
+          "256 MB",
+          "…-dev-demo-node-srv.cfapps.ap10.hana.ondemand.com"
+        ],
+        [
+          "demo-node-db-deployer",
+          "stopped",
+          "nodejs",
+          "256 MB",
+          "— 一次性任务，正常"
+        ]
+      ]
+    },
+    {
+      "t": "table",
+      "cols": [
+        "SERVICE INSTANCE",
+        "SERVICE",
+        "PLAN",
+        "LAST OPERATION"
+      ],
+      "widths": [
+        1.4,
+        1.8,
+        1.0,
+        1.4
+      ],
+      "rows": [
+        [
+          "demo-node-db",
+          "SAP HANA Schemas & HDI Containers (hana)",
+          "hdi-shared",
+          "create succeeded"
+        ],
+        [
+          "demo-xsuaa",
+          "Authorization & Trust Management",
+          "application",
+          "create succeeded"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "ok",
+      "text": "验收：srv 应用 started + 服务实例 create succeeded；浏览器访问 <route>/odata/v4/book-order/$metadata 返回 200。"
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "若 db-deployer 停在 stopped 属正常；若 srv 显示 crashed，先去 Logs 看第一条错误，再对照「常见错误」表。"
+    }
+  ],
+  "status": "● 1 started application · ● 2 service instances · Memory used: 512 MB / 4 GB",
+  "callouts": [
+    {
+      "on": "demo-node-srv",
+      "text": "1. 服务应用要 started"
+    },
+    {
+      "on": "demo-node-db",
+      "text": "2. HDI 容器实例（type: hdi-shared）"
+    },
+    {
+      "on": "demo-node-db-deployer",
+      "text": "3. 建表任务跑完即停止"
+    },
+    {
+      "on": "…-dev-demo-node-srv.cfapps.ap10.hana.ondemand.com",
+      "text": "4. 用这条路由验证 OData"
+    }
+  ]
+}

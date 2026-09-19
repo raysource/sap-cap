@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图书受注管理 / Manage Book Orders</title>
+
+  <!--
+    ⚠ 为什么要有这一块：
+      ① html / body / #container 必须有确定高度。Fiori Elements 的应用容器高度是 100%，
+         这三个元素的高度只要有一个是 0px，页面就会「加载正常、状态栏正常、内容区全白」。
+         排查：F12 → 选中 #container → 看 computed height 是否为 0px。
+      ② 不要用 <div data-sap-ui-component>（ComponentSupport 自动挂载）：它创建的容器没带
+         height="100%"，内层 -uiarea 会算成 0px（本站就是踩了这个坑）。
+         显式 new ComponentContainer({ height: "100%" }) 最稳。
+      ③ sap.fe.*（Fiori Elements）属于 SAPUI5，不在 OpenUI5 里 —— sdk.openui5.org 上没有
+         /resources/sap/fe/（会 404），所以要用 ui5.sap.com 的 CDN。生产环境应从 BTP 的
+         HTML5 Application Repository / approuter 加载。确认版本可用性：
+           curl -sI https://ui5.sap.com/1.136.0/resources/sap/fe/core/AppComponent.js   # → 200
+      ④ data-sap-ui-resourceroots 必须把应用 id 映射到当前目录，否则 manifest.json 找不到。
+  -->
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    #container { height: 100%; }
+  </style>
+
+  <script
+    id="sap-ui-bootstrap"
+    src="https://ui5.sap.com/1.136.0/resources/sap-ui-core.js"
+    data-sap-ui-theme="sap_horizon"
+    data-sap-ui-language="zh-CN"
+    data-sap-ui-libs="sap.m, sap.fe.templates"
+    data-sap-ui-compatVersion="edge"
+    data-sap-ui-async="true"
+    data-sap-ui-frameOptions="trusted"
+    data-sap-ui-resourceroots='{ "sap.training.bookorder.manage": "./" }'
+  ></script>
+
+  <script>
+    /* 应用入口：UI5 启动完成后挂载 Fiori Elements 应用（List Report + Object Page） */
+    sap.ui.getCore().attachInit(function () {
+      new sap.ui.core.ComponentContainer({
+        name: "sap.training.bookorder.manage",
+        height: "100%",
+        async: true
+      }).placeAt("container");
+    });
+  </script>
+</head>
+<body class="sapUiBody" id="content">
+  <div id="container"></div>
+</body>
+</html>

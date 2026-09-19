@@ -1,0 +1,72 @@
+[
+ {
+  "no": "SEC-01",
+  "title": "把四种 auth kind 的行为差异跑出来（mocked / dummy / basic / jwt）",
+  "basis": "mocked 下匿名 GET 返回 401（带 WWW-Authenticate: Basic realm=\"Users\"）、-u alice:alice 返回 200；用 cds_requires_auth_kind=dummy 重启后同一个匿名请求返回 200——两次状态码都记录在案并解释原因",
+  "time": "20 分",
+  "rel": "security.html#s3"
+ },
+ {
+  "no": "SEC-02",
+  "title": "用 cds.requires.auth.users 收紧本地认证",
+  "basis": "配置里出现 \"*\": false 与带 password 的用户；npx cds env get requires.auth 能看到合并后的用户；未配置的用户名返回 401、已知用户输错密码返回 401",
+  "time": "15 分",
+  "rel": "security.html#s4-2"
+ },
+ {
+  "no": "SEC-03",
+  "title": "本地复现 401 / 403 / 200 三态",
+  "basis": "同一条 GET：匿名 401、只有 view 角色的 alice 200、无角色的 bob 403（响应体形如 {\"error\":{\"message\":\"Forbidden\",\"code\":\"403\"}}）；同一张订单的 submitOrder：alice 403、zoe 200 并返回业务消息",
+  "time": "25 分",
+  "rel": "security.html#s5"
+ },
+ {
+  "no": "SEC-04",
+  "title": "写出服务级 + 实体级 + 动作级的授权组合",
+  "basis": "服务上有 @(requires: 'authenticated-user')，实体上有 @restrict 的 grant/to 组合（含动作名授权），并且能说明「层级之间是逻辑与、同一实体内多条 privilege 是逻辑或」；cds compile --to edmx 无 error",
+  "time": "20 分",
+  "rel": "security.html#s7"
+ },
+ {
+  "no": "SEC-05",
+  "title": "用 cds compile srv --to xsuaa 生成并核对授权描述符",
+  "basis": "命令输出里出现与 CDS 的 to: 一一对应的 scopes；与项目里手工维护的 xs-security.json 逐字对照后能指出差异（生成的是 to: 名，手工版改成了 OrderViewer/OrderEditor/OrderAdmin）",
+  "time": "15 分",
+  "rel": "security.html#s9-3"
+ },
+ {
+  "no": "SEC-06",
+  "title": "在 mta.yaml 里接上 xs-security.json，并检查 approuter 的 token 转发",
+  "basis": "resources 里的 xsuaa 资源带 path: ./xs-security.json 与 service-plan: application；srv 与 approuter 都 requires 它；approuter 的 destination 上有 forwardAuthToken: true，xs-app.json 的路由上有 authenticationType: xsuaa",
+  "time": "20 分",
+  "rel": "security.html#s9-4"
+ },
+ {
+  "no": "SEC-07",
+  "title": "完成「只有订单管理员能提交订单」的完整链路（六步）",
+  "basis": "① 模型加 @restrict（编译通过）② 描述符里 scope 名与 to: 对齐 ③ mta.yaml 引用 ④ 本地 alice 403 / zoe 200 ⑤ 部署后 cockpit 角色集合里含 OrderAdmin 且用户已加入 ⑥ 云端 curl 得到 403 / 200 / 401 三态",
+  "time": "60 分",
+  "rel": "security.html#s10"
+ },
+ {
+  "no": "SEC-08",
+  "title": "用 service key 取 JWT 并解出 scope 列表",
+  "basis": "cf create-service-key 成功；cf service-key … | tail -n +2 | jq -r '.credentials.url' 拿到 token 端点；client_credentials 与 password 两条路各取一个 token，解 payload 后能说明两者 scope 差异（技术用户无业务 scope）",
+  "time": "25 分",
+  "rel": "security.html#s11-2"
+ },
+ {
+  "no": "SEC-09",
+  "title": "用错误表把一个真实 403 定位到具体一环",
+  "basis": "写出排查记录：状态码 → 解 JWT 看 scope → 与 to: 逐字比对 → 检查角色集合与用户分配 → 检查 token 是否重新签发；结论指向唯一一环，并说明改完后如何复验",
+  "time": "20 分",
+  "rel": "security.html#s12"
+ },
+ {
+  "no": "SEC-10",
+  "title": "逐条勾选安全基线清单并说明不达标的风险",
+  "basis": "清单中至少 6 条能在自己的项目里指出对应的配置位置（package.json 的 [production] 档、注解、角色集合、验收脚本），其余两条说明为什么暂时做不到",
+  "time": "15 分",
+  "rel": "security.html#s13"
+ }
+]

@@ -1,0 +1,93 @@
+[
+ {
+  "no": "CDS-01",
+  "title": "核对三类 .cds 文件的编译产物",
+  "basis": "cds compile db/schema.cds --to sql 输出 4 个 CREATE TABLE；加上服务定义后 CREATE VIEW 变 7 个；再加 annotations.cds 后 CREATE TABLE 数不变而 --to edmx 的 Annotations 段出现",
+  "time": "10 分",
+  "rel": "cds.html#s1-1"
+ },
+ {
+  "no": "CDS-02",
+  "title": "把同一份模型编译到两个方言并说明差异",
+  "basis": "--dialect hana 的输出里 createdAt 为 TIMESTAMP、orderDate 为 DATE，且 String 无长度时是 NVARCHAR(5000)（SQLite 为 TIMESTAMP_TEXT/DATE_TEXT/NVARCHAR(255)）",
+  "time": "10 分",
+  "rel": "cds.html#s2-1"
+ },
+ {
+  "no": "CDS-03",
+  "title": "用类型动物园模型输出 SQLite/HANA 双列对照结论",
+  "basis": "能指出 array of String(20) 的列是 NCLOB、Binary(16) 分别是 BINARY_BLOB(16) 与 VARBINARY(16)、DateTime 在 HANA 上是 SECONDDATE",
+  "time": "15 分",
+  "rel": "cds.html#s2-2"
+ },
+ {
+  "no": "CDS-04",
+  "title": "解释并复现 UUID 主键的自动填充",
+  "basis": "POST 一行 BookOrderItems（只给 order_ID/book_ID/quantity）返回体里带自动生成的 36 位 ID，且 BookOrders 主键列 DDL 为 NVARCHAR(36) NOT NULL",
+  "time": "15 分",
+  "rel": "cds.html#s3-2"
+ },
+ {
+  "no": "CDS-05",
+  "title": "查证 orderNo 的唯一性由哪一层保证",
+  "basis": "在 --to sql 输出里确认 orderNo 列没有 UNIQUE；重复提交同一订单号返回 409 且带「已存在」消息",
+  "time": "15 分",
+  "rel": "cds.html#s3-3"
+ },
+ {
+  "no": "CDS-06",
+  "title": "写出 managed / localized 展开后的物理对象",
+  "basis": "能列出 createdAt/createdBy/modifiedAt/modifiedBy 四列及其类型；编译 localized 模型后能指出 _texts 表与 localized_ 视图",
+  "time": "15 分",
+  "rel": "cds.html#s4-2"
+ },
+ {
+  "no": "CDS-07",
+  "title": "用 diff 证明 Association 与 Composition 的 DDL 相同",
+  "basis": "两份仅一个关键词不同的临时模型 --to sql 输出 diff 为空；同时能背出 Composition 的三项运行时行为",
+  "time": "20 分",
+  "rel": "cds.html#s5-2"
+ },
+ {
+  "no": "CDS-08",
+  "title": "复现 up__ID 并说明 CSV 表头规则",
+  "basis": "匿名内联 Composition 编译出子表含 up__ID NVARCHAR(36) NOT NULL；把 CSV 表头写成 order_ID 时 deploy 失败于 no column named order_ID",
+  "time": "20 分",
+  "rel": "cds.html#s5-3"
+ },
+ {
+  "no": "CDS-09",
+  "title": "部署示范项目并完成四项数据自检",
+  "basis": "sqlite_master 列出 7 表 7 视图；Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9 行；明细 join 订单 = 9；孤儿明细行 = 0",
+  "time": "20 分",
+  "rel": "cds.html#s9-2"
+ },
+ {
+  "no": "CDS-10",
+  "title": "故意制造并修好三条建模报错",
+  "basis": "分别复现 Mismatched ‹EOF›、can't auto-redirect、no column named orders_ID，并在修复后同一条命令通过",
+  "time": "25 分",
+  "rel": "cds.html#s10"
+ },
+ {
+  "no": "CDS-11",
+  "title": "完成练习 1：客户信用额度字段",
+  "basis": "pragma table_info 出现 creditLimit:DECIMAL(13, 2)，三行额度为 100000/50000/20000；表头故意写错时 deploy 失败于 no column named credit_limit",
+  "time": "10 分",
+  "rel": "cds.html#s11-1"
+ },
+ {
+  "no": "CDS-12",
+  "title": "完成练习 2：供应商实体与 Books 关联",
+  "basis": "Books 的 DDL 出现 supplier_ID INTEGER；$metadata 出现 NavigationProperty Name=\"supplier\" 且含 ReferentialConstraint；孤儿行查询为 0",
+  "time": "20 分",
+  "rel": "cds.html#s11-2"
+ },
+ {
+  "no": "CDS-13",
+  "title": "完成练习 3：带主键视图与聚合取舍",
+  "basis": "BookStockView 在 --to sql 是 CREATE VIEW、在 --to edmx 是只读 EntitySet；暴露无主键聚合视图时得到 Expected entity to have a primary key；加 @cds.persistence.skip 后 --to sql 中该视图消失",
+  "time": "30 分",
+  "rel": "cds.html#s11-3"
+ }
+]

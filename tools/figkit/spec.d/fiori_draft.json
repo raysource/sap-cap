@@ -1,0 +1,59 @@
+{
+  "key": "fiori_draft",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/projects/demo-node — Fiori 保存按钮背后的真实请求",
+  "lh": 20,
+  "caption": "Fiori Create/Save 的真实请求序列（本地实测）：建草稿 POST（IsActiveEntity=false）→ PATCH 改草稿 → draftActivate 才写正式表；业务校验在激活时刻返回 400/409",
+  "label": "本地实机运行",
+  "src": "本地实测：curl project-code/demo-node（草稿流程，含 statusCriticality 虚拟元素）",
+  "lines": [
+    "$ SVC=http://localhost:4004/odata/v4/book-order   # 请求由 Fiori 发出，这里用 curl 复现",
+    "",
+    "$ # ① Create：POST 建草稿（返回的 ID 是草稿 ID，orderNo 仍是传入值）",
+    "$ curl -s -u alice: -X POST \"$SVC/BookOrders\" -H 'Content-Type: application/json' \\",
+    "    -d '{\"orderNo\":\"BO-1099\",\"customer_ID\":1000,\"note\":\"from Fiori\"}'",
+    "{\"@odata.context\":\"$metadata#BookOrders/$entity\",\"ID\":\"d8f19656-dda7-436c-85d9-70cde2cbf21b\",",
+    " \"orderNo\":\"BO-1099\",\"customer_ID\":1000,\"orderDate\":\"2026-09-19\",\"status\":\"OPEN\",",
+    " \"totalAmount\":0,\"IsActiveEntity\":false}",
+    "",
+    "$ # ② 编辑明细/字段：PATCH 草稿行（Fiori 每改一个字段发一次）",
+    "$ curl -s -u alice: -X PATCH \"$SVC/BookOrders(ID=$ID,IsActiveEntity=false)\" \\",
+    "    -H 'Content-Type: application/json' -d '{\"note\":\"edited in draft\"}' -o /dev/null -w 'HTTP %{http_code}\\n'",
+    "HTTP 200",
+    "",
+    "$ # ③ Save：POST draftActivate —— 这时才写正式表、才触发 before('CREATE')",
+    "$ curl -s -u alice: -X POST \"$SVC/BookOrders(ID=$ID,IsActiveEntity=false)/draftActivate\" \\",
+    "    -H 'Content-Type: application/json' -o /tmp/act.json -w 'HTTP %{http_code}\\n'",
+    "HTTP 201",
+    "{\"@odata.context\":\"../$metadata#BookOrders/$entity\",\"orderNo\":\"BO-1099\",\"note\":\"edited in draft\",",
+    " \"totalAmount\":0,\"statusCriticality\":1,\"HasActiveEntity\":false,\"IsActiveEntity\":true}",
+    "",
+    "$ # ④ 业务校验在激活时返回 4xx（草稿阶段不拦，方便用户慢慢改）",
+    "{\"error\":{\"message\":\"顾客 9999 不存在，请先维护主数据\",\"code\":\"400\",\"@Common.numericSeverity\":4}}",
+    "{\"error\":{\"message\":\"订单号 BO-1001 已存在，请更换\",\"code\":\"409\",\"@Common.numericSeverity\":4}}",
+    "",
+    "$ # ⑤ 取消：DELETE 草稿行（Fiori 的「取消」按钮）",
+    "$ curl -s -u alice: -X DELETE \"$SVC/BookOrders(ID=$ID,IsActiveEntity=false)\" -w 'HTTP %{http_code}\\n'",
+    "HTTP 204"
+  ],
+  "callouts": [
+    {
+      "on": "IsActiveEntity\":false}",
+      "text": "1. 只是草稿"
+    },
+    {
+      "on": "HTTP 200",
+      "text": "2. 每次改动一个请求"
+    },
+    {
+      "on": "HTTP 201",
+      "text": "3. 保存=激活"
+    },
+    {
+      "on": "@Common.numericSeverity",
+      "text": "4. 校验在保存时才拦"
+    }
+  ]
+}

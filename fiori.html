@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiori UI：给 CAP 服务配界面 · SAP CAP 培训课程</title>
+<meta name="description" content="给 CAP 服务配 Fiori 界面：Fiori Elements 与 freestyle 的选型、OData 服务 + annotations.cds + manifest.json 的三角关系、manifest 与 UI.* 注解逐字段手顺、cds watch 本地运行与空白页三步定位、List Report 到 Object Page 的真实草稿请求序列（POST → PATCH → draftActivate）、接入 mta.yaml 与部署后访问路径、常见问题表与练习。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cap.css">
+</head>
+<body>
+<!-- 顶栏与页脚由 tools/make_nav.py 统一生成：下面两个注释之间不要写任何东西 -->
+<!--NAV-->
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a class="active" href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
+<!--/NAV-->
+
+<div class="wrap">
+<main class="page">
+<article>
+<p class="breadcrumb"><a href="index.html">首页</a> / <span>⑨ Fiori UI</span></p>
+<h1>Fiori UI：给 CAP 服务配界面</h1>
+<p class="kicker">覆盖对象：<code>app/book-orders/webapp/manifest.json</code>（模板与路由）· <code>app/book-orders/annotations.cds</code>（UI.* 注解）· <code>srv/book-order-service.cds</code> 的 <code>/odata/v4/book-order</code> · <code>cds watch</code> 本地运行 · 草稿请求序列 · <code>cds add ui5</code> / <code>cds add html5-repo</code> 接入 MTA。本页所有 <code>curl</code> 输出都来自本站示范项目 <code>project-code/demo-node</code> 的本地实测。</p>
+
+<div class="toc">
+  <a href="#s0">0. 本页地图</a>
+  <a href="#s1">1. 选型：Fiori Elements 还是 freestyle</a>
+  <a href="#s2">2. 两条路径：工具生成 vs 手写文件</a>
+  <a href="#s3">3. 三角关系：服务 + 注解 + manifest</a>
+  <a href="#s4">4. 手顺：写出可用的 manifest.json</a>
+  <a href="#s5">5. 手顺：annotations.cds 注解逐条讲</a>
+  <a href="#s6">6. 状态着色：Criticality 的三种做法</a>
+  <a href="#s7">7. 本地运行：cds watch 与应用 URL</a>
+  <a href="#s8">8. 空白页三步定位法</a>
+  <a href="#s9">9. 从 List Report 到 Object Page 的真实请求</a>
+  <a href="#s10">10. 把 UI 接进 mta.yaml，部署后怎么打开</a>
+  <a href="#s11">11. 常见问题表（14 条）</a>
+  <a href="#s12">12. i18n、命名与版本三个易错点</a>
+  <a href="#s13">13. 练习（3 个）与完成基准</a>
+  <a href="#s14">14. 交付前检查清单</a>
+  <a href="#s15">15. 本节测试</a>
+  <a href="#s16">16. 小结与下一页</a>
+</div>
+
+<div class="box info"><b class="t">本页读完你能做到</b>
+<ul>
+  <li>看一张业务实体，说出它该用 List Report、Object Page、Analytical List Page 还是必须写 freestyle（并给出判断依据，而不是凭感觉）；</li>
+  <li>从零写出一个能跑起来的 Fiori Elements 应用：<code>app/&lt;app&gt;/webapp/manifest.json</code> 的 <code>sap.app</code> / <code>sap.ui5</code> / <code>models</code> / <code>routing.targets</code> 每个键都说得出来源；</li>
+  <li>用 <code>UI.LineItem</code> / <code>UI.SelectionFields</code> / <code>UI.HeaderInfo</code> / <code>UI.FieldGroup</code> / <code>UI.Facets</code> / <code>UI.DataFieldForAction</code> / <code>@readonly</code> / <code>Common.Label</code> 把订单列表与详情页配出来（含状态着色与「提交订单」按钮）；</li>
+  <li>用 <code>cds watch</code> 跑起来并通过 <code>/book-orders/webapp/index.html</code> 打开，白屏时按「Network → console → $metadata」三步定位；</li>
+  <li>说清 <code>Create → 编辑 → Save</code> 背后真实发的三个请求（POST 建草稿 → PATCH 改草稿 → POST draftActivate），并解释为什么业务校验错误只在 Save 时冒出来。</li>
+</ul></div>
+
+<div class="box warn"><b class="t">事实口径与环境</b>
+<p>本页命令与输出在本机实测过，环境：<b>Node 22.23.2</b>、<b>@sap/cds 9.9.3</b>、<b>@sap/cds-dk 9.9.6</b>、<b>@cap-js/sqlite 2.x</b>，本地服务端口用 <code>4010</code>（避开另一个正在跑的 4004）。示范项目本身在 <code>project-code/demo-node</code>；下面凡是「本站实测」的输出，都是把这个项目的 <code>db/</code>、<code>srv/</code> 复制到临时目录、再补上 <code>app/book-orders/</code> 后跑出来的真实响应，改动只限 <code>app/</code> 目录与一处草稿着色用的虚拟元素（正文会标注）。UI5 与 Fiori Elements 的小版本会改变控制台文案；凡本站没实跑的内容（<code>mbt</code>、<code>cf</code> 的云端输出）都在图注里写明「重绘」，不冒充实机截图。</p></div>
+
+<h2 id="s0">0. 本页地图：UI 这一层到底在交付什么</h2>
+
+<p>前八页交付的是「数据长什么样、服务能做什么、权限怎么管」。本页交付的是<b>人怎么用</b>。在 CAP 里这件事有一个很省力的前提：<b>你几乎不写页面代码</b>。Fiori Elements 是一套「通用前端」——它读服务的 <code>$metadata</code>（实体 + 注解），再读 <code>manifest.json</code>（用哪个页面模板、连哪个服务、路由怎么配），然后把表格、筛选条、详情页、按钮渲染出来。你交付的是<b>声明</b>，不是组件树。</p>
+
+<div class="flow">
+  <span class="node">CAP 服务<br><small>srv/*.cds</small></span>
+  <span class="arrow">→</span>
+  <span class="node">$metadata<br><small>实体 + 动作 + UI.* 注解</small></span>
+  <span class="arrow">+</span>
+  <span class="node">manifest.json<br><small>模板 + 路由 + 服务地址</small></span>
+  <span class="arrow">→</span>
+  <span class="node">Fiori Elements<br><small>List Report / Object Page</small></span>
+</div>
+
+<p>本站示范项目 <code>demo-node</code> 的 UI 只有一个应用：<code>app/book-orders/</code>，它管两张表——订单头 <code>BookOrders</code>（列表 + 详情 + 提交按钮）与订单明细 <code>BookOrderItems</code>（详情页里的子表）。本页所有例子都落在这两张表与它们的字段上：<code>orderNo</code>、<code>customer.name</code>、<code>orderDate</code>、<code>status</code>、<code>totalAmount</code>、<code>items</code>。</p>
+
+<table class="tbl small">
+  <tr><th>文件 / 目录</th><th>角色</th><th>本页章节</th></tr>
+  <tr><td><code>app/book-orders/webapp/manifest.json</code></td><td>用哪些模板、连哪个服务、路由怎么走</td><td>§4</td></tr>
+  <tr><td><code>app/book-orders/annotations.cds</code></td><td>列、筛选、页头、分节、按钮（UI.*）</td><td>§5 §6</td></tr>
+  <tr><td><code>app/book-orders/webapp/i18n/i18n.properties</code></td><td>界面文案（<code>{i18n&gt;Key}</code> 的取值处）</td><td>§12</td></tr>
+  <tr><td><code>srv/book-order-service.cds</code></td><td>实体集、<code>submitOrder</code> 动作、草稿开关</td><td>§3 §9</td></tr>
+  <tr><td><code>app/router/</code> + <code>mta.yaml</code></td><td>部署后 UI 与服务的唯一入口</td><td>§10 + <a href="deploy.html">⑩ 部署</a></td></tr>
+</table>
+
+<div class="box ok"><b class="t">验收（本页的地基）</b>
+<p>你能用一句话解释下面这个现象，说明你已经理解了 Fiori Elements 的工作方式：<b>同一个服务、同一份数据，改一改注解文件，列表里就多一列、少一个筛选框、状态从灰色变成橙色——前端一行 UI5 代码都没动。</b>如果还说不清「注解是怎么到前端手里的」，先记住这句话：<b>注解被编译进 <code>$metadata</code>，前端每次启动都去读它。</b></p></div>
+
+<h2 id="s1">1. 选型：Fiori Elements 还是 freestyle</h2>
+
+<p>选型只有一个判断标准：<b>你的页面是不是「列表 → 详情」这种标准业务形态</b>。是，就用 Fiori Elements（省 90% 前端工作量，还白拿草稿、筛选、变式管理、导出、消息条）；不是，就承认要写 freestyle，不要试图用注解硬拗。</p>
+
+<h3 id="s1-1">1-1 四种标准页面模板：什么时候用哪一个</h3>
+
+<table class="tbl">
+  <tr><th>模板 / 页面</th><th>典型长什么样</th><th>什么时候选它</th><th>不要用它的时候</th></tr>
+  <tr><td>List Report + Object Page<br><small><code>sap.fe.templates.ListReport</code> / <code>.ObjectPage</code></small></td>
+      <td>一张表（筛选条 + 工具栏 + 行）+ 点行进入的详情页</td>
+      <td>「管理单据」形态：订单、客户、物料、发票。<b>本站示范项目就是这一类</b></td>
+      <td>表格只是展示、不需要进去改数据时，可以直接 List Report 不配 Object Page</td></tr>
+  <tr><td>Worklist<br><small>（同属 <code>sap.fe.templates</code> 家族）</small></td>
+      <td>只有表、没有详情页，行上直接带动作</td>
+      <td>待办处理：审批队列、待发运清单。「看一眼 → 点一下 → 消失」</td>
+      <td>需要看明细或分节展示时，还是要 Object Page</td></tr>
+  <tr><td>Analytical List Page<br><small><code>~sap.fe.templates.AnalyticalListPage</code></small></td>
+      <td>图表 + 表格联动，带 <code>$apply</code> 聚合</td>
+      <td>分析型查询：按客户汇总销售额、按状态统计订单金额</td>
+      <td>只是普通事务列表强行上图表：筛选语义会对不上（本站未在真实工程里核对过该组件名，以 Fiori tools 生成为准）</td></tr>
+  <tr><td>Overview Page<br><small><code>sap.ovp</code></small></td>
+      <td>一屏卡片墙，每张卡是一个小主题</td>
+      <td>角色首页 / 概览页：销售看板、库存看板</td>
+      <td>要做增删改查流程时，卡片不是表单</td></tr>
+</table>
+
+<div class="cols2">
+  <div class="box ok"><b class="t">用 Fiori Elements 的四个信号</b>
+  <ul>
+    <li>数据来自<b>单个 OData 实体集</b>（或它的关联），字段是模型里已有的；</li>
+    <li>页面结构是「筛选 → 列表 → 详情 → 分节」；</li>
+    <li>需要草稿、消息、变式管理、导出、表格个性化这些标准能力；</li>
+    <li>希望后续 S/4 侧或顾问不改代码就能调字段顺序、加筛选、换表格类型。</li>
+  </ul></div>
+  <div class="box warn"><b class="t">必须 freestyle 的五个信号</b>
+  <ul>
+    <li>交互是<b>向导 / 多步表单</b>（Wizard、分步提交），或者一个页面同时改多个实体集的复杂编排；</li>
+    <li>需要<b>自定义可视化</b>：甘特图、日历、地图、拖拽看板、自定义图表（超出 FE 的 Chart/DataPoint）；</li>
+    <li>列表行内需要<b>批量编辑 + 即时计算</b>（像电子表格那样），FE 的表格不提供这种自由编辑模型；</li>
+    <li>要和 <b>第三方 UI 库 / 非 OData 接口</b>深度混用；</li>
+    <li>完全非业务形态的页面（看板大屏、运营可视化）。</li>
+  </ul></div>
+</div>
+
+<p>折中方案很常用，值得记住：<b>「FE 为主 + 少量自定义扩展」</b>。Fiori Elements 保留了扩展点（extension point / custom section / 自定义列），你可以在 List Report 里插一个自定义按钮、在 Object Page 里加一个自定义 section 放 freestyle 内容。这样 95% 是配置、5% 是代码，比整页 freestyle 便宜得多。</p>
+
+<h3 id="s1-2">1-2 选型对照：同一批需求在两条路线上的代价</h3>
+
+<table class="tbl small">
+  <tr><th>需求</th><th>Fiori Elements 路线</th><th>freestyle（UI5 MVC）路线</th></tr>
+  <tr><td>列表 + 筛选 + 分页</td><td>注解 + manifest，几十行声明</td><td>View + Controller + 分页/筛选/排序逻辑，几百行</td></tr>
+  <tr><td>详情页 + 分节 + 子表</td><td><code>UI.Facets</code> + 关联路径</td><td>自己写 Form/Table 绑定与导航</td></tr>
+  <tr><td>新建/编辑（含草稿、并发锁）</td><td><code>@odata.draft.enabled</code> 一个注解，前端自动有 Create/Edit/Save/取消</td><td>要自己实现临时对象、脏检查、并发冲突提示</td></tr>
+  <tr><td>业务校验报错展示</td><td>服务端 <code>req.reject(4xx, 消息)</code> → 消息条自动显示</td><td>自己接错误、自己做 MessageManager</td></tr>
+  <tr><td>表格个性化 / 变式管理 / 导出</td><td>模板自带</td><td>基本要自己接或放弃</td></tr>
+  <tr><td>特殊交互（向导、拖拽、地图）</td><td>做不到，要扩展点或换路线</td><td>本来就是它的主场</td></tr>
+</table>
+
+
+<h2 id="s2">2. 两条路径：工具生成 vs 手写文件</h2>
+
+<p>一张 Fiori Elements 应用最终就是<b>一个 <code>app/&lt;app&gt;/</code> 目录</b>：<code>webapp/manifest.json</code> 加几个可选文件。两条路径的区别只在「谁写这些文件」。</p>
+
+<table class="tbl">
+  <tr><th></th><th>路径 A：SAP Fiori tools / BAS 向导</th><th>路径 B：手写 manifest 与注解</th></tr>
+  <tr><td>怎么做</td><td>BAS/VS Code 里 <i>Fiori: Open Application Generator</i> → 选 <b>List Report Page</b> 或 <b>Form Entry Object Page</b> → 选数据源（CAP 项目的 OData V4 服务）→ 页面类型与主实体集</td><td>自己建 <code>app/book-orders/webapp/</code>，写 <code>manifest.json</code>；注解文件与它同目录</td></tr>
+  <tr><td>生成什么</td><td>完整可跑的工程、Page Map / 向导式加字段、注解自动补全与校验、i18n 文件、<code>ui5.yaml</code></td><td>只有你写的那几个文件</td></tr>
+  <tr><td>优点</td><td>少打错字；Page Map 能图形化加列/加节；注解编辑器有词汇表校验与跳转</td><td>文件小、可读、可 diff、可复制；理解成本一次搞定；离线也能写</td></tr>
+  <tr><td>代价</td><td>生成物含大量脚手架（Component.js、很多空 key），新人看不出哪些是「必须的」</td><td>页面上少一个 key 就白屏，必须知道每个键的作用</td></tr>
+  <tr><td>适用</td><td>交付生产应用、团队协作、要长期维护</td><td>学习、教学、复制模板、无法装扩展的环境</td></tr>
+</table>
+
+<div class="box info"><b class="t">CAP 侧还有第三条：直接拿官方模板改</b>
+<p>CAP 自带一个带 Fiori 界面的示例工程：<span class="cmd">npx cds add sample</span>（或新建时 <span class="cmd">cds init myproj --nodejs --add sample</span>）。它会生成 <code>app/browse/</code>、<code>app/admin-books/</code>、<code>app/admin-authors/</code>、<code>app/genres/</code> 四个 Fiori 应用，每个都有 <code>fiori-service.cds</code>（注解）、<code>webapp/manifest.json</code>、i18n，以及 <code>app/fiori-apps.html</code> + <code>app/appconfig/fioriSandboxConfig.json</code> 这个本地启动台。学习阶段最省力的做法是<b>复制其中一个目录改名</b>，再把注解换成自己的实体——本页 §4 给出的 manifest 就是这条路径整理出来的最小可用版本。<b>注意：CAP 没有 <code>cds add fiori</code> 这条命令</b>（<code>@sap/cds-dk 10.1.2</code> 的 facet 列表里没有 fiori；与 UI 相关的是 <code>sample</code>、<code>ui5</code>、<code>approuter</code>、<code>html5-repo</code>、<code>portal</code>、<code>workzone</code>、<code>app-frontend</code>）。</p></div>
+
+<h3 id="s2-1">2-1 手顺：用官方示例生成一套 Fiori 应用并跑起来</h3>
+<div class="stepmeta"><span class="k">cds init --add sample</span><span class="f">app/* 目录 + srv/ + db/</span><span class="c">耗时 10 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：新建一个带 Fiori 示例的工程（不要在自己已有的项目里乱加，先隔离验证）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd ~/projects
+npx cds init uilab --nodejs --add sample
+cd uilab &amp;&amp; npm install
+ls app                     # browse  admin-authors  admin-books  genres  fiori-apps.html  appconfig  services.cds</code></pre>
+  </li>
+  <li><b>动作</b>：部署本地库并启动。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds deploy --to sqlite:db.sqlite
+npx cds watch</code></pre>
+  </li>
+  <li><b>验证</b>：终端出现 <code>[cds] - server listening on { url: 'http://localhost:4004' }</code>；浏览器打开 <code>http://localhost:4004/fiori-apps.html</code> 能看到启动台，点磁贴能进 List Report。<b>应用地址是 <code>/&lt;app目录名&gt;/webapp/index.html</code> 这种形态</b>（示例工程里 <code>webapp/index.html</code> 由 Fiori tools 或 CAP 的模板提供；本站 §4 的写法是让 CAP 的静态服务直接吃 <code>webapp/</code> 目录）。</li>
+  <li><b>验证</b>：确认本地 index 页也给出了入口链接 —— 访问 <code>http://localhost:4004/</code>，CAP 的开发首页会列出所有服务与 <code>app/</code> 下的 Fiori 应用链接（<b>只在开发 profile 生效</b>）。</li>
+</ol>
+
+<figure class="fig" data-fig="fiori_launchpad">
+  <a class="zoom" href="assets/fig/fiori_launchpad.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_launchpad.svg" alt="本地开发用的 Fiori 启动台：cds watch 时访问 /fiori-apps.html，磁贴直接打开 app/ 下的应用（部署到 BTP 后换成 Work Zone / 子账户的 HTML5 应用）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 1</span><span class="cap">本地开发用的 Fiori 启动台：cds watch 时访问 /fiori-apps.html，磁贴直接打开 app/ 下的应用（部署到 BTP 后换成 Work Zone / 子账户的 HTML5 应用）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure><h2 id="s3">3. 三角关系：服务 + 注解 + manifest.json</h2>
+
+<p>Fiori Elements 应用活不活，取决于三份输入是否同时对得上。把它们的关系记住，排查时就不会乱猜：</p>
+
+
+<table class="tbl">
+  <tr><th>输入</th><th>在哪</th><th>决定什么</th><th>只错这一份时的症状</th></tr>
+  <tr><td>OData 服务</td><td><code>srv/book-order-service.cds</code>，URL <code>/odata/v4/book-order</code></td><td>有哪些实体集、哪些字段、哪些动作/函数、草稿是否开启</td><td>页面能打开但取不到数据；<code>$metadata</code> 里找不到 <code>BookOrders</code></td></tr>
+  <tr><td>注解</td><td><code>app/book-orders/annotations.cds</code>（<code>UI.*</code>）</td><td>表格列、筛选字段、页头标题、分节、按钮、着色</td><td><b>典型的「No data」</b>：请求成功、数据为空或没有可显示的列</td></tr>
+  <tr><td>manifest</td><td><code>app/book-orders/webapp/manifest.json</code></td><td>用哪个模板、连哪个 <code>dataSource</code>、路由与 target</td><td><b>整页白屏</b>：控制台第一条就是模板加载失败或 dataSource 找不到</td></tr>
+</table>
+
+<div class="box warn"><b class="t">三者的接缝在哪（必须记住的两句话）</b>
+<ol>
+  <li><b>注解不会自己走到前端</b>：CAP 把 <code>UI.*</code> 注解编译进服务的 <code>$metadata</code>，前端启动时读这份元数据。所以「注解写了但没生效」= 先去看 <code>$metadata</code> 里有没有它（§8 第 ③ 步）。</li>
+  <li><b>manifest 里的 uri 必须指向服务的真实路径</b>：本站是 <code>/odata/v4/book-order/</code>（来自服务定义里的 <code>@path</code>）。写错一个字符，症状是白屏或「Failed to load metadata」。</li>
+</ol><
+<figure class="fig" data-fig="fiori_triangle">
+  <a class="zoom" href="assets/fig/fiori_triangle.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_triangle.svg" alt="Fiori Elements 的三份输入：CAP 服务提供实体与动作、annotations.cds 决定列与按钮、manifest.json 决定用哪个模板和路由 —— 少一份页面就不成形" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">Fiori Elements 的三份输入：CAP 服务提供实体与动作、annotations.cds 决定列与按钮、manifest.json 决定用哪个模板和路由 —— 少一份页面就不成形</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>/div>
+
+<div class="box info"><b class="t">为什么注解建议单独放一个文件</b>
+<p>CAP 允许你把注解写进服务定义里，但官方推荐放在 <code>app/&lt;app&gt;/</code> 下的独立 <code>.cds</code> 文件（本站是 <code>annotations.cds</code>，官方示例称 <code>fiori-service.cds</code>）。理由是<b>关注点分离</b>：<code>srv/</code> 保持「服务与权限」的语义，<code>app/</code> 里是「界面长什么样」，两者可以分别演进、分别交给不同的人。<b>关键事实</b>：<code>app/&#42;&#42;/*.cds</code> 会被 <code>cds</code> 编译进模型——本站实测 <code>cds watch</code> 的启动日志与 <code>cds build</code> 的任务参数里都能看到 <code>app/&#42;</code> 与 <code>app/*</code>（构建任务的 model 列表是 <code>['db','srv','app','app/*']</code>），<b>所以放在 app 里的注解不需要任何 import 也会生效</b>。</p></div>
+
+<h2 id="s4">4. 手顺：写出可用的 manifest.json</h2>
+
+<p>先建目录，再写文件。目录结构本身有意义：<code>app/</code> 下每个子目录是一个独立应用，<code>webapp/</code> 是该应用的静态根（CAP 会把它发布到 <code>/&lt;子目录名&gt;/webapp/</code>）。</p>
+
+<div class="file-tree"><b>demo-node/</b>
+├── <span class="dir">db/</span>              schema.cds · data/*.csv
+├── <span class="dir">srv/</span>             book-order-service.cds · book-order-service.js
+├── <span class="dir">app/</span>
+│   └── <span class="dir">book-orders/</span>
+│       ├── annotations.cds          <span>← §5 的 UI.* 注解（会被编译进模型）</span>
+│       ├── <span class="dir">webapp/</span>
+│       │   ├── manifest.json        <span>← 本节主角</span>
+│       │   ├── index.html           <span>← 引导 UI5 的入口页</span>
+│       │   └── <span class="dir">i18n/</span>i18n.properties
+│       └── package.json · ui5.yaml  <span>← 部署到 HTML5 仓库时需要（§10）</span>
+├── mta.yaml  ·  xs-security.json
+└── package.json
+</div>
+
+<h3 id="s4-1">4-1 manifest.json 全文（本站示范项目，可直接复制）</h3>
+<div class="stepmeta"><span class="k">manifest.json</span><span class="f">app/book-orders/webapp/manifest.json</span><span class="c">耗时 15 分</span></div>
+
+<pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">{
+  "_version": "1.28.0",
+  "sap.app": {
+    "id": "demo.node.book-orders",
+    "type": "application",
+    "title": "图书受注管理",
+    "description": "CAP 示范项目：订单的 List Report / Object Page",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/book-order/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.136.0",
+      "libs": { "sap.fe.templates": {} }
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        { "pattern": ":?query:", "name": "BookOrdersList", "target": "BookOrdersList" },
+        { "pattern": "BookOrders({key}):?query:", "name": "BookOrdersObjectPage", "target": "BookOrdersObjectPage" }
+      ],
+      "targets": {
+        "BookOrdersList": {
+          "type": "Component",
+          "id": "BookOrdersList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "BookOrders",
+              "variantManagement": "Page",
+              "navigation": {
+                "BookOrders": { "detail": { "route": "BookOrdersObjectPage" } }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": { "type": "ResponsiveTable" }
+                }
+              }
+            }
+          }
+        },
+        "BookOrdersObjectPage": {
+          "type": "Component",
+          "id": "BookOrdersObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": { "entitySet": "BookOrders", "navigation": {} }
+          }
+        }
+      }
+    },
+    "contentDensities": { "compact": true, "cozy": true }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": { "desktop": true, "tablet": true, "phone": true }
+  },
+  "sap.fiori": { "registrationIds": [], "archeType": "transactional" }
+}</code></pre>
+
+<h3 id="s4-2">4-2 逐字段解释（每个键都写得出来源）</h3>
+
+<table class="tbl small">
+  <tr><th>键</th><th>含义</th><th>本站取值与理由</th></tr>
+  <tr><td><code>_version</code></td><td>manifest 描述符的版本（不是 UI5 版本）</td><td><code>1.28.0</code>：与 CAP 示例、Fiori tools 生成物同一代写法，改它没有收益</td></tr>
+  <tr><td><code>sap.app.id</code></td><td>应用的唯一 ID</td><td><code>demo.node.book-orders</code>。CAP 生成示例时会把 <code>sap.app.id</code> 改写成 <code>&lt;项目名&gt;.&lt;应用目录名&gt;</code>，原因是<b>部署到 HTML5 仓库 / Work Zone 时 ID 必须唯一</b>，重复会导致部署失败</td></tr>
+  <tr><td><code>sap.app.dataSources.mainService</code></td><td>前端要连的数据源</td><td><code>uri</code> 指向 CAP 服务路径 <code>/odata/v4/book-order/</code>（与 <code>@path</code> 一致）；<code>settings.odataVersion: "4.0"</code> 告诉前端这是 V4 模型，Fiori Elements V4 模板只认 V4</td></tr>
+  <tr><td><code>sap.app.i18n</code></td><td>文案文件位置</td><td><code>i18n/i18n.properties</code>，与注解里的 <code>{i18n&gt;Key}</code> 配合（§12）</td></tr>
+  <tr><td><code>sap.ui5.dependencies.minUI5Version</code></td><td>运行时最低 UI5 版本</td><td><code>1.136.0</code>（CAP 示例取的值；Fiori tools 生成物常见 <code>1.120.0</code>）。<b>写高一点没有代价，写太低会出现模板加载失败 / 白屏</b></td></tr>
+  <tr><td><code>sap.ui5.dependencies.libs</code></td><td>要加载的库</td><td><code>sap.fe.templates</code> 是 Fiori Elements 模板库。<b>漏了它 = 模板组件找不到 = 白屏</b>（这是最常见的白屏原因之一）</td></tr>
+  <tr><td><code>sap.ui5.flexEnabled</code></td><td>允许 UI5 灵活性（Adaptation）</td><td><code>true</code>：Fiori tools 生成物默认带；允许后续用 adaptation project 做调整，不需要改代码</td></tr>
+  <tr><td><code>sap.ui5.models[""]</code>（无名模型）</td><td>页面的默认模型</td><td><code>dataSource</code> 指向上面的 mainService。四个 settings 的含义：<code>synchronizationMode: "None"</code>（不写回服务端缓存）、<code>operationMode: "Server"</code>（排序/分页交给服务端）、<code>autoExpandSelect</code>（自动按需 <code>$select/$expand</code>）、<code>earlyRequests</code>（提前发元数据请求）。<b>注意：不需要写 <code>type</code></b> —— 数据源声明了 <code>odataVersion: 4.0</code> 时前端会自动用 OData V4 模型，Fiori tools 与 CAP 示例都不写</td></tr>
+  <tr><td><code>sap.ui5.routing.routes[]</code></td><td>URL 模式 → target</td><td>两条固定套路：<code>:?query:</code> 是列表页（可带查询参数），<code>BookOrders({key}):?query:</code> 是详情页（<code>{key}</code> 是主键占位，草稿实体会自动带上 <code>IsActiveEntity</code>）</td></tr>
+  <tr><td><code>targets.*.name</code></td><td>用哪个页面模板</td><td><code>sap.fe.templates.ListReport</code> / <code>sap.fe.templates.ObjectPage</code>（这两个组件名在 CAP 示例与 SAP 官方示例工程的 manifest 里都能核对到）</td></tr>
+  <tr><td><code>targets.*.options.settings.entitySet</code></td><td>这个页面主实体集</td><td><code>BookOrders</code>，必须与 <code>$metadata</code> 里的 EntitySet 同名</td></tr>
+  <tr><td><code>settings.navigation</code></td><td>点行 / 点关联去哪里</td><td>List Report 里写 <code>{"BookOrders": {"detail": {"route": "BookOrdersObjectPage"}}}</code>：语义是「主实体集点进详情走哪条路由」。Object Page 里 <code>{}</code> 表示没有更多下钻页（明细表就在本页分节里显示）</td></tr>
+  <tr><td><code>controlConfiguration["@com.sap.vocabularies.UI.v1.LineItem"]</code></td><td>针对某个注解的控件设置</td><td><code>tableSettings.type: "ResponsiveTable"</code>：用响应式表格（手机也能看）。要换成网格表就写 <code>"GridTable"</code></td></tr>
+  <tr><td><code>variantManagement: "Page"</code></td><td>变式管理作用范围</td><td>筛选条件、列顺序等个性化按页面保存（用户可另存视图）</td></tr>
+  <tr><td><code>sap.fiori.archeType</code></td><td>应用形态标签</td><td><code>"transactional"</code>（事务型）；分析型应用会写 <code>"analytical"</code>，影响 Work Zone 的显示与搜索</td></tr>
+</table>
+
+<h3 id="s4-3">4-3 index.html：不要漏的那 10 行</h3>
+
+<p><code>webapp/index.html</code> 负责引导 UI5 并启动 ComponentContainer。它<b>不是</b> Fiori Elements 的一部分，但少了它，<code>/book-orders/webapp/index.html</code> 就是 404，浏览器打开目录地址只会看到 404 或下载 <code>manifest.json</code>。最小写法（含 CDN 取舍，见 §7）：</p>
+
+<pre class="hl"><div class="code-head"><span class="lang">xml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-xml">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;script
+    id="sap-ui-bootstrap"
+    src="https://sdk.openui5.org/resources/sap-ui-core.js"
+    data-sap-ui-theme="sap_horizon"
+    data-sap-ui-compat-version="edge"
+    data-sap-ui-async="true"
+    data-sap-ui-on-init="module:sap/ui/core/ComponentSupport"
+    data-sap-ui-resource-roots='{ "demo.node.book-orders": "./" }'&gt;
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body class="sapUiBody"&gt;
+  &lt;div data-sap-ui-component
+       data-name="demo.node.book-orders"
+       data-id="container"
+       data-settings='{ "id": "book-orders" }'&gt;&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<div class="box warn"><b class="t">两个必须对上的名字</b>
+<ol>
+  <li><code>data-sap-ui-resource-roots</code> 的键必须等于 <code>manifest.json</code> 里的 <code>sap.app.id</code>（本站 <code>demo.node.book-orders</code>）；</li>
+  <li><code>data-sap-ui-component</code> 的 <code>data-name</code> 也必须等于这个 ID。写错的表现就是<b>白屏 + 控制台 <code>Failed to load component …</code></b>。</li>
+</ol></div>
+
+<h3 id="s4-4">4-4 验证</h3>
+<ol class="steps">
+  <li><b>验证（静态资源层）</b>：启动 <code>cds watch</code> 后，下面两条都必须 200（这是本站实测的响应头与状态码）：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -o /dev/null -w '%{http_code} %{content_type}\n' http://localhost:4004/book-orders/webapp/index.html
+# 200 text/html; charset=utf-8
+curl -s -o /dev/null -w '%{http_code} %{content_type}\n' http://localhost:4004/book-orders/webapp/manifest.json
+# 200 application/json; charset=utf-8
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4004/book-orders/index.html
+# 404   ← 注意：目录地址没有 index.html，应用入口在 webapp/ 下</code></pre>
+  </li>
+  <li><b>验证（语义层）</b>：浏览器打开 <code>http://localhost:4004/book-orders/webapp/index.html</code>，应当看到 List Report 的页头（标题「图书受注管理」）与筛选条；此时表格即使还没列，也算 manifest 这一层通过了。</li>
+</ol>
+
+
+<figure class="fig" data-fig="fiori_ann">
+  <a class="zoom" href="assets/fig/fiori_ann.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_ann.svg" alt="在 BAS（或 VS Code）里编辑 app/book-orders/annotations.cds：这个文件属于 app 目录，会被 cds 当作模型的一部分编译，改完保存后浏览器刷新即可看到列和按钮变化" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">在 BAS（或 VS Code）里编辑 app/book-orders/annotations.cds：这个文件属于 app 目录，会被 cds 当作模型的一部分编译，改完保存后浏览器刷新即可看到列和按钮变化</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure><h2 id="s5">5. 手顺：annotations.cds 注解逐条讲</h2>
+
+<p>下面的文件是本页所有例子的源头，字段全部取自示范项目：<code>orderNo</code>、<code>customer.name</code>、<code>orderDate</code>、<code>status</code>、<code>totalAmount</code>、<code>items</code>。</p>
+
+
+<pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">using { BookOrderService } from '../../srv/book-order-service';
+
+/* 订单头：列表页 + 详情页的界面语义 */
+annotate BookOrderService.BookOrders with @(
+
+  UI.SelectionFields : [ orderNo, status, orderDate ],      // 筛选条上的字段（顺序即显示顺序）
+
+  UI.LineItem : [                                           // 列表的列（顺序即列顺序）
+    { $Type: 'UI.DataField', Value: orderNo,        Label: '订单号' },
+    { $Type: 'UI.DataField', Value: customer.name,  Label: '客户' },
+    { $Type: 'UI.DataField', Value: orderDate,      Label: '订单日期' },
+    { $Type: 'UI.DataField', Value: status, Criticality: statusCriticality, Label: '状态' },
+    { $Type: 'UI.DataField', Value: totalAmount,    Label: '合计 (JPY)' },
+    { $Type: 'UI.DataFieldForAction', Label: '提交订单',
+      Action: 'BookOrderService.submitOrder', ![@UI.Emphasized]: true }
+  ],
+
+  UI.HeaderInfo : {                                          // 详情页页头
+    TypeName       : '订单', TypeNamePlural : '订单',
+    Title          : { $Type: 'UI.DataField', Value: orderNo },
+    Description    : { $Type: 'UI.DataField', Value: customer.name }
+  },
+
+  UI.Facets : [                                              // 详情页的分节
+    { $Type: 'UI.ReferenceFacet', Label: '订单信息', Target: '@UI.FieldGroup#Order' },
+    { $Type: 'UI.ReferenceFacet', Label: '订单明细', Target: 'items/@UI.LineItem' }
+  ],
+
+  UI.FieldGroup #Order : { Data : [                          // 被上面引用的字段组
+    { $Type: 'UI.DataField', Value: orderNo },
+    { $Type: 'UI.DataField', Value: customer.name },
+    { $Type: 'UI.DataField', Value: orderDate },
+    { $Type: 'UI.DataField', Value: status, Criticality: statusCriticality },
+    { $Type: 'UI.DataField', Value: totalAmount }
+  ] }
+);
+
+/* 订单明细：详情页里子表的列 */
+annotate BookOrderService.BookOrderItems with @(
+  UI.LineItem : [
+    { $Type: 'UI.DataField', Value: book.title, Label: '图书' },
+    { $Type: 'UI.DataField', Value: book.price, Label: '单价 (JPY)' },
+    { $Type: 'UI.DataField', Value: quantity,   Label: '数量' },
+    { $Type: 'UI.DataField', Value: amount,     Label: '金额 (JPY)' }
+  ]
+);
+
+/* 只读视图也可以直接标 @readonly，前端会把整张表变成只读 */
+annotate BookOrderService.OrderItemView with @readonly @(UI: {
+  LineItem : [
+    { Value: orderNo,   Label: '订单号' },
+    { Value: bookTitle, Label: '图书' },
+    { Value: quantity,  Label: '数量' },
+    { Value: amount,    Label: '金额' }
+  ]
+});</code></pre>
+
+<h3 id="s5-1">5-1 每个注解在做的事（含本站字段）</h3>
+
+<table class="tbl small">
+  <tr><th>注解</th><th>作用</th><th>本站写法要点</th></tr>
+  <tr><td><code>UI.SelectionFields</code></td><td>筛选条上出现哪些字段</td><td>写 <code>[ orderNo, status, orderDate ]</code> 就得到三个筛选框。<b>只有「常用过滤字段」才放进来</b>，放多了筛选条会挤成两行；不在这里的字段仍可通过「适应筛选」加出来</td></tr>
+  <tr><td><code>UI.LineItem</code></td><td>表格的列与行内按钮</td><td>数组顺序 = 列顺序。<code>{Value: …}</code> 可以直接写关联路径（<code>customer.name</code>、<code>book.title</code>），前端会用 <code>$expand</code> 取回来</td></tr>
+  <tr><td><code>UI.HeaderInfo</code></td><td>详情页页头</td><td><code>Title</code> 用订单号、<code>Description</code> 用客户名；<code>TypeName</code> / <code>TypeNamePlural</code> 决定「新建订单」「订单（4）」这类文案</td></tr>
+  <tr><td><code>UI.FieldGroup #名字</code></td><td>一组字段，供 Facets 引用</td><td><code>#Order</code> 是限定名（qualifier），页面里通过 <code>@UI.FieldGroup#Order</code> 引用；不带 <code>$Type</code> 的简写 <code>{ Value: x }</code> 等价于 <code>{ $Type: 'UI.DataField', Value: x }</code></td></tr>
+  <tr><td><code>UI.Facets</code></td><td>详情页的分节顺序</td><td><code>Target</code> 可以指向本实体的 <code>@UI.FieldGroup#…</code>，也可以指向<b>关联路径上的注解</b>（<code>items/@UI.LineItem</code>）——这就是「一张订单下面的明细表」的来源</td></tr>
+  <tr><td><code>UI.DataFieldForAction</code></td><td>按钮</td><td><code>Action</code> 写<b>服务名 + 动作名</b>：<code>'BookOrderService.submitOrder'</code>（绑定动作）；无绑定动作要写成 <code>'&lt;Service&gt;.EntityContainer/&lt;动作名&gt;'</code>。该动作要在 <code>srv/*.cds</code> 里定义，否则按钮点了报 404</td></tr>
+  <tr><td><code>@UI.Emphasized</code></td><td>按钮视觉强调</td><td>在注解里用 <code>![@UI.Emphasized]: true</code> 这种「注解的注解」写法（值的注解）</td></tr>
+  <tr><td><code>@readonly</code></td><td>实体/字段只读</td><td>实体级 = 前端不给编辑、后端也会拒绝写（本站 <code>OrderItemView</code>）。等价于 <code>Capabilities.InsertRestrictions.Insertable: false</code> 等三条；<code>@readonly</code> 更好读，推荐用它</td></tr>
+  <tr><td><code>Common.Label</code></td><td>字段标签</td><td>在元素上写 <code>status @Common.Label: '状态'</code>；效果是<b>全站一致</b>（列表头、详情页、筛选框都用它），比在每个 <code>Label</code> 里重复一遍更省事。<b>CAP 推荐的更上一层写法是 <code>@title</code></b>（编译到 <code>Common.Label</code>），模型层与协议无关</td></tr>
+  <tr><td><code>UI.HiddenFilter</code></td><td>是否可作为筛选字段</td><td><code>createdAt @UI.HiddenFilter: false</code> 表示显式允许被筛选（示例工程里就用来放开 <code>createdBy</code>）</td></tr>
+</table>
+
+<div class="box warn"><b class="t">本站实测踩过的一个语法坑</b>
+<p>给虚拟元素加注解时，<b>注解必须写在元素名之前或与类型之间</b>。把 <code>@readonly</code> 放到类型后面会直接编译失败（本机真实报错）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">// ✗ 错误写法
+annotate BookOrderService.BookOrders with {
+  statusCriticality : Integer @readonly;
+};
+// [ERROR] app/book-orders/annotations.cds:4:21-22: Mismatched ':', expecting ';', '{', '}', '@'
+
+// ✓ 正确写法（注解在元素名之后、类型之前）
+annotate BookOrderService.BookOrders with {
+  statusCriticality @readonly : Inte
+<figure class="fig" data-fig="fiori_objectpage">
+  <a class="zoom" href="assets/fig/fiori_objectpage.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_objectpage.svg" alt="Object Page：页头来自 UI.HeaderInfo、分节来自 UI.Facets、明细表来自 items/@UI.LineItem，「提交订单」按钮来自 UI.DataFieldForAction（绑定动作 submitOrder）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">Object Page：页头来自 UI.HeaderInfo、分节来自 UI.Facets、明细表来自 items/@UI.LineItem，「提交订单」按钮来自 UI.DataFieldForAction（绑定动作 submitOrder）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure>ger;
+};</code></pre>
+</div>
+
+<h3 id="s5-2">5-2 验证：注解是不是真的进了元数据</h3>
+<ol class="steps">
+  <li><b>动作</b>：编译成 EDMX 直接看（不依赖浏览器，最快）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds compile srv/book-order-service.cds app/book-orders/annotations.cds --to edmx | grep -c 'UI.LineItem'</code></pre>
+  </li>
+  <li><b>验证</b>：本站实测返回 <code>2</code> —— 订单头一份、订单明细一份。<b>返回 0 就是没生效</b>（注解文件不在模型里、实体名写错、或文件路径不对）。再确认按钮与着色路径也在：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ curl -s -u alice: "http://localhost:4004/odata/v4/book-order/\$metadata" | grep -A2 'Criticality'
+          &lt;PropertyValue Property="Criticality" Path="statusCriticality"/&gt;
+$ curl -s -u alice: "http://localhost:4004/odata/v4/book-order/\$metadata" | grep -c 'BookOrderService.submitOrder'
+1</code></pre>
+  </li>
+  <li><b>验证（页面层）</b>：浏览器里刷新 List Report：<b>列顺序 = <code>UI.LineItem</code> 的数组顺序，筛选框 = <code>UI.SelectionFields</code></b>；把其中两项对调，刷新后会立刻反过来。这一步能直观证明「注解在前端生效」。</li>
+</ol>
+
+<h2 id="s6">6. 状态着色：Criticality 的三种做法</h2>
+
+<p>列表里 <code>OPEN</code> / <code>SUBMITTED</code> / <code>CLOSED</code> 三行如果都是黑字，用户就得逐字读。Fiori Elements 的标准做法是给这个字段一个<b>数值化的 criticality</b>，前端按数值显示语义色与图标。取值来自 <code>UI.CriticalityType</code>：</p>
+
+<table class="tbl small">
+  <tr><th>值</th><th>语义</th><th>颜色 / 图标</th><th>本站映射（示例）</th></tr>
+  <tr><td><code>0</code></td><td>Neutral</td><td>灰色 · 中性</td><td>—</td></tr>
+  <tr><td><code>1</code></td><td>Negative</td><td>红色 · status-negative</td><td><code>OPEN</code>（未处理）</td></tr>
+  <tr><td><code>2</code></td><td>Critical</td><td>橙色 · status-critical</td><td><code>SUBMITTED</code>（待跟进）</td></tr>
+  <tr><td><code>3</code></td><td>Positive</td><td>绿色 · status-positive</td><td><code>CLOSED</code>（已结案）</td></tr>
+  <tr><td><code>5</code></td><td>New Item</td><td>蓝色（用于「别处新建、需注意」的行）</td><td>—</td></tr>
+</table>
+
+<div class="box info"><b class="t">别把 <code>UI.Criticality</code> 当元素注解用</b>
+<p>词汇表里 <code>UI.Criticality</code> 这个 Term 的作用域是 <b>Annotation</b>（注解的注解），真实写法是写在 <code>UI.LineItem</code> 内部：<code>![@UI.Criticality]: 某字段</code>，或者像本站一样在 <code>UI.DataField</code> 里写 <code>Criticality: 某数值字段</code>。直接写成 <code>status @UI.Criticality: #Critical</code> 不会按预期生效（另外 <code>UI.ValueCriticality</code> 虽然能「按值映射颜色」，但在词汇表里被标为 <b>~Experimental</b>，不建议用在交付项目里）。</p></div>
+
+<h3 id="s6-1">6-1 做法 A（推荐）：虚拟元素 + after-READ 计算</h3>
+<div class="stepmeta"><span class="k">virtual element</span><span class="f">srv/book-order-service.cds · srv/book-order-service.js</span><span class="c">耗时 15 分</span></div>
+<p>状态值在数据库里是字符串，而 criticality 要数值。最省事的做法是<b>不动数据库</b>：在服务投影里加一个 <code>virtual</code> 元素（不落库、不参与 SQL 查询），在 <code>after('READ')</code> 里按状态算出来。本站实测这样做可行，步骤如下（这正是本页练习 1 的答案骨架）。</p>
+<ol class="steps">
+  <li><b>动作</b>：在服务投影里加虚拟元素（<code>virtual</code> 关键字写在投影的选择列表里）。
+    <pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">// srv/book-order-service.cds
+@odata.draft.enabled
+entity BookOrders as projection on db.BookOrders { *, virtual statusCriticality : Integer }
+                     actions { action submitOrder() returns String; };</code></pre>
+  </li>
+  <li><b>动作</b>：在 <code>srv/book-order-service.js</code> 的 <code>init()</code> 里补一个读取后计算。注意结果集可能是数组也可能是单行。
+    <pre class="hl"><div class="code-head"><span class="lang">js</span><button class="copy-btn" type="button">复制</button></div><code class="lang-js">// srv/book-order-service.js（init() 内）
+const crit = (st) =&gt; (st === 'CLOSED' ? 3 : st === 'SUBMITTED' ? 2 : 1);
+this.after('READ', BookOrders, (rows) =&gt; {
+  for (const r of Array.isArray(rows) ? rows : [rows]) r.statusCriticality = crit(r.status);
+});</code></pre>
+  </li>
+  <li><b>验证</b>：本站实测的真实响应（四条订单，值分别 1/1/2/3，与 CSV 里的状态一致）：
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">curl -s -u alice: -G "http://localhost:4004/odata/v4/book-order/BookOrders" \
+  --data-urlencode '$select=orderNo,status,totalAmount,statusCriticality' \
+  --data-urlencode '$orderby=orderNo' -H 'Accept: application/json'</code></pre>
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">{"@odata.context":"$metadata#BookOrders","value":[
+ {"orderNo":"BO-1001","status":"OPEN",     "totalAmount":16000,"statusCriticality":1},
+ {"orderNo":"BO-1002","status":"OPEN",     "totalAmount":3600, "statusCriticality":1},
+ {"orderNo":"BO-1003","status":"SUBMITTED","totalAmount":17400,"statusCriticality":2},
+ {"orderNo":"BO-1004","status":"CLOSED",   "totalAmount":7600, "statusCriticality":3}]}</code></pre>
+    <b>判据</b>：四个值必须与状态一一对应；顺带核对 <code>totalAmount</code> 与 CSV 一致（16000 / 3600 / 17400 / 7600）。把虚拟元素写成普通元素（不加 <code>virtual</code>）会让 CAP 去查数据库列，得到一个真实报错形状 —— <code>no such table … statusCriticality</code>（本站实测踩过），这也是「为什么必须写 virtual」的最好证明。
+  </li>
+</ol>
+
+<h3 id="s6-2">6-2 做法 B / C：什么时候改用别的方式</h3>
+<table class="tbl small">
+  <tr><th>做法</th><th>怎么做</th><th>什么时候用</th></tr>
+  <tr><td>B：数据库加一列</td><td>在 <code>db/schema.cds</code> 的 <code>BookOrders</code> 里加 <code>statusCriticality : Integer</code>，CSV / 业务逻辑里维护值</td><td>criticality 本身有业务含义（要能筛选、排序、被别处消费）时。代价是数据迁移与维护多一处</td></tr>
+  <tr><td>C：代码表实体 + 关联</td><td>建 <code>Status</code> 代码表（<code>code</code> / <code>descr</code> / <code>criticality</code>），订单用关联指向它，<code>Criticality: status.criticality</code></td><td>状态集合会变、要多语言文本、要值帮助时（官方 incidents 示例就是这个结构）</td></tr>
+</table>
+
+
+<figure class="fig" data-fig="fiori_s02">
+  <a class="zoom" href="assets/fig/fiori_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_s02.svg" alt="fiori_s02" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 5</span><span class="cap">fiori_s02</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure><h2 id="s7">7. 本地运行：cds watch 与应用 URL</h2>
+
+<h3 id="s7-1">7-1 cds watch 是怎么服务 app/ 目录的</h3>
+<div class="stepmeta"><span class="k">cds watch</span><span class="f">app/book-orders/webapp/ · db.sqlite</span><span class="c">耗时 5 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：在项目根目录启动，<b>不需要额外的前端 dev server</b>。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds watch                 # 默认 4004；端口被占就 npx cds watch --port 4010</code></pre>
+  </li>
+  <li><b>验证（模型里有没有 app 目录的东西）</b>：启动日志会列出载入的模型文件，本站实测包含 <code>app/book-orders/annotations.cds</code>：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[cds] - loaded model from 4 file(s):
+  app/book-orders/annotations.cds
+  srv/book-order-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+[cds] - serving BookOrderService { at: [ '/odata/v4/book-order' ] }
+[cds] - server listening on { url: 'http://localhost:4010' }</code></pre>
+  </li>
+  <li><b>验证（静态资源层）</b>：<code>app/&lt;应用&gt;/</code> 与它下面的文件被直接静态发布。本站实测的状态码：
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">/book-orders/webapp/index.html   → 200  text/html
+/book-orders/webapp/manifest.json → 200  application/json
+/book-orders/annotations.cds      → 200        ← app 目录整体是静态发布的
+/book-orders/index.html           → 404        ← 目录地址没有 index.html
+/                                 → 200  CAP 开发首页（服务 + Fiori 应用链接）</code></pre>
+  </li>
+</ol>
+
+<table class="tbl">
+  <tr><th>要访问的东西</th><th>本地 URL</th><th>说明</th></tr>
+  <tr><td>Fiori 应用（List Report）</td><td><code>http://localhost:4004/book-orders/webapp/index.html</code></td><td>应用入口。<b>没有它就只能看到 404</b></td></tr>
+  <tr><td>本地启动台</td><td><code>http://localhost:4004/fiori-apps.html</code></td><td>示例工程里由 CAP 模板提供（<code>app/fiori-apps.html</code> + <code>app/appconfig/fioriSandboxConfig.json</code>），磁贴指向各应用</td></tr>
+  <tr><td>服务的元数据</td><td><code>http://localhost:4004/odata/v4/book-order/$metadata</code></td><td>检查注解是否生效的地方</td></tr>
+  <tr><td>CAP 开发首页</td><td><code>http://localhost:4004/</code></td><td>列出服务；开发 profile 下还有每个实体的 <b>Fiori preview</b> 链接（不用建应用就能看注解效果，仅本地）</td></tr>
+  <tr><td>部署后（对照）</td><td><code>https://&lt;org&gt;-&lt;space&gt;-&lt;mta ID&gt;.cfapps.&lt;region&gt;.hana.ondemand.com/</code></td><td>入口变成 approuter，没有目录名（§10）</td></tr>
+</table>
+
+
+<div class="box warn"><b class="t">Fiori preview 只在本地</b>
+<p>开发首页上那个 <b>Fiori preview</b> 链接是 CAP 提供的临时 List Report，用来「不建应用先看注解对不对」。它是<b>开发期工具，不是交付物</b>：<code>production</code> profile 下自动关闭（Node.js 侧想强行打开可设 <code>cds.fiori.preview: true</code>）。别把预览页当成交付界面。</p></div>
+
+<h3 id="s7-2">7-2 UI5 从 CDN 还是本地加载：取舍</h3>
+<table class="tbl small">
+  <tr><th></th><th>CDN（<code>sdk.openui5.org</code>）</th><th>本地 / npm（<code>@ui5/cli</code> + <code>ui5 serve</code> 或打包进应用）</th></tr>
+  <tr><td>典型写法</td><td><code>src="https://sdk.openui5.org/resources/sap-ui-core.js"</code>（稳定版）、<code>…/nightly/resources/…</code>（每日构建）。<b>本站实测这两个地址返回 200</b></td><td>由 UI5 CLI 起 dev server；或把 UI5 作为依赖打包，页面用相对路径加载</td></tr>
+  <tr><td>优点</td><td>零依赖、改一行就能换版本、本地开发最省事</td><td>版本钉死可复现；内网/离线可用；不依赖外网可用性；生产更可控</td></tr>
+  <tr><td>缺点</td><td>要外网；版本会随时间漂移（「昨天还好今天白屏」的经典原因）</td><td>多一层构建与依赖管理（<code>package.json</code> + <code>ui5.yaml</code> + <code>npm ci</code>）</td></tr>
+  <tr><td>建议</td><td>学习、内部演示、快速验证注解</td><td>交付项目：版本写进 <code>package.json</code>，构建期固定</td></tr>
+</table>
+<div class="box info"><b class="t">关于 sdk.openui5.org 的版本路径</b>
+<p>不带版本的 <code>https://sdk.openui5.org/resources/sap-ui-core.js</code> 与 <code>/nightly/…</code> 都在线可用（实测 200）；而 <code>https://sdk.openui5.org/1.136.0/resources/sap-ui-core.js</code> 这种<b>带版本的子路径实测是 404</b>，不要凭印象写。要钉版本就用本地 npm 包（推荐），或按 UI5 官方 SDK 页面给出的当前版本链接写法来取。CAP 示例工程自己的本地启动台用的是 <code>https://ui5.sap.com/test-resources/sap/ushell/bootstrap/sandbox.js</code> 与 <code>https://ui5.sap.com/resources/sap-ui-core.js</code>（<code>ui5.sap.com</code> 与 <code>sdk.openui5.org</code> 指向同一套 SDK）。</p></div>
+
+<h3 id="s7-3">7-3 在 BAS 里预览：端口转发</h3>
+<ol class="steps">
+  <li><b>动作</b>：BAS 终端里 <code>npx cds watch</code>（BAS 里没有本地浏览器可用）。</li>
+  <li><b>动作</b>：打开 <b>Ports</b>（终端旁边或底部面板），找到 <code>4004</code>，点 <b>Open in New Tab</b> / 复制转发地址。</li>
+  <li><b>验证</b>：把转发地址补上应用路径即可打开：<code>https://&lt;port-4004-转发域名&gt;/book-orders/webapp/index.html</code>。<b>判据</b>：页面标题出现「图书受注管理」；打不开时先看 <code>cURL</code> 那条是否也是 404（区分「没转发」和「路径错」）。</li>
+</ol>
+<div class="box warn"><b class="t">BAS 里的两个常见错觉</b>
+<ol>
+  <li><b>「我改了注解但页面没变」</b>：Fiori Elements 会把 <code>$metadata</code> 缓存在内存里，通常刷新页面即可；如果还不变，看控制台里 metadata 请求是否命中了浏览器缓存（Network 面板勾 Disable cache 再刷）。</li>
+  <li><b>「端口被占用」</b>：BAS/本机常见 <code>[EADDRINUSE] - port 4004 is already in use by another server process.</code>（本站实测过）。换端口：<code>npx cds watch --port 4010</code>，或杀掉旧进程。</li>
+</ol></div>
+
+<h2 id="s8">8. 空白页三步定位法</h2>
+
+<p>空白页最难的地方不是修，而是<b>定位到哪一层</b>。按下面的顺序做，三步之内必然能落到「静态资源 / 服务 / 注解」三者之一。</p>
+
+
+<table class="tbl">
+  <tr><th>步骤</th><th>看什么</th><th>判据与对策</th></tr>
+  <tr><td>① Network 面板</td><td><code>index.html</code>、<code>manifest.json</code>、<code>Component.js</code>/<code>sap-ui-core.js</code> 的状态码</td><td>任一 404/5xx → <b>静态资源层</b>：检查路径大小写、目录名、有没有 <code>webapp/</code>、有没有 <code>index.html</code>；<code>sap-ui-core.js</code> 失败 = CDN 不可达（§11 行 10）</td></tr>
+  <tr><td>② console 第一条报错</td><td>通常是 <code>Failed to load component</code> / <code>Template … not found</code> / <code>… is not a function</code></td><td>读<b>第一条</b>（后面全是它的连锁反应）。模板类报错 → 查 <code>manifest</code> 的 <code>libs: { sap.fe.templates: {} }</code> 与 <code>minUI5Version</code>；组件类报错 → 查 <code>sap.app.id</code> 与 <code>data-sap-ui-resource-roots</code> 是否一致</td></tr>
+  <tr><td>③ <code>$metadata</code> 请求</td><td>状态码 + 内容里有没有 <code>UI.LineItem</code> / <code>Criticality</code></td><td>401 → 认证（本地用 <code>-u alice:</code>）；200 但没有注解 → <b>注解层</b>：文件没在模型里、实体名写错、注解没保存；有注解但页面没列 → 检查注解是否写在<b>对的那个实体集</b>上</td></tr>
+</table>
+
+<div class="box ok"><b class="t">三条命令版（不打开浏览器也能定位）</b>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-
+<figure class="fig" data-fig="fiori_debug">
+  <a class="zoom" href="assets/fig/fiori_debug.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_debug.svg" alt="空白页的三步定位：① 静态资源是否 200 ② 控制台第一条报错 ③ $metadata 里注解是否真的在 —— 三条 curl 就能把「页面 / 服务 / 注解」三层分开" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">空白页的三步定位：① 静态资源是否 200 ② 控制台第一条报错 ③ $metadata 里注解是否真的在 —— 三条 curl 就能把「页面 / 服务 / 注解」三层分开</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl 本地 cds watch（端口 4010）</span></figcaption>
+</figure>btn" type="button">复制</button></div><code class="lang-bash"># ① 静态资源
+curl -s -o /dev/null -w '%{http_code} %{content_type}\n' http://localhost:4004/book-orders/webapp/index.html
+# ② 服务可用性与认证（401 = 认证层，200 = 服务层通过）
+curl -s -o /dev/null -w '%{http_code}\n' -u alice: http://localhost:4004/odata/v4/book-order/$metadata
+# ③ 注解是否进了元数据（0 = 注解层出问题）
+curl -s -u alice: http://localhost:4004/odata/v4/book-order/$metadata | grep -c 'UI.LineItem'</code></pre>
+<p>本站实测：①②③ 分别得到 <code>200 text/html</code>、<code>200</code>、<code>2</code>。三条全对而页面还是空，就去 console 看第一条报错（多半是 UI5 版本或资源根名字的问题）。</p></div>
+
+<h2 id="s9">9. 从 List Report 到 Object Page 的真实请求</h2>
+
+<p>Fiori Elements 的「新建 / 编辑」不是一次性 PUT，而是走 <b>OData V4 草稿（draft）编排</b>。这一点在 <a href="node.html#s7">⑤ Node 服务 §7 草稿</a>已经从服务侧讲过，本节从<b>前端按钮</b>的视角把它和 UI 对应起来：</p>
+
+<div class="timeline">
+  <div class="tl"><b>① Create 按钮</b> <code>POST /odata/v4/book-order/BookOrders</code>
+    <p>返回的是一条<b>草稿</b>（<code>IsActiveEntity:false</code>），浏览器随即跳到 Object Page；此时正式表里什么都没有。<b>UI 对应</b>：页面右上角出现「草稿」状态条与保存/取消按钮。</p></div>
+  <div class="tl"><b>② 编辑字段 / 加明细行</b> <code>PATCH /BookOrders(ID=…,IsActiveEntity=false)</code>
+    <p>每改一个字段发一次 PATCH（业务语义上就是自动保存草稿）。<b>UI 对应</b>：改动即时生效，没有「未保存」的红色提示。</p></div>
+  <div class="tl"><b>③ Save 按钮</b> <code>POST /BookOrders(ID=…,IsActiveEntity=false)/draftActivate</code> → <b>201</b>
+    <p>此刻才写正式表，并且<b>只有在此时</b>才触发服务端的 <code>before('CREATE')</code> 校验（本站的自动编号 BO-100x、顾客存在性校验都在这一刻）。<b>UI 对应</b>：保存成功后消息条提示，列表自动刷新。</p></div>
+  <div class="tl"><b>④ 取消按钮</b> <code>DELETE /BookOrders(ID=…,IsActiveEntity=false)</code> → <b>204</b>
+    <p>草稿被丢弃，正式数据不受影响。<b>UI 对应</b>：页面退回列表，草稿锁释放。</p></div>
+</div>
+
+
+<h3 id="s9-1">9-1 交互细节：按钮从哪来、校验什么时候拦</h3>
+<table class="tbl small">
+  <tr><th>UI 上的东西</th><th>注解 / 服务侧的来源</th><th>本站实测的请求与结果</th></tr>
+  <tr><td>列表工具栏的「创建」</td><td><code>@odata.draft.enabled</code> 自动带来（不需要注解声明）</td><td><code>POST /BookOrders</code> → 返回草稿（<code>IsActiveEntity:false</code>）；实测状态 200/201，响应里带 <code>HasActiveEntity:false</code></td></tr>
+  <tr><td>页头的「提交订单」按钮</td><td><code>UI.DataFieldForAction</code> + 服务里的绑定动作 <code>submitOrder</code></td><td>按钮最简写法可直接以 curl 验证：<code
+<figure class="fig" data-fig="fiori_draft">
+  <a class="zoom" href="assets/fig/fiori_draft.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_draft.svg" alt="Fiori Create/Save 的真实请求序列（本地实测）：建草稿 POST（IsActiveEntity=false）→ PATCH 改草稿 → draftActivate 才写正式表；业务校验在激活时刻返回 400/409" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 7</span><span class="cap">Fiori Create/Save 的真实请求序列（本地实测）：建草稿 POST（IsActiveEntity=false）→ PATCH 改草稿 → draftActivate 才写正式表；业务校验在激活时刻返回 400/409</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl project-code/demo-node（草稿流程，含 statusCriticality 虚拟元素）</span></figcaption>
+</figure>>POST /BookOrders(ID=…,IsActiveEntity=true)/submitOrder</code>；空订单 → 400、重复提交 → 409（见 ⑤ 页的断言脚本）</td></tr>
+  <tr><td>保存时的错误消息条</td><td>服务端 <code>req.reject(400/409, '消息')</code></td><td>实测响应体：<code>{"error":{"message":"顾客 9999 不存在，请先维护主数据","code":"400","@Common.numericSeverity":4}}</code> 与 <code>{"error":{"message":"订单号 BO-1001 已存在，请更换","code":"409",…}}</code></td></tr>
+  <tr><td>草稿阶段为什么几乎不报错</td><td>CAP 的草稿语义：PATCH 期间即使数据不合法也<b>照常保存草稿</b>（让用户能继续改），错误消息会持久化显示在页面上；<b>激活时</b>才做正式校验</td><td>实测：<code>POST</code> 一个 <code>customer_ID:9999</code> 的草稿 → 201 成功；随后 <code>draftActivate</code> → <b>400</b>。这正是「我明明填了，为什么保存才报错」的答案</td></tr>
+</table>
+
+<div class="box warn"><b class="t">三条与草稿相关的运维事实</b>
+<ol>
+  <li><b>草稿锁</b>：给活动行建草稿后该行被锁，<b>默认 15 分钟</b>超时（CAP Node.js 可配 <code>cds.fiori.draft_lock_timeout</code>）；另一个用户在这段时间内不能对同一行建草稿。</li>
+  <li><b>草稿会堆积</b>：非活动草稿默认 <b>30 天</b>后自动清理（<code>cds.fiori.draft_deletion_timeout</code>，可设 <code>false</code> 关闭），清理是「新建草稿时顺带做」的，不是定时任务。测试脚本每次跑之前先 <code>npm run deploy</code> 重置数据，否则断言会被残留草稿影响。</li>
+  <li><b>校验要写在活动实体上</b>：草稿和活动实体都可以被直接更新（活动数据的请求带 <code>IsActiveEntity=true</code>），所以校验必须对活动实体也生效，不能只写在草稿事件里。</li>
+</ol></div>
+
+<h2 id="s10">10. 把 UI 接进 mta.yaml，部署后怎么打开</h2>
+
+<p>本地跑通不等于交付完成：<b>部署时 UI 由谁托管、URL 长什么样</b>要和 <a href="deploy.html">⑩ 部署</a> 一起设计。CAP 给了两条现成路线，本站示范项目适合路线 A（单租户、自带 approuter）。</p>
+
+<table class="tbl">
+  <tr><th></th><th>路线 A：自带 approuter + HTML5 Application Repository</th><th>路线 B：自建 approuter（不带 HTML5 仓库）</th></tr>
+  <tr><td>命令</td><td><span class="cmd">npx cds add ui5</span> → <span class="cmd">npx cds add html5-repo</span>（配合 <code>cds add approuter hana xsuaa mta</code>）</td><td><span class="cmd">npx cds add approuter</span></td></tr>
+  <tr><td>生成的模块</td><td>srv、db-deployer、<b>approuter</b>、<b>app-deployer</b>（<code>com.sap.application.content</code>）、以及每个 Fiori 应用一个 <code>html5</code> 模块（本站是 <code>demonodebookorders</code>）</td><td>srv、db-deployer、approuter（<code>app/router/</code>）。<b>需要自己做符号链接</b>把 <code>app/</code> 下的应用暴露给 approuter（CAP 文档明确提到这一点）</td></tr>
+  <tr><td>资源</td><td><code>html5-apps-repo</code> 的 <code>app-host</code> + <code>app-runtime</code>、<code>xsuaa</code>（plan <code>application</code>）、<code>com.sap.xs.hdi-container</code>（<code>hana</code> / <code>hdi-shared</code>）</td><td>只需要 <code>xsuaa</code> + <code>hdi-container</code></td></tr>
+  <tr><td>访问路径（部署后）</td><td><code>https://&lt;org&gt;-&lt;space&gt;-&lt;mta ID&gt;.cfapps.&lt;region&gt;.hana.ondemand.com/</code>（approuter 是唯一入口，<code>app/&lt;app&gt;/xs-app.json</code> 把 <code>/odata/…</code> 转发给 srv，其余交给 <code>html5-apps-repo-rt</code>）</td><td>同左，但静态文件由 approuter 自己托管</td></tr>
+  <tr><td>适合</td><td>生产、要 FLP/Work Zone、要求 UI 与后端分离部署</td><td>演示、小工具、不想引入 HTML5 仓库配额</td></tr>
+</table>
+
+<h3 id="s10-1">10-1 手顺 A：本页 UI 接入 MTA（本站实测生成物）</h3>
+<div class="stepmeta"><span class="k">cds add ui5 / html5-repo</span><span class="f">mta.yaml · app/book-orders/{package.json,ui5.yaml} · app/router/</span><span class="c">耗时 20 分</span></div>
+<ol class="steps">
+  <li><b>动作</b>：先给项目补上部署相关的 facet（顺序有讲究：<b>先 <code>ui5</code> 再 <code>html5-repo</code></b>，后者要检测到 UI5 工程才会写打包脚本）。
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-node
+npx cds add hana xsuaa approuter mta    # 数据库 / 授权 / approuter / mta.yaml
+npx cds add ui5                         # 写入 package.json 的 "sapux": ["app/book-orders"]
+npx cds add html5-repo                  # HTML5 Application Repository 相关的模块与资源</code></pre>
+  </li>
+  <li><b>动作</b>：确认 UI5 打包配置真的生成了（本站实测生成物如下）。
+    <pre class="hl"><div class="code-head"><span class="lang">json</span><button class="copy-btn" type="button">复制</button></div><code class="lang-json">// app/book-orders/package.json（由 cds add html5-repo 生成）
+{
+  "name": "book-orders",
+  "version": "1.0.0",
+  "main": "webapp/index.html",
+  "scripts": {
+    "build": "ui5 build preload --clean-dest",
+    "start": "ui5 serve"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4",
+    "ui5-task-zipper": "^3"
+  }
+}</code></pre>
+    <pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml"># app/book-orders/ui5.yaml（同名生成物，注意 archiveName 与 mta.yaml 里的 artifacts 必须一致）
+specVersion: '4.0'
+metadata:
+  name: book-orders
+type: application
+builder:
+  resources:
+    excludes:
+      - "/test/&#42;&#42;"
+      - "/localService/&#42;&#42;"
+  customTasks:
+    - name: ui5-task-zipper
+      afterTask: generateVersionInfo
+      configuration:
+        archiveName: book-orders
+        relativePaths: true
+        additionalFiles:
+          - xs-app.json</code></pre>
+  </li>
+  <li><b>动作</b>：核对 <code>mta.yaml</code> 里出现 UI 相关的模块与资源（本站真实生成物的片段）。
+    <pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml">parameters:
+  deploy_mode: html5-repo
+
+modules:
+  - name: demo-node-app-deployer            # 把 UI 上传到 HTML5 仓库
+    type: com.sap.application.content
+    path: gen
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: demonodebookorders
+          artifacts:
+            - book-orders.zip               # 必须是 ui5.yaml 里 ui5-task-zipper 的 archiveName
+          target-path: app/
+    requires:
+      - name: demo-node-auth
+      - name: srv-api
+      - name: demo-node-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+
+  - name: demonodebookorders                # 每个 Fiori 应用一个 html5 模块
+    type: html5
+    path: app/book-orders
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms: []
+
+resources:
+  - name: demo-node-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters: { service: html5-apps-repo, service-plan: app-host }
+  - name: demo-node-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters: { service: html5-apps-repo, service-plan: app-runtime }</code></pre>
+  </li>
+  <li><b>验证</b>：<code>mbt build -t mta_archives</code> 之后，归档里必须能看到 <code>book-orders.zip</code> 与 app-deployer 模块；<b>用错顺序（先 html5-repo 再 ui5）会得到只有 <code>{"name":"book-orders"}</code> 的 package.json —— 没有 <code>build</code> 脚本，打包阶段会以 <code>Missing script: "build"</code> 失败</b>。修法是删掉 html5-repo 生成的文件后重跑 <code>cds add ui5 &amp;&amp; cds add html5-repo</code>。</li>
+  <li><b>验证（部署后）</b>：打开 approuter 路由根地址 <code>https://&lt;org&gt;-&lt;space&gt;-demo-node.cfapps.&lt;region&gt;.hana.ondemand.com/</code>：会先要求登录（xsuaa 的应用计划 + <code>app/router/xs-app.json</code> 的转发规则），登录后能进列表页；<code>/odata/v4/book-order/$metadata</code> 走同一条域名（approuter 转发给 srv）。详见 <a href="deploy.html#s5">⑩ 部署 §5 部署后验证清单</a>。</li>
+</ol>
+
+<div class="box info"><b class="t">UI 与后端的访问路径对照（本地 vs 云端）</b>
+<table class="tbl small">
+  <tr><th></th><th>本地 <code>cds watch</code></th><th>云端（approuter 为入口）</th></tr>
+  <tr><td>UI 入口</td><td><code>http://localhost:4004/book-orders/webapp/index.html</code></td><td><code>https://&lt;org&gt;-&lt;space&gt;-&lt;mta ID&gt;.cfapps.&lt;region&gt;.hana.ondemand.com/</code>（<code>welcomeFile: /index.html</code>）</td></tr>
+  <tr><td>OData</td><td><code>http://localhost:4004/odata/v4/book-order/…</code></td><td>同一个域名下的 <code>/odata/v4/book-order/…</code>（approuter 按 <code>xs-app.json</code> 转发到 <code>srv-api</code>）</td></tr>
+  <tr><td>静态文件来自</td><td>CAP 直接发布 <code>app/</code></td><td>HTML5 Application Repository（<code>html5-apps-repo-rt</code>）或 approuter 自带资源</td></tr>
+  <tr><td>认证</td><td>mocked（<code>-u alice:</code>）</td><td>XSUAA（浏览器跳登录页，<code>forwardAuthToken: true</code> 把令牌传给 srv）</td></tr>
+</table></div>
+
+<h2 id="s11">11. 常见问题表（14 条）</h2>
+
+<table class="tbl small">
+  <tr><th>症状</th><th>最可能的原因</th><th>怎么修 / 怎么验证</th></tr>
+  <tr><td>整页空白，控制台第一条是模板/组件加载失败</td><td><code>manifest.json</code> 缺 <code>libs: { "sap.fe.templates": {} }</code>；或 <code>sap.app.id</code> 与 <code>index.html</code> 的资源根/组件名不一致</td><td>补齐 libs；把 <code>data-sap-ui-resource-roots</code> 与 <code>data-sap-ui-component data-name</code> 都改成 <code>sap.app.id</code>。验证：Network 里 <code>manifest.json</code> 200 + console 无 <code>Failed to load component</code></td></tr>
+  <tr><td>页面能开，表格里「No data」</td><td>注解没生效（没列 → 表格无内容），或 <code>UI.LineItem</code> 写在别的实体集上，或数据真的为空</td><td><code>curl …/$metadata | grep -c UI.LineItem</code> 应为 2（本站实测值）；再 <code>curl …/BookOrders?$top=1</code> 确认有数据</td></tr>
+  <tr><td>页面上没有任何列，筛选条也空</td><td>注解文件不在模型里：放错目录（不在 <code>app/&#42;&#42;</code> 或 <code>srv/&#42;&#42;</code> 下）、文件名拼错、实体名写错（少了服务名前缀）</td><td><code>cds compile srv --to edmx</code> 直接看有没有注解；<code>cds watch</code> 启动日志里应列出该 <code>.cds</code> 文件</td></tr>
+  <tr><td><code>$metadata</code> 请求被浏览器拦（CORS 报错）</td><td>把 UI 放在<b>另一个源</b>（另一个端口/域名）跑，而服务没开跨域</td><td>本地开发就让 CAP 同时服务 UI（同源，最省事）；或用 Fiori tools 的代理/<code>cds watch</code> 的 UI5 dev server 统一入口。<b>不要用「前端自己起 8080 + 服务在 4004」这种试法</b></td></tr>
+  <tr><td>列表里没有「创建」按钮</td><td>实体没有开启草稿：<code>@odata.draft.enabled</code> 缺失</td><td>在服务定义里给该实体加注解后重启；验证：<code>$metadata</code> 里该实体应有 <code>DraftRoot</code> 注解</td></tr>
+  <tr><td>自己加的「提交订单」按钮不显示</td><td><code>UI.DataFieldForAction</code> 的 <code>Action</code> 名写错（绑定动作必须写 <code>服务名.动作名</code>）；或动作没在 <code>srv/*.cds</code> 里定义</td><td>改成 <code>'BookOrderService.submitOrder'</code>；用 curl 直接打 <code>POST /BookOrders(ID=…,IsActiveEntity=true)/submitOrder</code> 先证明服务侧可用</td></tr>
+  <tr><td>点保存报 <b>400</b>（业务校验）</td><td>服务端 <code>req.reject(400, …)</code>：本站如「顾客不存在」「数量必须大于 0」「没有明细不能提交」</td><td>这是<b>正确行为</b>：草稿阶段不拦，激活时才拦。看响应体里的 <code>message</code>（实测：「顾客 9999 不存在，请先维护主数据」），修数据后重试</td></tr>
+  <tr><td>点保存报 <b>409</b></td><td>唯一性冲突：本站是订单号重复（<code>before('CREATE')</code> 里的 dup 检查）</td><td>换一个订单号，或把自动编号逻辑用上（<code>orderNo</code> 留空由服务端生成 BO-100x）</td></tr>
+  <tr><td>日期少一天 / 时区偏移</td><td>用了 <code>Date</code> 而模型里是 <code>Date</code> 类型；或直接把带时区的 ISO 串写进日期字段</td><td>模型里 <code>orderDate : Date</code> 传 <code>2026-09-01</code>（不带时间）；带时间的场景用 <code>DateTime</code>/<code>Timestamp</code> 并在前端按用户时区显示。验证：<code>curl</code> 里回读到的日期与 CSV 完全一致</td></tr>
+  <tr><td>金额显示成 <code>16000</code> 而不是 <code>16,000</code>，或小数被截断</td><td>前端没拿到数量单位/小数位信息；或模型里用了 <code>Double</code> 之类浮点类型</td><td>金额用 <code>Decimal(13,2)</code>（本站就是），并在字段旁给出货币（本站用 <code>currency : String(3)</code>）。<b>Decimal 在前端的格式由元数据的精度决定</b>，不要在注解里手动加千分位字符串</td></tr>
+  <tr><td>UI5 版本不匹配（模板类报错 / 某些功能缺失）</td><td><code>minUI5Version</code> 与 CDN 上的实际版本不一致，或 CDN 自动升级后不再兼容旧写法</td><td>把 <code>minUI5Version</code> 提到当前 CDN 的稳定版之上（本站取 <code>1.136.0</code>），交付项目改为本地绑定 UI5 版本</td></tr>
+  <tr><td><code>sap-ui-core.js</code> 加载失败（离线/内网）</td><td>CDN 不可达：<code>sdk.openui5.org</code> 被网络策略阻断</td><td>网页打不开但服务正常时，先在浏览器直接打开该 URL；本地开发可改用 npm 安装的 UI5（<code>ui5 serve</code>）或内网镜像</td></tr>
+  <tr><td>路由 404：<code>/book-orders/webapp/index.html</code> 打不开</td><td>路径写错（漏了 <code>webapp/</code>、用了 <code>/book-orders/</code>）；或项目根目录不对（<code>cds watch</code> 必须停在项目根）</td><td>用 §7 的三条 curl 逐条比对；本站实测「目录地址」<code>/book-orders/index.html</code> 就是 404</td></tr>
+  <tr><td>部署后 UI 打不开，但 <code>$metadata</code> 正常</td><td>UI 没被打进归档或没上传：<code>cds add ui5</code> / <code>html5-repo</code> 顺序错、<code>book-orders.zip</code> 与 <code>archiveName</code> 不一致、app-deployer 模块失败</td><td>查 <code>cf logs demo-node-app-deployer --recent</code>（<a href="deploy.html#s6">⑩ 部署 §6</a>）；核对 <code>tar -tf …mtar | grep book-orders.zip</code></td></tr>
+</table>
+
+<h2 id="s12">12. i18n、命名与版本三个易错点</h2>
+
+<div class="cols2">
+  <div class="panel"><h3>i18n：文案不要硬编码</h3>
+  <p>注解里写中文能跑，但一旦要多语言就得全改。标准做法是 <code>{i18n&gt;Key}</code>：</p>
+  <pre class="hl"><div class="code-head"><span class="lang">cds</span><button class="copy-btn" type="button">复制</button></div><code class="lang-cds">UI.LineItem : [
+  { $Type: 'UI.DataField', Value: orderNo, Label: '{i18n&gt;OrderNo}' },
+  { $Type: 'UI.DataField', Value: status,  Label: '{i18n&gt;Status}' }
+];</code></pre>
+  <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text"># webapp/i18n/i18n.properties
+OrderNo=订单号
+Status=状态</code></pre>
+  <p><b>注意</b>：<code>{i18n&gt;…}</code> 的取值入口是 <code>manifest.json</code> 里那个 <code>i18n</code> 模型（本站 <code>i18n/i18n.properties</code>）。语言文件命名遵循 <code>i18n_zh_CN.properties</code> 之类的后缀规则；团队里最常见的 bug 是<b>键名拼错导致页面上直接显示 <code>{i18n&gt;OrderNo}</code></b>。</p></div>
+  <div class="panel"><h3>命名：三处必须一致</h3>
+  <ul>
+    <li><code>sap.app.id</code>（manifest） = <code>data-sap-ui-resource-roots</code> 的键 = <code>data-name</code>（index.html）；</li>
+    <li><code>entitySet</code>（manifest） = 服务里投影的实体名（本站 <code>BookOrders</code>）；</li>
+    <li><code>UI.DataFieldForAction.Action</code> = <code>服务名.动作名</code>（绑定）。
+<figure class="fig" data-fig="fiori_listreport">
+  <a class="zoom" href="assets/fig/fiori_listreport.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_listreport.svg" alt="注解生效后的 List Report：筛选字段来自 UI.SelectionFields，表格列来自 UI.LineItem，状态列的颜色来自 Criticality —— 数据是本站示范项目的 CSV 初始值" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 8</span><span class="cap">注解生效后的 List Report：筛选字段来自 UI.SelectionFields，表格列来自 UI.LineItem，状态列的颜色来自 Criticality —— 数据是本站示范项目的 CSV 初始值</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure></li>
+  </ul>
+  <p>再加一条经验：<code>sap.app.id</code> 建议用 <b>小写 + 点/连字符</b>（本站 <code>demo.node.book-orders</code>）。CAP 在生成示例时会把 ID 改写成 <code>&lt;项目&gt;.&lt;应用目录&gt;</code>，原因是<b>部署时 ID 必须唯一</b>，重复会导致 HTML5 仓库内容冲突。</p></div>
+</div>
+
+<table class="tbl small">
+  <tr><th>易错点</th><th>症状</th><th>对策</th></tr>
+  <tr><td>UI5 版本被写死成很低的 <code>minUI5Version</code></td><td>模板组件加载失败、部分注解特性不生效</td><td>对齐当前稳定版（本站 <code>1.136.0</code>）；交付时本地绑定版本</td></tr>
+  <tr><td>表格类型选错（ResponsiveTable vs GridTable）</td><td>手机上列被折叠成一行行、或桌面端列太挤</td><td>在 <code>controlConfiguration</code> 的 <code>tableSettings.type</code> 里切换并实测两种屏宽</td></tr>
+  <tr><td>把 <code>UI.LineItem</code> 当成「表格」写了许多列</td><td>列太多、横向滚动、用户体验差</td><td>列表只放「认出这行是谁」的字段（3–6 列），其余放 Object Page 的 FieldGroup</td></tr>
+</table>
+
+<h2 id="s13">13. 练习（3 个）与完成基准</h2>
+
+<h3 id="s13-1">练习 1：给 <code>status</code> 加 Criticality 着色（必做）</h3>
+<p><b>要求</b>：让列表里 <code>OPEN</code> 红、<code>SUBMITTED</code> 橙、<code>CLOSED</code> 绿，并且不改数据库结构。<b>提示</b>：在服务投影里加 <code>virtual statusCriticality : Integer</code>，在 <code>after('READ')</code> 里按状态赋值，注解里写 <code>Criticality: statusCriticality</code>。<b>基准</b>：<code>curl --data-urlencode '$select=orderNo,status,statusCriticality'</code> 返回 1/1/2/3（对应 BO-1001…BO-1004），页面三行颜色各不相同。</p>
+
+<h3 id="s13-2">练习 2：加一个 SelectionField（必做）</h3>
+<p><b>要求</b>：让「客户」也能在筛选条上筛选。<b>提示</b>：注意 <code>customer</code> 是关联，直接写 <code>customer</code> 与写 <code>customer_ID</code> 的效果不同（一个是值帮助、一个是数字输入）。<b>基准</b>：筛选条出现「客户」项；用客户 2000 过滤后只剩 BO-1003 一行（本站数据：BO-1003 属于 2000 上海博文出版中心）。<b>加分</b>：让筛选条上的顺序变成 <code>[ status, customer, orderDate ]</code>。</p>
+
+<h3 id="s13-3">练习 3：把明细表改成 Object Page 的独立 section（必做）</h3>
+<p><b>要求</b>：让明细表显示在「订单明细」分节里（本站写法已经给出：<code>UI.Facets</code> 里的 <code>{ $Type: 'UI.ReferenceFacet', Target: 'items/@UI.LineItem' }</code>），并解释<b>为什么 <code>Target</code> 写成关联路径而不是本实体的 <code>@UI.LineItem</code></b>。<b>基准</b>：详情页出现两个分节（订单信息 / 订单明细），明细列为 图书 / 单价 / 数量 / 金额，且 BO-1003 的明细三行金额之和 = 订单头 17,400。</p>
+
+<h3 id="s13-4">完成基准（自检清单）</h3>
+<ul class="check">
+  <li>能给一个业务实体说出「用哪个模板」并给出判断依据（≥2 条）；</li>
+  <li><code>manifest.json</code> 里每个键都能说出「删掉它会怎样」；</li>
+  <li>List Report 的列顺序与 <code>UI.LineItem</code> 数组顺序一致（现场改一项即可验证）；</li>
+  <li>筛选条字段与 <code>UI.SelectionFields</code> 一致；</li>
+  <li>状态着色与 <code>statusCriticality</code> 的取值一一对应；</li>
+  <li>「提交订单」按钮能点通（服务侧 curl 也通）；</li>
+  <li>能画出 Create → 编辑 → Save → 取消 四条请求（含 URL 与状态码）；</li>
+  <li>白屏时能在 5 分钟内说出「是哪一层的问题」并给出证据。</li>
+</ul>
+
+<h2 id="s14">14. 交付前检查清单</h2>
+
+<ul class="check">
+  <li><b>模型层</b>：<code>cds compile srv/book-order-service.cds app/book-orders/annotations.cds --to edmx</code> 无 <code>[ERROR]</code>；<code>grep -c UI.LineItem</code> 与预期列组数一致（本站 2）。</li>
+  <li><b>服务层</b>：<code>$metadata</code> 匿名 401、带用户 200（证明认证生效）；<code>BookOrders?$top=1</code> 有数据。</li>
+  <li><b>应用层</b>：<code>webapp/index.html</code>、<code>webapp/manifest.json</code> 都 200；console 无报错；页面标题与 <code>UI.HeaderInfo.Title</code> 一致。</li>
+  <li><b>交互层</b>：手动走一遍 Create → 改字段 → Save（看列表多一行）；再走一遍 取消（确认没有多出数据）。</li>
+  <li><b>错误层</b>：故意造一个错误（如重复订单号），确认页面显示的是<b>服务端消息</b>而不是「未知错误」。</li>
+  <li><b>文案层</b>：中英文切换（若有）无 <code>{i18n&gt;…}</code> 裸露；金额与日期格式正确。</li>
+  <li><b>交付层</b>：<code>mbt build</code> 后归档里能找到 <code>book-orders.zip</code>；<code>mta.yaml</code> 的应用名与 <code>ui5.yaml</code> 的 <code>archiveName</code> 一致。</li>
+</ul>
+
+<h2 id="s15">15. 本节测试</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>「列表 → 详情」形态之外，举两个必须 freestyle 的场景，并说明 Fiori Elements 为什么不适合。</li>
+    <li><code>manifest.json</code> 里的 <code>sap.app.id</code> 和 <code>index.html</code> 里的哪些属性必须一致？不一致的症状是什么？</li>
+    <li><code>routing.routes</code> 的两条 pattern（<code>:?query:</code> 与 <code>BookOrders({key}):?query:</code>）分别对应哪个页面？</li>
+    <li>为什么 <code>UI.LineItem</code> 里可以直接写 <code>customer.name</code>、<code>book.title</code>？前端会因此发什么请求？</li>
+    <li><code>UI.Facets</code> 里 <code>Target: 'items/@UI.LineItem'</code> 与 <code>Target: '@UI.FieldGroup#Order'</code> 有什么区别？</li>
+    <li>列表里的「创建」按钮需要在注解里声明吗？为什么？</li>
+    <li><code>UI.DataFieldForAction</code> 的 <code>Action</code> 该写 <code>submitOrder</code> 还是 <code>BookOrderService.submitOrder</code>？它和无绑定动作的写法差在哪？</li>
+    <li>写出 <code>OPEN</code> / <code>SUBMITTED</code> / <code>CLOSED</code> 对应的 criticality 数值，并说明为什么不能把 <code>UI.Criticality</code> 直接标在 <code>status</code> 元素上。</li>
+    <li>本地 <code>cds watch</code> 后，Fiori 应用的访问路径是什么？为什么 <code>/book-orders/index.html</code> 会是 404？</li>
+    <li>空白页三步定位法的三步分别看什么？每步各自的「判据」是什么？</li>
+    <li>Create 按钮点下去之后，第一次请求发的是什么？为什么此时正式表里还没有数据？</li>
+    <li>「我明明在草稿里填了顾客，为什么保存才报 400？」请用草稿编排的语义回答。</li>
+    <li>草稿锁的默认超时是多少？非活动草稿默认多久清理？这两个值怎么改？</li>
+    <li>部署时要让 UI 进 HTML5 仓库，<code>cds add ui5</code> 与 <code>cds add html5-repo</code> 的顺序为什么重要？顺序反了会看到什么错误？</li>
+    <li>部署后 UI 打不开但 <code>$metadata</code> 正常，你会先看哪个模块的日志？为什么？</li>
+  </ol>
+  <p class="go">对应自测题见自测页「Fiori UI」组（题库文件 <code>work/quiz/fiori.json</code>，共 18 题）。</p>
+</div>
+
+<h2 id="s16">16. 小结与下一页</h2>
+
+<div class="grid cards">
+  <div class="card"><h3>一句话总结</h3>
+    <p>Fiori Elements 是「读元数据的前端」：<b>服务提供实体与动作、注解提供界面语义、manifest 提供模板与路由</b>。你写的每一行 <code>.cds</code> 注解都会进入 <code>$metadata</code>，页面只是把它们渲染出来 —— 所以「页面不对」几乎总能还原成「三份输入里哪一份不对」。</p></div>
+  <div class="card"><h3>本页的三个关键动作</h3>
+    <p>① <code>app/book-orders/webapp/manifest.json</code>（模板 <code>sap.fe.templates.ListReport</code> / <code>ObjectPage</code>、<code>dataSources</code> 指向 <code>/odata/v4/book-order/</code>）；② <code>app/book-orders/annotations.cds</code>（<code>UI.LineItem</code> / <code>UI.SelectionFields</code> / <code>UI.HeaderInfo</code> / <code>UI.FieldGroup</code> / <code>UI.Facets</code> / <code>UI.DataFieldForAction</code> + 状态着色）；③ <code>cds watch</code> 下用 <code>/book-orders/webapp/index.html</code> 打开并三步定位问题。</p></div>
+  <div class="card"><h3>与草稿章节的关系</h3>
+    <p>保存按钮不是「一次提交」，而是 <code>POST 建草稿 → PATCH → POST draftActivate</code>。服务侧的原理与断言见 <a href="node.html#s7">⑤ Node 服务 §7</a>；本页补充了「从 UI 看这些请求分别对应哪个按钮、为什么校验在保存时才拦」。</p></div>
+  <div class="card"><h3>下一步</h3>
+    <p>界面能从本地打开了，但别人还看不到。下一页把「构建 → 打包 → 部署 → 验证」这条链路走完：<code>cds build</code> 的产物差异、<code>mta.yaml</code> 的模块与资源、<code>mbt build</code> 与 <code>cf deploy</code>、发布后的运维与 CI/CD。<br><a href="deploy.html">⑩ 构建与部署：从本地到 Cloud Foundry →</a></p></div>
+</div>
+
+<div class="box info"><b class="t">回读清单</b>
+<p>读完这页你应该能做到：打开任意一个 CAP 项目的 <code>app/</code> 目录，10 分钟内说清「有几个应用、每个应用连哪个服务、列表有哪些列、详情页有哪些分节、有哪些动作按钮」；并且知道改哪一个文件能让列表多一列。做不到的话回到 §3（三角关系）与 §5（注解逐条）重读一遍。</p></div>
+
+<p class="kicker">本页 curl 输出取自本地实测（Node 22.23.2 / @sap/cds 9.9.3 / 端口 4010）；<code>mbt</code>、<code>cf</code> 相关的图注为「重绘」，未在本机实跑。CAP 与 UI5 的小版本会改变日志与控制台文案，以你自己环境为准。</p>
+</article>
+</main>
+</div>
+
+<!--FOOTER-->
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
+<!--/FOOTER-->
+<script src="assets/main.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>
+

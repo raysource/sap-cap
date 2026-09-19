@@ -1,0 +1,8 @@
+[
+  {"no": "TEST-01", "title": "把「模型无 ERROR + 实体集数量」写成可进 CI 的一条断言", "basis": "cds compile --to edmx 的输出与退出码陷阱（有 [ERROR] 时 exit code 仍可能是 0）；grep -q 判定", "time": "15 分", "rel": "testing.html#s1-1"},
+  {"no": "TEST-02", "title": "给现有 5 类 handler 各补一条负向用例（400/401/405/409/404）", "basis": "cds.test 的 GET/POST、.catch(e => e) + err.response.status、业务消息断言", "time": "30 分", "rel": "testing.html#s2"},
+  {"no": "TEST-03", "title": "让 odata-verify.sh 幂等：连跑两次结果一致", "basis": "脚本会写数据（新增明细/激活草稿/提交订单）；before() 里 data.reset() 或每轮 npm run deploy", "time": "20 分", "rel": "testing.html#s5-1"},
+  {"no": "TEST-04", "title": "写 test/ci-verify.sh：起服务 → 轮询就绪 → 跑两层测试 → 收尾", "basis": "不能固定 sleep；轮询 $metadata 返回 200；最后 kill 掉服务进程", "time": "25 分", "rel": "testing.html#s7-1"},
+  {"no": "TEST-05", "title": "接入 GitHub Actions（模型检查 + 两层测试 + 失败时打印服务端日志）", "basis": "actions/setup-node 的 cache: npm（不要缓存 node_modules）、Node 版本矩阵、fail-fast: false", "time": "25 分", "rel": "testing.html#s7-2"},
+  {"no": "TEST-06", "title": "用 BASE= 变量把验收脚本指向已部署环境跑一遍", "basis": "脚本支持 BASE 环境变量；云端与本地 sqlite 的方言/权限差异只有真跑才知道", "time": "20 分", "rel": "testing.html#s9"}
+]

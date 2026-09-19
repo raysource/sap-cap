@@ -1,0 +1,109 @@
+{
+  "key": "hana_s04",
+  "kind": "hana",
+  "w": 1440,
+  "h": 900,
+  "caption": "SAP HANA Cloud Central 的实例列表：状态（RUNNING / STOPPED）、内存与存储、以及 SQL Console / Database Explorer 的入口",
+  "alt": "SAP HANA Cloud Central 的实例列表：状态（RUNNING / STOPPED）、内存与存储、以及 SQL Console / Database Explorer 的入口",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 页面结构与操作名出自 SAP HANA Cloud Central（SAP Tutorials「Provision an Instance…」）",
+  "product": "SAP HANA Cloud",
+  "user": "JASON",
+  "navW": 280,
+  "nav": {
+    "title": "SAP HANA CLOUD CENTRAL",
+    "items": [
+      {
+        "label": "Instances",
+        "active": true,
+        "sub": [
+          "MANAGE",
+          "SQL Console",
+          "Database Explorer"
+        ]
+      },
+      {
+        "label": "demo-hana (16 GB)",
+        "sub": [
+          "Status: RUNNING"
+        ]
+      },
+      {
+        "label": "Infrastructure"
+      },
+      {
+        "label": "Data Lake"
+      }
+    ]
+  },
+  "title": "Instances",
+  "subtitle": "免费层 / 试用：只有 1 个实例，固定 16 GB 内存 · 1 vCPU · 80 GB 存储",
+  "tabs": [
+    "Instances"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "table",
+      "cols": [
+        "DATABASE",
+        "STATUS",
+        "MEMORY",
+        "VERSION",
+        "ACTIONS"
+      ],
+      "widths": [
+        1.6,
+        0.9,
+        0.9,
+        1.0,
+        2.2
+      ],
+      "rows": [
+        [
+          "demo-hana",
+          "RUNNING",
+          "16 GB",
+          "QRC ~4/2025",
+          "⋯ Manage Configurations / Instance Mapping"
+        ],
+        [
+          "",
+          "",
+          "",
+          "",
+          "⋯ Open in SAP HANA Database Explorer"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "免费层 / 试用实例每天夜里会被自动停止（serviceStopped）；超过 30 天不重启会被删除。"
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "命令行也可以启停：cf update-service demo-hana -c '{\"data\": {\"serviceStopped\": false}}'。"
+    }
+  ],
+  "status": "● 1 instance · RUNNING · Consumption: free tier · 启动一次通常需要几分钟",
+  "callouts": [
+    {
+      "on": "RUNNING",
+      "text": "1. 只有 RUNNING 才能连"
+    },
+    {
+      "on": "16 GB",
+      "text": "2. 免费层固定规格"
+    },
+    {
+      "on": "⋯ Open in SAP HANA Database Explorer",
+      "text": "3. 查看 CAP 建的表从这里进"
+    },
+    {
+      "on": "⋯ Manage Configurations / Instance Mapping",
+      "text": "4. Instance Mapping 把实例映射到 CF org"
+    }
+  ]
+}

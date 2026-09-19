@@ -1,0 +1,8 @@
+TABLES: ['BookOrderService_BookOrders_drafts', 'DRAFT_DraftAdministrativeData', 'cds_outbox_Messages', 'sap_training_bookorder_BookOrderItems', 'sap_training_bookorder_BookOrders', 'sap_training_bookorder_Books', 'sap_training_bookorder_Customers']
+  BookOrderService_BookOrders_drafts 0 rows
+  DRAFT_DraftAdministrativeData      0 rows
+  cds_outbox_Messages                0 rows
+  sap_training_bookorder_BookOrderItems 9 rows
+  sap_training_bookorder_BookOrders  4 rows
+  sap_training_bookorder_Books       5 rows
+  sap_training_bookorder_Customers   3 rows

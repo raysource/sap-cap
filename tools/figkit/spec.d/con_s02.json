@@ -1,0 +1,64 @@
+{
+  "key": "con_s02",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "title": "jason@MacBook-Pro: ~/sap-cap/project-code/demo-node — npx cds watch",
+  "label": "本地实机运行",
+  "src": "本地实测：npx cds watch（@sap/cds 9.9.3）",
+  "caption": "一条 cds watch 就完成：加载并编译模型 → 接数据库 → 选认证策略 → 暴露 OData → 起 HTTP",
+  "lh": 19,
+  "lines": [
+    "$ npx cds watch",
+    "",
+    "cds serve all --with-mocks --in-memory? --port 4004",
+    "",
+    "[cds] - loaded model from 4 file(s):",
+    "  app/book-orders/annotations.cds",
+    "  srv/book-order-service.cds",
+    "  db/schema.cds",
+    "  node_modules/@sap/cds/common.cds",
+    "",
+    "[cds] - connect to db > sqlite { url: 'db.sqlite' }",
+    "[cds] - using auth strategy { kind: 'mocked' }",
+    "[cds] - serving BookOrderService {",
+    "    at: [ '/odata/v4/book-order' ],",
+    "    decl: 'srv/book-order-service.cds:4',",
+    "    impl: 'srv/book-order-service.js'",
+    "  }",
+    "[cds] - server listening on { url: 'http://localhost:4004' }",
+    "[cds] - server v9.9.3 launched in 250 ms",
+    "",
+    "# 本地默认端口 4004；Fiori preview、OData、$metadata 同时可用"
+  ],
+  "callouts": [
+    {
+      "at": [
+        60,
+        560
+      ],
+      "text": "1. 模型每次启动都重编译"
+    },
+    {
+      "at": [
+        60,
+        596
+      ],
+      "text": "2. 数据库连接按 requires.db"
+    },
+    {
+      "at": [
+        60,
+        632
+      ],
+      "text": "3. 认证策略按 auth.kind"
+    },
+    {
+      "at": [
+        60,
+        668
+      ],
+      "text": "4. at: 就是 @path: 的值"
+    }
+  ]
+}

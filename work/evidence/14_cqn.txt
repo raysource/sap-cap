@@ -1,0 +1,24 @@
+--- SELECT 过滤 + 排序 + 分页
+CQN: {"SELECT":{"from":{"ref":["sap.training.bookorder.Books"]},"columns":[{"ref":["ID"]},{"ref":["title"]},{"ref":["price"]}],"where":[{"ref":["price"]},">",{"val":3000}],"orderBy":[{"ref":["title"],"sort":"desc"}],"limit":{"rows":{"val":2}}}}
+SQL: SELECT "$B".ID,"$B".title as title,"$B".price FROM sap_training_bookorder_Books as "$B" WHERE "$B".price > ? ORDER BY title DESC LIMIT ?   values=[3000,2]
+
+--- SELECT 聚合 + group by
+CQN: {"SELECT":{"from":{"ref":["sap.training.bookorder.BookOrderItems"]},"columns":[{"ref":["order_ID"]},{"func":"count","args":[{"ref":["ID"]}],"as":"itemCount"},{"func":"sum","args":[{"ref":["amount"]}],"as":"total"}],"groupBy":[{"ref":["order_ID"]}]}}
+SQL: SELECT "$B".order_ID,count("$B".ID) as itemCount,sum("$B".amount) as total FROM sap_training_bookorder_BookOrderItems as "$B" GROUP BY "$B".order_ID
+
+--- SELECT 关联路径取列（冒号写法）
+CQN: {"SELECT":{"one":true,"from":{"ref":["sap.training.bookorder.BookOrderItems"]},"columns":[{"ref":["book","title"],"as":"bookTitle"},{"ref":["book","price"],"as":"unitPrice"}]}}
+SQL: SELECT book.title as bookTitle,book.price as unitPrice FROM sap_training_bookorder_BookOrderItems as "$B" left JOIN sap_training_bookorder_Books as book ON book.ID = "$B".book_ID LIMIT ?   values=[1]
+
+--- INSERT
+CQN: {"INSERT":{"into":{"ref":["sap.training.bookorder.BookOrderItems"]},"entries":[{"ID":"11111111-1111-4111-8111-111111111111","order_ID":"x","book_ID":1003,"quantity":2,"amount":5600}]}}
+SQL: INSERT INTO sap_training_bookorder_BookOrderItems (createdAt,createdBy,modifiedAt,modifiedBy,ID,order_ID,book_ID,quantity,amount) SELECT (CASE WHEN json_type(value,'$."createdAt"') IS NULL THEN ISO(session_context('$now')) ELSE ISO(value->>'$."createdAt"') END),(CASE WHEN json_type(value,'$."createdBy"') IS NULL THEN session_context('$user.id') ELSE value->>'$."createdBy"' END),(CASE WHEN json_type(value,'$."modifiedAt"') IS NULL THEN ISO(session_context('$now')) ELSE ISO(value->>'$."modifiedAt"') END),(CASE WHEN json_type(value,'$."modifiedBy"') IS NULL THEN session_context('$user.id') ELSE value->>'$."modifiedBy"' END),value->>'$."ID"',value->>'$."order_ID"',value->>'$."book_ID"',(CASE WHEN json_type(value,'$."quantity"') IS NULL THEN 1 ELSE value->>'$."quantity"' END),value->>'$."amount"' FROM json_each(?)
+
+--- UPDATE ... set ... where
+CQN: {"UPDATE":{"entity":{"ref":["sap.training.bookorder.BookOrders"]},"data":{"totalAmount":12000,"status":"OPEN"},"where":[{"ref":["orderNo"]},"=",{"val":"BO-1002"}]}}
+SQL: UPDATE sap_training_bookorder_BookOrders AS "$B" SET totalAmount=?,status=?,modifiedAt=session_context('$now'),modifiedBy=session_context('$user.id') WHERE "$B".orderNo = ?   values=[12000,"OPEN","BO-1002"]
+
+--- DELETE ... where
+CQN: {"DELETE":{"from":{"ref":["sap.training.bookorder.BookOrderItems"]},"where":[{"ref":["order_ID"]},"=",{"val":"x"}]}}
+SQL: DELETE FROM sap_training_bookorder_BookOrderItems AS "$B" WHERE "$B".order_ID = ?   values=["x"]
+

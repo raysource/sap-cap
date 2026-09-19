@@ -1,0 +1,147 @@
+{
+  "key": "hana_s01",
+  "kind": "cockpit",
+  "w": 1440,
+  "h": 900,
+  "caption": "BTP cockpit 的 Instances and Subscriptions：SAP HANA Cloud（数据库实例）与 SAP HANA Schemas & HDI Containers（hdi-shared）是两条不同的记录",
+  "alt": "BTP cockpit 的 Instances and Subscriptions：SAP HANA Cloud（数据库实例）与 SAP HANA Schemas & HDI Containers（hdi-shared）是两条不同的记录",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 字段与计划名出自 SAP BTP cockpit 与 SAP Help「Set Up a Schema or an HDI Container」",
+  "product": "SAP Business Technology Platform",
+  "crumbs": [
+    "Global Account: trial-eu10-9f3a2b (trial)",
+    "Subaccount: trial",
+    "Instances and Subscriptions"
+  ],
+  "nav": {
+    "title": "Subaccount: trial",
+    "items": [
+      {
+        "label": "Overview"
+      },
+      {
+        "label": "Instances and Subscriptions",
+        "active": true
+      },
+      {
+        "label": "Cloud Foundry",
+        "sub": [
+          "Org Members",
+          "Spaces",
+          "Service Marketplace"
+        ]
+      },
+      {
+        "label": "Security",
+        "sub": [
+          "Role Collections",
+          "Users"
+        ]
+      },
+      {
+        "label": "Entitlements"
+      },
+      {
+        "label": "Services"
+      }
+    ]
+  },
+  "title": "Instances and Subscriptions",
+  "subtitle": "Instances 标签列出 CF 服务实例；Subscriptions 标签列出 SaaS 订阅（如 SAP HANA Cloud 的管理工具）",
+  "tabs": [
+    "Instances",
+    "Subscriptions"
+  ],
+  "activeTab": 0,
+  "blocks": [
+    {
+      "t": "toolbar",
+      "items": [
+        {
+          "label": "Create",
+          "primary": true
+        },
+        {
+          "label": "~ 过滤器"
+        }
+      ],
+      "search": "搜索实例"
+    },
+    {
+      "t": "table",
+      "cols": [
+        "NAME",
+        "SERVICE",
+        "PLAN",
+        "STATUS",
+        "ACTIONS"
+      ],
+      "widths": [
+        1.3,
+        2.0,
+        1.0,
+        1.0,
+        1.4
+      ],
+      "rows": [
+        [
+          "demo-hana-db",
+          "SAP HANA Schemas & HDI Containers (hana)",
+          "hdi-shared",
+          "created",
+          "⋯  Service Keys"
+        ],
+        [
+          "demo-xsuaa",
+          "Authorization & Trust Management",
+          "application",
+          "created",
+          "⋯  Service Keys"
+        ],
+        [
+          "demo-node-db",
+          "SAP HANA Schemas & HDI Containers (hana)",
+          "hdi-shared",
+          "created",
+          "⋯  Service Keys"
+        ],
+        [
+          "(订阅) SAP HANA Cloud",
+          "SAP HANA Cloud — tools",
+          "tools",
+          "subscribed",
+          "Go to Application"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "「SAP HANA Cloud / hana」是数据库实例（由 SAP HANA Cloud Central 管理）；「SAP HANA Schemas & HDI Containers / hdi-shared」才是 CAP 部署时用的 HDI 容器。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "Entitlements 里必须先有 hdi-shared（以及 tools）配额，否则 Create 会失败并提示 quota / entitlement 不足。"
+    }
+  ],
+  "status": "● 3 service instances · ● 1 subscription (tools) · Region: ap10 (Singapore) · Environment: Cloud Foundry",
+  "callouts": [
+    {
+      "on": "demo-hana-db",
+      "text": "1. HDI 容器实例名（CAP 绑定它）"
+    },
+    {
+      "on": "SAP HANA Schemas & HDI Containers (hana)",
+      "text": "2. 服务名：Schemas & HDI Containers"
+    },
+    {
+      "on": "demo-node-db",
+      "text": "3. mta.yaml 里 resources 的名字"
+    },
+    {
+      "on": "tools",
+      "text": "4. tools 是订阅计划，不是数据库计划"
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "key": "hana_s02",
+  "kind": "dialog",
+  "w": 1440,
+  "h": 900,
+  "caption": "Create Instance：选服务 SAP HANA Schemas & HDI Containers、计划 hdi-shared，并在参数里把 HDI 容器指到某个 HANA Cloud 实例（database_id / schema）",
+  "alt": "Create Instance：选服务 SAP HANA Schemas & HDI Containers、计划 hdi-shared，并在参数里把 HDI 容器指到某个 HANA Cloud 实例（database_id / schema）",
+  "label": "高保真重绘",
+  "src": "本站自绘（figkit 高保真画面）· 步骤与参数出自 SAP Tutorial「Create a Development Project in SAP Business Application Studio」",
+  "dw": 980,
+  "dh": 620,
+  "title": "New Instance or Subscription",
+  "subtitle": "Service: SAP HANA Schemas & HDI Containers  ·  Plan: hdi-shared",
+  "steps": {
+    "items": [
+      "Basic Information",
+      "Parameters",
+      "Review"
+    ],
+    "active": 1
+  },
+  "under": {
+    "kind": "cockpit",
+    "product": "SAP Business Technology Platform",
+    "nav": {
+      "title": "Subaccount: trial",
+      "items": [
+        {
+          "label": "Instances and Subscriptions",
+          "active": true
+        },
+        {
+          "label": "Entitlements"
+        }
+      ]
+    },
+    "title": "Instances and Subscriptions",
+    "blocks": [
+      {
+        "t": "table",
+        "cols": [
+          "NAME",
+          "SERVICE",
+          "PLAN"
+        ],
+        "widths": [
+          1.4,
+          2,
+          1
+        ],
+        "rows": [
+          [
+            "demo-hana-db",
+            "SAP HANA Schemas & HDI Containers",
+            "hdi-shared"
+          ],
+          [
+            "demo-xsuaa",
+            "Authorization & Trust Management",
+            "application"
+          ]
+        ]
+      }
+    ]
+  },
+  "blocks": [
+    {
+      "t": "form",
+      "cols": 1,
+      "fields": [
+        [
+          "Service",
+          "SAP HANA Schemas & HDI Containers (hana)",
+          "数据库实例用 SAP HANA Cloud 服务"
+        ],
+        [
+          "Plan",
+          "hdi-shared",
+          "hdi-shared / schema / securestore"
+        ],
+        [
+          "Instance Name",
+          "demo-hana-db",
+          "与 mta.yaml 的 resource 名保持一致更清晰"
+        ],
+        [
+          "Parameters (JSON)",
+          "{ \"schema\": \"BOOKORDER\", \"database_id\": \"<HANA Cloud 实例 ID>\" }",
+          "database_id 从 Cloud Central 的 ⋯ > Copy Instance ID 取得"
+        ]
+      ]
+    },
+    {
+      "t": "note",
+      "kind": "info",
+      "text": "CLI 等价命令：cf create-service hana hdi-shared demo-hana-db -c '{ \"schema\": \"BOOKORDER\" }'（服务名以 cf marketplace 的输出为准）。"
+    },
+    {
+      "t": "note",
+      "kind": "warn",
+      "text": "指定 schema 只是给容器一个「建议名」；实际 schema 名可能被加密后缀修饰，以绑定凭据里的 schema 字段为准。"
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Cancel"
+    },
+    {
+      "label": "Create",
+      "primary": true
+    }
+  ],
+  "callouts": [
+    {
+      "on": "hdi-shared",
+      "text": "1. CAP 用 hdi-shared"
+    },
+    {
+      "on": "demo-hana-db",
+      "text": "2. 实例名 ≠ schema 名"
+    },
+    {
+      "on": "{ \"schema\": \"BOOKORDER\", \"database_id\": \"<HANA Cloud 实例 ID>\" }",
+      "text": "3. database_id 绑定到具体数据库实例"
+    },
+    {
+      "on": "CLI 等价命令：cf create-service hana hdi-shared demo-hana-db -c '{ \"schema\": \"BOOKORDER\" }'（服务名以 cf marketplace 的输出为准）。",
+      "text": "4. 服务名随环境不同，先查再建"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+[
+ {
+  "no": "HANA-01",
+  "title": "核对 HANA 相关 entitlements 并订阅 tools 计划",
+  "basis": "Entitlements 里能看到 SAP HANA Cloud 与 SAP HANA Schemas & HDI Containers 的相关计划（含 hdi-shared）；Subscriptions 里有 SAP HANA Cloud (tools)，点开能进 SAP HANA Cloud Central",
+  "time": "15 分",
+  "rel": "hana.html#s3-1"
+ },
+ {
+  "no": "HANA-02",
+  "title": "在 cockpit 创建 SAP HANA Cloud 数据库实例",
+  "basis": "Cloud Central 里实例状态为 RUNNING；⋯ 菜单能打开 Database Explorer；已 Copy Instance ID 留档",
+  "time": "25 分",
+  "rel": "hana.html#s3-2"
+ },
+ {
+  "no": "HANA-03",
+  "title": "用 CLI 复核实例并演练启停",
+  "basis": "cf services 里实例 last operation = create succeeded；执行 cf update-service 的 serviceStopped false/true 后状态在 running 与 stopped 之间变化",
+  "time": "15 分",
+  "rel": "hana.html#s3-3"
+ },
+ {
+  "no": "HANA-04",
+  "title": "创建 hdi-shared 容器（并说明为什么不用 schema）",
+  "basis": "cf services 里 demo-hana-db（hana / hdi-shared）状态 create succeeded；能口头说明 hdi-shared / schema / tools 的差别",
+  "time": "15 分",
+  "rel": "hana.html#s4-2"
+ },
+ {
+  "no": "HANA-05",
+  "title": "用 cds bind 建立 hybrid 绑定并验证",
+  "basis": ".cdsrc-private.json 里没有任何密码；cds env get requires.db --profile hybrid 显示 kind: hana；cds watch --profile hybrid 下能查到云端数据",
+  "time": "20 分",
+  "rel": "hana.html#s5-2"
+ },
+ {
+  "no": "HANA-06",
+  "title": "核对 mta.yaml 的 HDI 资源定义",
+  "basis": "resources 里有 type: com.sap.xs.hdi-container、service: hana、service-plan: hdi-shared；服务模块与 hdb 模块引用同一资源名",
+  "time": "10 分",
+  "rel": "hana.html#s5-3"
+ },
+ {
+  "no": "HANA-07",
+  "title": "推断并实测「实体名 → 表名」映射",
+  "basis": "先按规则写出 SAP_TRAINING_BOOKORDER_BOOKORDERS 等 5 个对象名，再与 gen/db/src/gen/*.hdbtable 的 grep 结果逐一比对一致",
+  "time": "15 分",
+  "rel": "hana.html#s6-2"
+ },
+ {
+  "no": "HANA-08",
+  "title": "在 Database Explorer 里找到 CAP 建的表并查行数",
+  "basis": "M_TABLES 查询返回 4 张表，行数为 Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9",
+  "time": "20 分",
+  "rel": "hana.html#s7-1"
+ },
+ {
+  "no": "HANA-09",
+  "title": "跑通 join + 聚合 SQL，并与 OData 对账",
+  "basis": "SQL 返回 4 行（BO-1001 16000 / BO-1002 3600 / BO-1003 17400 / BO-1004 7600）；getOrderTotal('BO-1003') 也返回 17400",
+  "time": "20 分",
+  "rel": "hana.html#s7-2"
+ },
+ {
+  "no": "HANA-10",
+  "title": "三条建表/初始化数据路径各跑一遍并比对",
+  "basis": "cds deploy --to sqlite 输出 successfully deployed；cds build --for hana 生成 .hdbtable/.hdbtabledata；cds deploy --to hana 之后行数与 CSV 一致",
+  "time": "25 分",
+  "rel": "hana.html#s8-1"
+ },
+ {
+  "no": "HANA-11",
+  "title": "错误演练：表名大小写与实例被停止",
+  "basis": "故意用小写/下划线错误的表名复现「表不存在」，改回大写后查询成功；把实例停掉后复现连接失败，再用 cf update-service 恢复",
+  "time": "20 分",
+  "rel": "hana.html#s9"
+ },
+ {
+  "no": "HANA-12",
+  "title": "数据可重建性检查（收尾）",
+  "basis": "Git 仓库里同时有 db/schema.cds、db/data/*.csv、mta.yaml；.gitignore 含 .cdsrc-private.json 与 db.sqlite；在空目录克隆后能重建库",
+  "time": "15 分",
+  "rel": "hana.html#s10"
+ }
+]

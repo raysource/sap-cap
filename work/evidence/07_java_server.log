@@ -1,0 +1,180 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< customer:demo-java >-------------------------
+[INFO] Building demo-java 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.15:run (default-cli) > test-compile @ demo-java >>>
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (Project Structure Checks) @ demo-java ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireMavenVersion passed
+[INFO] Rule 1: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] Rule 2: org.apache.maven.enforcer.rules.ReactorModuleConvergence passed
+[INFO] 
+[INFO] --- cds:4.9.1:install-node (cds.install-node) @ demo-java ---
+[INFO] InstallNodeMojo: Node.js v22.22.3 already installed.
+[INFO] 
+[INFO] --- cds:4.9.1:npm (cds.npm-ci) @ demo-java ---
+[INFO] NpmMojo: Using npm provided by goal install-node: /Users/jason/.m2/repository/com/sap/cds/cds-maven-plugin/cache/unpacked/22.22.3/unpacked-22.22.3-darwin-arm64.tar.gz/node-v22.22.3-darwin-arm64/bin/npm
+[INFO] NpmMojo: Identified /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java as reactor base directory.
+[INFO] NpmMojo: Using directory containing a .cdsrc.json as working directory: /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java
+[INFO] NpmMojo: Executing [/Users/jason/.m2/repository/com/sap/cds/cds-maven-plugin/cache/unpacked/22.22.3/unpacked-22.22.3-darwin-arm64.tar.gz/node-v22.22.3-darwin-arm64/bin/npm, ci] in working directory /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java
+[INFO] NpmMojo: npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+
+added 146 packages, and audited 147 packages in 2s
+
+41 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+[INFO] 
+[INFO] --- cds:4.9.1:resolve (cds.resolve) @ demo-java ---
+[INFO] 
+[INFO] --- cds:4.9.1:cds (cds.build) @ demo-java ---
+[INFO] CdsMojo: Using npx provided by goal install-node: /Users/jason/.m2/repository/com/sap/cds/cds-maven-plugin/cache/unpacked/22.22.3/unpacked-22.22.3-darwin-arm64.tar.gz/node-v22.22.3-darwin-arm64/bin/npx
+[INFO] CdsMojo: Using directory containing a .cdsrc.json as working directory: /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java
+[INFO] CdsMojo: Executing [/Users/jason/.m2/repository/com/sap/cds/cds-maven-plugin/cache/unpacked/22.22.3/unpacked-22.22.3-darwin-arm64.tar.gz/node-v22.22.3-darwin-arm64/bin/npx, -c, cds version] in working directory /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java
+[INFO] CdsMojo: Using configured working directory: /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java
+[INFO] CdsMojo: Executing [/Users/jason/.m2/repository/com/sap/cds/cds-maven-plugin/cache/unpacked/22.22.3/unpacked-22.22.3-darwin-arm64.tar.gz/node-v22.22.3-darwin-arm64/bin/npx, -c, cds build --for java] in working directory /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java
+[INFO] CdsMojo: building project with {
+  versions: { cds: '9.9.3', compiler: '6.9.5', dk: '9.9.6' },
+  target: '.',
+  tasks: [
+    { src: 'srv', for: 'java', options: { model: [ 'db', 'srv', '@sap/cds/srv/outbox' ] } }
+  ]
+}
+writing generation log to [/Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/target/cds-build.log]
+
+done > wrote output to:
+   srv/src/main/resources/edmx/_i18n/i18n.json
+   srv/src/main/resources/edmx/_i18n/messages.properties
+   srv/src/main/resources/edmx/_i18n/messages_ar.properties
+   srv/src/main/resources/edmx/_i18n/messages_bg.properties
+   srv/src/main/resources/edmx/_i18n/messages_cs.properties
+   srv/src/main/resources/edmx/_i18n/messages_da.properties
+   srv/src/main/resources/edmx/_i18n/messages_de.properties
+   srv/src/main/resources/edmx/_i18n/messages_el.properties
+   srv/src/main/resources/edmx/_i18n/messages_en.properties
+   srv/src/main/resources/edmx/_i18n/messages_en_US_saptrc.properties
+   srv/src/main/resources/edmx/_i18n/messages_es.properties
+   srv/src/main/resources/edmx/_i18n/messages_es_MX.properties
+   srv/src/main/resources/edmx/_i18n/messages_fi.properties
+   srv/src/main/resources/edmx/_i18n/messages_fr.properties
+   srv/src/main/resources/edmx/_i18n/messages_he.properties
+   srv/src/main/resources/edmx/_i18n/messages_hr.properties
+   srv/src/main/resources/edmx/_i18n/messages_hu.properties
+   srv/src/main/resources/edmx/_i18n/messages_it.properties
+   srv/src/main/resources/edmx/_i18n/messages_ja.properties
+   srv/src/main/resources/edmx/_i18n/messages_kk.properties
+   srv/src/main/resources/edmx/_i18n/messages_ko.properties
+   srv/src/main/resources/edmx/_i18n/messages_ms.properties
+   srv/src/main/resources/edmx/_i18n/messages_nl.properties
+   srv/src/main/resources/edmx/_i18n/messages_no.properties
+   srv/src/main/resources/edmx/_i18n/messages_pl.properties
+   srv/src/main/resources/edmx/_i18n/messages_pt.properties
+   srv/src/main/resources/edmx/_i18n/messages_ro.properties
+   srv/src/main/resources/edmx/_i18n/messages_ru.properties
+   srv/src/main/resources/edmx/_i18n/messages_sh.properties
+   srv/src/main/resources/edmx/_i18n/messages_sk.properties
+   ... 10 more. Run with DEBUG=build to show all files.
+
+build completed in 159 ms
+[INFO] CdsMojo: Executing [/Users/jason/.m2/repository/com/sap/cds/cds-maven-plugin/cache/unpacked/22.22.3/unpacked-22.22.3-darwin-arm64.tar.gz/node-v22.22.3-darwin-arm64/bin/npx, -c, cds deploy --to h2 --with-mocks --dry --out "/Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/src/main/resources/schema-h2.sql"] in working directory /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java
+[INFO] CdsMojo: 
+[INFO] 
+[INFO] --- cds:4.9.1:generate (cds.generate) @ demo-java ---
+[INFO] GenerateMojo: Adding code output directory /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/src/gen/java to compile source directories.
+[INFO] GenerateMojo: Adding directory /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/src/gen/resources to resources.
+[INFO] GenerateMojo: Using /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/src/main/resources/edmx/csn.json to generate Java classes into /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/src/gen.
+[INFO] GenerateMojo: Using module srv: groupId=customer, artifactId=demo-java, version=1.0.0-SNAPSHOT
+[INFO] GenerateMojo: Class generation finished successfully
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ demo-java ---
+[INFO] Copying 42 resources from src/main/resources to target/classes
+[INFO] Copying 1 resource from src/gen/resources to target/classes
+[INFO] 
+[INFO] --- flatten:1.7.3:flatten (flatten) @ demo-java ---
+[INFO] Generating flattened POM of project customer:demo-java:jar:1.0.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ demo-java ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ demo-java ---
+[INFO] skip non existing resourceDirectory /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ demo-java ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.5.15:run (default-cli) < test-compile @ demo-java <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.15:run (default-cli) @ demo-java ---
+[INFO] Attaching agents: []
+21:02:48.580 [main] INFO org.springframework.boot.devtools.restart.RestartApplicationListener -- Restart disabled due to System property 'spring.devtools.restart.enabled' being set to false
+   _________    ____         __
+  / ____/   |  / __ \       / /___ __   ______ _
+ / /   / /| | / /_/ /  __  / / __ `/ | / / __ `/
+/ /___/ ___ |/ ____/  / /_/ / /_/ /| |/ / /_/ /
+\____/_/  |_/_/       \____/\__,_/ |___/\__,_/      4.9.1
+
+Powered by Spring Boot 3.5.15
+
+2026-09-19T21:02:48.845+09:00  INFO 84793 --- [           main] com.training.bookorder.Application       : Starting Application using Java 21.0.12.1 with PID 84793 (/Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv/target/classes started by jason in /Users/jason/Desktop/work/training/sap-cap/project-code/demo-java/srv)
+2026-09-19T21:02:48.846+09:00  INFO 84793 --- [           main] com.training.bookorder.Application       : No active profile set, falling back to 1 default profile: "default"
+2026-09-19T21:02:48.862+09:00  INFO 84793 --- [           main] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-19T21:02:49.140+09:00  INFO 84793 --- [           main] c.s.c.services.impl.utils.CdsModelUtils  : Loaded CDS model from CSN resource path 'edmx/csn.json'
+2026-09-19T21:02:49.161+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service DefaultOutboxOrdered
+2026-09-19T21:02:49.161+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service DefaultOutboxUnordered
+2026-09-19T21:02:49.162+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service OutboxService$InMemory
+2026-09-19T21:02:49.162+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service ApplicationLifecycleService$Default
+2026-09-19T21:02:49.163+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service AuthorizationService$Default
+2026-09-19T21:02:49.164+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service TenantProviderService$Default
+2026-09-19T21:02:49.164+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service DeploymentService$Default
+2026-09-19T21:02:49.166+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service AuditLogService$Default
+2026-09-19T21:02:49.173+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service BookOrderService
+2026-09-19T21:02:49.174+09:00  INFO 84793 --- [           main] .s.c.r.CdsRuntimeBeanDefinitionRegistrar : Auto-configuration of DataSource beans is explicitly disabled.
+2026-09-19T21:02:49.407+09:00  INFO 84793 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-09-19T21:02:49.416+09:00  INFO 84793 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-19T21:02:49.416+09:00  INFO 84793 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.55]
+2026-09-19T21:02:49.444+09:00  INFO 84793 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-09-19T21:02:49.445+09:00  INFO 84793 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 581 ms
+2026-09-19T21:02:49.483+09:00  INFO 84793 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-19T21:02:49.573+09:00  INFO 84793 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:643042ee-89b8-4728-8ae7-628bf8b0a7f3 user=SA
+2026-09-19T21:02:49.574+09:00  INFO 84793 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-19T21:02:49.611+09:00  INFO 84793 --- [           main] c.s.c.services.impl.ServiceCatalogImpl   : Registered service PersistenceService$Default
+2026-09-19T21:02:49.622+09:00  INFO 84793 --- [           main] c.s.c.f.s.c.adapter.AdapterBeanFactory   : Servlet CdsODataV4Servlet mapped to /odata/v4
+2026-09-19T21:02:49.624+09:00  INFO 84793 --- [           main] c.s.c.f.s.c.adapter.AdapterBeanFactory   : Servlet IndexPageServlet mapped to /
+2026-09-19T21:02:49.626+09:00  INFO 84793 --- [           main] c.s.c.f.s.c.adapter.AdapterBeanFactory   : Servlet CdsFioriPreviewServlet mapped to /$fiori-preview
+2026-09-19T21:02:49.749+09:00  INFO 84793 --- [           main] c.s.c.s.impl.runtime.CdsRuntimeImpl      : Registered handler class com.training.bookorder.handlers.BookOrderServiceHandler
+2026-09-19T21:02:49.762+09:00  INFO 84793 --- [           main] .s.c.a.o.v.m.p.EdmxProviderConfiguration : Initialized Default EDMX V4 Provider
+2026-09-19T21:02:49.766+09:00  INFO 84793 --- [           main] .s.c.a.o.v.m.p.EdmxProviderConfiguration : Initialized Default EDMX I18n Provider
+2026-09-19T21:02:49.786+09:00  INFO 84793 --- [           main] c.sap.cds.services.impl.utils.BuildInfo  : git.commit.id: c9567f7c0e590e21da09cdfc78c8fe0cd48a2a30
+2026-09-19T21:02:49.786+09:00  INFO 84793 --- [           main] c.sap.cds.services.impl.utils.BuildInfo  : maven.version: 4.9.1
+2026-09-19T21:02:49.840+09:00  INFO 84793 --- [           main] c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.Books from ../db/data/sap.training.bookorder-Books.csv
+2026-09-19T21:02:49.842+09:00  INFO 84793 --- [           main] c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.Customers from ../db/data/sap.training.bookorder-Customers.csv
+2026-09-19T21:02:49.846+09:00  INFO 84793 --- [           main] c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.BookOrderItems from ../db/data/sap.training.bookorder-BookOrderItems.csv
+2026-09-19T21:02:49.851+09:00  INFO 84793 --- [           main] c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.BookOrders from ../db/data/sap.training.bookorder-BookOrders.csv
+2026-09-19T21:02:49.851+09:00  INFO 84793 --- [           main] c.s.c.s.i.o.persistence.TaskScheduler    : Started Task Scheduler with lookup interval 'PT30S'
+2026-09-19T21:02:49.897+09:00  INFO 84793 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-09-19T21:02:49.898+09:00  INFO 84793 --- [           main] f.s.c.r.IndexPageLinkLoggerConfiguration : CAP Index Page served at http://localhost:8080/
+2026-09-19T21:02:49.902+09:00  INFO 84793 --- [           main] com.training.bookorder.Application       : Started Application in 1.328 seconds (process running for 1.474)
+2026-09-19T21:03:37.080+09:00  INFO 84793 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-19T21:03:37.080+09:00  INFO 84793 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-19T21:03:37.083+09:00  INFO 84793 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
+2026-09-19T21:03:37.105+09:00  INFO 84793 --- [nio-8080-exec-1] c.s.c.a.odata.v4.metadata.MetadataInfo   : Loading OData V4 metadata for service 'BookOrderService'
+2026-09-19T21:03:37.227+09:00  INFO 84793 --- [nio-8080-exec-1] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 7 as cancelled: Not authenticated to send event 'READ' to 'BookOrderService' (service 'BookOrderService', event 'READ', entity 'BookOrderService.BookOrders')
+2026-09-19T21:03:37.261+09:00  INFO 84793 --- [nio-8080-exec-2] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 8 as cancelled: Not authenticated to send event 'READ' to 'BookOrderService' (service 'BookOrderService', event 'READ', entity 'BookOrderService.BookOrders')
+2026-09-19T21:03:37.287+09:00  INFO 84793 --- [nio-8080-exec-4] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 9 as cancelled: Not authenticated to send event 'getOrderTotal' to 'BookOrderService' (service 'BookOrderService', event 'getOrderTotal', entity '<no entity>')
+2026-09-19T21:03:42.013+09:00  INFO 84793 --- [nio-8080-exec-5] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 10 as cancelled: Not authenticated to send event 'READ' to 'BookOrderService' (service 'BookOrderService', event 'READ', entity 'BookOrderService.BookOrders')
+2026-09-19T21:03:42.025+09:00  INFO 84793 --- [nio-8080-exec-7] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 11 as cancelled: Not authenticated to send event 'READ' to 'BookOrderService' (service 'BookOrderService', event 'READ', entity 'BookOrderService.BookOrders')
+2026-09-19T21:03:42.035+09:00  INFO 84793 --- [nio-8080-exec-9] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 12 as cancelled: Not authenticated to send event 'getOrderTotal' to 'BookOrderService' (service 'BookOrderService', event 'getOrderTotal', entity '<no entity>')
+2026-09-19T21:04:47.827+09:00  INFO 84793 --- [nio-8080-exec-2] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 13 as cancelled: Not authenticated to send event 'READ' to 'BookOrderService' (service 'BookOrderService', event 'READ', entity 'BookOrderService.BookOrders')
+2026-09-19T21:04:47.836+09:00  INFO 84793 --- [nio-8080-exec-4] c.s.c.a.o.v4.processors.CdsProcessor     : Exception marked the ChangeSet 14 as cancelled: Not authenticated to send event 'READ' to 'BookOrderService' (service 'BookOrderService', event 'READ', entity 'BookOrderService.BookOrders')
+2026-09-19T21:04:47.869+09:00  INFO 84793 --- [ionShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-19T21:04:47.881+09:00  INFO 84793 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-09-19T21:04:47.885+09:00  WARN 84793 --- [ionShutdownHook] o.s.b.f.support.DisposableBeanAdapter    : Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: データベースはすでに閉じられています (VM終了時の自動データベースクローズを無効にするためには、db URLに ";DB_CLOSE_ON_EXIT=FALSE" を追加してください)
+Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-232]
+2026-09-19T21:04:47.888+09:00  INFO 84793 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-09-19T21:04:47.889+09:00  INFO 84793 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

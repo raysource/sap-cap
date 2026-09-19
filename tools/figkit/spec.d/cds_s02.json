@@ -1,0 +1,67 @@
+{
+  "key": "cds_s02",
+  "kind": "terminal",
+  "w": 1440,
+  "h": 900,
+  "caption": "cds compile db/schema.cds --to sql 的真实输出：四张表、managed 展开的 4 列、关联展开的 FK 列、日期/时间戳的 SQLite 物理类型",
+  "alt": "终端中 cds compile --to sql 的输出，显示 4 条 CREATE TABLE 与列定义",
+  "src": "本地实测：npx cds compile db/schema.cds --to sql（cds-dk 9.9.6，Node 22.23.2）",
+  "title": "jason@MacBook-Pro: ~/Desktop/work/training/sap-cap/project-code/demo-node",
+  "lh": 20,
+  "lines": [
+    "$ npx cds compile db/schema.cds --to sql",
+    "",
+    "CREATE TABLE sap_training_bookorder_Books (",
+    "  ID INTEGER NOT NULL,",
+    "  title NVARCHAR(120) NOT NULL,",
+    "  author NVARCHAR(80),",
+    "  price DECIMAL(9, 2) NOT NULL,",
+    "  currency NVARCHAR(3) DEFAULT 'JPY',",
+    "  stock INTEGER DEFAULT 0,",
+    "  PRIMARY KEY(ID)",
+    ");",
+    "",
+    "CREATE TABLE sap_training_bookorder_BookOrders (",
+    "  createdAt TIMESTAMP_TEXT,",
+    "  createdBy NVARCHAR(255),",
+    "  modifiedAt TIMESTAMP_TEXT,",
+    "  modifiedBy NVARCHAR(255),",
+    "  ID NVARCHAR(36) NOT NULL,",
+    "  orderNo NVARCHAR(16) NOT NULL,",
+    "  customer_ID INTEGER,",
+    "  orderDate DATE_TEXT DEFAULT CURRENT_TIMESTAMP,",
+    "  status NVARCHAR(10) DEFAULT 'OPEN',",
+    "  note NVARCHAR(255),",
+    "  totalAmount DECIMAL(13, 2) DEFAULT 0,",
+    "  statusCriticality INTEGER DEFAULT 2,",
+    "  PRIMARY KEY(ID)",
+    ");",
+    "",
+    "CREATE TABLE sap_training_bookorder_BookOrderItems (",
+    "  ID NVARCHAR(36) NOT NULL,",
+    "  order_ID NVARCHAR(36),",
+    "  book_ID INTEGER,",
+    "  quantity INTEGER DEFAULT 1,",
+    "  amount DECIMAL(13, 2),",
+    "  PRIMARY KEY(ID)",
+    ");"
+  ],
+  "callouts": [
+    {
+      "on": "  createdAt TIMESTAMP_TEXT,",
+      "text": "1. managed 展开的 4 列"
+    },
+    {
+      "on": "  customer_ID INTEGER,",
+      "text": "2. 关联展开成 <关联名>_<目标主键>"
+    },
+    {
+      "on": "  orderDate DATE_TEXT DEFAULT CURRENT_TIMESTAMP,",
+      "text": "3. SQLite 是 *_TEXT 物理类型"
+    },
+    {
+      "on": "  statusCriticality INTEGER DEFAULT 2,",
+      "text": "4. 普通标量列照原样出现"
+    }
+  ]
+}
