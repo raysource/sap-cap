@@ -97,11 +97,7 @@
 <code>cds</code> 配置）。<b>除了 <code>mvn</code> 需要在 <code>srv/</code> 下执行，其余命令都在根目录执行</b>——
 这是「配置读不到 / 表找不到」这类问题的头号原因。</div>
 
-
-<figure class="fig" data-fig="cli_s02">
-  <a class="zoom" href="assets/fig/cli_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cli_s02.svg" alt="cli_s02" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 1</span><span class="cap">cli_s02</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
-</figure><h2 id="s2">2. npm / npx：装依赖、换 Node 版本、npm scripts</h2>
+<h2 id="s2">2. npm / npx：装依赖、换 Node 版本、npm scripts</h2>
 
 <div class="tblwrap"><table class="tbl">
 <thead><tr><th>目的</th><th>命令</th><th>说明与坑</th></tr></thead>
@@ -175,11 +171,7 @@ $ npx cds version
     不要把路径写死在脚本里——用 <code>$(npx … -p process.execPath)</code> 求值。</li>
 </ul></div>
 
-
-<figure class="fig" data-fig="cli_s03">
-  <a class="zoom" href="assets/fig/cli_s03.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/cli_s03.svg" alt="cli_s03" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 2</span><span class="cap">cli_s03</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
-</figure><h2 id="s3">3. cds 命令全表（用途 / 典型输出 / 常见坑）</h2>
+<h2 id="s3">3. cds 命令全表（用途 / 典型输出 / 常见坑）</h2>
 <p><code>cds</code> 命令来自 <code>@sap/cds-dk</code>。下表的「存在性」一列按 <b>cds-dk 9.9.6 的
 <code>cds help</code> 与 <code>bin/</code> 目录</b>核对过：标 <b>有</b> 的命令本站能用，标
 <b>help 未列出但有</b> 的实测可用但不在总帮助里，标 <b>不存在</b> 的会打印 <code>Unknown command</code>。</p>
@@ -350,6 +342,7 @@ $ cds env get requires.db --profile hybrid --resolve-bindings  # 看真实凭据
   </ol>
   <p class="go">对应自测题见 <a href="quiz.html#q-cli">自测 · 速查</a>。</p>
 </div>
+
 <h2 id="s4">4. cds 配置文件速查</h2>
 <p>排「配置没生效」永远按这个顺序查：<b>① 我在哪个目录 → ② <code>cds env --sources</code> 说值从哪来 →
 ③ 我用的是哪个 profile → ④ 我改的文件是不是被更高优先级覆盖了</b>。</p>
@@ -389,15 +382,14 @@ $ cds env get requires.db --profile hybrid --resolve-bindings  # 看真实凭据
 <div class="tblwrap"><table class="tbl small">
 <thead><tr><th>设置</th><th>取值</th><th>含义 / 用时</th></tr></thead>
 <tbody>
-<tr><td rowspan="4"><code>cds.requires.db.kind</code></td><td><code>sqlite</code></td><td>本地文件库（需 <code>@cap-js/sqlite</code>），配 <code>credentials.url: "db.sqlite"</code></td></tr>
-<tr><td><code>hana</code></td><td>HDI 容器；本地用 <code>cds bind</code> 走 hybrid，云端由 <code>VCAP_SERVICES</code> 自动提供</td></tr>
-<tr><td><code>postgres</code>（<span style="color:#b45309">~</span>）</td><td>用 <code>@cap-js/postgres</code>；本课程未使用，以官方文档为准</td></tr>
-<tr><td><code>h2</code></td><td><b>仅 CAP Java</b>（<code>cds add h2</code> + Spring Boot 数据源）；Node.js 运行时不支持</td></tr>
-<tr><td rowspan="3"><code>cds.requires.db.credentials.url</code></td><td><code>db.sqlite</code></td><td>sqlite 的库文件路径，相对项目根</td></tr>
-<tr><td><code>:memory:</code></td><td>内存库，进程退出即丢（<code>cds watch</code> 显示的 <code>--in-memory?</code> 就是这个开关）</td></tr>
-<tr><td>—</td><td>用 <code>cds bind</code> 时<b>不要手写凭据</b>，让 bindings 决定</td></tr>
-<tr><td rowspan="2">其它常用键</td><td><code>cds.data</code> / <code>cds.requires.db.data</code></td><td>种子数据目录（真实值 <code>["db/data", "db/csv", "test/data"]</code>）</td></tr>
-<tr><td><code>cds.folders.db</code> / <code>.srv</code> / <code>.app</code></td><td>目录约定，改过目录名才需要显式配置</td></tr>
+<tr><td><code>cds.requires.db.kind</code></td><td><code>sqlite</code></td><td>本地文件库（需 <code>@cap-js/sqlite</code>），配 <code>credentials.url: "db.sqlite"</code></td></tr>
+<tr><td><code>cds.requires.db.kind</code></td><td><code>hana</code></td><td>HDI 容器；本地用 <code>cds bind</code> 走 hybrid，云端由 <code>VCAP_SERVICES</code> 自动提供</td></tr>
+<tr><td><code>cds.requires.db.kind</code></td><td><code>postgres</code>（<span style="color:#b45309">~</span>）</td><td>用 <code>@cap-js/postgres</code>；本课程未使用，以官方文档为准</td></tr>
+<tr><td><code>cds.requires.db.kind</code></td><td><code>h2</code></td><td><b>仅 CAP Java</b>（<code>cds add h2</code> + Spring Boot 数据源）；Node.js 运行时不支持</td></tr>
+<tr><td><code>cds.requires.db.credentials.url</code></td><td><code>db.sqlite</code></td><td>sqlite 的库文件路径，相对项目根</td></tr>
+<tr><td><code>cds.requires.db.credentials.url</code></td><td><code>:memory:</code></td><td>内存库，进程退出即丢（<code>cds watch</code> 显示的 <code>--in-memory?</code> 就是这个开关）</td></tr>
+<tr><td>其它常用键</td><td><code>cds.requires.db.data</code></td><td>种子数据目录（真实值 <code>["db/data", "db/csv", "test/data"]</code>）</td></tr>
+<tr><td>其它常用键</td><td><code>cds.folders.db</code> / <code>.srv</code> / <code>.app</code></td><td>目录约定，改过目录名才需要显式配置</td></tr>
 </tbody></table></div>
 
 <h3 id="s4-3">4-3 <code>requires.auth.kind</code>：六种取值与真实差异</h3>
@@ -442,9 +434,9 @@ $ cds env get requires.db --profile hybrid --resolve-bindings  # 看真实凭据
 <thead><tr><th>项</th><th>说明</th></tr></thead>
 <tbody>
 <tr><td>profile 的判定顺序</td><td>① <code>--production</code> 参数 → ② <code>--profile &lt;name&gt;</code> → ③ <code>NODE_ENV</code> → ④ <code>CDS_ENV</code>；<b>不指向 production 时自动启用 <code>development</code></b></td></tr>
-<tr><td>按 profile 写配置</td><td>在任意层级用 <code>"[production]": { … }</code> 包起来；<code>cds deploy --for hybrid</code>、<code>cds build --production</code> 都是 profile 的语法糖</td></tr>
+<tr><td>按 profile 写配置</td><td>在任意层级用 <code>"[production]": { … }</code> 包起来；<code>cds build --production</code> 就是 profile 的语法糖</td></tr>
 <tr><td><code>development</code></td><td>默认 profile。本地开发：sqlite / mocked</td></tr>
-<tr><td><code>production</code></td><td>生产：认证默认 <code>jwt</code>、绑定从 <code>VCAP_SERVICES</code> 读取、<code>cds build --production</code> 用它</td></tr>
+<tr><td><code>production</code></td><td>生产：认证默认 <code>jwt</code>、绑定从 <code>VCAP_SERVICES</code> 读取</td></tr>
 <tr><td><code>hybrid</code></td><td>本地连云端服务：<code>cds bind</code> 写入、<code>cds watch --profile hybrid</code> 使用</td></tr>
 <tr><td><code>CDS_ENV</code></td><td>用环境变量选 profile，可逗号分隔多个：<span class="cmd">CDS_ENV=production cds run</span></td></tr>
 <tr><td><code>CDS_CONFIG</code></td><td>三种形式：<b>JSON 串</b>（<code>CDS_CONFIG='{"requires":{"auth":{"kind":"dummy"}}}'</code>）、<b>JSON 文件</b>（<code>CDS_CONFIG=./my-cdsrc.json</code>）、<b>目录</b>（<code>CDS_CONFIG=/etc/secrets/cds</code>）</td></tr>
@@ -517,8 +509,7 @@ mocked        # ← package.json 里显式写了 mocked，production 默认值�
 <div class="tblwrap"><table class="tbl small">
 <thead><tr><th>写法</th><th>类型</th><th>作用 / 本课程用例</th></tr></thead>
 <tbody>
-<tr><td><code>key</code></td><td>元素修饰符</td><td>主键。<b>视图必须有 <code>key</code> 才能暴露为 OData 实体</b>，否则 <code>cds2edm</code> 报
-  <code>Expected entity to have a primary key</code></td></tr>
+<tr><td><code>key</code></td><td>元素修饰符</td><td>主键。<b>视图必须有 <code>key</code> 才能暴露为 OData 实体</b>，否则 <code>cds2edm</code> 报 <code>Expected entity to have a primary key</code></td></tr>
 <tr><td><code>not null</code></td><td>元素修饰符</td><td>数据库层非空：<code>title : String(120) not null;</code></td></tr>
 <tr><td><code>default &lt;值&gt;</code></td><td>元素修饰符</td><td><code>status : String(10) default 'OPEN';</code>、<code>orderDate : Date default $now;</code></td></tr>
 <tr><td><code>@readonly</code></td><td>注解（输入校验）</td><td>客户端不能改：<code>OrderItemView</code> 整个实体只读 → POST 返回 <b>405</b>；<code>totalAmount</code> 只读（服务端算）</td></tr>
@@ -526,8 +517,7 @@ mocked        # ← package.json 里显式写了 mocked，production 默认值�
 <tr><td><code>@assert.range</code> / <code>@assert.format</code> / <code>@assert.target</code></td><td>注解（输入校验）</td><td>范围、格式、外键存在性检查；都在输入校验那一组里</td></tr>
 <tr><td><code>@title</code></td><td>注解（UI）</td><td>字段标签：<code>orderNo : @title: '订单号'</code>；不写就显示技术名</td></tr>
 <tr><td><code>@odata.draft.enabled</code></td><td>注解（服务层）</td><td>启用草稿：实体多出 <code>IsActiveEntity</code> / <code>HasActiveEntity</code> / <code>HasDraftEntity</code> 与 <code>draftActivate</code> / <code>draftEdit</code> / <code>draftPrepare</code>，并多出草稿表</td></tr>
-<tr><td><code>@cds.redirection.target</code></td><td>注解（编译器）</td><td>两张实体来自同一底层实体时<b>必须显式指定重定向目标</b>，否则编译报
-  <code>can't auto-redirect …</code>。演示项目里 <code>BookOrderItems</code> 就是这种情况</td></tr>
+<tr><td><code>@cds.redirection.target</code></td><td>注解（编译器）</td><td>两张实体来自同一底层实体时<b>必须显式指定重定向目标</b>，否则编译报 <code>can't auto-redirect …</code>。演示项目里 <code>BookOrderItems</code> 就是这种情况</td></tr>
 <tr><td><code>@path: '/odata/v4/book-order'</code></td><td>注解（服务路径）</td><td>固定服务 URL。不写 CAP 会按服务名推导（<code>BookOrderService</code> → <code>/odata/v4/book-order</code>），<b>但显式写才稳定</b></td></tr>
 <tr><td><code>@(requires: 'authenticated-user')</code></td><td>服务级注解</td><td>整个服务要求已认证 → 匿名请求 <b>401</b></td></tr>
 <tr><td><code>@restrict</code></td><td>实体/动作级注解</td><td>细粒度授权（grant / where / to），见 <a href="security.html">⑧ 权限</a></td></tr>
@@ -539,8 +529,8 @@ mocked        # ← package.json 里显式写了 mocked，production 默认值�
 entity BookOrders : managed {
   key ID      : UUID;
       orderNo : String(16) not null;
-      customer: Association to Customers;                                  // 多对一
-      items   : Association to many BookOrderItems on items.order = $self;  // 一对多（要写 on 条件）
+      customer: Association to Customers;                                   // 多对一
+      items   : Association to many BookOrderItems on items.order = $self;   // 一对多（要写 on 条件）
 }
 entity BookOrderItems : managed {
   key ID   : UUID;
@@ -575,7 +565,7 @@ entity BookOrders : managed { key ID : UUID; ... }   // created/modified 四件�
 <thead><tr><th>导出名</th><th>内容</th><th>说明</th></tr></thead>
 <tbody>
 <tr><td><code>cuid</code></td><td><code>key ID : UUID</code></td><td>让实体自带 UUID 主键（本例未用 <code>cuid</code> 而是手写 <code>key ID : UUID</code>，等价）</td></tr>
-<tr><td><code>managed</code></td><td><code>createdAt</code> / <code>createdBy</code> / <code>modifiedAt</code> / <code>modifiedBy</code></td><td>自动维护的审计字段；<b>用 <code>Projection</code> 暴露时不要覆盖它们</b></td></tr>
+<tr><td><code>managed</code></td><td><code>createdAt</code> / <code>createdBy</code> / <code>modifiedAt</code> / <code>modifiedBy</code></td><td>自动维护的审计字段；<b>用 <code>projection</code> 暴露时不要覆盖它们</b></td></tr>
 <tr><td><code>temporal</code></td><td><code>validFrom</code> / <code>validTo</code></td><td>时态数据（配合 <code>@cds.valid.from/to</code>）</td></tr>
 <tr><td><code>Currency</code> / <code>Country</code> / <code>Language</code> / <code>Timezone</code></td><td><code>Association to sap.common.Currencies</code> 等</td><td>带 codelist 的复用类型。<b>坑</b>：本地 sqlite 上 codelist 校验会带来额外表与约束，演示项目因此用 <code>String(3) currency default 'JPY'</code> 而不是 <code>Currency</code></td></tr>
 <tr><td><code>sap.common.CodeList</code> / <code>TextsAspect</code> / <code>FlowHistory</code></td><td>代码表、多语言文本、流程历史 aspect</td><td>自定义代码表时继承 <code>CodeList</code>（自带 <code>name</code> / <code>descr</code>）</td></tr>
@@ -611,7 +601,7 @@ entity BookOrders : managed { key ID : UUID; ... }   // created/modified 四件�
 <tbody>
 <tr><td>实体集</td><td>GET</td><td><code>/BookOrders</code></td><td>200（匿名 401）</td></tr>
 <tr><td>单条</td><td>GET</td><td><code>/Books(1001)</code></td><td>200</td></tr>
-<tr><td>导航属性（展开）</td><td>GET</td><td><code>/BookOrders(orderNo='BO-1001')/items</code></td><td>200（`items` 是关联名）</td></tr>
+<tr><td>导航属性（展开）</td><td>GET</td><td><code>/BookOrders(orderNo='BO-1001')/items</code></td><td>200（<code>items</code> 是关联名）</td></tr>
 <tr><td>无绑定函数（unbound function）</td><td>GET</td><td><code>/getOrderTotal(orderNo='BO-1003')</code></td><td>200 <code>{"@odata.context":"$metadata#Edm.Decimal","value":17400}</code></td></tr>
 <tr><td>无绑定函数（无参数、返回结构体数组）</td><td>GET</td><td><code>/getOrderSummary()</code></td><td>200，4 行</td></tr>
 <tr><td>无绑定函数（找不到数据）</td><td>GET</td><td><code>/getOrderTotal(orderNo='BO-9999')</code></td><td><b>404</b></td></tr>
@@ -642,15 +632,14 @@ OData V4 里 <b>Function</b> 表示无副作用、可缓存 → <b>GET</b>；<b>
 &lt;Annotation Term="Core.ComputedDefaultValue"&gt; … &lt;/Annotation&gt;
 &lt;Annotation Term="Capabilities.InsertRestrictions"&gt; … &lt;/Annotation&gt;</code></pre>
 
-<h3 id="s6-4">6-4 状态码速查表（本课程断言用得最多的七个）</h3>
+<h3 id="s6-4">6-4 状态码速查表（本课程断言用得最多的九个）</h3>
 <div class="tblwrap"><table class="tbl small">
 <thead><tr><th>码</th><th>含义</th><th>本课程什么时候会看到它（真实用例）</th></tr></thead>
 <tbody>
 <tr><td><b>200</b></td><td>OK</td><td>正常 GET、提交动作成功（<code>submitOrder</code> 返回 200）</td></tr>
 <tr><td><b>201</b></td><td>Created</td><td>POST 新建明细；<b>草稿激活成功</b>（<code>draftActivate</code> → 201 并自动编号）</td></tr>
 <tr><td><b>204</b></td><td>No Content</td><td><code>DELETE</code> 成功（丢弃草稿）</td></tr>
-<tr><td><b>400</b></td><td>Bad Request</td><td>业务校验失败：<code>quantity: 0</code>、<code>book_ID: 9999</code>、顾客不存在、空订单提交；URL 写错也一样（真实消息：
-  <code>Parsing URL failed at position 43: Expected a whitespace but end of input found.</code>）</td></tr>
+<tr><td><b>400</b></td><td>Bad Request</td><td>业务校验失败：<code>quantity: 0</code>、<code>book_ID: 9999</code>、顾客不存在、空订单提交；URL 写错也一样（真实消息：<code>Parsing URL failed at position 43: Expected a whitespace but end of input found.</code>）</td></tr>
 <tr><td><b>401</b></td><td>Unauthorized</td><td>匿名请求被 <code>@(requires: 'authenticated-user')</code> 拦住（验收脚本第 2 条断言）</td></tr>
 <tr><td><b>403</b></td><td>Forbidden</td><td>已登录但角色不够（本地 mock 角色与云端 XSUAA scope 不一致时最常见，见 <a href="security.html">⑧</a>）</td></tr>
 <tr><td><b>404</b></td><td>Not Found</td><td>函数查不到数据（<code>getOrderTotal(orderNo='BO-9999')</code>）；实体/路径不存在</td></tr>
@@ -671,6 +660,369 @@ OData V4 里 <b>Function</b> 表示无副作用、可缓存 → <b>GET</b>；<b>
   </ol>
   <p class="go">对应自测题见 <a href="quiz.html#q-cli">自测 · 速查</a>。</p>
 </div>
+
+<h2 id="s7">7. curl 速查（对着示范项目练）</h2>
+<p>本课程所有接口验证都用 <code>curl</code>。<b>下面每条命令都用了示范项目的真实实体与真实路径
+<code>/odata/v4/book-order</code></b>，输出是本机实跑结果（服务起在 <code>localhost:4004</code>）。</p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 先定两个变量，后面所有命令都用它们（写死在脚本里也行）
+SVC='http://localhost:4004/odata/v4/book-order'     # 注意是单引号，否则 $ 会被 shell 吃掉
+AUTH=(-u alice:alice)                               # mocked 认证：alice 是内置的 admin 用户</code></pre>
+
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>目的</th><th>命令（真实可用）</th></tr></thead>
+<tbody>
+<tr><td>带 Basic Auth 取数据</td><td><span class="cmd">curl -s "${AUTH[@]}" "$SVC/Books?\$top=2&amp;\$select=ID,title,price"</span></td></tr>
+<tr><td>只要状态码（验收脚本最常用）</td><td><span class="cmd">curl -s -o /dev/null -w '%{http_code}' "${AUTH[@]}" "$SVC/BookOrders"</span></td></tr>
+<tr><td>匿名请求（期望 401）</td><td><span class="cmd">curl -s -o /dev/null -w '%{http_code}' "$SVC/BookOrders"</span></td></tr>
+<tr><td>POST JSON（新建明细）</td><td><span class="cmd">curl -s "${AUTH[@]}" -X POST "$SVC/BookOrderItems" -H 'Content-Type: application/json' -d '{"order_ID":"&lt;uuid&gt;","book_ID":1003,"quantity":3}'</span></td></tr>
+<tr><td>调用无绑定函数</td><td><span class="cmd">curl -s "${AUTH[@]}" "$SVC/getOrderTotal(orderNo='BO-1003')"</span></td></tr>
+<tr><td>调用绑定动作（带 key 与草稿标记）</td><td><span class="cmd">curl -s "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=&lt;uuid&gt;,IsActiveEntity=true)/submitOrder" -H 'Content-Type: application/json' -d '{}'</span></td></tr>
+<tr><td>激活草稿</td><td><span class="cmd">curl -s "${AUTH[@]}" -X POST "$SVC/BookOrders(ID=&lt;uuid&gt;,IsActiveEntity=false)/BookOrderService.draftActivate" -H 'Content-Type: application/json' -d '{}'</span></td></tr>
+<tr><td>格式化 JSON 输出</td><td><span class="cmd">curl -s "${AUTH[@]}" "$SVC/BookOrders?\$top=1" | python3 -m json.tool</span></td></tr>
+<tr><td>只数一行（脚本里最省事）</td><td><span class="cmd">… | python3 -c 'import sys,json;print(len(json.load(sys.stdin)["value"]))'</span></td></tr>
+<tr><td>看 <code>$metadata</code> 里的注解</td><td><span class="cmd">curl -s "${AUTH[@]}" "$SVC/\$metadata" | grep -o 'Annotation Term="[^"]*"' | sort | uniq -c</span></td></tr>
+<tr><td>限制超时（脚本别挂死）</td><td><span class="cmd">curl -s --max-time 10 "${AUTH[@]}" "$SVC/Books?\$top=1"</span></td></tr>
+</tbody></table></div>
+
+<h3 id="s7-1">7-1 真实输出（节选）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ curl -s "${AUTH[@]}" "$SVC/Books?\$top=2&amp;\$select=ID,title,price"
+{"@odata.context":"$metadata#Books","value":[{"ID":1001,"title":"SAP CAP 实战","price":4200},
+ {"ID":1002,"title":"SAP BTP 入门","price":3600}]}
+
+$ curl -s "${AUTH[@]}" "$SVC/Books?\$count=true&amp;\$top=1&amp;\$select=title"
+{"@odata.context":"$metadata#Books","@odata.count":5,"value":[{"title":"SAP CAP 实战","ID":1001}]}
+
+$ curl -s "${AUTH[@]}" "$SVC/Books(1001)/title/\$value"
+SAP CAP 实战
+
+$ curl -s "${AUTH[@]}" "$SVC/BookOrders?\$filter=orderNo%20eq%20'BO-1001'&amp;\$expand=items(\$select=quantity,amount)"
+{"@odata.context":"$metadata#BookOrders","value":[{"orderNo":"BO-1001","status":"OPEN",
+ "totalAmount":16000,"items":[{"quantity":2,"amount":8400},{"quantity":1,"amount":2800},
+ {"quantity":1,"amount":4800}],"IsActiveEntity":true,"HasActiveEntity":false,"HasDraftEntity":false}]}
+
+$ curl -s "${AUTH[@]}" "$SVC/getOrderTotal(orderNo='BO-1003')"
+{"@odata.context":"$metadata#Edm.Decimal","value":17400}
+
+$ curl -s -o /dev/null -w '%{http_code}\n' "${AUTH[@]}" "$SVC/getOrderTotal(orderNo='BO-9999')"
+404
+
+$ curl -s -o /dev/null -w '%{http_code}\n' "$SVC/BookOrders"      # 匿名
+401
+
+$ curl -s -o /dev/null -w '%{http_code}\n' "${AUTH[@]}" -X POST "$SVC/OrderItemView" \
+     -H 'Content-Type: application/json' -d '{}'                  # 只读实体
+405
+
+$ curl -s -o /dev/null -w '%{http_code}\n' "${AUTH[@]}" "$SVC/Books?\$filter=title%20eq"
+400
+
+$ curl -s "${AUTH[@]}" "$SVC/Books?\$filter=title%20eq"           # 400 的响应体（有消息可读）
+{"error":{"message":"Parsing URL failed at position 43: Expected a whitespace but end of input found.",
+ "code":"400","@Common.numericSeverity":4}}</code></pre>
+
+<h3 id="s7-2">7-2 看 <code>$metadata</code> 里的注解（真实结果）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ curl -s "${AUTH[@]}" "$SVC/\$metadata" -o /tmp/meta.xml -w '%{http_code}\n'
+200
+
+$ grep -o '&lt;Annotation Term="[^"]*"' /tmp/meta.xml | sort | uniq -c | sort -rn | head -8
+  17 &lt;Annotation Term="Common.Label"          # ← @title 生成的标签
+   9 &lt;Annotation Term="Core.Computed"          # ← 服务端计算的字段
+   7 &lt;Annotation Term="UI.Hidden"
+   6 &lt;Annotation Term="Core.ComputedDefaultValue"
+   4 &lt;Annotation Term="Core.Immutable"
+   2 &lt;Annotation Term="Common.SideEffects"
+   1 &lt;Annotation Term="Common.DraftRoot"       # ← 草稿根实体
+   1 &lt;Annotation Term="Capabilities.InsertRestrictions"
+
+$ grep -o 'draftActivate\|draftEdit\|draftPrepare\|IsActiveEntity' /tmp/meta.xml | sort | uniq -c
+  2 draftActivate
+  2 draftEdit
+  2 draftPrepare
+  3 IsActiveEntity</code></pre>
+<div class="box info"><b class="t">为什么先看 <code>$metadata</code></b>
+模型改错、注解写错、<code>@readonly</code> 没生效，<b>都能在 <code>$metadata</code> 里先看出来</b>——
+不用等 Fiori 页面做出来才发现。这也是 <a href="fiori.html">⑨ Fiori</a> 一节里「界面空白」的第一排查手段。</div>
+
+<div class="box warn"><b class="t">curl 的四个常见坑</b>
+<ul>
+  <li><b><code>$</code> 被 shell 展开</b>：双引号里写 <code>"$SVC/Books?$top=1"</code>，<code>$top</code> 会变成空串 →
+    实际请求变成 <code>?=1</code> 然后 400。用单引号包 URL，或写成 <code>\$top</code>。</li>
+  <li><b>忘记 <code>-H 'Content-Type: application/json'</code></b>：POST 会被当成非 JSON，返回 415/400。</li>
+  <li><b>只看 body 不看状态码</b>：失败时 body 是 <code>{"error":{…}}</code>，用 <code>-w '%{http_code}'</code>
+    或 <code>-i</code> 才看得见码；脚本里 <code>-o /dev/null -w</code> 最省事。</li>
+  <li><b>服务没起来</b>：<code>curl: (7) Failed to connect to localhost port 4004</code> 是「服务不在」，
+    <b>不是接口错</b>——先看 <code>cds watch</code> 那个终端里有没有 <code>server listening</code>。</li>
+</ul></div>
+
+<h2 id="s8">8. cf CLI 速查（部署与运维）</h2>
+<div class="box warn"><b class="t">本节命令的来源（先看这条）</b>
+本机<b>没有安装 <code>cf</code></b>（<span class="cmd">command -v cf</span> 返回空；直接敲 <code>cf</code> 会得到
+<code>-bash: cf: command not found</code>）。因此本节命令的<b>用法与参数来自官方文档与 cf-mta-plugin 仓库</b>，
+终端输出见本页的高保真重绘画面（画面 1：登录与计划查询；画面 2：构建到部署的完整链条）；
+<b>带 <code>~</code> 或标注「以官方文档为准」的内容本站未在真机验证</b>。
+安装方式见 <a href="btp.html">① BTP 注册</a> 与 <a href="deploy.html">⑩ 部署</a>。</div>
+
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>命令</th><th>用途</th><th>坑 / 备注</th></tr></thead>
+<tbody>
+<tr><td><span class="cmd">cf --version</span> · <span class="cmd">cf plugins</span></td><td>看 CLI 版本与已装插件</td><td>部署 MTA 需要 <b>multi-target 插件</b>（<code>cf deploy</code> 来自它）</td></tr>
+<tr><td><span class="cmd">cf login -a &lt;api-endpoint&gt; --sso</span></td><td>登录并选 org / space</td><td><b>端点必须与子账户 region 一致</b>（如 <code>https://api.cf.ap10.hana.ondemand.com</code>）；一次性代码要复制完整</td></tr>
+<tr><td><span class="cmd">cf target</span> · <span class="cmd">cf target -o &lt;org&gt; -s &lt;space&gt;</span></td><td>显示 / 切换 org 与 space</td><td><b>每次新开终端先 <code>cf target</code></b>：部署到错的 space 是最常见事故</td></tr>
+<tr><td><span class="cmd">cf spaces</span> · <span class="cmd">cf orgs</span></td><td>列出可用的 space / org</td><td>试用账号一般只有 <code>trial</code> / <code>dev</code></td></tr>
+<tr><td><span class="cmd">cf apps</span></td><td>列出已部署应用与状态</td><td>看 <code>started</code> / <code>crashed</code>；<code>cf app &lt;名&gt;</code> 看单应用详情与路由</td></tr>
+<tr><td><span class="cmd">cf logs &lt;app&gt; --recent</span></td><td>看最近日志（应用输出）</td><td><code>cf logs &lt;app&gt;</code> 是<b>持续跟踪</b>，按 Ctrl+C 退出；<code>--recent</code> 才是历史</td></tr>
+<tr><td><span class="cmd">cf marketplace -e hana</span>（或 <code>-e hana-cloud</code>）</td><td>看服务计划与说明</td><td>CAP 用 <code>hdi-shared</code>；<code>schema</code> / <code>tools</code> 不适用于 CAP 部署</td></tr>
+<tr><td><span class="cmd">cf services</span> · <span class="cmd">cf service &lt;实例名&gt;</span></td><td>列出 / 查看服务实例</td><td>创建卡在 <code>create in progress</code> 时用它看最后一步</td></tr>
+<tr><td><span class="cmd">cf create-service hana hdi-shared &lt;实例名&gt;</span></td><td>手工建 HDI 容器</td><td><b>走 MTA 部署时不需要</b>（<code>mta.yaml</code> 的 resources 会建）</td></tr>
+<tr><td><span class="cmd">cf create-service xsuaa application &lt;实例名&gt; -c xs-security.json</span></td><td>手工建 XSUAA 实例</td><td>同上；<code>-c</code> 传授权定义。<code>~</code> 具体参数以官方文档为准</td></tr>
+<tr><td><span class="cmd">cf bind-service</span> · <span class="cmd">cf create-service-key</span></td><td>绑定实例 / 建服务密钥</td><td><code>cds bind</code> 会自动建 <code>&lt;实例&gt;-key</code>，手工时才需要</td></tr>
+<tr><td><span class="cmd">cf env &lt;app&gt;</span></td><td>看应用的环境变量与 <code>VCAP_SERVICES</code></td><td>确认 CAP 读到的是哪个库 / 哪个 XSUAA 实例</td></tr>
+<tr><td><span class="cmd">cf deploy &lt;mtar&gt;</span></td><td><b>部署 MTA</b>（来自 multiapps 插件）</td><td>先 <code>cds build --production</code> 再 <code>mbt build</code>；<code>-e &lt;config.mtaext&gt;</code> 指定扩展描述符。完整参数用 <code>cf deploy --help</code></td></tr>
+<tr><td><span class="cmd">cf undeploy &lt;mta-id&gt;</span></td><td>卸载整个 MTA</td><td>会把 MTA 创建的实例一起删掉；<code>-f</code> 非交互。以 <code>cf undeploy --help</code> 为准</td></tr>
+<tr><td><span class="cmd">cf mtas</span> · <span class="cmd">cf mta &lt;id&gt;</span> · <span class="cmd">cf mta-ops</span> · <span class="cmd">cf dmol -i &lt;op-id&gt;</span></td><td>列出 / 查看 / 跟踪部署操作 / 下载操作日志</td><td>部署失败时<b>先 <code>cf mta-ops</code></b> 看有没有留操作记录，再下载日志</td></tr>
+<tr><td><span class="cmd">cf bg-deploy</span>（<span style="color:#b45309">~</span>）</td><td>蓝绿部署</td><td>需要应用支持；本课程未使用，以官方文档为准</td></tr>
+<tr><td><span class="cmd">cf restart &lt;app&gt;</span> · <span class="cmd">cf restage &lt;app&gt;</span></td><td>重启 / 重新构建并启动</td><td>改了依赖或 buildpack 相关配置用 <code>restage</code></td></tr>
+<tr><td><span class="cmd">cf install-plugin multiapps</span></td><td>装 multiapps（MTA）插件</td><td>社区仓库方式；也可手动下载二进制后 <code>cf install-plugin &lt;path&gt; -f</code></td></tr>
+</tbody></table></div>
+
+<h3 id="s8-1">8-1 部署链条（本项目真实产物名）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 1) 生成部署产物（CAP Node.js：写进 gen/）
+npx cds build --production
+
+# 2) 打包成 .mtar（ID 与 version 来自 mta.yaml：ID: demo-node / version: 1.0.0）
+mbt build -t mta_archives
+
+# 3) 部署（需要 cf login 且 space 正确）
+cf deploy mta_archives/demo-node_1.0.0.mtar
+
+# 4) 部署后验证：路由上取元数据 + 看日志
+curl -s -o /dev/null -w '%{http_code}\n' https://trial-dev-demo-node.cfapps.ap10.hana.ondemand.com/odata/v4/book-order/$metadata
+cf logs demo-node-srv --recent | tail -20</code></pre>
+
+
+<div class="box ok"><b class="t">部署终端的三个判据（对照「画面 2」看）</b>
+<ul>
+  <li><code>Process finished.</code> —— <b>这一行才是部署成功的标志</b>，不是上传阶段的 <code>OK</code>；</li>
+  <li><code>Server listening on port 8080</code> —— 云端默认端口是 <b>8080</b>（本地才是 4004），<b>不要拿 4004 去 curl 云端路由</b>；</li>
+  <li>最后用真实数据回读验证：<span class="cmd">curl -s -o /dev/null -w '%{http_code}' &lt;路由&gt;/odata/v4/book-order/$metadata</span> 得到 200。</li>
+</ul>
+<p>对应画面：<b>画面 1</b>（<code>cf login</code> / <code>cf target</code> / <code>cf marketplace</code>）与
+<b>画面 2</b>（<code>cds build --production</code> → <code>mbt build</code> → <code>cf deploy</code> → <code>cf logs</code> → <code>curl</code>）。</p></div>
+
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>症状</th><th>原因</th><th>对策</th></tr></thead>
+<tbody>
+<tr><td><code>-bash: cf: command not found</code></td><td>CLI 未安装（<b>本机就是这个状态</b>）</td><td>按 <a href="btp.html">① BTP</a> 的安装手顺装 cf CLI，装完 <span class="cmd">cf --version</span> 自检</td></tr>
+<tr><td><code>~Not logged in. Use 'cf login' or 'cf api' to login.</code></td><td>当前终端没登录 / token 过期</td><td><span class="cmd">cf login -a &lt;端点&gt; --sso</span>。以实际输出为准</td></tr>
+<tr><td><code>~No org and space targeted, use 'cf target -o ORG -s SPACE'</code></td><td>登录后未选 space</td><td><span class="cmd">cf target</span> 确认，再 <span class="cmd">cf target -o trial -s dev</span>。以实际输出为准</td></tr>
+<tr><td><code>~error code: 10003, message: You are not authorized to perform the requested action</code></td><td>角色不够（如不是 Space Developer）</td><td>让管理员补角色集合；<a href="btp.html">① BTP</a> 里有角色配置手顺</td></tr>
+<tr><td><code>~Service instance &lt;名&gt; already exists</code></td><td><code>create-service</code> 重复执行</td><td>先 <span class="cmd">cf services</span> 查，或 <span class="cmd">cf update-service</span></td></tr>
+<tr><td>部署卡住 / 应用 <code>crashed</code></td><td>内存不足、缺依赖、认证配置错</td><td><span class="cmd">cf logs &lt;app&gt; --recent</span> 看启动日志第一段错误；<span class="cmd">cf app &lt;app&gt;</span> 看实例状态</td></tr>
+<tr><td>路由 404 / 502</td><td>approuter 未起、路由未映射、服务没监听 <code>$PORT</code></td><td>看 approuter 与 srv 两个应用的日志；确认云端端口是 8080</td></tr>
+</tbody></table></div>
+
+<div class="box ok"><b class="t">部署前自查（可勾选）</b>
+<ul class="check">
+  <li><span class="cmd">cf target</span> 显示的 org / space 就是目标环境</li>
+  <li><span class="cmd">mbt build -t mta_archives</span> 成功，且 <code>mta_archives/</code> 下的文件名与 <code>mta.yaml</code> 的 ID/version 一致</li>
+  <li><code>mta.yaml</code> 里有 <code>hana</code>（<code>hdi-shared</code>）与 <code>xsuaa</code>（<code>application</code>）两个资源</li>
+  <li>认证已从 <code>mocked</code> 改成 <code>jwt</code> / <code>xsuaa</code>（本课程示范项目的 <code>package.json</code> 需要按 profile 改，见 §4-3）</li>
+  <li>部署后用 <span class="cmd">curl -s -o /dev/null -w '%{http_code}' &lt;路由&gt;/odata/v4/book-order/$metadata</span> 得到 200</li>
+</ul></div>
+
+<h2 id="s9">9. btp CLI 与 BAS 速查</h2>
+<div class="box warn"><b class="t">同样先说明</b> 本机未安装 <code>btp</code> CLI，BAS 是浏览器里的开发环境。
+本节内容来自 SAP Help Portal 的 btp CLI 命令参考与 SAP BTP 官方文档；<b>带 <code>~</code> 的参数名以
+<code>btp help all</code> 与官方文档为准</b>。</div>
+
+<h3 id="s9-1">9-1 btp CLI 的命令语法</h3>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">btp [OPTIONS] ACTION [GROUP/OBJECT] [PARAMS]
+
+OPTIONS : --config  --format  --help  --info  --verbose  --version
+ACTIONS : list  get  create  update  delete  add  remove  assign  unassign
+          enable  move  register  unregister  subscribe  unsubscribe  share  unshare
+GROUPS  : accounts  connectivity  security  services
+PARAMS  : 第一个位置参数不带 key（如实例名），其余带 key（如 --plan）
+帮助    : btp help all（全部命令）· btp help（语法）· 命令后加 --help</code></pre>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>命令</th><th>用途</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td><span class="cmd">btp login --sso</span></td><td>登录全局账户（推荐 SSO）</td><td>登录后默认 target 是全局账户；<code>btp logout</code> 退出</td></tr>
+<tr><td><span class="cmd">btp target -sa &lt;子账户ID&gt;</span></td><td>把后续命令的目标切到某个子账户</td><td>切换后不用每个命令都带子账户 ID（官方文档明确推荐）</td></tr>
+<tr><td><span class="cmd">btp list accounts/subaccount</span></td><td>列出子账户（拿 ID 用）</td><td>全局账户级命令始终在登录的全局账户里执行</td></tr>
+<tr><td><span class="cmd">btp list services/instance</span> · <span class="cmd">btp get services/instance</span></td><td>列出 / 查看服务实例</td><td>查 hana / xsuaa 实例状态</td></tr>
+<tr><td><span class="cmd">btp list services/plan</span> · <span class="cmd">btp list services/offering</span></td><td>查计划 / 查服务产品名</td><td>官方文档：创建实例前先用它们确认 offering 与 plan 名</td></tr>
+<tr><td><span class="cmd">btp create services/instance &lt;名字&gt; --plan &lt;计划&gt; --offering &lt;产品&gt;</span></td><td>创建服务实例</td><td><code>~</code> 具体参数名以 <code>btp create services/instance --help</code> 为准</td></tr>
+<tr><td><span class="cmd">btp list security/user</span> · <span class="cmd">btp get security/user</span></td><td>列出 / 查看用户及其角色集合</td><td>支持 <code>--of-idp</code> 指定自定义身份提供者</td></tr>
+<tr><td><span class="cmd">btp assign security/role-collection &lt;角色集合&gt; --to-user &lt;邮箱&gt;</span></td><td>给用户分配角色集合</td><td><code>~</code> 参数名以官方文档为准；首次分配会创建 shadow user，可用 <code>--create-user-if-missing false</code> 阻止</td></tr>
+<tr><td><span class="cmd">btp unassign security/role-collection</span></td><td>取消分配</td><td>排「明明给了角色还是 403」时用它确认</td></tr>
+<tr><td><span class="cmd">btp list security/role-collection</span>（<span style="color:#b45309">~</span>）</td><td>列出角色集合</td><td>本课程用 cockpit 核对；命令名以官方文档为准</td></tr>
+</tbody></table></div>
+<p><b>什么时候用 btp CLI、什么时候用 cf CLI？</b> 一句话：<b>账户与权限用 <code>btp</code>，应用与实例的运行时用 <code>cf</code></b>。
+子账户、角色集合、服务实例的创建两边都能做，课程里的分工是「<code>btp</code> 管账号与角色、<code>cf</code> 管部署与日志」。</p>
+
+<h3 id="s9-2">9-2 BAS（Business Application Studio）速查</h3>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>要做的事</th><th>怎么做</th><th>坑</th></tr></thead>
+<tbody>
+<tr><td>创建 dev space</td><td>BAS 首页 → <b>Create Dev Space</b> → 名称 + Type 选 <b>Full Stack Cloud Application</b> → Create</td><td>名称必填才能点 Create；<b>同时只能有 1 个 RUNNING</b>，其余要 STOPPED（内存配额限制）</td></tr>
+<tr><td>进入开发环境</td><td>Dev Space Manager 里点 dev space 名称 → 打开 IDE（浏览器标签页）</td><td>浏览器别用隐私模式，登录态会丢</td></tr>
+<tr><td>开项目</td><td>IDE 里打开终端 → <span class="cmd">cds init demo-node</span>（或 <code>cds init bookshop --nodejs --add sample</code>）</td><td>BAS 内已预装 <code>cds</code> CLI 与 Node；<b>不要在这里再 <code>npm i -g @sap/cds-dk</code></b> 折腾版本</td></tr>
+<tr><td>起服务 + 看界面</td><td><span class="cmd">cds watch</span> → 端口自动转发，提示里给的 URL 直接点开</td><td>端口转发（Port Forwarding）默认对常见端口开放；改端口后要重新确认转发</td></tr>
+<tr><td>部署到 CF</td><td>BAS 里 <span class="cmd">mbt build</span> → <span class="cmd">cf deploy mta_archives/&lt;mtar&gt;</span>；也可用右键菜单 Deploy</td><td>部署前要 <span class="cmd">cf login</span>；BAS 终端与本地终端是<b>两套登录态</b></td></tr>
+<tr><td>连云端库做联调</td><td><span class="cmd">cds bind db --to &lt;实例名&gt;</span> → <span class="cmd">cds watch --profile hybrid</span></td><td>必须先 <code>cf login</code> 且 space 正确，否则 bind 找不到实例</td></tr>
+<tr><td>调试</td><td><span class="cmd">cds watch --inspect</span>（或命令面板 Run and Debug）</td><td>Node 调试走 9229；Java 走 8000</td></tr>
+<tr><td>Git</td><td>IDE 左侧 Source Control；HTTPS + PAT 认证</td><td>PAT 别提交进仓库；BAS 的 <code>~/.cds-services.json</code> 是环境级文件，不要进项目仓库</td></tr>
+</tbody></table></div>
+
+<h2 id="s10">10. mvn 速查（只针对 CAP Java）</h2>
+<p>CAP Java 项目用 Maven 构建，<b>所有 <code>mvn</code> 命令都在 Java 项目根目录（或 <code>srv/</code> 子模块）下执行</b>。
+本机环境（实测）：<code>Apache Maven 3.9.16</code> + <code>openjdk 21.0.12.1</code>（课程要求 JDK 17 或 21）。</p>
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">$ mvn -v
+Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)
+Maven home: /opt/homebrew/Cellar/maven/3.9.16/libexec
+Java version: 21.0.12.1, vendor: Homebrew</code></pre>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>命令</th><th>用途</th><th>备注 / 坑</th></tr></thead>
+<tbody>
+<tr><td><span class="cmd">mvn -v</span></td><td>看 Maven / JDK 版本</td><td>JDK 版本不对（<code>maven-enforcer-plugin</code> 会拦）</td></tr>
+<tr><td><span class="cmd">mvn clean</span></td><td>清 <code>target/</code></td><td>生成物（POJO、schema.sql、csn.json）都在里面，清完要重新 build</td></tr>
+<tr><td><span class="cmd">mvn compile</span></td><td>编译（含 CDS 构建 + POJO 生成）</td><td>第一次会联网下依赖；之后可用 <code>-o</code> 离线</td></tr>
+<tr><td><span class="cmd">mvn test</span></td><td>跑测试（Surefire）</td><td>跳过测试用 <code>-DskipTests</code>（编译仍做）或 <code>-Dmaven.test.skip=true</code>（连编译都跳）</td></tr>
+<tr><td><span class="cmd">mvn package</span></td><td>打包成 jar（含 <code>-exec.jar</code>）</td><td>Spring Boot repackage 的输出，部署时用</td></tr>
+<tr><td><span class="cmd">mvn install</span></td><td>装进本地 <code>~/.m2</code></td><td>多模块工程里父模块要先 install，子模块才能引用</td></tr>
+<tr><td><span class="cmd">mvn -pl srv -am clean install</span></td><td><b>只构建某个模块</b>（本课程 Java 项目的模块名是 <code>srv</code>；<code>-am</code> 连带构建它依赖的模块）</td><td>在父目录下执行；<code>-pl</code> 的模块名要和 <code>pom.xml</code> 的 <code>modules</code> 一致</td></tr>
+<tr><td><span class="cmd">mvn -o clean install</span></td><td><b>离线构建</b>（不访问远程仓库）</td><td>依赖没下全时会报「找不到构件」；CI 缓存场景常用</td></tr>
+<tr><td><span class="cmd">mvn spring-boot:run</span></td><td><b>本地起服务</b></td><td>在 <code>srv/</code> 下执行；默认 profile 用 H2 内存库（<code>schema-h2.sql</code> 由 cds-maven-plugin 生成）。端点一般还是 <code>/odata/v4/book-order</code></td></tr>
+<tr><td><span class="cmd">mvn spring-boot:run -Dspring-boot.run.profiles=production</span>（<span style="color:#b45309">~</span>）</td><td>用指定 Spring profile 起服务</td><td>本课程未实测该参数组合，以 Spring Boot 官方文档为准</td></tr>
+<tr><td><span class="cmd">mvn cds:watch</span></td><td>改 CDS 模型自动重建并重启应用</td><td>等价于 <code>mvn com.sap.cds:cds-maven-plugin:watch</code>；配 <code>spring-boot-devtools</code> 才快</td></tr>
+<tr><td><span class="cmd">mvn cds:auto-build</span></td><td>只做模型重建（配合 IDE 里启动应用）</td><td>要用 <code>mvn cds:xxx</code> 这种短前缀，需先在 <code>~/.m2/settings.xml</code> 里加 <code>pluginGroups: com.sap.cds</code></td></tr>
+<tr><td><span class="cmd">mvn cds:build</span></td><td>执行 CDS 构建 + POJO 生成</td><td>生成 <code>schema.sql</code> / <code>csn.json</code> / <code>edmx</code></td></tr>
+<tr><td><span class="cmd">mvn cds:add h2</span>（<span style="color:#b45309">~</span>）</td><td>加 H2 支持</td><td>与 <code>cds add h2</code> 同名特性；参数以 <code>mvn cds:help -Ddetail=true</code> 为准</td></tr>
+<tr><td><span class="cmd">mvn cds:help -Ddetail=true -Dgoal=watch</span></td><td>看某个 goal 的完整参数</td><td>排「参数记不住」时的权威来源</td></tr>
+<tr><td><span class="cmd">mvn dependency:tree</span>（<span style="color:#b45309">~</span>）</td><td>看依赖树</td><td>标准 Maven 用法；本课程未实测，以 Maven 官方文档为准</td></tr>
+</tbody></table></div>
+<p><code>cds-maven-plugin</code>（本课程 Java 项目用 4.9.1）实际提供的 goal（取自插件自带的
+<code>META-INF/maven/plugin.xml</code>，<b>真实清单</b>）：</p>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">add            给 CAP Java 项目加特性（等价 cds add）
+auto-build     先做一次 CDS 构建，然后监视 CDS 模型变化
+build          默认做 CDS 构建 + Java 类生成
+cds            在项目里执行任意 cds 命令：mvn cds:cds
+clean          删除上次构建生成的文件与目录
+generate       扫描 csn.json 生成 POJO（类型安全访问）
+help           显示插件帮助：mvn cds:help -Ddetail=true -Dgoal=&lt;goal&gt;
+install-cdsdk  把 @sap/cds-dk 装进 CAP Java 项目
+install-node   下载并安装 Node.js 发行版到本地
+npm            执行 npm 命令（如 npm install）
+npx            执行 npx 命令
+resolve        从依赖 JAR 里抽取模型到 target/cds/
+version        打印 CAP Java 项目版本信息
+watch          启动应用并监视 CDS 模型变化，变更即重建</code></pre>
+<div class="box info"><b class="t">Node 版与 Java 版的命令对照（同一件事两种敲法）</b>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>要做的事</th><th>Node.js</th><th>CAP Java</th></tr></thead>
+<tbody>
+<tr><td>建项目</td><td><code>cds init --nodejs</code></td><td><code>cds init --java</code>（或 <code>cds add java</code>）</td></tr>
+<tr><td>起服务（不监视）</td><td><code>cds serve</code> / <code>cds-serve</code></td><td><code>mvn spring-boot:run</code></td></tr>
+<tr><td>起服务（监视模型）</td><td><code>cds watch</code></td><td><code>mvn cds:watch</code></td></tr>
+<tr><td>本地数据库</td><td>sqlite（<code>db.sqlite</code>）</td><td>H2 内存库（<code>cds add h2</code>）</td></tr>
+<tr><td>建库 / 灌数据</td><td><code>cds deploy --to sqlite</code></td><td>启动时由 <code>schema-h2.sql</code> 建表；<code>db/data/*.csv</code> 由框架导入</td></tr>
+<tr><td>构建部署产物</td><td><code>cds build --production</code></td><td><code>mvn clean package</code> / <code>cds build --for java</code></td></tr>
+<tr><td>测试</td><td><code>npm test</code>（mocha + cds.test）</td><td><code>mvn test</code>（Spring Boot Test / MockMvc）</td></tr>
+</tbody></table></div></div>
+
+<h2 id="s11">11. 「我不知道该用哪条命令」决策表</h2>
+<p>按<b>目的</b>查。左边是你脑子里的问题，右边是能敲的命令（路径都按本课程示范项目写）。</p>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>我现在想…</th><th>敲这条</th><th>在哪执行</th></tr></thead>
+<tbody>
+<tr><td>建一个新项目</td><td><span class="cmd">cds init demo-node</span> · <span class="cmd">cds init --java my-java-app</span></td><td>项目上级目录</td></tr>
+<tr><td>给项目加 HANA / XSUAA / MTA 支持</td><td><span class="cmd">cds add hana,xsuaa,mta</span></td><td>项目根</td></tr>
+<tr><td>装依赖</td><td><span class="cmd">npm install</span>（CI 用 <span class="cmd">npm ci</span>）</td><td>项目根</td></tr>
+<tr><td>确认 Node 版本对</td><td><span class="cmd">node -v</span>；不对就用 <span class="cmd">npx -y node@22 -p process.execPath</span></td><td>任意</td></tr>
+<tr><td>改完模型，只想确认写得对</td><td><span class="cmd">npx cds compile db/schema.cds srv/book-order-service.cds --to sql</span></td><td>项目根</td></tr>
+<tr><td>想看某个服务会暴露哪些实体/函数</td><td><span class="cmd">npx cds compile srv/book-order-service.cds --to edmx</span></td><td>项目根</td></tr>
+<tr><td>想直接看会生成什么 SQL</td><td><span class="cmd">npx cds compile db/schema.cds --to sql --dialect hana</span></td><td>项目根</td></tr>
+<tr><td>建表 + 灌种子数据</td><td><span class="cmd">npm run deploy</span></td><td>项目根</td></tr>
+<tr><td>起服务写代码 / 看 Fiori</td><td><span class="cmd">npm run watch</span>（= <code>cds watch</code>）</td><td>项目根</td></tr>
+<tr><td>起服务让脚本打请求</td><td><span class="cmd">npm start</span>（= <code>cds-serve</code>）</td><td>项目根</td></tr>
+<tr><td>端口被占用</td><td><span class="cmd">cds watch --port 4005</span> 或 <span class="cmd">lsof -ti:4004</span> 找进程</td><td>项目根</td></tr>
+<tr><td>不知道配置为什么没生效</td><td><span class="cmd">cds env --sources</span> → <span class="cmd">cds env get requires.db</span></td><td>项目根</td></tr>
+<tr><td>临时改配置试一下</td><td><span class="cmd">CDS_CONFIG='{"requires":{"auth":{"kind":"dummy"}}}' cds serve</span></td><td>项目根</td></tr>
+<tr><td>本地连云端 HANA 联调</td><td><span class="cmd">cf login -a &lt;端点&gt; --sso</span> → <span class="cmd">cds bind db --to demo-hana-db</span> → <span class="cmd">cds watch --profile hybrid</span></td><td>项目根</td></tr>
+<tr><td>看接口返回对不对</td><td><span class="cmd">curl -s -u alice:alice "$SVC/BookOrders?$top=1" | python3 -m json.tool</span></td><td>项目根 / 任意</td></tr>
+<tr><td>只想看某个请求的状态码</td><td><span class="cmd">curl -s -o /dev/null -w '%{http_code}' -u alice:alice "$SVC/BookOrders"</span></td><td>项目根 / 任意</td></tr>
+<tr><td>确认注解真的进了 <code>$metadata</code></td><td><span class="cmd">curl -s -u alice:alice "$SVC/$metadata" | grep -c 'UI.LineItem'</span></td><td>任意</td></tr>
+<tr><td>跑单元 / 集成测试</td><td><span class="cmd">npm test</span></td><td>项目根</td></tr>
+<tr><td>跑完整验收（26 条断言）</td><td><span class="cmd">bash test/odata-verify.sh</span></td><td>项目根</td></tr>
+<tr><td>摸不清有几条测试文件</td><td><span class="cmd">cds test -l</span></td><td>项目根</td></tr>
+<tr><td>做模型 / 环境检查</td><td><span class="cmd">npm i -D eslint</span> → <span class="cmd">cds lint</span></td><td>项目根</td></tr>
+<tr><td>打包部署产物</td><td><span class="cmd">npx cds build --production</span> → <span class="cmd">mbt build -t mta_archives</span></td><td>项目根</td></tr>
+<tr><td>部署到 Cloud Foundry</td><td><span class="cmd">cf deploy mta_archives/demo-node_1.0.0.mtar</span></td><td>项目根（已登录）</td></tr>
+<tr><td>看云端日志</td><td><span class="cmd">cf logs demo-node-srv --recent</span></td><td>任意（已登录）</td></tr>
+<tr><td>云端部署失败，想看哪一步错了</td><td><span class="cmd">cf mta-ops</span> → <span class="cmd">cf dmol -i &lt;操作ID&gt;</span></td><td>任意（已登录）</td></tr>
+<tr><td>给同事开角色</td><td><span class="cmd">btp target -sa &lt;子账户&gt;</span> → <span class="cmd">btp assign security/role-collection OrderAdmin --to-user &lt;邮箱&gt;</span>（<span style="color:#b45309">~</span>）</td><td>任意（btp 已登录）</td></tr>
+<tr><td>Java 版跑起来</td><td><span class="cmd">mvn spring-boot:run</span>（在 <code>srv/</code> 下）</td><td>Java 项目 <code>srv/</code></td></tr>
+<tr><td>Java 版改模型后自动重建</td><td><span class="cmd">mvn cds:watch</span></td><td>Java 项目根</td></tr>
+<tr><td>Java 版跑测试</td><td><span class="cmd">mvn test</span></td><td>Java 项目根</td></tr>
+</tbody></table></div>
+
+<div class="box danger"><b class="t">三条「不要做」</b>
+<ul>
+  <li><b>不要在 <code>srv/</code> 里敲 <code>cds</code> 命令</b>：配置与脚本在项目根，模型路径也对不上。</li>
+  <li><b>不要把 <code>mocked</code> / <code>dummy</code> 认证带上云</b>：本课程示范项目的 <code>package.json</code> 是全局
+    <code>mocked</code>，上云前必须按 profile 改成 <code>jwt</code> / <code>xsuaa</code>（§4-3）。</li>
+  <li><b>不要用 <code>cds watch</code> 做验收或 CI</b>：它会监视文件、重启进程，跑 CI 要用
+    <code>cds build --production</code> + <code>npm test</code> + <code>test/odata-verify.sh</code>。</li>
+</ul></div>
+
+<h2 id="s12">12. 本节测试（8 题）</h2>
+<div class="sectest">
+  <b class="t">本节测试</b>
+  <ol>
+    <li>给出「不启动服务、只把当前模型编译成 HANA 方言的 DDL 看一眼」的完整命令。</li>
+    <li><code>cds deploy --to h2</code>、<code>cds deploy --to sqlite</code>、<code>cds deploy --to hana</code>
+      三者中，哪一个不被支持？另外两个分别需要什么前置条件？</li>
+    <li>说明 <code>cds serve</code> / <code>cds watch</code> / <code>cds run</code> 三者的关系，并指出哪个等价于
+      <code>npm start</code>。</li>
+    <li>配置同时出现在 <code>package.json</code> 的 <code>cds</code> 段、<code>.cdsrc-private.json</code> 与
+      <code>CDS_CONFIG</code> 环境变量里，最终谁会生效？用哪条命令能直接看到每个值的来源？</li>
+    <li>为什么用 <code>mocked</code> 认证时 <code>-u nosuch:wrong</code> 也会返回 200？要让它只认自己配的用户，
+      配置要加哪一行？</li>
+    <li>写出「调用 <code>getOrderTotal</code> 函数」和「提交 <code>BO-1001</code> 这张订单」两条 curl 命令，
+      并说明后者为什么是 POST、以及重复提交会得到什么状态码。</li>
+    <li>部署链路的四条命令（从构建到验证）写出来，并指出哪一行输出才代表「部署成功」。</li>
+    <li>同一个业务需求，Node.js 与 CAP Java 各用什么命令起本地服务？两者的本地数据库分别是什么？
+      为什么 <code>cds deploy</code> 管不了 Java 的 H2？</li>
+  </ol>
+  <p class="go">对应自测题见 <a href="quiz.html#q-cli">自测 · 速查</a>；参考答案见 <a href="instructor.html">讲师版</a>。</p>
+</div>
+
+<div class="box warn"><b class="t">未验证清单（本页所有 <code>~</code> 项汇总，以官方文档为准）</b>
+<ol>
+  <li><code>~npm i -g @sap/cds-dk</code>：本站只验证了项目内安装（<code>devDependencies</code>）。</li>
+  <li><code>~</code> <code>requires.db.kind</code> 的 <code>postgres</code>：课程未使用。</li>
+  <li><code>~</code> 认证 <code>kind: ias</code>：课程未使用（课程覆盖 mocked / dummy / basic / jwt / xsuaa）。</li>
+  <li><code>~</code> <code>@cds.persistence.skip</code> 注解：课程未使用。</li>
+  <li><code>~</code> <code>draftEdit</code> / <code>draftPrepare</code>：只在 <code>$metadata</code> 里确认存在，
+    未逐个实调（<code>draftActivate</code> 已实测）。</li>
+  <li><b><code>cf</code> CLI 全部命令与错误信息</b>：本机未安装 cf，命令用法来自官方文档与
+    cf-mta-plugin（multiapps）仓库，报错原文在表里以 <code>~</code> 标注。</li>
+  <li><b><code>btp</code> CLI 全部命令</b>：本机未安装 btp；命令名来自 SAP Help Portal 的 btp CLI 命令参考与
+    SAP BTP 官方文档（<code>btp login</code> / <code>btp target</code> / <code>btp list・get・create・assign services|security|accounts</code>
+    已核对，具体参数名以 <code>btp &lt;命令&gt; --help</code> 为准）。</li>
+  <li><b>BAS 界面操作</b>：浏览器环境操作，本站以高保真画面与官方文档为准（Type 选
+    <b>Full Stack Cloud Application</b>、1 个 RUNNING dev space 等）。</li>
+  <li><code>~mvn spring-boot:run -Dspring-boot.run.profiles=…</code>、<code>~mvn cds:add h2</code>、
+    <code>~mvn dependency:tree</code>：本机只验证了 Maven / JDK 与插件 goal 清单，未逐条执行；
+    goal 名取自 <code>cds-maven-plugin 4.9.1</code> 的 <code>plugin.xml</code>。</li>
+</ol></div>
+
+<div class="box ok"><b class="t">下一步</b>
+把本页当书签用：<b>遇到 <code>cds</code> 的参数问题查 §3，配置不生效查 §4，接口不对查 §6/§7，
+上云出问题查 §8</b>。相关页面：<a href="cds.html">④ CDS 建模</a> ·
+<a href="node.html">⑤ Node.js 服务</a> · <a href="security.html">⑧ 认证与授权</a> ·
+<a href="testing.html">⑦ 测试体系</a>。</div>
 </article>
 </main>
 </div>

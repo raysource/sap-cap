@@ -10,14 +10,43 @@
 </head>
 <body>
 <!--NAV-->
-<header class="site"><div class="nav-wrap"><a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a><nav class="main"><a class="active" href="quiz.html">自测</a></nav></div></header>
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a class="active" href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
 <!--/NAV-->
 
 <div class="wrap">
 <main class="page">
 <article>
 <p class="breadcrumb"><a href="index.html">首页</a> / <span>能力自测</span></p>
-<h1>能力自测：196 题，按板块分组</h1>
+<h1>能力自测：209 题，按板块分组</h1>
 <p class="kicker">点击选项即判分并显示解说 · 合格线 75% · 全部题目来自正文的「本节测试」</p>
 
 <div class="box info"><b class="t">怎么用</b>
@@ -40,6 +69,7 @@
 <a href="#q-security">⑧ 认证与授权（18 题）</a>
 <a href="#q-fiori">⑨ Fiori UI（18 题）</a>
 <a href="#q-deploy">⑩ 构建与部署（18 题）</a>
+<a href="#q-cli">命令与注解速查（13 题）</a>
 <a href="#q-project">示范项目（端到端）（10 题）</a>
 </div>
 <h2 id="q-concept">概念：CAP 是什么 <a class="tag" href="concept.html">回到本页</a></h2>
@@ -2285,10 +2315,167 @@
   <div class="explain">端点与子账户的 region 绑定：https://api.cf.&lt;region&gt;.hana.ondemand.com。本站对各区域端点做过可达性实测（/v2/info 返回 200）；中国区使用不同域名。正确端点以 Cockpit 子账户 Overview 里给出的 API Endpoint 为准。</div>
 </div>
 
+<h2 id="q-cli">命令与注解速查 <a class="tag" href="cli.html">回到本页</a></h2>
+<div class="quiz-q" data-answer="B">
+  <div class="q-meta"><span class="tag gray">操作</span><span class="tag">命令与注解速查</span></div>
+  <h4>187. 系统里的 Node 不是 LTS，装依赖时 better-sqlite3 的原生模块报 ERR_DLOPEN_FAILED。课程里「不改系统、临时切到 Node 22」的做法是什么？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. brew install node@22 然后重装整个系统 Node</div>
+      <div class="opt" data-key="B">B. npx -y node@22 -p process.execPath 取到路径，再用 export PATH=&quot;$(dirname &quot;$(npx -y node@22 -p process.execPath)&quot;):$PATH&quot; 把它放到当前终端最前面，然后 node -v 确认是 v22.x</div>
+      <div class="opt" data-key="C">C. 在 package.json 里写 &quot;engines&quot;: {&quot;node&quot;: &quot;&gt;=20&quot;}，npm 会自动换 Node</div>
+      <div class="opt" data-key="D">D. 把 db.sqlite 删掉重建，原生模块报错就会消失</div>
+  </div>
+  <div class="explain">课程示范项目 README 用的就是这条：npx 临时下载 node@22，-p process.execPath 打印它的绝对路径，dirname 后塞进 PATH。engines 只是声明（npm 默认不强制），删 db.sqlite 与原生模块 ABI 无关；本站真实复现过 ERR_DLOPEN_FAILED + server shutdown。</div>
+</div>
+
+<div class="quiz-q" data-answer="C">
+  <div class="q-meta"><span class="tag gray">排错</span><span class="tag">命令与注解速查</span></div>
+  <h4>188. 你执行 cds deploy --to h2，看到「Deploying into a H2 database is not yet supported」，但紧接着终端又打印“successfully deployed to …”。发生了什么？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. H2 已经支持，只是版本提示没更新</div>
+      <div class="opt" data-key="B">B. 命令报错但退出码是 0，所以 db.sqlite 被重建了</div>
+      <div class="opt" data-key="C">C. cds deploy 只支持 sqlite / hana；--to h2 不被支持，于是回落到默认目标（本项目配置的 db.sqlite）并照常建库，所以看起来“成功”了</div>
+      <div class="opt" data-key="D">D. 需要先 cds add h2 再执行一次，才会真的部署到 H2</div>
+  </div>
+  <div class="explain">cds help deploy 原文写着 Supported databases: sqlite, hana。写错目标不会报错退出，而是回落到配置里的 db.sqlite ——这是最容易被误判为成功的一类坑。CAP Java 的本地 H2 走 cds add h2 + Spring Boot，与本命令无关。</div>
+</div>
+
+<div class="quiz-q" data-answer="A">
+  <div class="q-meta"><span class="tag gray">概念</span><span class="tag">命令与注解速查</span></div>
+  <h4>189. cds serve、cds watch、cds run、npm start 四者的关系，哪个说法正确？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. cds run 是 cds serve all 的快捷方式；cds watch 等价于 cds serve all --with-mocks --in-memory?；npm start 执行的是 cds-serve（即不监视文件变化的 serve）</div>
+      <div class="opt" data-key="B">B. cds watch 与 npm start 完全等价，只是名字不同</div>
+      <div class="opt" data-key="C">C. cds run 已经废弃，现在会报 Unknown command</div>
+      <div class="opt" data-key="D">D. npm start 会调用 cds watch，所以改代码会自动重启</div>
+  </div>
+  <div class="explain">cds help run 原文：cds run is just a convenient shortcut for cds serve [--project &lt;project&gt;]。cds watch 的真实启动横幅就是 cds serve all --with-mocks --in-memory? --port …。示范项目 package.json 里 start = cds-serve，所以 npm start 不监视文件变化——要热重载得用 npm run watch。</div>
+</div>
+
+<div class="quiz-q" data-answer="D">
+  <div class="q-meta"><span class="tag gray">操作</span><span class="tag">命令与注解速查</span></div>
+  <h4>190. 配置同时写在 package.json 的 cds 段、.cdsrc-private.json 和 CDS_CONFIG 环境变量里，你想知道「最终生效的是哪个、每个值从哪来」，用哪条命令？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. npm run deploy，看它用哪个库</div>
+      <div class="opt" data-key="B">B. cds compile --to sql，看生成哪个库的 DDL</div>
+      <div class="opt" data-key="C">C. cat package.json</div>
+      <div class="opt" data-key="D">D. cds env --sources（列出 cds.env 的所有来源），再 cds env get requires.db 看具体项</div>
+  </div>
+  <div class="explain">cds env --sources 会按顺序列出 process.env、package.json、插件的 package.json、@sap/cds 默认值等来源；优先级高的在后面（process.env &gt; .cdsrc-private.json &gt; package.json 的 cds 段 &gt; 内置默认值）。这是排「配置没生效」的第一条命令。</div>
+</div>
+
+<div class="quiz-q" data-answer="C">
+  <div class="q-meta"><span class="tag gray">排错</span><span class="tag">命令与注解速查</span></div>
+  <h4>191. 示范项目的 package.json 里写的是 requires.auth.kind = mocked（没有按 profile 区分）。执行 CDS_ENV=production cds env get requires.auth.kind 会得到什么？该怎么修？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. 得到 jwt，因为 production profile 的默认认证就是 jwt</div>
+      <div class="opt" data-key="B">B. 得到 null，因为生产环境不允许本地认证</div>
+      <div class="opt" data-key="C">C. 得到 mocked —— 显式写的值压住了 production 的默认值；应改成按 profile 写：[development] 用 mocked、[production] 用 jwt / xsuaa</div>
+      <div class="opt" data-key="D">D. 得到 xsuaa，CAP 会自动检测到未绑定的 XSUAA 并切换</div>
+  </div>
+  <div class="explain">实测结果就是 mocked：production 的默认值（jwt）只在项目没有显式配置时才生效。这类「显式配置压过 profile 默认值」是上云后 401/403 事故的常见源头，所以课程要求把认证按 profile 分开写。</div>
+</div>
+
+<div class="quiz-q" data-answer="A">
+  <div class="q-meta"><span class="tag gray">概念</span><span class="tag">命令与注解速查</span></div>
+  <h4>192. 本地用 mocked 认证时，curl -u nosuch:wrong … 也会返回 200。为什么？要让它只认自己配的用户，配置要加什么？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. 因为 mocked 是开发期的假登录：它用 HTTP Basic 但不校验密码，默认还带 &quot;*&quot;: true（放行任意用户）；要在 users 里显式写 &quot;*&quot;: false</div>
+      <div class="opt" data-key="B">B. 因为 curl 的 -u 参数被忽略了，要用 -H &#x27;Authorization: Basic …&#x27;</div>
+      <div class="opt" data-key="C">C. 因为服务级注解写错了，应把 requires 改成 restrict_all_services</div>
+      <div class="opt" data-key="D">D. 因为 mocked 用的是匿名放行，加 @requires 就能拦住</div>
+  </div>
+  <div class="explain">课程验收脚本里确实有一条「任意用户(mocked 放行) → 200」的断言，这是 mocked 的设计而不是缺陷：它只是开发期的身份模拟。要收紧要同时做两件事：配 users，并把默认的 &quot;*&quot;: true 覆盖成 false。真正的认证用 jwt / xsuaa（需要 @sap/xssec）。</div>
+</div>
+
+<div class="quiz-q" data-answer="C">
+  <div class="q-meta"><span class="tag gray">最佳实践</span><span class="tag">命令与注解速查</span></div>
+  <h4>193. 你想对模型做静态检查，于是敲了 cds lint，得到「ESLint is not installed…」。正确的下一步是什么？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. cds lint 不存在，应该改用 cds compile --to sql</div>
+      <div class="opt" data-key="B">B. npm i -g eslint，全局装完再跑</div>
+      <div class="opt" data-key="C">C. 先 npm i -D eslint（再用 cds add lint 生成配置），然后在项目根执行 cds lint</div>
+      <div class="opt" data-key="D">D. 忽略这条提示，cds lint 会退回内置检查并照常给出结果</div>
+  </div>
+  <div class="explain">cds lint 是真实存在的命令（cds-dk 9.9.x 的 bin/lint.js，基于 ESLint 做 env / model 检查），但它自己不装 ESLint——真实输出就是那句提示。依赖进 devDependencies 而不是全局，才能保证团队与 CI 一致。</div>
+</div>
+
+<div class="quiz-q" data-answer="B">
+  <div class="q-meta"><span class="tag gray">排错</span><span class="tag">命令与注解速查</span></div>
+  <h4>194. 下面这条命令为什么拿不到数据，反而得到 400？  SVC=&#x27;…/odata/v4/book-order&#x27;; curl -s -u alice:alice &quot;$SVC/Books?$top=2&quot;</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. 因为 $SVC 变量不能出现在 URL 里，必须写全路径</div>
+      <div class="opt" data-key="B">B. 因为双引号里 $top 被 shell 当成变量展开成空串，URL 变成 ?=2；应写成 &#x27;…?\$top=2&#x27; 或把整个 URL 用单引号</div>
+      <div class="opt" data-key="C">C. 因为 $top 是 OData V2 的写法，V4 要用 $limit</div>
+      <div class="opt" data-key="D">D. 因为 -u 与 -s 不能同时用</div>
+  </div>
+  <div class="explain">OData 的 $ 系列选项在 shell 里是变量语法。真实的 400 报错正文很直白：Parsing URL failed at position 43: Expected a whitespace but end of input found. 对策：URL 用单引号，或在双引号里写 \$top。</div>
+</div>
+
+<div class="quiz-q" data-answer="D">
+  <div class="q-meta"><span class="tag gray">概念</span><span class="tag">命令与注解速查</span></div>
+  <h4>195. 本课程用状态码做业务规则断言。下面哪一组对应关系正确？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. 匿名读实体集 → 404；重复提交 → 400</div>
+      <div class="opt" data-key="B">B. 只读实体 POST → 409；找不到数据 → 500</div>
+      <div class="opt" data-key="C">C. 匿名读实体集 → 403；对只读实体 POST → 400</div>
+      <div class="opt" data-key="D">D. 匿名读实体集 → 401；对只读实体（@readonly）POST → 405；重复提交已提交订单 / 订单号重复 → 409</div>
+  </div>
+  <div class="explain">课程实测：匿名 → 401（@(requires: &#x27;authenticated-user&#x27;) 在授权前拦住）；POST 到 @readonly 的 OrderItemView → 405；草稿激活时订单号重复、以及重复 submitOrder → 409；函数查不到数据 → 404。把 4xx 写进断言，业务规则才算真被验证过。</div>
+</div>
+
+<div class="quiz-q" data-answer="B">
+  <div class="q-meta"><span class="tag gray">操作</span><span class="tag">命令与注解速查</span></div>
+  <h4>196. 从「改了模型」到「云端用真实数据回读验证」，正确的命令顺序是？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. cf deploy → mbt build → cds build --production → curl</div>
+      <div class="opt" data-key="B">B. cds build --production → mbt build -t mta_archives → cf deploy mta_archives/demo-node_1.0.0.mtar → curl 路由上的 $metadata / 数据</div>
+      <div class="opt" data-key="C">C. mbt build → cds deploy --to hana → cf push</div>
+      <div class="opt" data-key="D">D. cds watch → cf deploy → cf logs</div>
+  </div>
+  <div class="explain">.mtar 的文件名由 mta.yaml 的 ID 与 version 决定（本项目 ID: demo-node、version: 1.0.0）。部署是否成功要看 Deploying/Process finished. 这一段（不是上传阶段的 OK），并且云端端口是 8080 而不是本地的 4004。</div>
+</div>
+
+<div class="quiz-q" data-answer="D">
+  <div class="q-meta"><span class="tag gray">操作</span><span class="tag">命令与注解速查</span></div>
+  <h4>197. 同一个模型换成 CAP Java 运行时，下面哪组命令是对的？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. mvn build --to java，然后 java -jar gen/srv.js</div>
+      <div class="opt" data-key="B">B. 必须先用 cds build --for java 生成 POJO，再 mvn run</div>
+      <div class="opt" data-key="C">C. cds deploy --to h2 建库，然后 node server.js 起服务</div>
+      <div class="opt" data-key="D">D. 在 srv/ 下 mvn spring-boot:run 起服务（本地 H2），mvn clean package 打包；只想构建 srv 模块用 mvn -pl srv -am clean install；依赖已下全时可加 -o 离线</div>
+  </div>
+  <div class="explain">CAP Java 用 Maven 与 Spring Boot：本地开发默认 H2 内存库（schema-h2.sql 由 cds-maven-plugin 生成），起服务是 mvn spring-boot:run，模型变更可用 mvn cds:watch。cds deploy 只管 Node 侧的 sqlite / hana，管不了 Java 的 H2。</div>
+</div>
+
+<div class="quiz-q" data-answer="A">
+  <div class="q-meta"><span class="tag gray">最佳实践</span><span class="tag">命令与注解速查</span></div>
+  <h4>198. 关于「在哪执行命令」和「用哪条命令做验收」，下面哪条指导是对的？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. cds 命令都在项目根执行（srv/ 里执行会因为路径与配置不一致而出错）；验收与 CI 不要用 cds watch，而用 cds build --production + npm test + bash test/odata-verify.sh</div>
+      <div class="opt" data-key="B">B. 验收必须用 cds watch，因为只有它能热重载</div>
+      <div class="opt" data-key="C">C. mvn 命令也要在项目根执行，才能找到模型</div>
+      <div class="opt" data-key="D">D. cds 命令在哪执行都一样，CAP 会自己往上找项目根</div>
+  </div>
+  <div class="explain">cds version 打印的 cds.root 就是当前生效的项目根——敲错目录会立刻暴露（模型路径、npm scripts、配置全都会对不上）。cds watch 会监视文件并频繁重启进程，不适合当验收/CI 入口；云端构建走 cds build --production。</div>
+</div>
+
+<div class="quiz-q" data-answer="C">
+  <div class="q-meta"><span class="tag gray">概念</span><span class="tag">命令与注解速查</span></div>
+  <h4>199. btp CLI 与 cf CLI 的分工，哪一句最准确？</h4>
+  <div class="opts">
+      <div class="opt" data-key="A">A. cf 可以管理角色集合，btp 只能部署应用</div>
+      <div class="opt" data-key="B">B. 两者完全等价，随便用哪个都行</div>
+      <div class="opt" data-key="C">C. btp 管账户与权限（子账户、角色集合分配、查服务实例），cf 管应用与运行时（部署、日志、实例绑定）；btp 的语法是 btp [OPTIONS] ACTION [GROUP/OBJECT] [PARAMS]，组有 accounts / security / services / connectivity</div>
+      <div class="opt" data-key="D">D. btp 只能登录，其余都要用 cf</div>
+  </div>
+  <div class="explain">课程的分工就是「btp 管账号与角色、cf 管部署与日志」：btp assign security/role-collection 授权，cf deploy / cf logs 部署运维。btp 的动作集合是 list / get / create / update / delete / assign / unassign 等动词 + 组/对象。</div>
+</div>
+
 <h2 id="q-project">示范项目（端到端） <a class="tag" href="project.html">回到本页</a></h2>
 <div class="quiz-q" data-answer="B">
   <div class="q-meta"><span class="tag gray">概念</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>187. 示范项目里哪些文件在换成 Java 运行时时不用改？</h4>
+  <h4>200. 示范项目里哪些文件在换成 Java 运行时时不用改？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. 都不用改</div>
       <div class="opt" data-key="B">B. db/schema.cds、db/data/*.csv 与服务定义 srv/book-order-service.cds（只差 @path 一行）</div>
@@ -2300,7 +2487,7 @@
 
 <div class="quiz-q" data-answer="B">
   <div class="q-meta"><span class="tag gray">操作</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>188. 订单合计为什么必须在 after 钩子里由服务端回写，而不是让客户端提交 totalAmount？</h4>
+  <h4>201. 订单合计为什么必须在 after 钩子里由服务端回写，而不是让客户端提交 totalAmount？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. 因为客户端提交的字段会被 OData 拒绝</div>
       <div class="opt" data-key="B">B. 因为合计是派生数据：来源是明细之和，客户端提交会产生不一致与作弊空间；服务端在明细变化后统一重算</div>
@@ -2312,7 +2499,7 @@
 
 <div class="quiz-q" data-answer="A">
   <div class="q-meta"><span class="tag gray">操作</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>189. 为什么要先 rm -f db.sqlite &amp;&amp; npm run deploy 才能重跑 test/odata-verify.sh？</h4>
+  <h4>202. 为什么要先 rm -f db.sqlite &amp;&amp; npm run deploy 才能重跑 test/odata-verify.sh？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. 脚本会真的改数据（新增明细、提交订单、自动建 BO-1005），断言与固定种子数据绑定；不重建就与期望值不一致</div>
       <div class="opt" data-key="B">B. 因为 SQLite 文件锁住了端口</div>
@@ -2324,7 +2511,7 @@
 
 <div class="quiz-q" data-answer="C">
   <div class="q-meta"><span class="tag gray">概念</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>190. Fiori List Report 里「状态」列的颜色是哪来的？</h4>
+  <h4>203. Fiori List Report 里「状态」列的颜色是哪来的？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. UI5 自动根据文本内容猜的</div>
       <div class="opt" data-key="B">B. manifest.json 里写死的 CSS</div>
@@ -2336,7 +2523,7 @@
 
 <div class="quiz-q" data-answer="B">
   <div class="q-meta"><span class="tag gray">排错</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>191. 如果没有 test/dev-proxy.js，在浏览器里直接打开 http://localhost:4004/book-orders/webapp/index.html 会发生什么？</h4>
+  <h4>204. 如果没有 test/dev-proxy.js，在浏览器里直接打开 http://localhost:4004/book-orders/webapp/index.html 会发生什么？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. 一切正常</div>
       <div class="opt" data-key="B">B. 页面能打开但 OData 请求全部 401 → 列表显示为空/No data（因为服务上有 @requires，而浏览器不会主动带凭据）</div>
@@ -2348,7 +2535,7 @@
 
 <div class="quiz-q" data-answer="C">
   <div class="q-meta"><span class="tag gray">概念</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>192. 部署到 Cloud Foundry 后，OData 实体对应的表是谁在哪一步建的？</h4>
+  <h4>205. 部署到 Cloud Foundry 后，OData 实体对应的表是谁在哪一步建的？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. 手工在 Database Explorer 里建</div>
       <div class="opt" data-key="B">B. CAP 运行时第一次收到请求时建</div>
@@ -2360,7 +2547,7 @@
 
 <div class="quiz-q" data-answer="C">
   <div class="q-meta"><span class="tag gray">最佳实践</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>193. 把示范项目改成你公司的业务，改动顺序应该是？</h4>
+  <h4>206. 把示范项目改成你公司的业务，改动顺序应该是？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. 先写界面再倒推模型</div>
       <div class="opt" data-key="B">B. 先改注解，再改服务，最后改模型</div>
@@ -2372,7 +2559,7 @@
 
 <div class="quiz-q" data-answer="B">
   <div class="q-meta"><span class="tag gray">排错</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>194. 现象：Java 版 $metadata 返回 200，但带认证读实体返回 401。最合理的结论是？</h4>
+  <h4>207. 现象：Java 版 $metadata 返回 200，但带认证读实体返回 401。最合理的结论是？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. Java 运行时不支持 OData V4</div>
       <div class="opt" data-key="B">B. 端点是好的、模型是好的，问题在认证链路（本地 mock 用户没配好）—— 元数据通常不受实体级授权限制，所以「能读元数据≠能读数据」</div>
@@ -2384,7 +2571,7 @@
 
 <div class="quiz-q" data-answer="B">
   <div class="q-meta"><span class="tag gray">操作</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>195. 部署前本地应该先跑哪条命令生成部署产物？</h4>
+  <h4>208. 部署前本地应该先跑哪条命令生成部署产物？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. npm run deploy</div>
       <div class="opt" data-key="B">B. npx cds build --production（生成 gen/srv 与 gen/db），再用 mbt build 打成 .mtar</div>
@@ -2396,7 +2583,7 @@
 
 <div class="quiz-q" data-answer="B">
   <div class="q-meta"><span class="tag gray">最佳实践</span><span class="tag">示范项目（端到端）</span></div>
-  <h4>196. 这个示范项目为什么把验收脚本写成 curl 而不是 mocha？</h4>
+  <h4>209. 这个示范项目为什么把验收脚本写成 curl 而不是 mocha？</h4>
   <div class="opts">
       <div class="opt" data-key="A">A. 因为 mocha 不能测 OData</div>
       <div class="opt" data-key="B">B. 两者定位不同：curl 脚本是「可被学员手工复现的验收清单」，mocha 是「可进 CI 的自动化测试」；课程里都给了，学员应该知道什么时候用哪个</div>
@@ -2420,7 +2607,40 @@
 </div>
 
 <!--FOOTER-->
-<footer class="site"><div class="inner"><p class="copy">© <span data-year>2026</span> SAP CAP 培训课程</p></div></footer>
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
 <!--/FOOTER-->
 <script src="assets/main.js"></script>
 <script src="assets/quiz.js"></script>

@@ -22,3 +22,8 @@ GET $metadata (alice)                          200
 GET BookOrders (alice)                         401
 GET BookOrders (anonymous)                     401
 → 结论：端点路径已修正（含 @path 语义差异），$metadata 200；带认证的实体读仍 401（本地 mock 用户配置未找到正确写法）。
+
+=== 追加：Java 侧测试代码编译验证 2026-09-19 21:57 JST ===
+命令: cd project-code/demo-java && mvn -B -q test-compile
+结果: EXIT=0（主源码 BookOrderServiceHandler.java + 测试 BookOrderServiceTest.java 一起编译通过）
+说明: 测试的“通过”仍受制于本地认证配置（见 java.html §10），但测试代码本身能对着 cds.gen 生成类型编译，说明类型用法正确。

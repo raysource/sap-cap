@@ -4,21 +4,50 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>任务索引 · SAP CAP 培训课程</title>
-<meta name="description" content="SAP CAP 培训课程的全部实训任务索引：119 个任务，含完成基准、预计时间与所在页面，可按板块筛选。">
+<meta name="description" content="SAP CAP 培训课程的全部实训任务索引：131 个任务，含完成基准、预计时间与所在页面，可按板块筛选。">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/cap.css">
 </head>
 <body>
 <!--NAV-->
-<header class="site"><div class="nav-wrap"><a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a><nav class="main"><a class="active" href="tasks.html">任务索引</a></nav></div></header>
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a class="active" href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
 <!--/NAV-->
 
 <div class="wrap">
 <main class="page">
 <article>
 <p class="breadcrumb"><a href="index.html">首页</a> / <span>任务索引</span></p>
-<h1>任务索引：119 个实训任务</h1>
-<p class="kicker">每条任务都有可观察的「完成基准」 · 合计约 42 小时 26 分 · 可按板块筛选或搜索</p>
+<h1>任务索引：131 个实训任务</h1>
+<p class="kicker">每条任务都有可观察的「完成基准」 · 合计约 46 小时 21 分 · 可按板块筛选或搜索</p>
 
 <div class="box info"><b class="t">怎么用</b>
 <ul>
@@ -30,7 +59,7 @@
 <p><input id="q" type="search" placeholder="搜索任务号 / 关键字（例如：草稿、HANA、409）"
    style="width:100%;max-width:420px;padding:8px 12px;border:1px solid var(--line);border-radius:8px">
    <span id="cnt" style="font-size:13px;color:var(--muted);margin-left:8px"></span></p>
-<p><button class="copy-btn" data-f="① BTP 注册" style="margin:2px">① BTP 注册</button><button class="copy-btn" data-f="② BAS 环境" style="margin:2px">② BAS 环境</button><button class="copy-btn" data-f="③ HANA 云" style="margin:2px">③ HANA 云</button><button class="copy-btn" data-f="④ CDS 建模" style="margin:2px">④ CDS 建模</button><button class="copy-btn" data-f="⑤ Node 服务" style="margin:2px">⑤ Node 服务</button><button class="copy-btn" data-f="⑥ Java 服务" style="margin:2px">⑥ Java 服务</button><button class="copy-btn" data-f="⑦ 测试" style="margin:2px">⑦ 测试</button><button class="copy-btn" data-f="⑧ 权限" style="margin:2px">⑧ 权限</button><button class="copy-btn" data-f="⑨ Fiori UI" style="margin:2px">⑨ Fiori UI</button><button class="copy-btn" data-f="⑩ 部署" style="margin:2px">⑩ 部署</button><button class="copy-btn" data-f="概念（理解型）" style="margin:2px">概念（理解型）</button><button class="copy-btn" data-f="示范项目" style="margin:2px">示范项目</button><button class="copy-btn" data-f="" style="margin:2px;background:#0f2438">全部</button></p>
+<p><button class="copy-btn" data-f="① BTP 注册" style="margin:2px">① BTP 注册</button><button class="copy-btn" data-f="② BAS 环境" style="margin:2px">② BAS 环境</button><button class="copy-btn" data-f="③ HANA 云" style="margin:2px">③ HANA 云</button><button class="copy-btn" data-f="④ CDS 建模" style="margin:2px">④ CDS 建模</button><button class="copy-btn" data-f="⑤ Node 服务" style="margin:2px">⑤ Node 服务</button><button class="copy-btn" data-f="⑥ Java 服务" style="margin:2px">⑥ Java 服务</button><button class="copy-btn" data-f="⑦ 测试" style="margin:2px">⑦ 测试</button><button class="copy-btn" data-f="⑧ 权限" style="margin:2px">⑧ 权限</button><button class="copy-btn" data-f="⑨ Fiori UI" style="margin:2px">⑨ Fiori UI</button><button class="copy-btn" data-f="⑩ 部署" style="margin:2px">⑩ 部署</button><button class="copy-btn" data-f="命令速查" style="margin:2px">命令速查</button><button class="copy-btn" data-f="概念（理解型）" style="margin:2px">概念（理解型）</button><button class="copy-btn" data-f="示范项目" style="margin:2px">示范项目</button><button class="copy-btn" data-f="" style="margin:2px;background:#0f2438">全部</button></p>
 
 <div class="tblwrap"><table class="tbl small" id="tasks">
 <thead><tr><th>板块</th><th>任务号</th><th>任务</th><th>完成基准（可观察）</th><th>预计</th><th>页面</th></tr></thead>
@@ -987,6 +1016,102 @@
       <td>90 分</td>
       <td><a href="project.html#step9">示范项目</a></td>
     </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-01</td>
+      <td>把项目切到 Node 22 LTS 并装好依赖（操作型）</td>
+      <td>node -v 输出 v22.x（用 npx -y node@22 -p process.execPath + export PATH 的方式，而不是改系统 Node）；npm install 或 npm ci 成功，npx cds version 能打印 @sap/cds-dk / @sap/cds 版本且没有 ELSPROBLEMS 提示</td>
+      <td>15 分</td>
+      <td><a href="cli.html#s2">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-02</td>
+      <td>用 cds help 自查命令与参数，而不是靠记忆（理解型）</td>
+      <td>能打开 cds help 的总表，并用 cds help &lt;command&gt; 查出至少 5 条本课程用到的命令（init / add / compile / serve / watch / deploy / build / env / bind / lint）；能指出 cd run 与 cd test 不在总帮助列表里但真实存在（cds help run / cds help test 有用法）；能说出 cds install / cds start 这类命令的真实报错形态（Unknown command &#x27;x&#x27;. Similar commands are …）</td>
+      <td>15 分</td>
+      <td><a href="cli.html#s3">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-03</td>
+      <td>用 cds compile 看模型的三份产物（操作型）</td>
+      <td>分别执行 --to sql、--to json（CSN）、--to edmx 各拿到一份产物：SQL 里能看到命名空间前缀的表名与金额列类型、CSN 顶层有 namespace / definitions、EDMX 是 OData V4 且含 EntitySet 与 FunctionImport；再用 --to sql --dialect hana 对比同一实体在 HANA 方言下的列类型差异</td>
+      <td>20 分</td>
+      <td><a href="cli.html#s3-2">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-04</td>
+      <td>建库、起服务、看出启动日志的四行关键信息（操作型）</td>
+      <td>npm run deploy 打印 4 行 init from db/data/*.csv 并以 successfully deployed 结束；cds watch（或 npm start）启动日志里能指出：loaded model from N file(s)、connect to db、using auth strategy { kind: &#x27;mocked&#x27; }、serving BookOrderService at [&#x27;/odata/v4/book-order&#x27;]；并能说明 cds watch 与 npm start 在「是否监视文件变化」上的差别</td>
+      <td>20 分</td>
+      <td><a href="cli.html#s3-3">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-05</td>
+      <td>用 cds env 定位一条「没生效」的配置（排错型）</td>
+      <td>能说出配置来源优先级（内置默认值 → .cdsrc → package.json 的 cds 段 → .cdsrc-private.json → .env → CDS_CONFIG → process.env → VCAP_SERVICES）；用 cds env --sources 列出实际来源，并用 cds env get requires.db 看到 kind: sqlite 与 credentials.url；再用 CDS_requires_db_kind=hana cds env get requires.db.kind 实测出 hana（即环境变量覆盖生效）</td>
+      <td>20 分</td>
+      <td><a href="cli.html#s4">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-06</td>
+      <td>证明「显式配置会压过 profile 默认值」（排错型）</td>
+      <td>执行 CDS_ENV=production cds env get requires.auth.kind，实测得到 mocked（而不是 production 默认的 jwt），并能解释原因；随后把配置改成按 profile 写（[development] mocked / [production] jwt）并说明上云前为什么必须这么改</td>
+      <td>15 分</td>
+      <td><a href="cli.html#s4-3">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-07</td>
+      <td>用 curl 拿到 200 / 401 / 404 / 405 / 409 五种状态码（操作型）</td>
+      <td>用 -u alice:alice 与 -o /dev/null -w &#x27;%{http_code}&#x27; 分别复现：带认证读实体集 → 200；不带认证 → 401；函数查不存在的订单号 → 404；POST 只读的 OrderItemView → 405；重复提交已提交订单（或草稿激活订单号重复）→ 409；并说明每种码对应的业务含义</td>
+      <td>25 分</td>
+      <td><a href="cli.html#s6-4">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-08</td>
+      <td>用 curl 调用函数与绑定动作（操作型）</td>
+      <td>GET /getOrderTotal(orderNo=&#x27;BO-1003&#x27;) 返回 {&quot;value&quot;:17400}；GET /getOrderSummary() 返回 4 行；POST /BookOrders(ID=&lt;uuid&gt;,IsActiveEntity=true)/submitOrder 返回 200 且该订单 status 变成 SUBMITTED；能说明函数为什么用 GET、动作为什么用 POST，以及 IsActiveEntity 的含义</td>
+      <td>25 分</td>
+      <td><a href="cli.html#s6-2">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-09</td>
+      <td>看 $metadata 里的注解，判断模型改对了没有（操作型）</td>
+      <td>把 $metadata 存成文件并用 grep 统计 Annotation Term：能看到 Common.Label（来自 @title）、Core.Computed、Common.DraftRoot，以及 draftActivate / draftEdit / draftPrepare 与 IsActiveEntity 存在；能据此判断「注解有没有真的进元数据」而不用等界面</td>
+      <td>20 分</td>
+      <td><a href="cli.html#s7-2">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-10</td>
+      <td>把构建到部署的四步命令写进笔记并核对产物名（操作型）</td>
+      <td>写出 cds build --production → mbt build -t mta_archives → cf deploy mta_archives/demo-node_1.0.0.mtar → curl 路由 $metadata 的完整链条，并说明 .mtar 文件名来自 mta.yaml 的 ID/version、云端端口是 8080、判据是 Process finished.（cf 未安装时以官方文档与画面为准，需在相应标注 ~ 的位置注明）</td>
+      <td>15 分</td>
+      <td><a href="cli.html#s8-1">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-11</td>
+      <td>用 CAP Java 的 mvn 命令跑起来并说明与 Node 的对照（操作型）</td>
+      <td>在 Java 项目 srv/ 下 mvn spring-boot:run 起服务、mvn -pl srv -am clean install 只构建该模块；能列出 cds-maven-plugin 的 goal（build / watch / auto-build / generate / clean / add / cds / npm / npx 等）并说明 mvn -o 的用途与失效场景；能对照 Node 侧 cds serve / cds watch / npm test 写出等价命令</td>
+      <td>25 分</td>
+      <td><a href="cli.html#s10">命令速查</a></td>
+    </tr>
+    <tr data-c="命令速查">
+      <td><code>命令速查</code></td>
+      <td>CLI-12</td>
+      <td>把「目的 → 命令」的决策表整理成自己的速查卡（理解型）</td>
+      <td>从 §11 决策表里自选 10 条，写出「目的 / 命令 / 在哪个目录执行」三列，且没有一条写错目录或漏掉前置（如 cf login、cf target、cds deploy 后要重启服务）；能明确说出三条「不要做」：不要在 srv/ 里敲 cds、不要把 mocked / dummy 认证带上云、不要用 cds watch 做验收或 CI</td>
+      <td>20 分</td>
+      <td><a href="cli.html#s11">命令速查</a></td>
+    </tr>
 </tbody></table></div>
 
 <div class="sectest">
@@ -1003,7 +1128,40 @@
 </div>
 
 <!--FOOTER-->
-<footer class="site"><div class="inner"><p class="copy">© <span data-year>2026</span> SAP CAP 培训课程</p></div></footer>
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
 <!--/FOOTER-->
 <script src="assets/main.js"></script>
 <script src="assets/quiz.js"></script>

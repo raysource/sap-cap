@@ -1,0 +1,158 @@
+[
+ {
+  "tag": "操作",
+  "q": "系统里的 Node 不是 LTS，装依赖时 better-sqlite3 的原生模块报 ERR_DLOPEN_FAILED。课程里「不改系统、临时切到 Node 22」的做法是什么？",
+  "opts": {
+   "A": "brew install node@22 然后重装整个系统 Node",
+   "B": "npx -y node@22 -p process.execPath 取到路径，再用 export PATH=\"$(dirname \"$(npx -y node@22 -p process.execPath)\"):$PATH\" 把它放到当前终端最前面，然后 node -v 确认是 v22.x",
+   "C": "在 package.json 里写 \"engines\": {\"node\": \">=20\"}，npm 会自动换 Node",
+   "D": "把 db.sqlite 删掉重建，原生模块报错就会消失"
+  },
+  "answer": "B",
+  "explain": "课程示范项目 README 用的就是这条：npx 临时下载 node@22，-p process.execPath 打印它的绝对路径，dirname 后塞进 PATH。engines 只是声明（npm 默认不强制），删 db.sqlite 与原生模块 ABI 无关；本站真实复现过 ERR_DLOPEN_FAILED + server shutdown。"
+ },
+ {
+  "tag": "排错",
+  "q": "你执行 cds deploy --to h2，看到「Deploying into a H2 database is not yet supported」，但紧接着终端又打印“successfully deployed to …”。发生了什么？",
+  "opts": {
+   "A": "H2 已经支持，只是版本提示没更新",
+   "B": "命令报错但退出码是 0，所以 db.sqlite 被重建了",
+   "C": "cds deploy 只支持 sqlite / hana；--to h2 不被支持，于是回落到默认目标（本项目配置的 db.sqlite）并照常建库，所以看起来“成功”了",
+   "D": "需要先 cds add h2 再执行一次，才会真的部署到 H2"
+  },
+  "answer": "C",
+  "explain": "cds help deploy 原文写着 Supported databases: sqlite, hana。写错目标不会报错退出，而是回落到配置里的 db.sqlite ——这是最容易被误判为成功的一类坑。CAP Java 的本地 H2 走 cds add h2 + Spring Boot，与本命令无关。"
+ },
+ {
+  "tag": "概念",
+  "q": "cds serve、cds watch、cds run、npm start 四者的关系，哪个说法正确？",
+  "opts": {
+   "A": "cds run 是 cds serve all 的快捷方式；cds watch 等价于 cds serve all --with-mocks --in-memory?；npm start 执行的是 cds-serve（即不监视文件变化的 serve）",
+   "B": "cds watch 与 npm start 完全等价，只是名字不同",
+   "C": "cds run 已经废弃，现在会报 Unknown command",
+   "D": "npm start 会调用 cds watch，所以改代码会自动重启"
+  },
+  "answer": "A",
+  "explain": "cds help run 原文：cds run is just a convenient shortcut for cds serve [--project <project>]。cds watch 的真实启动横幅就是 cds serve all --with-mocks --in-memory? --port …。示范项目 package.json 里 start = cds-serve，所以 npm start 不监视文件变化——要热重载得用 npm run watch。"
+ },
+ {
+  "tag": "操作",
+  "q": "配置同时写在 package.json 的 cds 段、.cdsrc-private.json 和 CDS_CONFIG 环境变量里，你想知道「最终生效的是哪个、每个值从哪来」，用哪条命令？",
+  "opts": {
+   "A": "npm run deploy，看它用哪个库",
+   "B": "cds compile --to sql，看生成哪个库的 DDL",
+   "C": "cat package.json",
+   "D": "cds env --sources（列出 cds.env 的所有来源），再 cds env get requires.db 看具体项"
+  },
+  "answer": "D",
+  "explain": "cds env --sources 会按顺序列出 process.env、package.json、插件的 package.json、@sap/cds 默认值等来源；优先级高的在后面（process.env > .cdsrc-private.json > package.json 的 cds 段 > 内置默认值）。这是排「配置没生效」的第一条命令。"
+ },
+ {
+  "tag": "排错",
+  "q": "示范项目的 package.json 里写的是 requires.auth.kind = mocked（没有按 profile 区分）。执行 CDS_ENV=production cds env get requires.auth.kind 会得到什么？该怎么修？",
+  "opts": {
+   "A": "得到 jwt，因为 production profile 的默认认证就是 jwt",
+   "B": "得到 null，因为生产环境不允许本地认证",
+   "C": "得到 mocked —— 显式写的值压住了 production 的默认值；应改成按 profile 写：[development] 用 mocked、[production] 用 jwt / xsuaa",
+   "D": "得到 xsuaa，CAP 会自动检测到未绑定的 XSUAA 并切换"
+  },
+  "answer": "C",
+  "explain": "实测结果就是 mocked：production 的默认值（jwt）只在项目没有显式配置时才生效。这类「显式配置压过 profile 默认值」是上云后 401/403 事故的常见源头，所以课程要求把认证按 profile 分开写。"
+ },
+ {
+  "tag": "概念",
+  "q": "本地用 mocked 认证时，curl -u nosuch:wrong … 也会返回 200。为什么？要让它只认自己配的用户，配置要加什么？",
+  "opts": {
+   "A": "因为 mocked 是开发期的假登录：它用 HTTP Basic 但不校验密码，默认还带 \"*\": true（放行任意用户）；要在 users 里显式写 \"*\": false",
+   "B": "因为 curl 的 -u 参数被忽略了，要用 -H 'Authorization: Basic …'",
+   "C": "因为服务级注解写错了，应把 requires 改成 restrict_all_services",
+   "D": "因为 mocked 用的是匿名放行，加 @requires 就能拦住"
+  },
+  "answer": "A",
+  "explain": "课程验收脚本里确实有一条「任意用户(mocked 放行) → 200」的断言，这是 mocked 的设计而不是缺陷：它只是开发期的身份模拟。要收紧要同时做两件事：配 users，并把默认的 \"*\": true 覆盖成 false。真正的认证用 jwt / xsuaa（需要 @sap/xssec）。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "你想对模型做静态检查，于是敲了 cds lint，得到「ESLint is not installed…」。正确的下一步是什么？",
+  "opts": {
+   "A": "cds lint 不存在，应该改用 cds compile --to sql",
+   "B": "npm i -g eslint，全局装完再跑",
+   "C": "先 npm i -D eslint（再用 cds add lint 生成配置），然后在项目根执行 cds lint",
+   "D": "忽略这条提示，cds lint 会退回内置检查并照常给出结果"
+  },
+  "answer": "C",
+  "explain": "cds lint 是真实存在的命令（cds-dk 9.9.x 的 bin/lint.js，基于 ESLint 做 env / model 检查），但它自己不装 ESLint——真实输出就是那句提示。依赖进 devDependencies 而不是全局，才能保证团队与 CI 一致。"
+ },
+ {
+  "tag": "排错",
+  "q": "下面这条命令为什么拿不到数据，反而得到 400？  SVC='…/odata/v4/book-order'; curl -s -u alice:alice \"$SVC/Books?$top=2\"",
+  "opts": {
+   "A": "因为 $SVC 变量不能出现在 URL 里，必须写全路径",
+   "B": "因为双引号里 $top 被 shell 当成变量展开成空串，URL 变成 ?=2；应写成 '…?\\$top=2' 或把整个 URL 用单引号",
+   "C": "因为 $top 是 OData V2 的写法，V4 要用 $limit",
+   "D": "因为 -u 与 -s 不能同时用"
+  },
+  "answer": "B",
+  "explain": "OData 的 $ 系列选项在 shell 里是变量语法。真实的 400 报错正文很直白：Parsing URL failed at position 43: Expected a whitespace but end of input found. 对策：URL 用单引号，或在双引号里写 \\$top。"
+ },
+ {
+  "tag": "概念",
+  "q": "本课程用状态码做业务规则断言。下面哪一组对应关系正确？",
+  "opts": {
+   "A": "匿名读实体集 → 404；重复提交 → 400",
+   "B": "只读实体 POST → 409；找不到数据 → 500",
+   "C": "匿名读实体集 → 403；对只读实体 POST → 400",
+   "D": "匿名读实体集 → 401；对只读实体（@readonly）POST → 405；重复提交已提交订单 / 订单号重复 → 409"
+  },
+  "answer": "D",
+  "explain": "课程实测：匿名 → 401（@(requires: 'authenticated-user') 在授权前拦住）；POST 到 @readonly 的 OrderItemView → 405；草稿激活时订单号重复、以及重复 submitOrder → 409；函数查不到数据 → 404。把 4xx 写进断言，业务规则才算真被验证过。"
+ },
+ {
+  "tag": "操作",
+  "q": "从「改了模型」到「云端用真实数据回读验证」，正确的命令顺序是？",
+  "opts": {
+   "A": "cf deploy → mbt build → cds build --production → curl",
+   "B": "cds build --production → mbt build -t mta_archives → cf deploy mta_archives/demo-node_1.0.0.mtar → curl 路由上的 $metadata / 数据",
+   "C": "mbt build → cds deploy --to hana → cf push",
+   "D": "cds watch → cf deploy → cf logs"
+  },
+  "answer": "B",
+  "explain": ".mtar 的文件名由 mta.yaml 的 ID 与 version 决定（本项目 ID: demo-node、version: 1.0.0）。部署是否成功要看 Deploying/Process finished. 这一段（不是上传阶段的 OK），并且云端端口是 8080 而不是本地的 4004。"
+ },
+ {
+  "tag": "操作",
+  "q": "同一个模型换成 CAP Java 运行时，下面哪组命令是对的？",
+  "opts": {
+   "A": "mvn build --to java，然后 java -jar gen/srv.js",
+   "B": "必须先用 cds build --for java 生成 POJO，再 mvn run",
+   "C": "cds deploy --to h2 建库，然后 node server.js 起服务",
+   "D": "在 srv/ 下 mvn spring-boot:run 起服务（本地 H2），mvn clean package 打包；只想构建 srv 模块用 mvn -pl srv -am clean install；依赖已下全时可加 -o 离线"
+  },
+  "answer": "D",
+  "explain": "CAP Java 用 Maven 与 Spring Boot：本地开发默认 H2 内存库（schema-h2.sql 由 cds-maven-plugin 生成），起服务是 mvn spring-boot:run，模型变更可用 mvn cds:watch。cds deploy 只管 Node 侧的 sqlite / hana，管不了 Java 的 H2。"
+ },
+ {
+  "tag": "最佳实践",
+  "q": "关于「在哪执行命令」和「用哪条命令做验收」，下面哪条指导是对的？",
+  "opts": {
+   "A": "cds 命令都在项目根执行（srv/ 里执行会因为路径与配置不一致而出错）；验收与 CI 不要用 cds watch，而用 cds build --production + npm test + bash test/odata-verify.sh",
+   "B": "验收必须用 cds watch，因为只有它能热重载",
+   "C": "mvn 命令也要在项目根执行，才能找到模型",
+   "D": "cds 命令在哪执行都一样，CAP 会自己往上找项目根"
+  },
+  "answer": "A",
+  "explain": "cds version 打印的 cds.root 就是当前生效的项目根——敲错目录会立刻暴露（模型路径、npm scripts、配置全都会对不上）。cds watch 会监视文件并频繁重启进程，不适合当验收/CI 入口；云端构建走 cds build --production。"
+ },
+ {
+  "tag": "概念",
+  "q": "btp CLI 与 cf CLI 的分工，哪一句最准确？",
+  "opts": {
+   "A": "cf 可以管理角色集合，btp 只能部署应用",
+   "B": "两者完全等价，随便用哪个都行",
+   "C": "btp 管账户与权限（子账户、角色集合分配、查服务实例），cf 管应用与运行时（部署、日志、实例绑定）；btp 的语法是 btp [OPTIONS] ACTION [GROUP/OBJECT] [PARAMS]，组有 accounts / security / services / connectivity",
+   "D": "btp 只能登录，其余都要用 cf"
+  },
+  "answer": "C",
+  "explain": "课程的分工就是「btp 管账号与角色、cf 管部署与日志」：btp assign security/role-collection 授权，cf deploy / cf logs 部署运维。btp 的动作集合是 list / get / create / update / delete / assign / unassign 等动词 + 组/对象。"
+ }
+]

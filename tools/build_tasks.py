@@ -29,6 +29,7 @@ ORDER = [
     ("deploy", "⑩ 部署", "deploy.html"),
     ("concept", "概念（理解型）", "concept.html"),
     ("project", "示范项目", "project.html"),
+    ("cli", "命令速查", "cli.html"),
 ]
 
 

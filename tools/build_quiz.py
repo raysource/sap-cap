@@ -34,6 +34,7 @@ CHAPTERS = [
     ("security", "⑧ 认证与授权", "security.html"),
     ("fiori", "⑨ Fiori UI", "fiori.html"),
     ("deploy", "⑩ 构建与部署", "deploy.html"),
+    ("cli", "命令与注解速查", "cli.html"),
     ("project", "示范项目（端到端）", "project.html"),
 ]
 

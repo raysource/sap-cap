@@ -33,7 +33,8 @@ ORDER = [("btp", "① BTP 注册", "btp.html"), ("bas", "② BAS 环境", "bas.h
          ("node", "⑤ Node 服务", "node.html"), ("java", "⑥ Java 服务", "java.html"),
          ("testing", "⑦ 测试", "testing.html"), ("security", "⑧ 权限", "security.html"),
          ("fiori", "⑨ Fiori UI", "fiori.html"), ("deploy", "⑩ 部署", "deploy.html"),
-         ("concept", "概念（理解型）", "concept.html"), ("project", "示范项目", "project.html")]
+         ("concept", "概念（理解型）", "concept.html"), ("project", "示范项目", "project.html"),
+         ("cli", "命令速查", "cli.html")]
 
 OVERVIEW = [
     ("0 准备", "注册 BTP 试用、创建子账户与 CF 空间、装 cf/btp CLI", "btp.html", "90 分", "cf target 输出正确的 org / space"),
