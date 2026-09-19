@@ -114,9 +114,11 @@ def check(path: str) -> list[str]:
                 errs.append(f"missing image: {src_}")
         if not alt:
             errs.append(f"img without alt: {src_}")
+    # markdown 标记只算「正文里」的：代码块（<pre>）里的 ** 是源码本身（例如 README.md 的粗体）
+    prose = re.sub(r"<pre\b.*?</pre>", "", src, flags=re.S)
     for bad in ("**", "⟦"):
-        if bad in src:
-            errs.append(f"markdown marker {bad!r} left in HTML")
+        if bad in prose:
+            errs.append(f"markdown marker {bad!r} left in HTML (outside <pre>)")
     for m in re.finditer(r"<td>[^<]*\|", src):
         errs.append(f"pipe inside <td>: {m.group(0)[:50]!r}")
     return errs

@@ -94,6 +94,7 @@ def main(check=False):
             end = heads[i + 1].start() if i + 1 < len(heads) else len(clean)
             sections.append([i, m.start(), end, tokens(clean[m.start():end]), None])
         existing = clean.count('class="fig"')
+        pending = []
         for key in mine:
             spec = specs[key]
             want = tokens((spec.get("caption") or "") + " " + " ".join(
@@ -113,8 +114,10 @@ def main(check=False):
             best[4] = key
             n = existing + 1
             existing += 1
-            clean = clean[:best[2]] + "\n" + figure(key, spec, n) + clean[best[2]:]
+            pending.append((best[2], figure(key, spec, n)))
             print(f"put  {key:12s} -> {page}  画面 {n}  (section score matches={best_score})")
+        for offset, html in sorted(pending, key=lambda x: -x[0]):     # 倒序插入，偏移才不会失效
+            clean = clean[:offset] + "\n" + html + clean[offset:]
         if clean != src:
             if not check:
                 open(path, "w", encoding="utf-8").write(clean)

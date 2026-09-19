@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>讲师版：采分点、必问问题与参考答案 · SAP CAP 培训课程</title>
-<meta name="description" content="SAP CAP 培训课程的讲师版：本页用法（课前准备 / 课中提问 / 课后验收）、2 天 20 小时课堂节奏表、11 个板块的采分点清单（能力 / 可观察证据 / 不给分的表现）、43 道必问问题与参考答案、全部自测题与各页本节测试的参考答案、学员卡点现场处置 15 条、两个 15 分钟演示脚本、百分制评分标准与疑难问答。">
+<meta name="description" content="SAP CAP 培训课程的讲师版：本页用法（课前准备 / 课中提问 / 课后验收）、2 天 20 小时课堂节奏表、11 个板块的采分点清单（能力 / 可观察证据 / 不给分的表现）、43 道必问问题与参考答案、全部自测题与各页本节测试的参考答案、学员卡点现场处置 16 条、两个 15 分钟演示脚本、百分制评分标准与疑难问答。">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/cap.css">
 </head>
@@ -701,6 +701,16 @@
 <tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q16<br><small>把同一份归档部署到 dev / prod，推荐用什么机制区分差异？</small></td><td><b>B</b></td><td>扩展描述符只写差异：_schema-version、ID（-prod 之类）、extends: &lt;原 ID&gt;，以及 modules[].parameters。cds up 也支持 --overlay 传入。这样 mta.yaml 只有一份，不会「改一处忘一处」。</td><td><a href="deploy.html#s1">deploy.html#s1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
 <tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q17<br><small>试用账号的 HANA Cloud 实例第二天不可用（部署/查询失败），第一步应该做什么？</small></td><td><b>B</b></td><td>试用子账户的 HANA Cloud 实例会按天停止。这也是「部署失败先看实例状态」的原因之一；别的常见原因还有内存配额、版本号重复、路由被占用等（§8 表）。</td><td><a href="deploy.html#s9">deploy.html#s9</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
 <tr><td>⑩ 部署<br><small>deploy.json · 18 题</small></td><td>Q18<br><small>cf login 时端点写错（与子账户 region 不一致）最典型的现象是？</small></td><td><b>B</b></td><td>端点与子账户的 region 绑定：https://api.cf.&lt;region&gt;.hana.ondemand.com。本站对各区域端点做过可达性实测（/v2/info 返回 200）；中国区使用不同域名。正确端点以 Cockpit 子账户 Overview 里给出的 API Endpoint 为准。</td><td><a href="deploy.html#s4-1">deploy.html#s4-1</a><br><a href="quiz.html#q-deploy">quiz.html#q-deploy</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q1<br><small>示范项目里哪些文件在换成 Java 运行时时不用改？</small></td><td><b>B</b></td><td>CAP 的模型层与运行时解耦：领域模型与服务定义是共享的（Java 侧唯一要注意 @path 语义不同），而业务实现（.js / EventHandler）必须各写一份。</td><td><a href="project.html#step8">project.html#step8</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q2<br><small>订单合计为什么必须在 after 钩子里由服务端回写，而不是让客户端提交 totalAmount？</small></td><td><b>B</b></td><td>合计属于派生字段（derived），真相在子表。本项目的做法是 after 明细钩子里 sum(amount) 回写父表，并在 before UPDATE 订单头时把客户端传来的 totalAmount 删掉，保证唯一数据来源。</td><td><a href="project.html#step5">project.html#step5</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q3<br><small>为什么要先 rm -f db.sqlite &amp;&amp; npm run deploy 才能重跑 test/odata-verify.sh？</small></td><td><b>A</b></td><td>这是 curl 版集成测试的固有取舍：它跑在真实数据库上。想要可重复就该用 mocha + cds.test（每次起独立进程与干净库），或者在测试里自建数据并在结束时清理。</td><td><a href="project.html#step6">project.html#step6</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q4<br><small>Fiori List Report 里「状态」列的颜色是哪来的？</small></td><td><b>C</b></td><td>颜色语义由注解声明、由服务端数据驱动：OPEN→2 橙色、SUBMITTED→3 绿色、CLOSED→0 中性。这样业务规则（谁能改状态）与展示语义集中在一处，前端不需要写判断逻辑。</td><td><a href="project.html#step7">project.html#step7</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q5<br><small>如果没有 test/dev-proxy.js，在浏览器里直接打开 http://localhost:4004/book-orders/webapp/index.html 会发生什么？</small></td><td><b>B</b></td><td>本地没有 approuter/XSUAA 做登录跳转，浏览器对跨源/同源的 XHR 不会自动附带凭据。dev-proxy 给每个请求补上 Authorization: Basic alice:alice 来模拟已登录用户；真实部署由 approuter 处理。</td><td><a href="project.html#step7">project.html#step7</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q6<br><small>部署到 Cloud Foundry 后，OData 实体对应的表是谁在哪一步建的？</small></td><td><b>C</b></td><td>MTA 部署时 db 模块由 hdi-deployer 执行 cds build 生成的建表脚本；应用启动日志里能看到它用 HDI container 的 technical user 连库。这也是「部署成功但表为空」这类问题的排查入口。</td><td><a href="project.html#step9">project.html#step9</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q7<br><small>把示范项目改成你公司的业务，改动顺序应该是？</small></td><td><b>C</b></td><td>依赖方向是单向的：界面依赖服务、服务依赖模型。反过来改会出现「注解引用了不存在的字段」「服务投影不到实体」等一串连锁错误。</td><td><a href="project.html#files">project.html#files</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q8<br><small>现象：Java 版 $metadata 返回 200，但带认证读实体返回 401。最合理的结论是？</small></td><td><b>B</b></td><td>这是本课程记录的真实未解决项（java.html §10）。正确的下一步是核对该版本 CAP Java 的本地身份模拟配置，或改用真实 XSUAA + cds bind。删掉 @requires 只是把安全问题隐藏起来。</td><td><a href="project.html#step8">project.html#step8</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q9<br><small>部署前本地应该先跑哪条命令生成部署产物？</small></td><td><b>B</b></td><td>cds build --production 把模型编译成运行时需要的产物（gen/srv 含 csn.json 与 edmx，gen/db 含 HDI 建表描述）；mbt build 再按 mta.yaml 把模块组装成可部署的 .mtar。npm run deploy 只是本地 SQLite 建库。</td><td><a href="project.html#step9">project.html#step9</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
+<tr><td>示范项目（端到端）<br><small>project.json · 10 题</small></td><td>Q10<br><small>这个示范项目为什么把验收脚本写成 curl 而不是 mocha？</small></td><td><b>B</b></td><td>curl 脚本的价值在于可读性与可复现性（讲师可以逐条讲、学员可以改参数试），代价是不幂等、无断言框架；mocha + cds.test 可重复、可进 CI，但可读性差一些。两者互补。</td><td><a href="project.html#final">project.html#final</a><br><a href="quiz.html#q-project">quiz.html#q-project</a></td></tr>
 </tbody></table></div>
 
 <h3 id="s4-2">4-2 各页「本节测试」参考答案要点</h3>
@@ -783,6 +793,18 @@
   <li>CQN fluent API（status=OPEN、只取 ID/orderNo、orderNo 倒序、前 3 条）？→ <code>SELECT.from(BookOrders).columns('ID','orderNo').where({ status: 'OPEN' }).orderBy('orderNo desc').limit(3)</code>。</li>
 </ol>
 
+<h4><a href="java.html">⑥ Java 服务 · 本节测试（8 题）</a></h4>
+<ol class="steps">
+  <li>Java 版与 Node 版共享哪些文件？哪些必须各写一份？→ 共享 <code>db/*.cds</code>（领域模型）、<code>srv/*.cds</code>（服务定义与注解，含 <code>@path</code> 之外的授权与 UI 注解）、<code>db/data/*.csv</code>；各写一份：<code>pom.xml</code>（父 POM + srv 模块）、Java 事件处理器、JUnit 测试、Application 启动类。</li>
+  <li><code>@Before</code> / <code>@After</code> / <code>@On</code> 对应 Node 的什么？→ <code>this.before(event, Entity, cb)</code> / <code>this.after(...)</code> / <code>this.on(...)</code>；Java 用注解声明（<code>@ServiceName</code> 指定服务、<code>event</code> / <code>entity</code> 指定目标），写错实体名在<b>编译或启动期</b>报错，而 Node 写错是运行时静默不触发。</li>
+  <li>绑定动作的键为什么必须用 <code>CqnAnalyzer</code> 取？→ 键不在请求体里，而在请求的目标（CQN）上；Java 侧请求本身就是 CQN，需要用 <code>CqnAnalyzer</code> 从 target 解析出实体键（Node 侧对应 <code>req.params[req.params.length-1].ID</code>）。</li>
+  <li><code>Result.first(Class)</code> 与 <code>Result.single(Class)</code> 的区别？→ <code>first</code> 返回 <code>Optional</code>（无行即空，需 <code>orElse(null)</code> / <code>isPresent()</code>）；<code>single</code> 要求恰好一行，0 行或多行都抛异常。</li>
+  <li>为什么 CAP Java 里 <code>@path</code> 不能照抄 Node 的写法？→ Node 把 <code>@path</code> 当完整路径，CAP Java 会再加一次 servlet 基路径 <code>/odata/v4</code>，于是变成 <code>/odata/v4/odata/v4/book-order</code>（实测 404）；Java 侧写 <code>@path: '/book-order'</code>。</li>
+  <li>端点 404 时第一个该打开的页面？为什么？→ <code>http://localhost:8080/</code>（CAP Index Page）：它列出所有服务的真实 URL，本机就是靠它发现路径被拼了两遍。</li>
+  <li><code>mvn compile</code> 生成的 <code>cds.gen</code> 有什么价值？没有它可行吗？→ 价值是<b>类型安全</b>：实体接口（<code>getOrderNo()</code> 等）、动作上下文（<code>BookOrdersSubmitOrderContext</code>）、常量（<code>BookOrders_.CDS_NAME</code>），字段/实体名写错编译期就报错；不用它也能跑（全靠字符串），但失去这层保护。</li>
+  <li>§10 里那条 401 说明了什么？要修的话第一步做什么？→ 说明「<b><code>$metadata</code> 能打开 ≠ 数据能读</b>」：本地 mock 用户没生效时，匿名与具名请求都被拒（所以「匿名 401」这条断言没有区分度）。第一步：按 CAP Java 官方文档核对<b>当前版本（4.9.1）</b>的 mock 用户属性名与层级并打开配置诊断日志；或者直接建真实 XSUAA + <code>cds bind</code> 走真实认证。<b>注意 <code>cds.requires.auth.kind: dummy</code> 是 Node 侧写法，Java 侧不适用</b>。</li>
+</ol>
+
 <h4><a href="testing.html">⑦ 测试体系 · 本节测试（7 题）</a></h4>
 <ol class="steps">
   <li>四层各抓什么？各给一个「上一层抓不到」的例子。→ 见 <a href="#s3-7">3-7 第 1 题</a>。例子：第 0 层抓不到 handler 逻辑错误（金额算错）；第 2 层能抓「方法用错 → 405」「草稿激活 → 409」这类真实 HTTP 语义，而第 1 层在进程内不易覆盖。</li>
@@ -804,18 +826,6 @@
   <li>同一实体两段 <code>annotate … with @(restrict: […])</code>，最终生效哪一段？编译时提示？→ <b>后者整体覆盖前者</b>；编译只有一行 WARNING <code>Duplicate assignment with "@restrict", using last</code>，前一段的权限静默消失（<code>--to xsuaa</code> 输出里能看出只剩后一段的 scope）。</li>
   <li><code>@readonly</code> 是「只读」还是「权限控制」？要「只有管理员能读」怎么写？→ 它是与用户无关的静态访问控制（等价 <code>@restrict: [{ grant: 'READ' }]</code>，默认 <code>to: 'any'</code>）；按角色控制写 <code>@restrict: [{ grant: 'READ', to: 'BookOrder.View' }]</code>（<code>to</code> 里是 CAP 角色名）。</li>
   <li>角色集合、角色模板、scope、CAP 角色名的关系（画箭头链）？→ <code>xs-security.json</code> 的 <code>scopes</code>（<code>$XSAPPNAME.submit</code>）→ <code>role-templates</code>（<code>OrderAdmin</code>，<code>scope-references</code> 指向该 scope）→ 管理员在 cockpit 组装 <b>role-collection</b> 并分配给用户 → XSUAA 签发 JWT，把 scope 写进 <code>scope</code> 声明 → CAP 的 jwt 认证剥掉 <code>&lt;xsappname&gt;.</code> 前缀 → 得到 <b>CAP 角色名</b> <code>submit</code> → 与 CDS 里 <code>to: 'submit'</code> 比对。</li>
-</ol>
-
-<h4><a href="java.html">⑥ Java 服务 · 本节测试（8 题）</a></h4>
-<ol class="steps">
-  <li>Java 版与 Node 版共享哪些文件？哪些必须各写一份？→ 共享 <code>db/*.cds</code>（领域模型）、<code>srv/*.cds</code>（服务定义与注解，含 <code>@path</code> 之外的授权与 UI 注解）、<code>db/data/*.csv</code>；各写一份：<code>pom.xml</code>（父 POM + srv 模块）、Java 事件处理器、JUnit 测试、Application 启动类。</li>
-  <li><code>@Before</code> / <code>@After</code> / <code>@On</code> 对应 Node 的什么？→ <code>this.before(event, Entity, cb)</code> / <code>this.after(...)</code> / <code>this.on(...)</code>；Java 用注解声明（<code>@ServiceName</code> 指定服务、<code>event</code> / <code>entity</code> 指定目标），写错实体名在<b>编译或启动期</b>报错，而 Node 写错是运行时静默不触发。</li>
-  <li>绑定动作的键为什么必须用 <code>CqnAnalyzer</code> 取？→ 键不在请求体里，而在请求的目标（CQN）上；Java 侧请求本身就是 CQN，需要用 <code>CqnAnalyzer</code> 从 target 解析出实体键（Node 侧对应 <code>req.params[req.params.length-1].ID</code>）。</li>
-  <li><code>Result.first(Class)</code> 与 <code>Result.single(Class)</code> 的区别？→ <code>first</code> 返回 <code>Optional</code>（无行即空，需 <code>orElse(null)</code> / <code>isPresent()</code>）；<code>single</code> 要求恰好一行，0 行或多行都抛异常。</li>
-  <li>为什么 CAP Java 里 <code>@path</code> 不能照抄 Node 的写法？→ Node 把 <code>@path</code> 当完整路径，CAP Java 会再加一次 servlet 基路径 <code>/odata/v4</code>，于是变成 <code>/odata/v4/odata/v4/book-order</code>（实测 404）；Java 侧写 <code>@path: '/book-order'</code>。</li>
-  <li>端点 404 时第一个该打开的页面？为什么？→ <code>http://localhost:8080/</code>（CAP Index Page）：它列出所有服务的真实 URL，本机就是靠它发现路径被拼了两遍。</li>
-  <li><code>mvn compile</code> 生成的 <code>cds.gen</code> 有什么价值？没有它可行吗？→ 价值是<b>类型安全</b>：实体接口（<code>getOrderNo()</code> 等）、动作上下文（<code>BookOrdersSubmitOrderContext</code>）、常量（<code>BookOrders_.CDS_NAME</code>），字段/实体名写错编译期就报错；不用它也能跑（全靠字符串），但失去这层保护。</li>
-  <li>§10 里那条 401 说明了什么？要修的话第一步做什么？→ 说明「<b><code>$metadata</code> 能打开 ≠ 数据能读</b>」：本地 mock 用户没生效时，匿名与具名请求都被拒（所以「匿名 401」这条断言没有区分度）。第一步：按 CAP Java 官方文档核对<b>当前版本（4.9.1）</b>的 mock 用户属性名与层级并打开配置诊断日志；或者直接建真实 XSUAA + <code>cds bind</code> 走真实认证。<b>注意 <code>cds.requires.auth.kind: dummy</code> 是 Node 侧写法，Java 侧不适用</b>。</li>
 </ol>
 
 <h4><a href="fiori.html">⑨ Fiori UI · 本节测试（15 题）</a></h4>
@@ -1014,7 +1024,7 @@ chk '重复订单号激活 → 409' 409 -X POST \
 <tbody>
 <tr>
   <td><b>自测（quiz）</b></td><td><b>40 分</b></td>
-  <td>正确率 = 答对题数 ÷ 总题数（<span class="tag">186</span> 题）；得分 = 正确率 × 40。<br>
+  <td>正确率 = 答对题数 ÷ 总题数（<span class="tag">196</span> 题）；得分 = 正确率 × 40。<br>
       <b>硬线：正确率低于 75% 直接判不合格</b>（与课程既定的合格线一致），不再看后面两块。</td>
   <td><a href="quiz.html">自测页</a>（题库 <code>work/quiz/*.json</code>）</td>
 </tr>
@@ -1022,7 +1032,7 @@ chk '重复订单号激活 → 409' 409 -X POST \
   <td><b>任务完成度</b></td><td><b>40 分</b></td>
   <td>每个板块的得分 = 该板块「通过的任务数 ÷ 该板块任务数」×（该板块任务数 ÷ 全部任务数 × 40）。<br>
       通过的定义：该任务「完成基准」里的可观察判据全部成立，且能出示命令与输出。</td>
-  <td><a href="tasks.html">任务索引</a>（<code>work/tasks/*.json</code>，共 <span class="tag">108</span> 条）</td>
+  <td><a href="tasks.html">任务索引</a>（<code>work/tasks/*.json</code>，共 <span class="tag">119</span> 条）</td>
 </tr>
 <tr>
   <td><b>课堂演示与答辩</b></td><td><b>20 分</b></td>
@@ -1033,18 +1043,19 @@ chk '重复订单号激活 → 409' 409 -X POST \
 
 <h3 id="s7-1">7-1 任务完成度的板块权重</h3>
 <p>下表按题库里的任务条数自动折算（多出的任务不影响比重原则：<b>做得多的板块权重自然大</b>）。系数 = 该板块任务数 ÷ 全部任务数 × 40。</p>
-<div class="tblwrap"><table class="tbl small"><thead><tr><th>板块</th><th>任务条数</th><th>折算分值（满分 40）</th><th>板块页面</th></tr></thead><tbody><tr><td>概念</td><td>8 条</td><td>3.0 分</td><td><a href="concept.html">concept.html</a></td></tr>
-<tr><td>① BTP 开通</td><td>17 条</td><td>6.3 分</td><td><a href="btp.html">btp.html</a></td></tr>
-<tr><td>② BAS 环境</td><td>13 条</td><td>4.8 分</td><td><a href="bas.html">bas.html</a></td></tr>
-<tr><td>③ HANA 云</td><td>12 条</td><td>4.4 分</td><td><a href="hana.html">hana.html</a></td></tr>
-<tr><td>④ CDS 建模</td><td>13 条</td><td>4.8 分</td><td><a href="cds.html">cds.html</a></td></tr>
-<tr><td>⑤ Node 服务</td><td>6 条</td><td>2.2 分</td><td><a href="node.html">node.html</a></td></tr>
-<tr><td>⑥ Java 服务</td><td>11 条</td><td>4.1 分</td><td><a href="java.html">java.html</a></td></tr>
-<tr><td>⑦ 测试体系</td><td>6 条</td><td>2.2 分</td><td><a href="testing.html">testing.html</a></td></tr>
-<tr><td>⑧ 认证授权</td><td>10 条</td><td>3.7 分</td><td><a href="security.html">security.html</a></td></tr>
-<tr><td>⑨ Fiori UI</td><td>6 条</td><td>2.2 分</td><td><a href="fiori.html">fiori.html</a></td></tr>
-<tr><td>⑩ 部署</td><td>6 条</td><td>2.2 分</td><td><a href="deploy.html">deploy.html</a></td></tr>
-<tr><td><b>合计</b></td><td><b>108 条</b></td><td><b>40 分</b></td><td>—</td></tr></tbody></table></div>
+<div class="tblwrap"><table class="tbl small"><thead><tr><th>板块</th><th>任务条数</th><th>折算分值（满分 40）</th><th>板块页面</th></tr></thead><tbody><tr><td>概念</td><td>8 条</td><td>2.7 分</td><td><a href="concept.html">concept.html</a></td></tr>
+<tr><td>① BTP 开通</td><td>17 条</td><td>5.7 分</td><td><a href="btp.html">btp.html</a></td></tr>
+<tr><td>② BAS 环境</td><td>13 条</td><td>4.4 分</td><td><a href="bas.html">bas.html</a></td></tr>
+<tr><td>③ HANA 云</td><td>12 条</td><td>4.0 分</td><td><a href="hana.html">hana.html</a></td></tr>
+<tr><td>④ CDS 建模</td><td>13 条</td><td>4.4 分</td><td><a href="cds.html">cds.html</a></td></tr>
+<tr><td>⑤ Node 服务</td><td>6 条</td><td>2.0 分</td><td><a href="node.html">node.html</a></td></tr>
+<tr><td>⑥ Java 服务</td><td>11 条</td><td>3.7 分</td><td><a href="java.html">java.html</a></td></tr>
+<tr><td>⑦ 测试体系</td><td>6 条</td><td>2.0 分</td><td><a href="testing.html">testing.html</a></td></tr>
+<tr><td>⑧ 认证授权</td><td>10 条</td><td>3.4 分</td><td><a href="security.html">security.html</a></td></tr>
+<tr><td>⑨ Fiori UI</td><td>6 条</td><td>2.0 分</td><td><a href="fiori.html">fiori.html</a></td></tr>
+<tr><td>⑩ 部署</td><td>6 条</td><td>2.0 分</td><td><a href="deploy.html">deploy.html</a></td></tr>
+<tr><td>示范项目（端到端）</td><td>11 条</td><td>3.7 分</td><td><a href="project.html">project.html</a></td></tr>
+<tr><td><b>合计</b></td><td><b>119 条</b></td><td><b>40 分</b></td><td>—</td></tr></tbody></table></div>
 
 <h3 id="s7-2">7-2 界线（A / B / C / 不合格）</h3>
 <div class="tblwrap"><table class="tbl">
@@ -1064,7 +1075,7 @@ chk '重复订单号激活 → 409' 409 -X POST \
 </ol></div>
 
 <h3 id="s7-3">7-3 一次完整的算分示例（讲师照着改数字即可）</h3>
-<p>某学员：自测正确率 <b>80.6%</b>（例如 186 题里答对 150 题）→ 自测得分 <code>0.806 × 40 ≈ 32.2</code>；任务完成度按板块加权 <b>80%</b> → <code>≈ 32</code>；演示 A 拿 5 分、演示 B 拿 6 分、答辩拿 4 分 → 演示共 15 分。<b>总分 ≈ 79.2 → C</b>。评语：「全流程能走通，草稿与权限两块要在追问下才答得清；下次交付前先练演示 B 的日志定位。」</p>
+<p>某学员：自测正确率 <b>80.6%</b>（例如 <span class="tag">196</span> 题里答对 158 题）→ 自测得分 <code>0.806 × 40 ≈ 32.2</code>；任务完成度按板块加权 <b>80%</b> → <code>≈ 32</code>；演示 A 拿 5 分、演示 B 拿 6 分、答辩拿 4 分 → 演示共 15 分。<b>总分 ≈ 79.2 → C</b>。评语：「全流程能走通，草稿与权限两块要在追问下才答得清；下次交付前先练演示 B 的日志定位。」</p>
 
 <div class="box warn"><b class="t">打分时容易产生争议的四种情况（建议提前跟学员约定）</b>
 <ul>
@@ -1150,7 +1161,7 @@ chk '重复订单号激活 → 409' 409 -X POST \
   <li><a href="quiz.html">自测页</a>：全部自测题（自动判分，合格 75%）；本页 <a href="#s4">第 4 节</a>给出每题答案与要点。</li>
   <li><a href="worksheet.html">学员版</a>：可打印的记入表；与 <a href="#s2">采分点</a>一一对应。</li>
   <li><a href="tasks.html">任务索引</a>：全部实训任务与完成基准（评分第 2 项的数据来源）。</li>
-  <li><a href="code.html">源码</a> · 速查 · <a href="issues.html">排错</a> · <a href="glossary.html">术语表</a>：上课随时要翻的四页。</li>
+  <li><a href="code.html">源码</a> · <a href="cli.html">速查</a> · <a href="issues.html">排错</a> · <a href="glossary.html">术语表</a>：上课随时要翻的四页。</li>
   <li><a href="project.html">示范项目</a>：端到端验收对象（模型 → 服务 → 测试 → Fiori → 部署）。</li>
 </ul></div>
 <p class="kicker">本页的答案与数字来自：课程各页的实测内容、题库 <code>work/quiz/*.json</code>、任务表 <code>work/tasks/*.json</code>、示范项目 <code>project-code/demo-node/README.md</code> 与 <code>work/evidence/*</code>。带 <span class="tag">~</span> 的条目为随版本/租户变化或本地无法实测的内容，授课时请以你所在环境与官方文档为准。</p>

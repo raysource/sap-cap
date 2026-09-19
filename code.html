@@ -10,7 +10,36 @@
 </head>
 <body>
 <!--NAV-->
-<header class="site"><div class="nav-wrap"><a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a><nav class="main"><a class="active" href="code.html">源码</a></nav></div></header>
+<header class="site">
+  <div class="nav-wrap">
+    <a class="brand" href="index.html"><span class="logo">CAP</span><span class="txt">SAP CAP 培训</span></a>
+    <nav class="main">
+      <a href="index.html" title="课程总览 · 学习路线 · 环境清单">首页</a>
+      <a href="concept.html" title="CAP 是什么：模型 · 服务 · UI 三层与两种运行时">概念</a>
+      <a href="btp.html" title="从试用账号到环境就绪：全局账户 · 子账户 · 权限 · CF 空间">① BTP 注册</a>
+      <a href="bas.html" title="Business Application Studio 开发环境与终端">② BAS 环境</a>
+      <a href="hana.html" title="SAP HANA Cloud 实例 · HDI 容器 · 数据库浏览器">③ HANA 云</a>
+      <a href="cds.html" title="CDS 语言 · 实体 · 关联 · 注解 · 数据初始化">④ CDS 建模</a>
+      <a href="node.html" title="CAP Node.js：服务定义与事件处理器">⑤ Node 服务</a>
+      <a href="java.html" title="CAP Java：Maven 工程 · 事件处理器 · Spring 集成">⑥ Java 服务</a>
+      <a href="testing.html" title="单元测试 · 集成测试 · OData 验证 · CI">⑦ 测试</a>
+      <a href="security.html" title="XSUAA · 角色集合 · @requires / @restrict">⑧ 权限</a>
+      <a href="fiori.html" title="Fiori Elements 应用 · 注解 · 本地运行">⑨ Fiori UI</a>
+      <a href="deploy.html" title="MTA 构建 · cf deploy · 部署后验证 · CI/CD">⑩ 部署</a>
+      <span class="navsep"></span>
+      <a href="project.html" title="端到端可运行示范：模型 → 服务 → 测试 → Fiori → 部署">示范项目</a>
+      <a class="active" href="code.html" title="示范项目全部源文件全文（可复制）">源码</a>
+      <a href="cli.html" title="cds / cf / btp / mvn / curl 命令与注解速查">速查</a>
+      <a href="issues.html" title="常见错误信息 → 原因 → 对策">排错</a>
+      <a href="tasks.html" title="全部实训任务一览（可筛选）">任务索引</a>
+      <span class="navsep"></span>
+      <a href="instructor.html" title="采分点 · 必问问题 · 参考答案">讲师版</a>
+      <a href="worksheet.html" title="记入式工作纸（可打印）">学员版</a>
+      <a href="quiz.html" title="按章节分组的能力测试（合格 75%）">自测</a>
+      <a href="glossary.html" title="中英对照 + 对象速查">术语表</a>
+    </nav>
+  </div>
+</header>
 <!--/NAV-->
 
 <div class="wrap">
@@ -9091,7 +9120,40 @@ class BookOrderServiceTest {
 </div>
 
 <!--FOOTER-->
-<footer class="site"><div class="inner"><p class="copy">© <span data-year>2026</span> SAP CAP 培训课程</p></div></footer>
+<footer class="site">
+  <div class="inner">
+    <div class="cols">
+      <div>
+        <h5>SAP CAP 培训课程</h5>
+        <p>从 BTP 注册到部署上线 · Node.js 与 Java 双运行时 · 每节带测试</p>
+      </div>
+      <div>
+        <h5>课程板块</h5>
+        <p><a href="concept.html">概念</a> · <a href="btp.html">① BTP 注册</a> ·
+        <a href="bas.html">② BAS 环境</a> · <a href="hana.html">③ HANA 云</a> ·
+        <a href="cds.html">④ CDS 建模</a> · <a href="node.html">⑤ Node 服务</a> ·
+        <a href="java.html">⑥ Java 服务</a></p>
+      </div>
+      <div>
+        <h5>实训与资料</h5>
+        <p><a href="project.html">示范项目</a> · <a href="code.html">源码</a> ·
+        <a href="cli.html">速查</a> · <a href="issues.html">排错</a> ·
+        <a href="tasks.html">任务索引</a> · <a href="glossary.html">术语表</a></p>
+      </div>
+      <div>
+        <h5>课堂配套</h5>
+        <p><a href="instructor.html">讲师版</a> · <a href="worksheet.html">学员版</a> ·
+        <a href="quiz.html">自测</a></p>
+      </div>
+      <div>
+        <h5>一句话免责</h5>
+        <p>页面中的 BTP / BAS / HANA / Fiori 画面为本站<b>高保真重绘图</b>（非实机截图），
+        终端输出为本地实际运行结果。标准值与配额随版本/区域而异，请在自己环境中核对。</p>
+      </div>
+    </div>
+    <p class="copy">© <span data-year>2026</span> SAP CAP 培训课程 · 静态站点，可离线使用</p>
+  </div>
+</footer>
 <!--/FOOTER-->
 <script src="assets/main.js"></script>
 <script src="assets/quiz.js"></script>

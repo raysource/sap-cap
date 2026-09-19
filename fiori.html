@@ -202,6 +202,7 @@ npx cds watch</code></pre>
   <li><b>验证</b>：确认本地 index 页也给出了入口链接 —— 访问 <code>http://localhost:4004/</code>，CAP 的开发首页会列出所有服务与 <code>app/</code> 下的 Fiori 应用链接（<b>只在开发 profile 生效</b>）。</li>
 </ol>
 
+
 <figure class="fig" data-fig="fiori_launchpad">
   <a class="zoom" href="assets/fig/fiori_launchpad.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_launchpad.svg" alt="本地开发用的 Fiori 启动台：cds watch 时访问 /fiori-apps.html，磁贴直接打开 app/ 下的应用（部署到 BTP 后换成 Work Zone / 子账户的 HTML5 应用）" width="1440" height="900" loading="lazy"></a>
   <figcaption><span class="n">画面 1</span><span class="cap">本地开发用的 Fiori 启动台：cds watch 时访问 /fiori-apps.html，磁贴直接打开 app/ 下的应用（部署到 BTP 后换成 Work Zone / 子账户的 HTML5 应用）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
@@ -222,15 +223,16 @@ npx cds watch</code></pre>
   <li><b>注解不会自己走到前端</b>：CAP 把 <code>UI.*</code> 注解编译进服务的 <code>$metadata</code>，前端启动时读这份元数据。所以「注解写了但没生效」= 先去看 <code>$metadata</code> 里有没有它（§8 第 ③ 步）。</li>
   <li><b>manifest 里的 uri 必须指向服务的真实路径</b>：本站是 <code>/odata/v4/book-order/</code>（来自服务定义里的 <code>@path</code>）。写错一个字符，症状是白屏或「Failed to load metadata」。</li>
 </ol><
-<figure class="fig" data-fig="fiori_triangle">
-  <a class="zoom" href="assets/fig/fiori_triangle.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_triangle.svg" alt="Fiori Elements 的三份输入：CAP 服务提供实体与动作、annotations.cds 决定列与按钮、manifest.json 决定用哪个模板和路由 —— 少一份页面就不成形" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 2</span><span class="cap">Fiori Elements 的三份输入：CAP 服务提供实体与动作、annotations.cds 决定列与按钮、manifest.json 决定用哪个模板和路由 —— 少一份页面就不成形</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
-</figure>/div>
+/div>
 
 <div class="box info"><b class="t">为什么注解建议单独放一个文件</b>
 <p>CAP 允许你把注解写进服务定义里，但官方推荐放在 <code>app/&lt;app&gt;/</code> 下的独立 <code>.cds</code> 文件（本站是 <code>annotations.cds</code>，官方示例称 <code>fiori-service.cds</code>）。理由是<b>关注点分离</b>：<code>srv/</code> 保持「服务与权限」的语义，<code>app/</code> 里是「界面长什么样」，两者可以分别演进、分别交给不同的人。<b>关键事实</b>：<code>app/&#42;&#42;/*.cds</code> 会被 <code>cds</code> 编译进模型——本站实测 <code>cds watch</code> 的启动日志与 <code>cds build</code> 的任务参数里都能看到 <code>app/&#42;</code> 与 <code>app/*</code>（构建任务的 model 列表是 <code>['db','srv','app','app/*']</code>），<b>所以放在 app 里的注解不需要任何 import 也会生效</b>。</p></div>
 
-<h2 id="s4">4. 手顺：写出可用的 manifest.json</h2>
+
+<figure class="fig" data-fig="fiori_triangle">
+  <a class="zoom" href="assets/fig/fiori_triangle.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_triangle.svg" alt="Fiori Elements 的三份输入：CAP 服务提供实体与动作、annotations.cds 决定列与按钮、manifest.json 决定用哪个模板和路由 —— 少一份页面就不成形" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 2</span><span class="cap">Fiori Elements 的三份输入：CAP 服务提供实体与动作、annotations.cds 决定列与按钮、manifest.json 决定用哪个模板和路由 —— 少一份页面就不成形</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure><h2 id="s4">4. 手顺：写出可用的 manifest.json</h2>
 
 <p>先建目录，再写文件。目录结构本身有意义：<code>app/</code> 下每个子目录是一个独立应用，<code>webapp/</code> 是该应用的静态根（CAP 会把它发布到 <code>/&lt;子目录名&gt;/webapp/</code>）。</p>
 
@@ -402,6 +404,7 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4004/book-orders/index
 </ol>
 
 
+
 <figure class="fig" data-fig="fiori_ann">
   <a class="zoom" href="assets/fig/fiori_ann.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_ann.svg" alt="在 BAS（或 VS Code）里编辑 app/book-orders/annotations.cds：这个文件属于 app 目录，会被 cds 当作模型的一部分编译，改完保存后浏览器刷新即可看到列和按钮变化" width="1440" height="900" loading="lazy"></a>
   <figcaption><span class="n">画面 3</span><span class="cap">在 BAS（或 VS Code）里编辑 app/book-orders/annotations.cds：这个文件属于 app 目录，会被 cds 当作模型的一部分编译，改完保存后浏览器刷新即可看到列和按钮变化</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
@@ -494,10 +497,7 @@ annotate BookOrderService.BookOrders with {
 // ✓ 正确写法（注解在元素名之后、类型之前）
 annotate BookOrderService.BookOrders with {
   statusCriticality @readonly : Inte
-<figure class="fig" data-fig="fiori_objectpage">
-  <a class="zoom" href="assets/fig/fiori_objectpage.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_objectpage.svg" alt="Object Page：页头来自 UI.HeaderInfo、分节来自 UI.Facets、明细表来自 items/@UI.LineItem，「提交订单」按钮来自 UI.DataFieldForAction（绑定动作 submitOrder）" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 4</span><span class="cap">Object Page：页头来自 UI.HeaderInfo、分节来自 UI.Facets、明细表来自 items/@UI.LineItem，「提交订单」按钮来自 UI.DataFieldForAction（绑定动作 submitOrder）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
-</figure>ger;
+ger;
 };</code></pre>
 </div>
 
@@ -516,7 +516,11 @@ $ curl -s -u alice: "http://localhost:4004/odata/v4/book-order/\$metadata" | gre
   <li><b>验证（页面层）</b>：浏览器里刷新 List Report：<b>列顺序 = <code>UI.LineItem</code> 的数组顺序，筛选框 = <code>UI.SelectionFields</code></b>；把其中两项对调，刷新后会立刻反过来。这一步能直观证明「注解在前端生效」。</li>
 </ol>
 
-<h2 id="s6">6. 状态着色：Criticality 的三种做法</h2>
+
+<figure class="fig" data-fig="fiori_objectpage">
+  <a class="zoom" href="assets/fig/fiori_objectpage.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_objectpage.svg" alt="Object Page：页头来自 UI.HeaderInfo、分节来自 UI.Facets、明细表来自 items/@UI.LineItem，「提交订单」按钮来自 UI.DataFieldForAction（绑定动作 submitOrder）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">Object Page：页头来自 UI.HeaderInfo、分节来自 UI.Facets、明细表来自 items/@UI.LineItem，「提交订单」按钮来自 UI.DataFieldForAction（绑定动作 submitOrder）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure><h2 id="s6">6. 状态着色：Criticality 的三种做法</h2>
 
 <p>列表里 <code>OPEN</code> / <code>SUBMITTED</code> / <code>CLOSED</code> 三行如果都是黑字，用户就得逐字读。Fiori Elements 的标准做法是给这个字段一个<b>数值化的 criticality</b>，前端按数值显示语义色与图标。取值来自 <code>UI.CriticalityType</code>：</p>
 
@@ -568,6 +572,7 @@ this.after('READ', BookOrders, (rows) =&gt; {
   <tr><td>B：数据库加一列</td><td>在 <code>db/schema.cds</code> 的 <code>BookOrders</code> 里加 <code>statusCriticality : Integer</code>，CSV / 业务逻辑里维护值</td><td>criticality 本身有业务含义（要能筛选、排序、被别处消费）时。代价是数据迁移与维护多一处</td></tr>
   <tr><td>C：代码表实体 + 关联</td><td>建 <code>Status</code> 代码表（<code>code</code> / <code>descr</code> / <code>criticality</code>），订单用关联指向它，<code>Criticality: status.criticality</code></td><td>状态集合会变、要多语言文本、要值帮助时（官方 incidents 示例就是这个结构）</td></tr>
 </table>
+
 
 
 <figure class="fig" data-fig="fiori_s02">
@@ -649,11 +654,7 @@ npx cds watch                 # 默认 4004；端口被占就 npx cds watch --po
 </table>
 
 <div class="box ok"><b class="t">三条命令版（不打开浏览器也能定位）</b>
-<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-
-<figure class="fig" data-fig="fiori_debug">
-  <a class="zoom" href="assets/fig/fiori_debug.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_debug.svg" alt="空白页的三步定位：① 静态资源是否 200 ② 控制台第一条报错 ③ $metadata 里注解是否真的在 —— 三条 curl 就能把「页面 / 服务 / 注解」三层分开" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 6</span><span class="cap">空白页的三步定位：① 静态资源是否 200 ② 控制台第一条报错 ③ $metadata 里注解是否真的在 —— 三条 curl 就能把「页面 / 服务 / 注解」三层分开</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl 本地 cds watch（端口 4010）</span></figcaption>
-</figure>btn" type="button">复制</button></div><code class="lang-bash"># ① 静态资源
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># ① 静态资源
 curl -s -o /dev/null -w '%{http_code} %{content_type}\n' http://localhost:4004/book-orders/webapp/index.html
 # ② 服务可用性与认证（401 = 认证层，200 = 服务层通过）
 curl -s -o /dev/null -w '%{http_code}\n' -u alice: http://localhost:4004/odata/v4/book-order/$metadata
@@ -661,7 +662,11 @@ curl -s -o /dev/null -w '%{http_code}\n' -u alice: http://localhost:4004/odata/v
 curl -s -u alice: http://localhost:4004/odata/v4/book-order/$metadata | grep -c 'UI.LineItem'</code></pre>
 <p>本站实测：①②③ 分别得到 <code>200 text/html</code>、<code>200</code>、<code>2</code>。三条全对而页面还是空，就去 console 看第一条报错（多半是 UI5 版本或资源根名字的问题）。</p></div>
 
-<h2 id="s9">9. 从 List Report 到 Object Page 的真实请求</h2>
+
+<figure class="fig" data-fig="fiori_debug">
+  <a class="zoom" href="assets/fig/fiori_debug.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_debug.svg" alt="空白页的三步定位：① 静态资源是否 200 ② 控制台第一条报错 ③ $metadata 里注解是否真的在 —— 三条 curl 就能把「页面 / 服务 / 注解」三层分开" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">空白页的三步定位：① 静态资源是否 200 ② 控制台第一条报错 ③ $metadata 里注解是否真的在 —— 三条 curl 就能把「页面 / 服务 / 注解」三层分开</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl 本地 cds watch（端口 4010）</span></figcaption>
+</figure><h2 id="s9">9. 从 List Report 到 Object Page 的真实请求</h2>
 
 <p>Fiori Elements 的「新建 / 编辑」不是一次性 PUT，而是走 <b>OData V4 草稿（draft）编排</b>。这一点在 <a href="node.html#s7">⑤ Node 服务 §7 草稿</a>已经从服务侧讲过，本节从<b>前端按钮</b>的视角把它和 UI 对应起来：</p>
 
@@ -682,10 +687,7 @@ curl -s -u alice: http://localhost:4004/odata/v4/book-order/$metadata | grep -c 
   <tr><th>UI 上的东西</th><th>注解 / 服务侧的来源</th><th>本站实测的请求与结果</th></tr>
   <tr><td>列表工具栏的「创建」</td><td><code>@odata.draft.enabled</code> 自动带来（不需要注解声明）</td><td><code>POST /BookOrders</code> → 返回草稿（<code>IsActiveEntity:false</code>）；实测状态 200/201，响应里带 <code>HasActiveEntity:false</code></td></tr>
   <tr><td>页头的「提交订单」按钮</td><td><code>UI.DataFieldForAction</code> + 服务里的绑定动作 <code>submitOrder</code></td><td>按钮最简写法可直接以 curl 验证：<code
-<figure class="fig" data-fig="fiori_draft">
-  <a class="zoom" href="assets/fig/fiori_draft.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_draft.svg" alt="Fiori Create/Save 的真实请求序列（本地实测）：建草稿 POST（IsActiveEntity=false）→ PATCH 改草稿 → draftActivate 才写正式表；业务校验在激活时刻返回 400/409" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 7</span><span class="cap">Fiori Create/Save 的真实请求序列（本地实测）：建草稿 POST（IsActiveEntity=false）→ PATCH 改草稿 → draftActivate 才写正式表；业务校验在激活时刻返回 400/409</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl project-code/demo-node（草稿流程，含 statusCriticality 虚拟元素）</span></figcaption>
-</figure>>POST /BookOrders(ID=…,IsActiveEntity=true)/submitOrder</code>；空订单 → 400、重复提交 → 409（见 ⑤ 页的断言脚本）</td></tr>
+>POST /BookOrders(ID=…,IsActiveEntity=true)/submitOrder</code>；空订单 → 400、重复提交 → 409（见 ⑤ 页的断言脚本）</td></tr>
   <tr><td>保存时的错误消息条</td><td>服务端 <code>req.reject(400/409, '消息')</code></td><td>实测响应体：<code>{"error":{"message":"顾客 9999 不存在，请先维护主数据","code":"400","@Common.numericSeverity":4}}</code> 与 <code>{"error":{"message":"订单号 BO-1001 已存在，请更换","code":"409",…}}</code></td></tr>
   <tr><td>草稿阶段为什么几乎不报错</td><td>CAP 的草稿语义：PATCH 期间即使数据不合法也<b>照常保存草稿</b>（让用户能继续改），错误消息会持久化显示在页面上；<b>激活时</b>才做正式校验</td><td>实测：<code>POST</code> 一个 <code>customer_ID:9999</code> 的草稿 → 201 成功；随后 <code>draftActivate</code> → <b>400</b>。这正是「我明明填了，为什么保存才报错」的答案</td></tr>
 </table>
@@ -697,7 +699,11 @@ curl -s -u alice: http://localhost:4004/odata/v4/book-order/$metadata | grep -c 
   <li><b>校验要写在活动实体上</b>：草稿和活动实体都可以被直接更新（活动数据的请求带 <code>IsActiveEntity=true</code>），所以校验必须对活动实体也生效，不能只写在草稿事件里。</li>
 </ol></div>
 
-<h2 id="s10">10. 把 UI 接进 mta.yaml，部署后怎么打开</h2>
+
+<figure class="fig" data-fig="fiori_draft">
+  <a class="zoom" href="assets/fig/fiori_draft.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_draft.svg" alt="Fiori Create/Save 的真实请求序列（本地实测）：建草稿 POST（IsActiveEntity=false）→ PATCH 改草稿 → draftActivate 才写正式表；业务校验在激活时刻返回 400/409" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 7</span><span class="cap">Fiori Create/Save 的真实请求序列（本地实测）：建草稿 POST（IsActiveEntity=false）→ PATCH 改草稿 → draftActivate 才写正式表；业务校验在激活时刻返回 400/409</span><span class="kind real">本地实机运行</span><span class="src">本地实测：curl project-code/demo-node（草稿流程，含 statusCriticality 虚拟元素）</span></figcaption>
+</figure><h2 id="s10">10. 把 UI 接进 mta.yaml，部署后怎么打开</h2>
 
 <p>本地跑通不等于交付完成：<b>部署时 UI 由谁托管、URL 长什么样</b>要和 <a href="deploy.html">⑩ 部署</a> 一起设计。CAP 给了两条现成路线，本站示范项目适合路线 A（单租户、自带 approuter）。</p>
 
@@ -847,10 +853,7 @@ Status=状态</code></pre>
     <li><code>sap.app.id</code>（manifest） = <code>data-sap-ui-resource-roots</code> 的键 = <code>data-name</code>（index.html）；</li>
     <li><code>entitySet</code>（manifest） = 服务里投影的实体名（本站 <code>BookOrders</code>）；</li>
     <li><code>UI.DataFieldForAction.Action</code> = <code>服务名.动作名</code>（绑定）。
-<figure class="fig" data-fig="fiori_listreport">
-  <a class="zoom" href="assets/fig/fiori_listreport.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_listreport.svg" alt="注解生效后的 List Report：筛选字段来自 UI.SelectionFields，表格列来自 UI.LineItem，状态列的颜色来自 Criticality —— 数据是本站示范项目的 CSV 初始值" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 8</span><span class="cap">注解生效后的 List Report：筛选字段来自 UI.SelectionFields，表格列来自 UI.LineItem，状态列的颜色来自 Criticality —— 数据是本站示范项目的 CSV 初始值</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
-</figure></li>
+</li>
   </ul>
   <p>再加一条经验：<code>sap.app.id</code> 建议用 <b>小写 + 点/连字符</b>（本站 <code>demo.node.book-orders</code>）。CAP 在生成示例时会把 ID 改写成 <code>&lt;项目&gt;.&lt;应用目录&gt;</code>，原因是<b>部署时 ID 必须唯一</b>，重复会导致 HTML5 仓库内容冲突。</p></div>
 </div>
@@ -885,7 +888,11 @@ Status=状态</code></pre>
   <li>白屏时能在 5 分钟内说出「是哪一层的问题」并给出证据。</li>
 </ul>
 
-<h2 id="s14">14. 交付前检查清单</h2>
+
+<figure class="fig" data-fig="fiori_listreport">
+  <a class="zoom" href="assets/fig/fiori_listreport.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/fiori_listreport.svg" alt="注解生效后的 List Report：筛选字段来自 UI.SelectionFields，表格列来自 UI.LineItem，状态列的颜色来自 Criticality —— 数据是本站示范项目的 CSV 初始值" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 8</span><span class="cap">注解生效后的 List Report：筛选字段来自 UI.SelectionFields，表格列来自 UI.LineItem，状态列的颜色来自 Criticality —— 数据是本站示范项目的 CSV 初始值</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+</figure><h2 id="s14">14. 交付前检查清单</h2>
 
 <ul class="check">
   <li><b>模型层</b>：<code>cds compile srv/book-order-service.cds app/book-orders/annotations.cds --to edmx</code> 无 <code>[ERROR]</code>；<code>grep -c UI.LineItem</code> 与预期列组数一致（本站 2）。</li>
@@ -937,6 +944,7 @@ Status=状态</code></pre>
 <p>读完这页你应该能做到：打开任意一个 CAP 项目的 <code>app/</code> 目录，10 分钟内说清「有几个应用、每个应用连哪个服务、列表有哪些列、详情页有哪些分节、有哪些动作按钮」；并且知道改哪一个文件能让列表多一列。做不到的话回到 §3（三角关系）与 §5（注解逐条）重读一遍。</p></div>
 
 <p class="kicker">本页 curl 输出取自本地实测（Node 22.23.2 / @sap/cds 9.9.3 / 端口 4010）；<code>mbt</code>、<code>cf</code> 相关的图注为「重绘」，未在本机实跑。CAP 与 UI5 的小版本会改变日志与控制台文案，以你自己环境为准。</p>
+</div>
 </article>
 </main>
 </div>

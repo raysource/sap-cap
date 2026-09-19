@@ -191,6 +191,7 @@ cf update-service demo-hana -c '{ "data": { "serviceStopped": false } }'</code><
 </ul></div>
 
 
+
 <figure class="fig" data-fig="hana_s02">
   <a class="zoom" href="assets/fig/hana_s02.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s02.svg" alt="Create Instance：选服务 SAP HANA Schemas &amp; HDI Containers、计划 hdi-shared，并在参数里把 HDI 容器指到某个 HANA Cloud 实例（database_id / schema）" width="1440" height="900" loading="lazy"></a>
   <figcaption><span class="n">画面 1</span><span class="cap">Create Instance：选服务 SAP HANA Schemas &amp; HDI Containers、计划 hdi-shared，并在参数里把 HDI 容器指到某个 HANA Cloud 实例（database_id / schema）</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 步骤与参数出自 SAP Tutorial「Create a Development Project in SAP Business Application Studio」</span></figcaption>
@@ -243,6 +244,7 @@ cf service demo-hana-db         # 看详情与 status</code></pre>
   <li><span class="cmd">demo-hana-db</span> 实例状态 create succeeded。</li>
   <li>能说出「<span class="cmd">hdi-shared</span> / <span class="cmd">schema</span> / <span class="cmd">tools</span>」三者的差别，以及为什么 CAP 必须用 <span class="cmd">hdi-shared</span>。</li>
 </ul></div>
+
 
 
 <figure class="fig" data-fig="hana_s01">
@@ -303,10 +305,7 @@ resources:
     type: com.sap.xs.hdi-container
     parameters:
       service: hana                 # CLI label：SAP HANA Sche
-<figure class="fig" data-fig="hana_s08">
-  <a class="zoom" href="assets/fig/hana_s08.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s08.svg" alt="hybrid 模式下的配置与验证：.cdsrc-private.json 里只有绑定元数据；cds env get requires.db 确认 kind 变成 hana" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 3</span><span class="cap">hybrid 模式下的配置与验证：.cdsrc-private.json 里只有绑定元数据；cds env get requires.db 确认 kind 变成 hana</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· JSON 结构出自 capire「Hybrid Testing」文档示例（实例名替换为本教材项目）</span></figcaption>
-</figure>mas & HDI Containers
+mas & HDI Containers
       service-plan: hdi-shared</code></pre>
 <p>两条要点：<b>(1)</b> 资源名（<span class="cmd">demo-node-db</span>）是 MTA 内部的名字，部署时会创建/复用一个同名 CF 服务实例；也可以让 MTA 复用已有实例（把 <span class="cmd">parameters</span> 里的 <span class="cmd">service</span>/<span class="cmd">service-plan</span> 去掉、改成显式指定现有实例名或加 <span class="cmd">config</span>）。<b>(2)</b> 服务模块与建表模块引用的是同一个资源，所以服务拿到的连接信息和建表用的是同一个容器。</p>
 
@@ -320,7 +319,11 @@ resources:
   <li><span class="cmd">cds watch --profile hybrid</span> 下访问 <span class="cmd">/odata/v4/book-order/BookOrders</span> 能返回数据。</li>
 </ul></div>
 
-<h2 id="s6">6. 用 Database Explorer 看 CAP 生成的表</h2>
+
+<figure class="fig" data-fig="hana_s07">
+  <a class="zoom" href="assets/fig/hana_s07.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s07.svg" alt="本地连云端 HANA：cds bind 生成 hybrid 绑定（不落盘凭据），再用 cds watch --profile hybrid 启动" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 3</span><span class="cap">本地连云端 HANA：cds bind 生成 hybrid 绑定（不落盘凭据），再用 cds watch --profile hybrid 启动</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 命令与输出行出自 capire「Hybrid Testing」（cds bind），服务名替换为本教材项目</span></figcaption>
+</figure><h2 id="s6">6. 用 Database Explorer 看 CAP 生成的表</h2>
 <div class="stepmeta"><span class="k">SAP HANA Database Explorer</span><span class="f">Catalog · SQL Console</span><span class="c">耗时 15 分</span></div>
 
 <h3 id="s6-1">6-1 进 Database Explorer 的两条路</h3>
@@ -339,10 +342,7 @@ resources:
     <tr><td><span class="cmd">sap.training.bookorder.Books</span></td><td><span class="cmd">sap_training_bookorder_Books</span></td><td><span class="cmd">SAP_TRAINING_BOOKORDER_BOOKS</span></td></tr>
     <tr><td><span class="cmd">sap.training.bookorder.Customers</span></td><td><span class="cmd">sap_training_bookorder_Customers</span></td><td><span class="cmd">SAP_TRAINING_BOOKORDER_CUSTOMERS</span></td></tr>
     <tr><td><span class="cmd">sap.training.bookorder.BookOrders</span></td><td><span class="cmd">sap_training_bookorder_BookOrders</span></td><td><span class="cmd">SAP_TRAINING_BOOKORDER_BOOKORDERS</
-<figure class="fig" data-fig="hana_s05">
-  <a class="zoom" href="assets/fig/hana_s05.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s05.svg" alt="Database Explorer 的 Catalog 树：HDI 容器 → BOOKORDER schema → CAP 生成的表（命名空间 → 大写 + 下划线）" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 4</span><span class="cap">Database Explorer 的 Catalog 树：HDI 容器 → BOOKORDER schema → CAP 生成的表（命名空间 → 大写 + 下划线）</span><span class="kind real">本地实机运行</span><span class="src">本站自绘（figkit 高保真画面）· 表名由本教材项目实测生成：cds build --for hana 产出的 .hdbtable / .hdbtabledata</span></figcaption>
-</figure>span></td></tr>
+span></td></tr>
     <tr><td><span class="cmd">sap.training.bookorder.BookOrderItems</span></td><td><span class="cmd">sap_training_bookorder_BookOrderItems</span></td><td><span class="cmd">SAP_TRAINING_BOOKORDER_BOOKORDERITEMS</span></td></tr>
     <tr><td><span class="cmd">sap.training.bookorder.OrderItemView</span>（带主键的视图）</td><td>视图，同名规则</td><td><span class="cmd">SAP_TRAINING_BOOKORDER_ORDERITEMVIEW</span></td></tr>
   </tbody>
@@ -358,7 +358,11 @@ head -1 gen/db/src/gen/*.hdbtable     # 看里面的 COLUMN TABLE &lt;表名&gt;
 grep target_table gen/db/src/gen/data/*.hdbtabledata   # 大写表名也写在这里</code></pre>
 在 HANA 侧再用 Database Explorer 的 Catalog 树或 <span class="cmd">M_TABLES</span> 复核一次（见第 7 节）。名称大小写与 schema 名都可能随版本/环境变化（~）。</div>
 
-<h2 id="s7">7. 可跑的 SQL（join 与聚合）</h2>
+
+<figure class="fig" data-fig="hana_s05">
+  <a class="zoom" href="assets/fig/hana_s05.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s05.svg" alt="Database Explorer 的 Catalog 树：HDI 容器 → BOOKORDER schema → CAP 生成的表（命名空间 → 大写 + 下划线）" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 4</span><span class="cap">Database Explorer 的 Catalog 树：HDI 容器 → BOOKORDER schema → CAP 生成的表（命名空间 → 大写 + 下划线）</span><span class="kind real">本地实机运行</span><span class="src">本站自绘（figkit 高保真画面）· 表名由本教材项目实测生成：cds build --for hana 产出的 .hdbtable / .hdbtabledata</span></figcaption>
+</figure><h2 id="s7">7. 可跑的 SQL（join 与聚合）</h2>
 <div class="stepmeta"><span class="k">SQL Console</span><span class="f">BOOKORDER schema</span><span class="c">耗时 15 分</span></div>
 
 <h3 id="s7-1">7-1 先确认 schema 与表清单</h3>
@@ -399,10 +403,7 @@ SELECT B.ID                               AS BOOK_ID,
        SUM(I.QUANTITY)                    AS SOLD_QTY,
        SUM(I.AMOUNT)                      AS SOLD_AMOUNT
   FROM SAP_TRAINING_BOOKORDER_BOOKORDERITEMS AS
-<figure class="fig" data-fig="hana_s06">
-  <a class="zoom" href="assets/fig/hana_s06.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s06.svg" alt="SQL Console 里直接查 CAP 建的表：订单主表与明细表 join + 聚合，结果与 OData 端点的数字对得上" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 5</span><span class="cap">SQL Console 里直接查 CAP 建的表：订单主表与明细表 join + 聚合，结果与 OData 端点的数字对得上</span><span class="kind real">本地实机运行</span><span class="src">本站自绘（figkit 高保真画面）· SQL 语法与结果集按本教材项目的真实数据（db/data/*.csv）推导；执行入口出自 SAP Tutorial「Query the Database Using SQL Statements」</span></figcaption>
-</figure> I
+ I
   JOIN SAP_TRAINING_BOOKORDER_BOOKS          AS B ON B.ID = I.BOOK_ID
  GROUP BY B.ID, B.TITLE
  ORDER BY SOLD_AMOUNT DESC;
@@ -435,15 +436,13 @@ SELECT O.ORDERNO, B.TITLE, I.QUANTITY, I.AMOUNT
 两边都一致，说明「服务层逻辑 + 数据库数据」都正确。本项目的 <span class="cmd">test/odata-verify.sh</span> 里 25 项验证就是按这个思路做的（其中 1 项为已知的负向失败项，用于演示鉴权缺口）。</div>
 
 
+
 <figure class="fig" data-fig="hana_s03">
   <a class="zoom" href="assets/fig/hana_s03.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s03.svg" alt="hana_s03" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 6</span><span class="cap">hana_s03</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
+  <figcaption><span class="n">画面 5</span><span class="cap">hana_s03</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）</span></figcaption>
 </figure><h2 id="s8">8. 建表与初始化数据的三条路径</h2>
 <div class="stepmeta"><span class="k">cds deploy --to sqlite</span><span class="k">cds deploy --to hana</span><span class="f">gen/db</span><span class="c">耗时 15 分</span><
-<figure class="fig" data-fig="hana_s09">
-  <a class="zoom" href="assets/fig/hana_s09.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s09.svg" alt="部署时建表：cds build --for hana 产出 HDI 工件，mbt build 打包，cf deploy 由 hdb 模块的 HDI deployer 执行" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 7</span><span class="cap">部署时建表：cds build --for hana 产出 HDI 工件，mbt build 打包，cf deploy 由 hdb 模块的 HDI deployer 执行</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npx cds build --for hana 的工件清单与 gen/db/package.json 内容；部署命令出自 capire「Deploy to Cloud Foundry」</span></figcaption>
-</figure>/div>
+/div>
 
 <table class="tbl small">
   <thead><tr><th>路径</th><th>谁执行</th><th>建表在哪</th><th>数据来源</th><th>适用场景</th></tr></thead>
@@ -489,25 +488,23 @@ cds deploy --to hana --no-build        # 跳过 cds build（已构建过）</cod
   <li><b>schema 名不等于你给的名字</b>：建容器时给的 <span class="cmd">schema</span> 只是建议/前缀，实际 schema 可能有后缀。以绑定凭据里的 <span class="cmd">schema</span> 字段为准。</li>
 </ul></div>
 
-<h2 id="s9">9. 常见错误表</h2>
+
+<figure class="fig" data-fig="hana_s09">
+  <a class="zoom" href="assets/fig/hana_s09.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s09.svg" alt="部署时建表：cds build --for hana 产出 HDI 工件，mbt build 打包，cf deploy 由 hdb 模块的 HDI deployer 执行" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 6</span><span class="cap">部署时建表：cds build --for hana 产出 HDI 工件，mbt build 打包，cf deploy 由 hdb 模块的 HDI deployer 执行</span><span class="kind real">本地实机运行</span><span class="src">本地实测：npx cds build --for hana 的工件清单与 gen/db/package.json 内容；部署命令出自 capire「Deploy to Cloud Foundry」</span></figcaption>
+</figure><h2 id="s9">9. 常见错误表</h2>
 <table class="tbl small">
   <thead><tr><th>现象</th><th>原因</th><th>处置</th><th>验证</th></tr></thead>
   <tbody>
     <tr><td>应用连不上数据库，报连接失败/超时</td><td>HANA 实例被自动停止（免费层/试用每天晚间自动停）</td><td><span class="cmd">cf update-service &lt;实例名&gt; -c '{ "data": { "serviceStopped": false } }'</span>，或到 Cloud Central 点 Start</td><td>实例状态回到 RUNNING，应用重启后能查询数据</td></tr>
     <tr><td>实例直接不见了</td><td>免费层/试用实例 30 天未重启会被删除</td><td>重新创建实例与 HDI 容器，重新部署（数据来自 CSV，可重建）</td><td>Cloud Central 里新实例 RUNNIN
-<figure class="fig" data-fig="hana_s10">
-  <a class="zoom" href="assets/fig/hana_s10.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s10.svg" alt="创建 SAP HANA Cloud 实例的向导：Type / 实例名与密码 / 大小与可用性 / Connections（IP 允许列表）/ 高级设置" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 8</span><span class="cap">创建 SAP HANA Cloud 实例的向导：Type / 实例名与密码 / 大小与可用性 / Connections（IP 允许列表）/ 高级设置</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 步骤名出自 SAP Tutorial「Provision an Instance of SAP HANA Cloud, SAP HANA Database」；IP 白名单标签随版本可能不同 ~</span></figcaption>
-</figure>G，部署后行数正确</td></tr>
+G，部署后行数正确</td></tr>
     <tr><td>DBeaver / 本地 Python 直连被拒</td><td>实例的 IP 允许列表不允许你的出口 IP</td><td>Cloud Central → Manage Configurations → Connections/Allowed IP Addresses 里放行你的 IP（或临时允许全部）</td><td>直连客户端能建立连接并 <span class="cmd">SELECT 1 FROM DUMMY</span></td></tr>
     <tr><td>容器创建失败：<span class="cmd">No database available</span> / <span class="cmd">no database mapped</span></td><td>数据库实例未 RUNNING，或未做 Instance Mapping（HDI broker 找不到可用数据库）</td><td>先启动实例，再做 Instance Mapping（第 3-2 节第 7 步），然后重建容器</td><td><span class="cmd">cf services</span> 里该实例 last operation = create succeeded</td></tr>
     <tr><td>连接报权限不足 / <span class="cmd">insufficient privilege</span></td><td>用错了用户：CAP 部署用 HDI 的技术用户，手动查询要用 DBADMIN 或容器技术用户</td><td>部署路径不要手写凭据；查询用 Database Explorer 里对应的连接</td><td>用正确连接执行 <span class="cmd">SELECT CURRENT_USER FROM DUMMY</span> 得到预期用户</td></tr>
     <tr><td>SQL 报「表或视图不存在」</td><td>表名大小写/下划线写错（HANA 未加引号折叠为全大写；命名空间点换下划线）</td><td>按第 6-2 节的规则改成 <span class="cmd">SAP_TRAINING_BOOKORDER_BOOKORDERS</span> 这种写法，或加双引号精确引用</td><td>同一条 SQL 在 SQL Console 里返回行</td></tr>
     <tr><td>表在但没数据（0 行）</td><td>CSV 文件名不符合 <span class="cmd">&lt;命名空间&gt;-&lt;实体名&gt;.csv</span>，或不在 <span class="cmd">
-<figure class="fig" data-fig="hana_s04">
-  <a class="zoom" href="assets/fig/hana_s04.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s04.svg" alt="SAP HANA Cloud Central 的实例列表：状态（RUNNING / STOPPED）、内存与存储、以及 SQL Console / Database Explorer 的入口" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 9</span><span class="cap">SAP HANA Cloud Central 的实例列表：状态（RUNNING / STOPPED）、内存与存储、以及 SQL Console / Database Explorer 的入口</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 页面结构与操作名出自 SAP HANA Cloud Central（SAP Tutorials「Provision an Instance…」）</span></figcaption>
-</figure>db/data</span> 下</td><td>改名并重跑部署路径</td><td>重新部署后 <span class="cmd">M_TABLES</span> 的 RECORD_COUNT 与 CSV 行数一致</td></tr>
+db/data</span> 下</td><td>改名并重跑部署路径</td><td>重新部署后 <span class="cmd">M_TABLES</span> 的 RECORD_COUNT 与 CSV 行数一致</td></tr>
     <tr><td>改了数据，下次部署又被改回去</td><td>CSV 数据由 HDI 托管，每次部署都会覆盖</td><td>不要用 CSV 放业务数据；需要保留的数据改用应用接口写入</td><td>连续部署两次后，手改的用户数据仍在</td></tr>
     <tr><td>部署报 HDI 容器已被别的应用绑定 / 无法复用</td><td>多个应用指向同一个实例，或 MTA 资源名与实际实例不一致</td><td>要么让每个应用用独立容器，要么让 <span class="cmd">mta.yaml</span> 显式引用同一个已有实例（并接受共享 schema）</td><td><span class="cmd">cf deploy</span> 不再报绑定冲突，两个应用都能查询各自数据</td></tr>
     <tr><td>删除实体后表还在</td><td>HDI 默认不删除对象（delta deployment 不做 undeploy）</td><td>在 <span class="cmd">undeploy.json</span> 里加入要删除的工件类型/路径；<b>不要</b>加 <span class="cmd">.hdbtable</span></td><td>重新部署后 Catalog 树里该表消失</td></tr>
@@ -517,7 +514,11 @@ cds deploy --to hana --no-build        # 跳过 cds build（已构建过）</cod
   </tbody>
 </table>
 
-<h2 id="s10">10. 成本与运维要点</h2>
+
+<figure class="fig" data-fig="hana_s04">
+  <a class="zoom" href="assets/fig/hana_s04.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s04.svg" alt="SAP HANA Cloud Central 的实例列表：状态（RUNNING / STOPPED）、内存与存储、以及 SQL Console / Database Explorer 的入口" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 7</span><span class="cap">SAP HANA Cloud Central 的实例列表：状态（RUNNING / STOPPED）、内存与存储、以及 SQL Console / Database Explorer 的入口</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 页面结构与操作名出自 SAP HANA Cloud Central（SAP Tutorials「Provision an Instance…」）</span></figcaption>
+</figure><h2 id="s10">10. 成本与运维要点</h2>
 <table class="tbl small">
   <thead><tr><th>主题</th><th>要点</th><th>你要做的动作</th></tr></thead>
   <tbody>
@@ -532,7 +533,11 @@ cds deploy --to hana --no-build        # 跳过 cds build（已构建过）</cod
   </tbody>
 </table>
 
-<h2 id="s11">11. 本节测试</h2>
+
+<figure class="fig" data-fig="hana_s10">
+  <a class="zoom" href="assets/fig/hana_s10.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s10.svg" alt="创建 SAP HANA Cloud 实例的向导：Type / 实例名与密码 / 大小与可用性 / Connections（IP 允许列表）/ 高级设置" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 8</span><span class="cap">创建 SAP HANA Cloud 实例的向导：Type / 实例名与密码 / 大小与可用性 / Connections（IP 允许列表）/ 高级设置</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 步骤名出自 SAP Tutorial「Provision an Instance of SAP HANA Cloud, SAP HANA Database」；IP 白名单标签随版本可能不同 ~</span></figcaption>
+</figure><h2 id="s11">11. 本节测试</h2>
 <div class="sectest">
   <b class="t">本节测试</b>
   <ol>
@@ -549,14 +554,15 @@ cds deploy --to hana --no-build        # 跳过 cds build（已构建过）</cod
   <p class="go">对应自测题见 <a href="quiz.html#q-hana">自测 · ③ HANA Cloud 与 HDI</a>；动手任务见任务索引页「HANA-01…」。</p>
 </div>
 
-<h2 id="s12">12. 小结</h2>
+
+<figure class="fig" data-fig="hana_s08">
+  <a class="zoom" href="assets/fig/hana_s08.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s08.svg" alt="hybrid 模式下的配置与验证：.cdsrc-private.json 里只有绑定元数据；cds env get requires.db 确认 kind 变成 hana" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 9</span><span class="cap">hybrid 模式下的配置与验证：.cdsrc-private.json 里只有绑定元数据；cds env get requires.db 确认 kind 变成 hana</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· JSON 结构出自 capire「Hybrid Testing」文档示例（实例名替换为本教材项目）</span></figcaption>
+</figure><h2 id="s12">12. 小结</h2>
 <div class="box ok"><b class="t">这一页真正要记住的</b>
 <ul>
   <li><b>两条记录，别搞混</b>：SAP HANA Cloud 的 <span class="cmd">hana</span> / <span class="cmd">hana-free</span> 是数据库本体；SAP HANA Schemas &amp; HDI Containers 的 <span class="cmd">hdi-shared</span> 才是 CAP 部署的目标。前者用 Cloud Central 管，后者用 cockpit 或 <span class="cmd">c
-<figure class="fig" data-fig="hana_s07">
-  <a class="zoom" href="assets/fig/hana_s07.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s07.svg" alt="本地连云端 HANA：cds bind 生成 hybrid 绑定（不落盘凭据），再用 cds watch --profile hybrid 启动" width="1440" height="900" loading="lazy"></a>
-  <figcaption><span class="n">画面 10</span><span class="cap">本地连云端 HANA：cds bind 生成 hybrid 绑定（不落盘凭据），再用 cds watch --profile hybrid 启动</span><span class="kind">高保真重绘</span><span class="src">本站自绘（figkit 高保真画面）· 命令与输出行出自 capire「Hybrid Testing」（cds bind），服务名替换为本教材项目</span></figcaption>
-</figure>f create-service</span> 建。</li>
+f create-service</span> 建。</li>
   <li><b>表名的规则只有一条</b>：命名空间点换下划线 + 大写折叠。「表不存在」的九成原因是没按这条换算。</li>
   <li><b>本地与云端可以同时正确</b>：<span class="cmd">cds bind</span>（不落盘凭据）+ <span class="cmd">cds watch --profile hybrid</span> 就地连云端库；先用 <span class="cmd">cds env get requires.db</span> 确认，再谈功能。</li>
   <li><b>验证永远用两个维度</b>：Database Explorer 里的 SQL（数据库视角）与 OData 端点（服务视角）互相对账。BO-1001 必须两边都是 16000。</li>
@@ -570,6 +576,7 @@ cds deploy --to hana --no-build        # 跳过 cds build（已构建过）</cod
   <li>本地实测：<span class="cmd">npx cds build --for hana</span> 的工件清单、<span class="cmd">gen/db/src/gen/*.hdbtable</span> 内容、<span class="cmd">gen/db/package.json</span>、<span class="cmd">cds add hana mta</span> 生成的 <span class="cmd">mta.yaml</span>、<span class="cmd">cds deploy --help</span> 与 <span class="cmd">cds bind --help</span>、<span class="cmd">work/evidence/*.txt</span>、<span class="cmd">db/data/*.csv</span>。</li>
   <li>带 <span class="cmd">~</span> 的名称表示随发布/区域/环境可能不同（服务计划名、向导标签、按钮文案）；使用前请按各节的「自系统确认方法」在本机复核。</li>
 </ul></div>
+</div>
 </article>
 </main>
 </div>
@@ -614,3 +621,8 @@ cds deploy --to hana --no-build        # 跳过 cds build（已构建过）</cod
 <script src="assets/quiz.js"></script>
 </body>
 </html>
+
+<figure class="fig" data-fig="hana_s06">
+  <a class="zoom" href="assets/fig/hana_s06.svg" target="_blank" title="点击在新标签打开原图"><img src="assets/fig/hana_s06.svg" alt="SQL Console 里直接查 CAP 建的表：订单主表与明细表 join + 聚合，结果与 OData 端点的数字对得上" width="1440" height="900" loading="lazy"></a>
+  <figcaption><span class="n">画面 10</span><span class="cap">SQL Console 里直接查 CAP 建的表：订单主表与明细表 join + 聚合，结果与 OData 端点的数字对得上</span><span class="kind real">本地实机运行</span><span class="src">本站自绘（figkit 高保真画面）· SQL 语法与结果集按本教材项目的真实数据（db/data/*.csv）推导；执行入口出自 SAP Tutorial「Query the Database Using SQL Statements」</span></figcaption>
+</figure>

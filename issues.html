@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>故障排除手册 · SAP CAP 培训课程</title>
-<meta name="description" content="SAP CAP 跨板块排错手册：按环境/工具链、CDS 建模、服务与处理器、认证与权限、Fiori、部署六层，逐条给出「现象（错误信息原文）→ 触发条件 → 根因 → 修复手顺 → 如何验证」，每行都带可执行的检查命令；含 18 条详细手顺、万能排错流程与层定位表。错误原文取自本地实测证据与官方文档/知识库。">
+<meta name="description" content="SAP CAP 跨板块排错手册：按环境/工具链、CDS 建模、服务与处理器、认证与权限、Fiori、部署六层，逐条给出「现象（错误信息原文）→ 触发条件 → 根因 → 修复手顺 → 如何验证」，每行都带可执行的检查命令；含 16 个详细手顺小节、万能排错流程与层定位表。错误原文取自本地实测证据与官方文档/知识库。">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/cap.css">
 </head>
@@ -59,7 +59,8 @@
   <a href="#s5">5. Fiori（9 行）</a>
   <a href="#s6">6. 部署（9 行）</a>
   <a href="#s7">7. 万能排错流程</a>
-  <a href="#s8">8. 本节测试</a>
+  <a href="#tests">本节测试</a>
+  <a href="#s8">8. 各板块入口</a>
 </div>
 
 <div class="box info"><b class="t">本页读完你能做到</b>
@@ -290,7 +291,7 @@ npm install-scripts --help         # 确认本机 npm 提供的 allowlist 命令
 <td>编译无 <code>[ERROR]</code>；若改用 Association，<code>--to sql</code> 里子表出现普通列 <code>order_ID</code>，而不是组合自动生成的 <code>up__ID</code></td>
 </tr>
 <tr>
-<td>观察（<b>不报错</b>）：<code>npm run deploy</code> 打印 <code>/&gt; successfully deployed to db.sqlite</code>，但改过列名之后老数据全没了（<code>select count(*)</code> 从 1 变成 0）</td>
+<td><code>SqliteError: Cannot add a NOT NULL column with default value NULL</code> / <code>Cannot add a PRIMARY KEY column</code>（对<b>已有表</b>做 ALTER 时的 SQLite 限制）；或观察（<b>不报错</b>）：<code>npm run deploy</code> 打印 <code>/&gt; successfully deployed to db.sqlite</code>，但改过列名之后老数据全没了（<code>select count(*)</code> 从 1 变成 0）</td>
 <td>改了 <code>db/schema.cds</code> 的列名/删了列，然后重新 <code>cds deploy</code></td>
 <td>schema drift：SQLite 侧表结构按新模型重建，旧列里那批数据没有迁移来源（CSV 里也没有）。<b>本站实测：把 <code>note</code> 改名成 <code>remark</code> 后 deploy 成功，行数据为 0</b></td>
 <td>本地教学：接受重建，重新灌 CSV（<code>rm -f db.sqlite &amp;&amp; npm run deploy</code>）；<b>生产（HANA）</b><span class="tag">~</span>不要用「删表重建」当迁移手段，走正式迁移流程并以官方 Databases 指南为准</td>
@@ -375,7 +376,7 @@ import sqlite3; c = sqlite3.connect('db.sqlite')
 print('列:', [r[1] for r in c.execute('pragma table_info(sap_training_bookorder_BookOrders)')])
 print('行数:', c.execute('select count(*) from sap_training_bookorder_BookOrders').fetchone()[0])"</code></pre>
 </li>
-<li><b>改模型 → 重新部署 → 再记录一次</b>。本站实测的两个事实：<b>加列会保留数据</b>（<code>ALTER</code>）；<b>改列名会让表重建、旧行消失</b>，而 deploy 依然打印 <code>/&gt; successfully deployed to db.sqlite</code>。</li>
+<li><b>改模型 → 重新部署 → 再记录一次</b>。本站实测的两个事实：<b>加列会保留数据</b>（<code>ALTER</code>）；<b>改列名会让表重建、旧行消失</b>，而 deploy 依然打印 <code>/&gt; successfully deployed to db.sqlite</code>。<b>注意</b>：SQLite 自己对手工 <code>ALTER</code> 有硬限制 —— 实测原文 <code>Cannot add a NOT NULL column with default value NULL</code> 与 <code>Cannot add a PRIMARY KEY column</code>；这两类改动在生产上必须走正式迁移，别指望删表重建。</li>
 <li><b>判断标准</b>：列名单边变化 + 行数归零 = 结构重建（schema drift），不是「数据被服务删了」。本地教学环境的正确动作是<b>重新播种</b>：
 <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">rm -f db.sqlite &amp;&amp; npm run deploy
 bash test/odata-verify.sh          # 期望 PASS 26 / FAIL 0</code></pre>
@@ -863,6 +864,33 @@ curl -s -o /dev/null -w '%{http_code}\n' https://&lt;route&gt;/odata/v4/book-ord
 <li><b>验证（业务级）</b>：用真实 JWT 跑与本地同一组断言（匿名 401 / 有权限 200 / 无权限 403 / 提交动作 200）；数据侧在 Database Explorer 里对行数。<b>本地 26 条断言全绿 + 云端这四条成立</b>，才算「部署成功」。</li>
 </ol>
 
+<h3 id="s6-2">6-2 手顺：部署成功但表是空的（四步定位）</h3>
+<div class="stepmeta"><span class="k">cds build / cf logs / cf env</span><span class="f">gen/db/data · demo-node-db-deployer · mta.yaml</span><span class="c">耗时 25 分（需真实账号）</span></div>
+<ol class="steps">
+<li><b>第一步：确认种子数据进了构建产物</b>。CSV 只有变成 HDI 的表格数据部署物才会被 deployer 灌进 HANA：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">npx cds build --production
+ls -l gen/db/data/
+cat gen/db/csv/*.hdbtabledata 2>/dev/null | head -20    # 或看 gen/db/src/data 下的 hdbtabledata 描述</code></pre>
+四个 CSV（Books / Customers / BookOrders / BookOrderItems）都应出现在 <code>gen/db/data</code>，且 <code>gen/db</code> 下有引用它们的 table-data 描述文件。<b>产物里没有 = 部署再成功也一定空</b>。
+</li>
+<li><b>第二步：看建表/灌数据的日志（真正的证据）</b>：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf logs demo-node-db-deployer --recent | tail -60
+cf logs demo-node-db-deployer --recent | grep -iE 'error|failed|table data|deploy' | tail -20</code></pre>
+本地同名步骤的对照物是 <code>npm run deploy</code> 打印的 <code>&gt; init from db/data/sap.training.bookorder-Books.csv</code> 那几行 —— <b>云端也要能看到等价的「表格数据部署」记录</b>，否则就是没灌。
+</li>
+<li><b>第三步：确认 srv 与 deployer 连的是同一个 HANA 实例/schema</b>。最常见的「建了表但服务读不到」是两边绑了不同的实例：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cf service demo-node-db                 # Bound apps 应含 srv 与 db-deployer
+cf env demo-node-srv | grep -A8 '"hana"' # instance_name / schema 与上一条一致
+cf services                              # 确认没有两个名字相近的 hana 实例各绑一端</code></pre>
+</li>
+<li><b>第四步：分清「库里没数据」和「界面查的是草稿行」</b>。界面与服务可能都对，只是查的是未激活的行：
+<pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># 只查已激活的行（Fiori 列表默认的过滤条件之一）
+curl -s -u alice:alice "https://&lt;route&gt;/odata/v4/book-order/BookOrders?$filter=IsActiveEntity eq true&amp;$select=orderNo" | head -c 200</code></pre>
+HANA 侧（Database Explorer 或 SQL Console）执行 <code>SELECT COUNT(*) FROM sap_training_bookorder_Books;</code> —— 期望 5。
+</li>
+<li><b>验证</b>：三相一致才算修好 —— ① deployer 日志里有表格数据部署记录；② 库里的行数与 CSV 一致（Books 5 / Customers 3 / BookOrders 4 / BookOrderItems 9）；③ Fiori 列表能列出 <code>BO-1001</code>。<b>只满足其中一项就宣布「部署完成」是本页最贵的错误之一。</b></li>
+</ol>
+
 <h2 id="s7">7. 万能排错流程（5 步，任何报错都照这个走）</h2>
 <p>前面六节是「答案表」，本节是「检索与记录方法」。顺序不能换：跳过第 1 步直接猜原因，是最慢的路。</p>
 <ol class="steps">
@@ -895,7 +923,7 @@ curl -s -o /dev/null -w '%{http_code}\n' https://&lt;route&gt;/odata/v4/book-ord
 <div class="box ok"><b class="t">验收：这 5 步真的成了你的习惯</b>
 挑一个本页的条目，用「最小复现」故意制造它、按流程修好、并写出自己的记录行 —— 能独立走完一次，以后遇到新报错就只是重复这个循环。</div>
 
-<div class="sectest">
+<div class="sectest" id="tests">
   <b class="t">本节测试</b>
   <ol>
     <li>报错里出现 <code>文件:行:列</code>、出现 <code>&gt; init from …</code> 之后的失败、出现 HTTP 状态码，分别该翻本页哪一节？为什么不能跳层？</li>
