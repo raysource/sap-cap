@@ -67,6 +67,7 @@ sap-cap/
 │   ├── build_tasks.py             汇总 work/tasks/*.json → tasks.html（119 条）
 │   ├── build_code.py              从 project-code/ 生成 code.html（源码全文）
 │   ├── check_page.py              单页静态检查（标签平衡 / 链接 / quiz / FIG / 图片 alt）
+│   ├── check_anchors.py           锚点级链接检查（page.html#id 是否真的存在）
 │   ├── serve_demo.sh              起停本地演示环境
 │   └── shot.js                    CDP 真实截图（等页面出现指定文本再截）
 ├── work/

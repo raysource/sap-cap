@@ -39,6 +39,11 @@
   <li><b>一处已知的课程内部不一致</b>：题库 <code>work/quiz/node.json</code> 第 16 题与 <code>node.html</code> 错误表第 2 行把「<code>$expand</code> 返回空数组」解释成
     「Composition 会在父表加 FK 列，CSV 播种填不到」；而 <code>cds.html</code> §5 的实测 <code>diff</code> 证明两种写法 DDL 逐字相同、FK 都在子表（<code>order_ID</code>）。
     <b>授课时请按 <a href="cds.html#s5">cds.html §5</a> 的口径讲</b>（见 <a href="#s3-4">3-4 的第 1 题</a>与 <a href="#s8">8 疑难问答 Q1</a>）。</li>
+  <li><b>上课前必须检查 <code>app/book-orders/annotations.cds</code> 能不能编译</b>（这是讲师版发现的一处待修问题，直接影响 <a href="#s6-1">演示 A</a> 与 ⑨ Fiori 段）。
+    实测：<span class="cmd">npx cds parse app/book-orders/annotations.cds</span> 报 6 条 <code>[ERROR] … Mismatched ‘:’</code>（第 64–69 行），随后服务启动后
+    <code>$metadata</code> 里 <code>Annotation</code> 与 <code>UI.LineItem</code> 的计数都是 <b>0</b>（也就是说界面会失去全部列与按钮）。
+    修法：把 <code>annotate … with @( a : @title: 'x', … )</code> 改成块形式 <code>annotate … with { a @title: 'x'; … }</code>（本站已验证：改完编译 0 ERROR，EDMX 里有 182 处 <code>Annotation</code><span class="tag">~</span>）；
+    同时把两处都写了 <code>totalAmount</code> 的 annotate 合并到一处，消掉 <code>Duplicate assignment with "@totalAmount"</code> 的 WARNING。</li>
 </ul></div>
 
 <h2 id="s0">0. 本页用法</h2>
@@ -870,7 +875,7 @@
   <li><b>草稿相关的两个 201</b>（POST 与 draftActivate）必须用 <code>IsActiveEntity</code> 与 <code>orderNo</code> 区分；把「POST 后订单号已生成」当正确答案的要当场演示一遍。</li>
 </ul></div>
 
-<h2 id="s5">5. 常见学员卡点与现场处置（15 条）</h2>
+<h2 id="s5">5. 常见学员卡点与现场处置（16 条）</h2>
 <p>用法：学员举手时先在这一列里找「现象」，按「你怎么引导」的顺序让他自己发现原因——<b>不要直接给答案</b>，最后一句才给他「一句话解释」收尾。</p>
 <div class="tblwrap"><table class="tbl">
 <thead><tr><th>现象</th><th>学员会怎么做错</th><th>你怎么引导</th><th>一句话解释</th></tr></thead>
@@ -889,6 +894,7 @@
 <tr><td>验收脚本第二次跑出现 6 条 FAIL</td><td>改断言让它们通过</td><td>让他先 <code>rm -f db.sqlite* &amp;&amp; npm run deploy</code> 再跑一次，然后逐条解释那 6 条为什么「失败得有价值」</td><td>脚本自己写数据，<b>前置条件变了</b>；重跑前必须重置库（CI 里天然是干净库）。</td></tr>
 <tr><td>本地能用 <code>cds watch</code>，CI 里却挂到超时</td><td>在 CI 里加 <code>sleep</code> 或忽略</td><td>让他把 <code>watch</code> 换成 <code>cds compile</code> + <code>npm start</code>，再加轮询健康检查</td><td><code>cds watch</code> 是<b>常驻监视进程不会退出</b>；CI 需要的是能明确成功/失败并退出的命令。</td></tr>
 <tr><td>Fiori 页面 No data / 空白</td><td>去改模型、改注解</td><td>先看浏览器网络面板：401 还是 404？401 用 <code>test/dev-proxy.js</code> 注入 mock 认证；404 就核对 <code>manifest.json</code> 的 <code>uri</code> 与服务的 <code>@path</code></td><td>本地没有 approuter/XSUAA，页面不会带凭据 → <b>先看 401 再看 URI</b>，最后才怀疑注解。</td></tr>
+<tr><td>改了 <code>annotations.cds</code> 但界面一点没变（或列/按钮全消失）</td><td>去改 <code>webapp/</code>、重装 UI5、怀疑浏览器缓存</td><td>先跑 <span class="cmd">npx cds parse app/book-orders/annotations.cds</span>；再 <span class="cmd">curl -s -u alice:alice "$SVC/$metadata" | grep -c Annotation</span></td><td>注解文件<b>解析错误时整段注解都不会进 <code>$metadata</code></b>（计数为 0，界面就没有列和按钮）；元素级注解要写成 <code>a @title: 'x';</code>，不是 <code>a : @title: 'x',</code>。</td></tr>
 <tr><td><code>mvn spring-boot:run</code> 起不来（Java 版本 / 依赖解析失败）</td><td>去改 handler 代码</td><td>看日志第一屏：<code>enforcer</code> 的 RequireJavaVersion / RequireMavenVersion 是否 pass，再看 <code>cds-maven-plugin</code> 的三个 goal 是否执行</td><td>Java 段的问题九成在<b>工具链版本</b>（JDK 17/21、Maven 3.9+）与首次依赖下载，不在业务代码。</td></tr>
 </tbody></table></div>
 
@@ -906,12 +912,13 @@
 <h3 id="s6-1">演示 A（15 分）：从改动一个 <code>.cds</code> 到看到 OData 结果与 Fiori 变化</h3>
 <div class="stepmeta"><span class="k">cds watch · curl · 浏览器</span><span class="f">app/book-orders/annotations.cds · db/schema.cds · db/data/*.csv</span><span class="c">耗时 15 分</span></div>
 <ol class="steps">
+  <li><b>课前 3 分钟｜先确认注解能编译</b>（否则「界面变化」这段演不出来）：<span class="cmd">npx cds parse app/book-orders/annotations.cds</span> 必须无 <code>[ERROR]</code>；若报 <code>Mismatched ‘:’</code>，把该文件的 <code>annotate … with @( a : @title: 'x', … )</code> 改成块形式 <code>annotate … with { a @title: 'x'; … }</code>（详见本页顶部「讲这一页之前请先确认」的说明）。</li>
   <li><b>0–2 分｜建立基线</b>：服务已在跑（<code>npm start</code>），先记录「改之前」的三个数字，写在白板上——这是后面判断变化的依据。
     <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">SVC=http://localhost:4004/odata/v4/book-order
 
 # ① 服务可达（200）+ 元数据里的注解条数
 curl -s -o /dev/null -w 'metadata=%{http_code}\n' -u alice:alice "$SVC/\$metadata"
-curl -s -u alice:alice "$SVC/\$metadata" | grep -c Annotation        # 基线：166
+curl -s -u alice:alice "$SVC/\$metadata" | grep -c Annotation        # 本站记录值 166；若得到 0，说明 app/annotations.cds 没解析成功（见本节第 1 步）
 
 # ② 数据现状（OData 视角）
 curl -s -u alice:alice "$SVC/BookOrders?\$select=orderNo,status,totalAmount&\$orderby=orderNo" | python3 -m json.tool | head -20</code></pre>
@@ -974,15 +981,18 @@ curl -s -w '\nHTTP=%{http_code}\n' -u alice:alice -X POST \
     <p>期望形状：<code>{"error":{"message":"订单号 BO-1001 已存在，请更换","code":"409","@Common.numericSeverity":4}}</code>。</p>
   </li>
   <li><b>8–12 分｜定位到行号</b>：三件事按顺序做，让学员看到「怎么从现象走到代码」。
-    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># ① 服务端日志：cds watch 的终端里找这一行（[error] 行里带 文件:行号）
-#    [error] - 409 - Error: 订单号 BO-1001 已存在，请更换
-#      at BookOrderService.beforeCreateOrder (…/srv/book-order-service.js:41:22)
-
-# ② 用消息文本反查代码位置（比翻文件快）
+    <pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">[odata] - POST /odata/v4/book-order/BookOrders(ID=…,IsActiveEntity=false)/BookOrderService.draftActivate
+[error] - 409 - Error: 订单号 BO-1001 已存在，请更换
+    at BookOrderService.&lt;anonymous&gt; (…/srv/book-order-service.js:&lt;行号&gt;:&lt;列号&gt;)
+    at async BookOrderService.draftHandle [as handle] (…/@sap/cds/libx/_runtime/fiori/lean-draft.js:1020:20)</code></pre>
+    <p>这个形状<b>是本站实测的</b>：同一路径的 400 案例在 <a href="node.html#s7">node.html §7</a> 里逐字记录了 <code>[odata] - POST …/BookOrderService.draftActivate</code>、
+    <code>[error] - 400 - Error: 顾客 9999 不存在，请先维护主数据</code>、<code>at BookOrderService.&lt;anonymous&gt; (…/srv/book-order-service.js:38:24)</code> 与 <code>lean-draft.js:1020</code> 的栈。
+    本页把行号写成 <code>&lt;行号&gt;</code> 是为了让你照自己终端里的数字讲（本站源码里重复编号的检查在 <code>srv/book-order-service.js</code> 第 30 行）。</p>
+    <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash"># ② 用消息文本反查代码位置（比翻文件快；本站实测命中第 30 行）
 grep -n '已存在' srv/book-order-service.js
 
-# ③ 直接把那一行连同上下文打出来（讲师投屏用）
-sed -n '30,50p' srv/book-order-service.js</code></pre>
+# ③ 把那一行连同上下文打出来（讲师投屏用）
+sed -n '24,36p' srv/book-order-service.js</code></pre>
     <p>引导问题：<b>为什么错误发生在激活请求上，而不是 POST 请求上？</b>（答案：草稿实体的 <code>CREATE</code> 只发生在 draftActivate）——把演示 B 与 <a href="#s3-5">3-5 第 1 题</a>扣起来。</p>
   </li>
   <li><b>12–15 分｜把它变成回归</b>：现场加一条断言，让这个 409 以后自动被守住。

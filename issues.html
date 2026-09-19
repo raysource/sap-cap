@@ -905,10 +905,10 @@ curl -s -o /dev/null -w '%{http_code}\n' https://&lt;route&gt;/odata/v4/book-ord
     <li>把 <code>requires.auth.kind</code> 从 <code>mocked</code> 换成 <code>dummy</code> 后，「匿名必须 401」这条断言为什么必然失败？另外，<code>mocked</code> 下为什么用一个不存在的用户名也能拿到 200？</li>
     <li>Fiori 页面全白，请按顺序说出你的三步检查（每步给出具体的观察位置或命令），并说明「<code>sap.fe.*</code> 不在 OpenUI5 CDN 上」这条怎么用一条 <code>curl</code> 在 10 秒内验证。</li>
   </ol>
-  <p class="go">对应自测题见 <a href="quiz.html#q-issues">自测 · 排错</a>；参考答案与采分点见 <a href="instructor.html">讲师版</a>；记录行模板可直接抄第 7 节第 5 步的代码块。</p>
+  <p class="go">对应自测题见 <a href="quiz.html">自测页</a>；参考答案与采分点见 <a href="instructor.html">讲师版</a>；记录行模板可直接抄第 7 节第 5 步的代码块。</p>
 </div>
 
-<h2 id="next">8. 各板块入口（按层直达）</h2>
+<h2 id="s8">8. 各板块入口（按层直达）</h2>
 <p>本页只回答「报错了怎么办」。每一层的<b>正着做</b>的方法在各板块页里，遇到「没报错但我不知道下一步做什么」时请回对应页面。</p>
 <div class="grid cards">
   <div class="card"><h3><a href="concept.html">概念：CAP 是什么</a></h3><p>三层架构与请求生命周期 —— 用来判断「一个现象该归在哪一层」。</p></div>
