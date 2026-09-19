@@ -6,15 +6,16 @@ spring:
   sql.init.platform: h2
 cds:
   data-source.auto-config.enabled: false
-  # 本地开发的身份模拟：alice / bob。没有凭据的请求 → 401（与 Node 版的 mocked 认证行为一致）
+  # 本地开发的身份模拟。注意两点（都是本机实测踩到的）：
+  #  ① 必须有 cds-starter-cloudfoundry 依赖，否则这段配置不生效（认证中间件不在 classpath 上）；
+  #  ② 用「以用户名为键的 map」形式（官方示例 cloud-cap-samples-java 就是这个写法）。
   security:
     mock:
-      enabled: true
       users:
-        - name: alice
+        alice:
           password: alice
           roles:
             - admin
-        - name: bob
+        bob:
           password: bob
           roles: []

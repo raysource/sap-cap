@@ -1,29 +1,26 @@
-=== CAP Java (demo-java) 实测记录 2026-09-19 21:04 JST ===
+=== CAP Java (demo-java) 实测记录（已解决认证问题后重跑） 2026-09-20 01:19 JST ===
 
---- 编译 ---
-[INFO] Compiling 72 source files with javac [debug release 21] to target/classes
-[INFO] BUILD SUCCESS
-[INFO] Total time:  6.544 s
-
---- 启动自检（摘自 07_java_server.log）---
+--- 启动自检 ---
 c.s.c.services.impl.ServiceCatalogImpl   : Registered service BookOrderService
 c.s.c.f.s.c.adapter.AdapterBeanFactory   : Servlet CdsODataV4Servlet mapped to /odata/v4
-c.s.c.s.impl.runtime.CdsRuntimeImpl      : Registered handler class com.training.bookorder.handlers.BookOrderServiceHandler
-c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.Books from ../db/data/sap.training.bookorder-Books.csv
-c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.Customers from ../db/data/sap.training.bookorder-Customers.csv
-c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.BookOrderItems from ../db/data/sap.training.bookorder-BookOrderItems.csv
-c.s.c.s.impl.persistence.CsvDataLoader   : Filling sap.training.bookorder.BookOrders from ../db/data/sap.training.bookorder-BookOrders.csv
-o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-f.s.c.r.IndexPageLinkLoggerConfiguration : CAP Index Page served at http://localhost:8080/
-com.training.bookorder.Application       : Started Application in 1.328 seconds (process running for 1.474)
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : Added mock user {"name":"privileged","password":"","systemUser":false,"privileged":true,"internalUser":false,"roles":[],"attributes":{},"additional":{},"valid":true}
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : Added mock user {"name":"authenticated","password":"","systemUser":false,"privileged":false,"internalUser":false,"roles":[],"attributes":{},"additional":{},"valid":true}
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : Added mock user {"name":"alice","password":"alice","systemUser":false,"privileged":false,"internalUser":false,"roles":["admin"],"attributes":{},"additional":{},"valid":true}
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : Added mock user {"name":"internal","password":"","systemUser":false,"privileged":false,"internalUser":true,"roles":[],"attributes":{},"additional":{},"valid":true}
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : Added mock user {"name":"system","password":"","systemUser":true,"privileged":false,"internalUser":false,"roles":[],"attributes":{},"additional":{},"valid":true}
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : Added mock user {"name":"bob","password":"bob","systemUser":false,"privileged":false,"internalUser":false,"roles":[],"attributes":{},"additional":{},"valid":true}
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : *************************************************************************
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : *  Security configuration based on mock users found in active profile.  *
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : *                 !!! NEVER USE IN PRODUCTIVE MODE !!!                  *
+c.s.c.f.s.c.a.m.MockUsersSecurityConfig  : *************************************************************************
 
---- HTTP 实测 ---
-GET $metadata (alice)                          200
-GET BookOrders (alice)                         401
-GET BookOrders (anonymous)                     401
-→ 结论：端点路径已修正（含 @path 语义差异），$metadata 200；带认证的实体读仍 401（本地 mock 用户配置未找到正确写法）。
+--- mvn test ---
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
 
-=== 追加：Java 侧测试代码编译验证 2026-09-19 21:57 JST ===
-命令: cd project-code/demo-java && mvn -B -q test-compile
-结果: EXIT=0（主源码 BookOrderServiceHandler.java + 测试 BookOrderServiceTest.java 一起编译通过）
-说明: 测试的“通过”仍受制于本地认证配置（见 java.html §10），但测试代码本身能对着 cds.gen 生成类型编译，说明类型用法正确。
+--- HTTP ---
+metadata(alice)          
+BookOrders(alice)        
+BookOrders(bob)          
+BookOrders(匿名)           
+metadata(匿名)             

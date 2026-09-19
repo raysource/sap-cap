@@ -31,10 +31,17 @@ class BookOrderServiceTest {
     @Autowired
     MockMvc mvc;
 
+    /**
+     * 注意：认证中间件一旦生效（cds-starter-cloudfoundry 在场），**$metadata 也需要凭据**——
+     * 这点与 Node 版不同：Node 的 mocked 认证下匿名取 $metadata 是 200。
+     * 本机实测：匿名 → 401，带 alice → 200。所以断言要按运行时的真实行为写。
+     */
     @Test
-    @DisplayName("$metadata 无需认证即可访问（Fiori 要能读到模型）")
-    void metadataIsPublic() throws Exception {
+    @DisplayName("$metadata：匿名 → 401，带凭据 → 200")
+    void metadataRequiresAuth() throws Exception {
         mvc.perform(get("/odata/v4/book-order/$metadata"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/odata/v4/book-order/$metadata").with(httpBasic("alice", "alice")))
                 .andExpect(status().isOk());
     }
 

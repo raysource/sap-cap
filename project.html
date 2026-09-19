@@ -78,7 +78,7 @@
 <tr><td>R6</td><td>能看到「按订单汇总的行数与金额」</td><td>函数 <code>getOrderSummary()</code></td><td>返回 4 行，BO-1001 的 <code>totalAmount=16000</code></td></tr>
 <tr><td>R7</td><td>只有登录用户能访问</td><td><code>@(requires: 'authenticated-user')</code></td><td>匿名 → 401；带凭据 → 200</td></tr>
 <tr><td>R8</td><td>在浏览器里能列出订单、能进明细页</td><td><code>app/book-orders/</code></td><td>截图见 §9</td></tr>
-<tr><td>R9</td><td>同一个模型能在 Java 运行时上跑</td><td><code>project-code/demo-java/</code></td><td>编译成功 + 服务启动 + <code>$metadata</code> 200（见 §10 的诚实说明）</td></tr>
+<tr><td>R9</td><td>同一个模型能在 Java 运行时上跑</td><td><code>project-code/demo-java/</code></td><td><code>mvn test</code> 8/8 通过；带认证读 <code>BookOrders</code> 200、匿名 401（见 §10）</td></tr>
 <tr><td>R10</td><td>能打包部署到 Cloud Foundry</td><td><code>mta.yaml</code> + <code>xs-security.json</code></td><td>本机未实测（需 BTP 账号），命令与验证清单见 §11</td></tr>
 </tbody></table></div>
 <div class="box info"><b class="t">为什么选“图书受注”这个场景</b>
@@ -418,9 +418,9 @@ UI5 抛 <code>DataField::items::$count - Stable Id could not be generated…</co
 <tr><td><code>mvn compile</code>（71 个源文件）</td><td>✅ <code>BUILD SUCCESS</code></td></tr>
 <tr><td>服务启动 / 模型注册 / CSV 灌入 H2 / handler 挂载</td><td>✅ 启动日志全部出现</td></tr>
 <tr><td><code>GET /odata/v4/book-order/$metadata</code></td><td>✅ 200</td></tr>
-<tr><td>带认证读实体、函数、动作</td><td>⚠ <b>未通过</b>：本地 mock 用户配置在本会话没找出正确写法，一律 401。<br>完整记录与排查方向在 <a href="java.html#fail">java.html §10</a></td></tr>
+<tr><td>带认证读实体、函数、动作</td><td>✅ <b>已通过</b>：补 <code>cds-starter-cloudfoundry</code> 依赖后 mock 用户生效，<code>BookOrders</code>(alice) 200、匿名 401，<code>mvn test</code> 8/8。<br>根因、无效尝试与修复见 <a href="java.html#fail">java.html §10</a></td></tr>
 </tbody></table></div>
-<div class="box info"><b class="t">这条“未通过”为什么值得留在教材里</b>
+<div class="box ok"><b class="t">这条“曾经的未通过”为什么值得留在教材里</b>
 它演示了两件事：① 两种运行时的 <code>@path</code> 语义不同（Java 侧是相对 servlet 基路径的，
 照抄 Node 的写法会得到 <code>/odata/v4/odata/v4/book-order</code>）；② <code>$metadata</code> 能打开
 <b>不等于</b>数据能读（元数据通常不受实体级授权限制）。排错第一步永远是打开 CAP 的索引页

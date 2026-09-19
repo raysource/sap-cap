@@ -20,6 +20,16 @@
 			<artifactId>cds-starter-spring-boot</artifactId>
 		</dependency>
 
+		<!-- CAP Java 的认证中间件由平台 starter 带入；cds init 默认不带，
+		     缺了它 cds.security.mock.users 不会生效（请求全部落到未认证，启动日志里也不会
+		     出现 MockUsersSecurityConfig）。见官方文档 Security / Authentication：
+		     "Platform starter bundles cds-starter-cf and cds-starter-k8s ensure all required
+		     dependencies out of the box." -->
+		<dependency>
+			<groupId>com.sap.cds</groupId>
+			<artifactId>cds-starter-cloudfoundry</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>

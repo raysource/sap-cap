@@ -205,7 +205,7 @@
 <tr><td>@sap/cds / cds-dk</td><td>9.x（两侧同大版本）</td><td><code>@sap/cds 9.9.3</code>、<code>@sap/cds-dk 9.x</code></td><td>cds-dk 10 要求 cds ≥ 9；两边大版本一致才不会出现 CLI 与运行时不匹配</td></tr>
 <tr><td>数据库（本地）</td><td>@cap-js/sqlite + better-sqlite3</td><td><code>@cap-js/sqlite 2.x</code>、SQLite <code>3.53.2</code></td><td>零配置，教学首选；云端换成 HANA Cloud（见 <a href="hana.html">③</a>）</td></tr>
 <tr><td>SAP HANA Cloud</td><td>试用账号 1 个 hdi-shared 实例</td><td>未在本机开通（<b>课程按手顺教学并使用 SQLite 实测</b>）</td><td>没有 BTP 账号时全套课程仍可完成，只有 <a href="hana.html">③</a> <a href="deploy.html">⑩</a> 的云端部分需要账号</td></tr>
-<tr><td>Java（可选）</td><td>JDK 17 或 21 + Maven 3.9+</td><td>本机已安装 <code>openjdk@21</code> + <code>maven</code></td><td>只做 <a href="java.html">⑥</a> 需要；Node 与 Java 共享同一份 <code>.cds</code> 模型</td></tr>
+<tr><td>Java（可选）</td><td>JDK 17 或 21 + Maven 3.9+</td><td>本机已装 <code>openjdk@21</code> + <code>maven</code>（Java 侧已跑通：<code>mvn test</code> 8/8）</td><td>只做 <a href="java.html">⑥</a> 需要；Node 与 Java 共享同一份 <code>.cds</code> 模型</td></tr>
 <tr><td>浏览器</td><td>Chrome / Edge 最新版</td><td><code>Google Chrome</code></td><td>BAS、cockpit、Fiori 预览都用它；调试 $metadata 请求必备</td></tr>
 <tr><td>CLI 工具</td><td><code>cf</code>（Cloud Foundry CLI）、<code>btp</code> CLI、<code>mbt</code>（MTA Build Tool）</td><td>安装手顺见 <a href="btp.html">①</a> / <a href="deploy.html">⑩</a></td><td>只有部署阶段需要；本地开发不需要</td></tr>
 </tbody></table></div>
@@ -261,7 +261,7 @@ CDS 模型（共享）、Node.js 实现、Java 实现。项目源码随课程交
 <tr><td>启动</td><td><code>npm start</code></td><td><code>server listening on http://localhost:4004</code>，服务挂载在 <code>/odata/v4/book-order</code></td></tr>
 <tr><td>验收</td><td><code>bash test/odata-verify.sh</code></td><td><b>26 条断言全部通过</b>（含匿名 401、草稿激活 409/400、状态迁移 409）</td></tr>
 <tr><td>Fiori</td><td><code>cds watch</code> + 浏览器</td><td>List Report / Object Page 正常列出订单与明细（见 <a href="fiori.html">⑨</a>）</td></tr>
-<tr><td>Java</td><td><code>mvn spring-boot:run</code></td><td>同一模型在 Java 运行时上返回同样的数据（见 <a href="java.html">⑥</a>）</td></tr>
+<tr><td>Java</td><td><code>mvn test</code>（从根目录）</td><td><b>Tests run: 8, Failures: 0</b> —— 同一模型在 Java 运行时上返回同样的数据（见 <a href="java.html">⑥</a>）</td></tr>
 </tbody></table></div>
 <div class="box warn"><b class="t">诚实说明</b>
 BTP / BAS / HANA Cloud 的<b>云端部分未在本机开通</b>（需要真实的 S/4 或 BTP 试用账号与公司邮箱策略）。

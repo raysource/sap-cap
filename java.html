@@ -53,7 +53,7 @@
   <a href="#why">0. 为什么要学第二个运行时</a><a href="#env">1. 环境准备</a><a href="#scaffold">2. 工程结构</a>
   <a href="#pom">3. pom.xml 与编译链</a><a href="#types">4. 生成的类型（cds.gen）</a><a href="#handler">5. 事件处理器全文</a>
   <a href="#node-vs-java">6. 与 Node 版逐项对照</a><a href="#run">7. 本地运行与验证</a><a href="#traps">8. 本机踩到的 4 个坑</a>
-  <a href="#test">9. 测试（JUnit + MockMvc）</a><a href="#fail">10. 实测结果与未通过项</a><a href="#issues">11. 常见错误表</a>
+  <a href="#test">9. 测试（JUnit + MockMvc）</a><a href="#fail">10. 实测：从全部 401 到 8/8 通过</a><a href="#issues">11. 常见错误表</a>
   <a href="#sectest">12. 本节测试</a>
 </div>
 
@@ -356,40 +356,91 @@ class BookOrderServiceTest {
     }
 }</code></pre>
 <pre class="hl"><div class="code-head"><span class="lang">bash</span><button class="copy-btn" type="button">复制</button></div><code class="lang-bash">cd project-code/demo-java
-mvn -pl srv test            # 只跑 srv 模块的测试
-mvn test                    # 全 reactor</code></pre>
+mvn test                    # 从根目录跑：会构建父 POM + srv 模块
+# ⚠ 不要用 mvn -pl srv test：父 POM 不在 reactor 里，enforcer 会报
+#    "Module parents have been found which could not be found in the reactor"
+#    必须只跑 srv 时用 mvn -pl srv -am test（-am 把依赖的模块一起纳入）</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">Tests run: 8, Failures: 0, Errors: 0, Skipped: 0  →  BUILD SUCCESS</code></pre>
 <div class="box warn"><b class="t">为什么这套测试在本机也没跑绿</b>
 这些用例依赖<b>同一个本地认证配置</b>（mock 用户 alice）——那正是 §10 未解决的那一项。
 <code>metadataIsPublic</code> 与 <code>anonymousIsRejected</code> 两个用例不依赖它，可以独立通过；
 其余用例在认证配置正确之前会得到 401。请把 §10 的排查当作前置任务。</div>
 
-<h2 id="fail">10. 实测结果与未通过项（诚实记录）</h2>
+<h2 id="fail">10. 本机实测结果：从「全部 401」到 8/8 通过</h2>
+<p>本页最初记录的是一处<b>未解决的认证问题</b>。后来按官方文档找到了根因并修好，过程本身就是最值得讲的一段，
+所以完整保留下来：<b>症状 → 三种无效尝试 → 一句话根因 → 修复 → 复测</b>。</p>
+
+<h3>10.1 症状</h3>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">$ curl -u alice:alice "http://localhost:8080/odata/v4/book-order/BookOrders"
+{"error":{"code":"401003","message":"ログインする必要があります。"}}
+
+# 而 $metadata 是 200、服务启动正常、CSV 也灌进去了 —— 只有「认证」这一步过不去。
+# 启动日志里**没有** MockUsersSecurityConfig 那一行（这一点当时没注意，是关键线索）。</code></pre>
+
+<h3>10.2 三种无效尝试（都是改错的地方）</h3>
 <div class="tblwrap"><table class="tbl small">
-<thead><tr><th>检查项</th><th>结果</th><th>证据 / 说明</th></tr></thead>
+<thead><tr><th>尝试</th><th>结果</th><th>为什么无效</th></tr></thead>
 <tbody>
-<tr><td><code>mvn compile</code></td><td>✅ 通过</td><td><code>BUILD SUCCESS</code>，71 个源文件，34 秒；<code>cds.gen.bookorderservice.*</code> 已生成（用 <code>javap</code> 核对了 <code>BookOrderService_</code>、<code>BookOrdersSubmitOrderContext</code>、<code>GetOrderTotalContext</code>、<code>OrderSummaryRow</code> 的真实签名）</td></tr>
-<tr><td>应用启动</td><td>✅ 通过</td><td><code>Started Application in 1.372 seconds</code>；服务、处理器、持久化服务均注册成功</td></tr>
-<tr><td>CSV 种子数据</td><td>✅ 通过</td><td>日志 4 行 <code>Filling sap.training.bookorder.…</code>（Books / Customers / BookOrderItems / BookOrders）</td></tr>
-<tr><td><code>GET $metadata</code>（带认证）</td><td>✅ 200</td><td><code>curl -u alice:alice …/odata/v4/book-order/$metadata</code> → 200（模型可被 Fiori 读取）</td></tr>
-<tr><td><code>GET BookOrders</code>（带认证）</td><td>⚠ 未通过 → 401</td><td><code>{"error":{"code":"401003","message":"ログインする必要があります。"}}</code></td></tr>
-<tr><td>匿名 <code>GET BookOrders</code> → 401</td><td>✅ 通过（但无区分度）</td><td>认证没配好时匿名与具名都会被拒，所以这条不能证明授权规则正确</td></tr>
-<tr><td>函数 / 动作 / 业务校验</td><td>⚠ 未验证</td><td>都卡在同一道认证门后面</td></tr>
-<tr><td>JUnit 测试</td><td>⚠ 部分未验证</td><td>依赖 mock 用户的用例与上面同一原因</td></tr>
+<tr><td>application.yaml 里写 <code>cds.security.mock.enabled: true</code> + <code>users</code> 列表形式</td><td>仍然 401</td><td>属性名本身没错，但<b>认证中间件不在 classpath 上</b>，这段配置没人读</td></tr>
+<tr><td>用 <code>SPRING_APPLICATION_JSON</code> 注入同样的配置</td><td>仍然 401</td><td>同上：不是 YAML 绑定的问题</td></tr>
+<tr><td><code>cds.requires.auth.kind: dummy</code></td><td>仍然 401</td><td>这是 <b>Node 侧</b>的写法；CAP Java 的本地认证走 Spring 的 mock 用户配置，不认这个属性</td></tr>
 </tbody></table></div>
-<div class="box danger"><b class="t">未解决项：CAP Java 的本地 mock 用户没有生效</b>
-<p>已尝试且<b>都无效</b>（每次都重启验证）：</p>
+
+<h3>10.3 根因（官方文档一句话）</h3>
+<div class="box warn"><b class="t">cap.cloud.sap → Security → Authentication</b>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">CAP Java requires certain Maven dependencies to enable authentication middleware support.
+Platform starter bundles cds-starter-cf and cds-starter-k8s ensure all required
+dependencies out of the box.</code></pre>
+即：<b><code>cds init --java</code> 生成的工程默认不带认证中间件的 starter</b>，所以 mock 用户配置不会生效。
+判断依据就是启动日志里没有 <code>MockUsersSecurityConfig</code> 那一行 —— 有它才说明 mock 认证真的启用了。</div>
+
+<h3>10.4 修复</h3>
+<pre class="hl"><div class="code-head"><span class="lang">xml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-xml">&lt;!-- srv/pom.xml --&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;com.sap.cds&lt;/groupId&gt;
+  &lt;artifactId&gt;cds-starter-cloudfoundry&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+<pre class="hl"><div class="code-head"><span class="lang">yaml</span><button class="copy-btn" type="button">复制</button></div><code class="lang-yaml"># srv/src/main/resources/application.yaml —— 用「以用户名为键的 map」形式（官方示例 cloud-cap-samples-java 的写法）
+cds:
+  security:
+    mock:
+      users:
+        alice:
+          password: alice
+          roles: [ admin ]
+        bob:
+          password: bob
+          roles: []</code></pre>
+
+<h3>10.5 复测（真实输出）</h3>
+<pre class="hl"><div class="code-head"><span class="lang">text</span><button class="copy-btn" type="button">复制</button></div><code class="lang-text">MockUsersSecurityConfig : Added mock user {"name":"alice","password":"alice",...,"roles":["admin"],...}
+MockUsersSecurityConfig : Added mock user {"name":"bob","password":"bob",...,"roles":[],...}
+Registered service BookOrderService · Servlet CdsODataV4Servlet mapped to /odata/v4
+Registered handler class com.training.bookorder.handlers.BookOrderServiceHandler
+Filling sap.training.bookorder.{Books,Customers,BookOrderItems,BookOrders} from ../db/data/*.csv
+Tomcat started on port 8080 (http) with context path '/'</code></pre>
+<div class="tblwrap"><table class="tbl small">
+<thead><tr><th>检查项</th><th>修复前</th><th>修复后</th></tr></thead>
+<tbody>
+<tr><td><code>$metadata</code>（alice）</td><td>200</td><td><b>200</b></td></tr>
+<tr><td><code>BookOrders</code>（alice）</td><td>401</td><td><b>200（返回 4 张种子订单）</b></td></tr>
+<tr><td><code>BookOrders</code>（bob）</td><td>401</td><td><b>200</b></td></tr>
+<tr><td><code>BookOrders</code>（匿名）</td><td>401</td><td><b>401</b>（正确）</td></tr>
+<tr><td><code>$metadata</code>（匿名）</td><td>200</td><td><b>401</b>（认证生效后的真实行为）</td></tr>
+<tr><td><code>mvn test</code>（8 个 JUnit 用例）</td><td>—</td><td><b>Tests run: 8, Failures: 0, Errors: 0 → BUILD SUCCESS</b></td></tr>
+</tbody></table></div>
+<div class="box info"><b class="t">由此得到两个可教学的运行时差异</b>
 <ul>
-<li><code>cds.security.mock.enabled: true</code> + <code>cds.security.mock.users: [{name, password, roles}]</code>（application.yaml）</li>
-<li>用 <code>SPRING_APPLICATION_JSON</code> 注入同样结构的配置（排除 YAML 绑定问题）</li>
-<li><code>cds.requires.auth.kind: dummy</code>（这是 Node 侧的写法，Java 侧不适用）</li>
-</ul>
-<p><b>下一步排查方向</b>（留给下一位接手的人，按顺序做）：① 到 CAP Java 官方文档的
-“Mock Users / Local Development” 一节核对<b>当前版本（4.9.1）</b>的确切属性名与层级；
-② 打开配置诊断日志确认配置是否被读到（<code>logging.level.com.sap.cds=DEBUG</code> 或 <code>spring.config</code> 相关日志）；
-③ 或者干脆建一个真的 XSUAA 实例 + <code>cds bind</code> 走真实认证（<a href="security.html">⑧</a> 有手顺），
-这比继续猜本地 mock 配置更靠近生产。</p>
-<p><b>对学员的意义</b>：这条记录本身就是教材 —— CAP Java 的本地认证配置比 Node 侧更容易踩坑，
-并且「<code>$metadata</code> 能打开 ≠ 数据能读」是排错时最重要的第一课。</p></div>
+<li><b>$metadata 是否公开，两种运行时不同</b>：Node 的 mocked 认证下匿名取 <code>$metadata</code> 是 <b>200</b>；
+  Java 侧认证一旦生效，<code>$metadata</code> 也要凭据（匿名 <b>401</b>）。写测试断言必须按真实行为，不能照搬另一个运行时。</li>
+<li><b>只构建一个模块的坑</b>：<code>mvn -pl srv test</code> 会触发 enforcer 的
+  <code>ReactorModuleConvergence</code>（"Module parents have been found which could not be found in the reactor"），
+  必须从根目录 <code>mvn test</code> 或 <code>mvn -pl srv -am test</code>。</li>
+</ul></div>
+<div class="box ok"><b class="t">结论</b>
+两种运行时现在<b>都实测通过</b>：Node <code>bash test/odata-verify.sh</code> → <b>PASS 26 / FAIL 0</b>；
+Java <code>mvn test</code> → <b>Tests run 8 / Failures 0</b>。原始输出在
+<code>work/evidence/04_odata.txt</code> 与 <code>work/evidence/08_java_odata.txt</code>。</div>
 
 <h2 id="issues">11. 常见错误表</h2>
 <div class="tblwrap"><table class="tbl small">
@@ -402,7 +453,7 @@ mvn test                    # 全 reactor</code></pre>
 <tr><td><code>Cannot find symbol getCustomer_ID()</code></td><td>外键访问器名是 <code>getCustomerId()</code></td><td>以生成的接口为准（IDE 里跳进去看）</td></tr>
 <tr><td>端点 404 且报 “No static resource …”</td><td>servlet 未注册（多模块/devtools 重启）</td><td>从 <code>srv</code> 目录运行，并加 <code>-Dspring.devtools.restart.enabled=false</code></td></tr>
 <tr><td>端点被拼成 <code>/odata/v4/odata/v4/…</code></td><td><code>@path</code> 在 Java 侧是<b>相对</b>基路径的</td><td>写 <code>@path: '/book-order'</code>；用 <code>http://localhost:8080/</code> 的索引页核对真实 URL</td></tr>
-<tr><td>所有请求 401 “ログインする必要があります”</td><td>本地认证没配置（见 §10）</td><td>按 §10 的三步排查，或改用真实 XSUAA + <code>cds bind</code></td></tr>
+<tr><td>所有请求 401 “ログインする必要があります”</td><td>缺 <code>cds-starter-cloudfoundry</code>，mock 认证未启用（启动日志没有 <code>MockUsersSecurityConfig</code>）</td><td>补该依赖 + 用 map 形式的 <code>cds.security.mock.users</code>（见 §10）</td></tr>
 <tr><td>启动日志里没有 <code>Filling … from ../db/data</code></td><td><code>db/</code> 不在项目根，或 CSV 表头不是物理列名</td><td>核对目录结构与表头（见 <a href="cds.html">④</a>）</td></tr>
 <tr><td>业务异常返回 500</td><td>抛了裸异常而不是 <code>ServiceException</code></td><td><code>throw new ServiceException(ErrorStatuses.BAD_REQUEST, "…")</code></td></tr>
 <tr><td><code>spring-boot:run</code> 后改代码不生效</td><td>devtools 重启把 servlet 注册弄丢</td><td>关掉 devtools 自动重启后手动重启</td></tr>
@@ -419,7 +470,7 @@ mvn test                    # 全 reactor</code></pre>
     <li>为什么 CAP Java 里 <code>@path</code> 不能照抄 Node 版的写法？</li>
     <li>端点 404 时，第一个应该打开的页面是什么？为什么？</li>
     <li><code>mvn compile</code> 生成的 <code>cds.gen</code> 包有什么价值？没有它可行吗？</li>
-    <li>本页 §10 里那条 401 说明了什么？如果要修，你的第一步做什么？</li>
+    <li>本页 §10 里 401 的根因是什么？你怎么从启动日志判断「mock 认证到底有没有启用」？</li>
   </ol>
   <p class="go">参考答案见 <a href="instructor.html">讲师版</a>；在线自测见 <a href="quiz.html#q-java">自测 · Java 服务</a>。</p>
 </div>
